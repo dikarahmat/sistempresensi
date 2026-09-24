@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserRole::class,
             'role.kesiswaan' => RoleKesiswaanMiddleware::class,
         ]);
+
+        // Trust Railway's reverse proxy agar Laravel tau request aslinya HTTPS
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
