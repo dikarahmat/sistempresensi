@@ -1,0 +1,1 @@
+@include('walikelas.absensi.class')
