@@ -74,7 +74,8 @@ class AuthController extends Controller
         }
 
         // 3. Cek apakah login menggunakan Name / Username atau prefix alias email (misal: 'admin', 'kesiswaan')
-        $user = User::where('name', $loginInput)
+        $user = User::where('username', $loginInput)
+            ->orWhere('name', $loginInput)
             ->orWhere('email', $loginInput)
             ->orWhere('email', 'like', $loginInput . '@%')
             ->first();

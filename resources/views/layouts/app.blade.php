@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() ?? 'SMP PGRI' }}</title>
 
     <!-- Global Favicon Dinamis -->
@@ -34,7 +34,7 @@
             --primary-blue-hover: #2563eb;
             --text-dark: #1e293b;
             --bg-canvas: #3b62f6;
-            --bottom-nav-height: 60px;
+            --bottom-nav-height: 56px;
         }
 
         /* --------------------------------------------------------------------------
@@ -47,7 +47,8 @@
             min-height: 100vh;
             background-color: #3b62f6 !important;
             color: var(--text-dark);
-            overflow: hidden;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
             font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
@@ -97,14 +98,15 @@
             aside,
             .app-sidebar-drawer {
                 position: fixed !important;
-                top: 0 !important;
+                top: env(safe-area-inset-top, 0px) !important;
                 left: 0 !important;
                 bottom: 0 !important;
                 height: 100vh !important;
-                height: 100dvh !important;
-                width: 16.5rem !important;
-                max-width: 82vw !important;
-                z-index: 9999999 !important; /* Hierarki Tertinggi: Menutupi Penuh Bottom Navbar */
+                height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+                width: 14rem !important;
+                min-width: 0 !important;
+                max-width: 78vw !important;
+                z-index: 1045 !important;
                 box-shadow: 20px 0 50px -10px rgba(15, 23, 42, 0.45), 8px 0 25px -5px rgba(15, 23, 42, 0.25) !important;
                 transform: translate3d(-100%, 0, 0) !important;
                 -webkit-transform: translate3d(-100%, 0, 0) !important;
@@ -166,7 +168,7 @@
             background-color: rgba(0, 0, 0, 0.45) !important;
             -webkit-backdrop-filter: blur(4px) !important;
             backdrop-filter: blur(4px) !important;
-            z-index: 9999990 !important; /* Di atas Bottom Navbar, di bawah Sidebar Drawer */
+            z-index: 1040 !important;
             touch-action: none !important;
             cursor: pointer !important;
         }
@@ -182,13 +184,13 @@
             height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px)) !important;
             min-height: var(--bottom-nav-height) !important;
             margin: 0 !important;
-            padding: 0 0 env(safe-area-inset-bottom, 0px) 0 !important;
+            padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px) !important;
             background-color: #ffffff !important;
             border-radius: 0 !important; /* Lurus mentok penuh kiri-kanan */
             border: none !important;
             border-top: 1px solid #e2e8f0 !important;
             box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06) !important;
-            z-index: 99990 !important; /* Terbuka normal, namun ikut tertutup gelap saat overlay aktif */
+            z-index: 1030 !important;
             transform: translateZ(0) !important;
             -webkit-transform: translateZ(0) !important;
             will-change: transform !important;
@@ -340,7 +342,137 @@
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding-bottom: calc(var(--bottom-nav-height) + 1.75rem + env(safe-area-inset-bottom, 0px)) !important;
+                padding: calc(1.5rem + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-height) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
+            }
+
+            body {
+                font-size: 0.875rem !important;
+            }
+
+            .header-main-subtitle {
+                display: none !important;
+            }
+
+            .app-header-left {
+                align-items: center !important;
+                gap: 0.25rem !important;
+            }
+
+            .mobile-top-hamburger {
+                align-self: center !important;
+                margin-block: 0 !important;
+            }
+
+            .card-body,
+            .card > .p-4,
+            .card > [class~="p-3.5"] {
+                padding: 0.75rem !important;
+            }
+
+            .btn {
+                padding: 0.4rem 0.65rem !important;
+                font-size: 0.85rem !important;
+            }
+
+            .btn-solid-pill,
+            .btn-row-action {
+                min-height: 34px !important;
+                height: 34px !important;
+                padding: 0 0.7rem !important;
+                font-size: 0.8rem !important;
+            }
+
+            .mobile-nav-icon {
+                font-size: 1.1rem !important;
+            }
+
+            .mobile-nav-label {
+                font-size: 10px !important;
+            }
+
+            .mobile-top-hamburger i {
+                font-size: 1.25rem !important;
+            }
+
+            .app-sidebar-drawer .nav-link {
+                font-size: 0.8rem !important;
+            }
+
+            .app-sidebar-drawer .nav-link i {
+                font-size: 1.1rem !important;
+            }
+
+            .btn i,
+            button i {
+                font-size: 0.9em !important;
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           3.B LAPISAN MOBILE: SAFE-AREA 16px, CLEAN LOOK & PERFORMA RENDER
+           Aktif HANYA di < 768px — tampilan desktop tetap 100% identik
+           -------------------------------------------------------------------------- */
+        @media (max-width: 767.98px) {
+            /* Cegah auto-zoom iOS saat fokus input (font < 16px memicu zoom Safari) */
+            .form-control,
+            .form-select {
+                font-size: 16px !important;
+                min-height: 40px !important;
+            }
+
+            /* Touch target minimal 40px (Apple HIG / Material) + respons tap instan */
+            .btn {
+                min-height: 40px !important;
+                -webkit-tap-highlight-color: transparent !important;
+                touch-action: manipulation !important;
+            }
+
+            /* Pengecualian tombol aksi dalam tabel: kompak namun tetap mudah di-tap */
+            .btn-row-action,
+            .crud-center-wrapper .btn {
+                min-height: 34px !important;
+            }
+
+            .pagination-compact .page-link {
+                min-height: 36px !important;
+                min-width: 36px !important;
+            }
+
+            /* Safety belt: tombol Hapus selalu tampil paling akhir di baris aksi */
+            .crud-center-wrapper .action-delete,
+            .crud-center-wrapper .btn-danger {
+                order: 99;
+            }
+
+            /* Clean look: redam bayangan berat & efek lift (hemat GPU, anti-jank) */
+            .card,
+            .stat-card-modern,
+            .table-custom-card,
+            .modal-content {
+                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+            }
+            .stat-card-modern:hover,
+            .shortcut-card-interactive:hover,
+            .operasional-card-interactive:hover,
+            .btn-modern-smooth:hover {
+                transform: none !important;
+            }
+
+            /* Ikon kartu statistik ikut diskalakan agar rapi di layar kecil */
+            .stat-card-modern > i {
+                font-size: 1.45rem !important;
+            }
+
+            /* Scroll horizontal tabel: momentum halus tanpa memantul ke halaman */
+            .table-responsive {
+                overscroll-behavior-x: contain !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            /* Cegah font-inflation saat rotasi layar */
+            html {
+                -webkit-text-size-adjust: 100% !important;
+                text-size-adjust: 100% !important;
             }
         }
 
@@ -540,6 +672,88 @@
             height: 0 !important;
         }
 
+        .search-box-wrap {
+            position: relative !important;
+            display: block !important;
+            height: 38px !important;
+        }
+
+        .search-box-wrap > .form-control {
+            width: 100% !important;
+            height: 38px !important;
+            padding-right: 2.75rem !important;
+            min-width: 0 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+        }
+
+        .search-box-wrap > .btn {
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 38px !important;
+            height: 38px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 6px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #64748b !important;
+            z-index: 2;
+        }
+
+        .search-box-wrap > .btn:hover,
+        .search-box-wrap > .btn:focus-visible {
+            background: transparent !important;
+            color: #2563eb !important;
+            box-shadow: none !important;
+        }
+
+        @media (min-width: 1280px) {
+            .action-bar-section {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto !important;
+                align-items: center !important;
+                gap: 0.75rem !important;
+            }
+
+            .action-bar-section > form {
+                display: flex !important;
+                flex: initial !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                gap: 0.5rem !important;
+            }
+
+            .action-bar-section > form .search-box-wrap {
+                flex: 1 1 0% !important;
+                width: auto !important;
+                min-width: 220px !important;
+                max-width: none !important;
+            }
+
+            .action-bar-section > form .filter-box-wrap {
+                flex: 0 1 36% !important;
+                width: auto !important;
+                min-width: 160px !important;
+                max-width: none !important;
+            }
+
+            .action-bar-section > form > .w-md-auto {
+                flex: 0 0 auto !important;
+                width: auto !important;
+            }
+
+            .action-bar-section > .d-flex {
+                flex: 0 0 auto !important;
+                width: auto !important;
+                margin-left: 0 !important;
+                justify-content: flex-end !important;
+            }
+        }
+
         .nav-link {
             display: flex;
             align-items: center;
@@ -717,6 +931,9 @@
     </style>
 </head>
 <body class="overflow-hidden bg-[#3b62f6] m-0 p-0" x-data="{ sidebarOpen: false }">
+
+{{-- Global Smart Loader Component --}}
+@include('components.loading-overlay')
 
 <!-- ========================================================================= -->
 <!-- 1. ROOT APPLICATION CANVAS                                                -->

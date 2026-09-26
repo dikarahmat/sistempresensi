@@ -78,7 +78,7 @@
         gap: 0.35rem;
         width: 100%;
         padding: 0.42rem 0.65rem;
-        border-radius: 8px;
+        border-radius: 8px !important;
         font-size: 0.80rem;
         font-weight: 600;
         text-decoration: none !important;
@@ -91,36 +91,36 @@
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
     .btn-portal-action i {
-        font-size: 1.2rem;
+        font-size: 0.8rem;
         line-height: 1;
         flex-shrink: 0;
     }
-    @media (min-width: 640px) {
-        .btn-portal-action i {
-            font-size: 1.3rem;
+
+    /* Touch target portal buttons (mobile): tetap ringkas namun mudah di-tap */
+    @media (max-width: 767.98px) {
+        .btn-portal-action {
+            min-height: 40px;
+            padding: 0.5rem 0.65rem;
         }
     }
 
-    /* Mode Gerbang Button (Slate Neutral Crisp) */
+    /* Mode Gerbang Button (Green) */
     .btn-portal-gate {
-        background-color: #ffffff;
-        color: #1e293b !important;
-        border-color: #cbd5e1;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        background-color: #16a34a;
+        color: #ffffff !important;
+        border-color: #16a34a;
+        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
     }
     .btn-portal-gate:hover {
-        background-color: #f8fafc;
-        border-color: #94a3b8;
-        color: #0f172a !important;
+        background-color: #15803d;
+        border-color: #15803d;
+        color: #ffffff !important;
         transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 3px 6px rgba(22, 163, 74, 0.25);
     }
     .btn-portal-gate:active {
         transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    }
-    .btn-portal-gate i {
-        color: #2563eb;
+        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
     }
 
     /* Buka Scanner Button (Royal Blue Primary) */
@@ -540,19 +540,9 @@
     <!-- ========================================================================= -->
     <div class="d-block d-md-none">
         <div class="card border border-light-subtle shadow-sm rounded-3 p-3 mb-3 bg-white">
-            <div class="row g-2">
-                <!-- 1. Mode Gerbang -->
-                <div class="col-6">
-                    <a href="{{ Route::has('admin.scanner.kiosk') ? route('admin.scanner.kiosk') : (Route::has('admin.scanner') ? route('admin.scanner') : url('/admin/scanner/kiosk')) }}" 
-                       class="btn-portal-action btn-portal-gate shadow-2xs w-100" 
-                       title="Mode Gerbang">
-                        <i class='bx bx-scan'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Mode Gerbang</span>
-                    </a>
-                </div>
-
-                <!-- 2. Buka Scanner QR -->
-                <div class="col-6">
+            <div class="d-flex flex-column gap-2">
+                <!-- 1. Buka Scanner QR -->
+                <div class="w-100">
                     <button type="button" id="btnToggleScannerMobile" 
                             class="btn-portal-action btn-portal-scanner shadow-2xs w-100" 
                             onclick="toggleInlineScanner()"
@@ -560,6 +550,16 @@
                         <i class='bx bx-camera' id="toggleScannerIconMobile"></i>
                         <span class="text-nowrap" style="font-size: 0.8rem;" id="toggleScannerTextMobile">Scanner QR</span>
                     </button>
+                </div>
+
+                <!-- 2. Mode Gerbang -->
+                <div class="w-100">
+                          <a href="{{ Route::has('admin.scanner.kiosk') ? route('admin.scanner.kiosk') : (Route::has('admin.scanner') ? route('admin.scanner') : url('/admin/scanner/kiosk')) }}"
+                              class="btn-portal-action btn-portal-gate shadow-2xs w-100"
+                       title="Mode Gerbang">
+                        <i class='bx bx-scan'></i>
+                        <span class="text-nowrap" style="font-size: 0.8rem;">Mode Gerbang</span>
+                    </a>
                 </div>
             </div>
         </div>

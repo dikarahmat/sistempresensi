@@ -4,43 +4,6 @@
 @section('page_title', 'Data Siswa')
 @section('page_subtitle', 'Kelola informasi siswa, cetak kartu NISN, dan data rombongan belajar.')
 
-@section('page_header_right')
-<!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
-<div class="d-none d-md-block">
-    <div class="d-flex align-items-center gap-2">
-        <!-- Tombol Cetak Kartu Massal -->
-        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#printCardsModal">
-            <i class='bx bx-printer fs-6'></i>
-            <span>Cetak Kartu</span>
-        </button>
-
-        @if(Auth::check() && Auth::user()->role === 'admin')
-        <!-- Tombol Import Excel -->
-        <button type="button" class="btn btn-success btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#importModal">
-            <i class='bx bx-file fs-6'></i>
-            <span>Import Excel</span>
-        </button>
-
-        <!-- Tombol Hapus Semua Siswa -->
-        <button type="button" class="btn btn-danger btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" title="Hapus Semua Siswa" onclick="confirmDeleteAllStudents()">
-            <i class='bx bx-trash fs-6'></i>
-            <span>Hapus</span>
-        </button>
-        <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all') }}" method="POST" class="d-none">
-            @csrf
-            @method('DELETE')
-        </form>
-
-        <!-- Tombol Tambah Siswa -->
-        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-            <i class='bx bx-plus fs-6'></i>
-            <span>Tambah Siswa</span>
-        </button>
-        @endif
-    </div>
-</div>
-@endsection
-
 @push('styles')
 <style>
     /* Zebra Striping Khusus */
@@ -109,131 +72,83 @@
             gap: 2px;
         }
     }
+
+    .table-zebra-custom thead th {
+        color: #111827 !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        background-color: #f8fafc !important;
+    }
+
+    /* ===== Action Bar Layout: Search+Filter Stretch Memanjang, Sejajar 1 Baris ===== */
+    .action-bar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+    @media (min-width: 992px) {
+        .action-bar-section {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+    }
+
+    /* Responsive Search + Dropdown Filter */
+    @media (max-width: 991.98px) {
+        .search-box-wrap,
+        .filter-box-wrap {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+    }
+    @media (min-width: 992px) {
+        .search-box-wrap {
+            max-width: 350px !important;
+        }
+        .filter-box-wrap {
+            max-width: 200px !important;
+        }
+    }
+    .btn-solid-pill,
+    button.btn-solid-pill,
+    a.btn-solid-pill {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        height: 38px !important;
+        border-radius: 6px !important;
+        border: none !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #ffffff;
+        white-space: nowrap;
+        padding: 0 1rem;
+        transition: filter 0.15s ease, transform 0.1s ease;
+        box-shadow: none !important;
+    }
+    .btn-solid-pill:hover {
+        filter: brightness(0.94);
+        color: #ffffff;
+    }
+    .btn-solid-pill:active {
+        transform: scale(0.98);
+    }
+    .btn-solid-green { background-color: #16a34a; }
+    .btn-solid-blue { background-color: #2563eb; }
+    .btn-solid-red { background-color: #dc2626; }
 </style>
 @endpush
 
-@section('content')
-
-    <!-- ========================================================================= -->
-    <!-- 1. KONTEN KHUSUS MOBILE (< 768px): KARTU TERPADU TOMBOL, CARI & FILTER     -->
-    <!-- ========================================================================= -->
-    <div class="d-block d-md-none mb-3">
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
-            
-            <div class="row g-2">
-                <!-- 1. Cetak Kartu Massal -->
-                <div class="{{ Auth::check() && Auth::user()->role === 'admin' ? 'col-6' : 'col-12' }}">
-                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#printCardsModal">
-                        <i class='bx bx-printer fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Cetak Kartu</span>
-                    </button>
-                </div>
-
-                @if(Auth::check() && Auth::user()->role === 'admin')
-                <!-- 2. Import Excel -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <i class='bx bx-file fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
-                    </button>
-                </div>
-
-                <!-- 3. Hapus Semua Siswa -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" title="Hapus Semua Siswa" onclick="confirmDeleteAllStudents()">
-                        <i class='bx bx-trash fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Hapus</span>
-                    </button>
-                </div>
-
-                <!-- 4. Tambah Siswa -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <i class='bx bx-plus fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Siswa</span>
-                    </button>
-                </div>
-                @endif
-            </div>
-
-            <!-- Sekat Pemisah -->
-            <hr class="border-secondary-subtle my-3">
-
-            <!-- Bagian Bawah: Form Pencarian & Filter Kelas Mobile -->
-            <form method="GET" action="{{ route('kesiswaan.students.index') }}" class="m-0">
-                <!-- Input Pencarian Menyatu Seamless (Tombol Kaca Pembesar di Sisi Kanan) -->
-                <div class="input-group shadow-sm rounded-3 mb-2 w-100">
-                    <input type="text" 
-                           name="search" 
-                           class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 py-1.5" 
-                           placeholder="Cari nama atau NIS..." 
-                           value="{{ request('search') }}"
-                           aria-label="Cari nama atau NIS">
-                    <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary" type="submit">
-                        <i class='bx bx-search fs-6'></i>
-                    </button>
-                </div>
-
-                <!-- Dropdown Filter Kelas ("Semua Kelas") -->
-                <div class="w-100">
-                    <select name="class_id" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-sm rounded-3 fw-normal">
-                        <option value="">Semua Kelas</option>
-                        @foreach($classes as $c)
-                        <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>
-                            Kelas {{ $c->name }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-            </form>
-
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- 2. KONTEN KHUSUS DESKTOP (>= 768px): CARD FILTER & PENCARIAN STANDAR      -->
-    <!-- ========================================================================= -->
-    <div class="d-none d-md-block">
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-3">
-                <form method="GET" action="{{ route('kesiswaan.students.index') }}" class="row g-2 align-items-center">
-                    <!-- Input Pencarian Desktop Menyatu Seamless (Tombol Kaca Pembesar di Sisi Kanan) -->
-                    <div class="col-12 col-md">
-                        <div class="input-group shadow-sm rounded-3 w-100">
-                            <input type="text" 
-                                   name="search" 
-                                   class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 py-2" 
-                                   placeholder="Cari berdasarkan nama atau NIS..." 
-                                   value="{{ request('search') }}"
-                                   aria-label="Cari berdasarkan nama atau NIS">
-                            <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit">
-                                <i class='bx bx-search fs-5'></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Dropdown Filter Kelas Desktop -->
-                    <div class="col-12 col-md-auto">
-                        <select name="class_id" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-sm rounded-3 fw-normal py-2 px-3" style="min-width: 175px;">
-                            <option value="">Semua Kelas</option>
-                            @foreach($classes as $c)
-                            <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>
-                                Kelas {{ $c->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    @if(request('search') || request('class_id'))
-                    <div class="col-12 col-md-auto">
-                        <a href="{{ route('kesiswaan.students.index') }}" class="btn btn-outline-secondary py-2 px-3 rounded-3">Reset</a>
-                    </div>
-                    @endif
-
-                </form>
-            </div>
-        </div>
-    </div>
+@@section('content')
 
     {{-- Alert Notifikasi --}}
     @if(session('success'))
@@ -256,19 +171,104 @@
     </div>
     @endif
 
-    {{-- Tabel Data Siswa (Alignment Vertikal & Horizontal Presisi, Anti-Numpuk text-nowrap & table-responsive) --}}
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    @if(Auth::check() && Auth::user()->role === 'admin')
+    {{-- Form Delete All Students (Hidden, dipanggil via confirmDeleteAllStudents()) --}}
+    <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all') }}" method="POST" class="d-none">
+        @csrf
+        @method('DELETE')
+    </form>
+    @endif
+
+    <!-- ========================================================================= -->
+    <!-- KARTU UTAMA DATA SISWA: CLEAN ACTION BAR & TABEL TERPADU (SIAKAD STYLE)   -->
+    <!-- ========================================================================= -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+        
+        <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
+        <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
+            <div class="action-bar-section">
+                
+                <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas (Flex Column on Mobile, Row on Desktop) -->
+                <form method="GET" action="{{ route('kesiswaan.students.index') }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
+                    <!-- Search Bar -->
+                    <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
+                        <input type="text" 
+                               name="search" 
+                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 w-100" 
+                               placeholder="Cari nama atau NIS..." 
+                               value="{{ request('search') }}"
+                               aria-label="Cari nama atau NIS"
+                               style="height: 38px; font-size: 0.85rem;">
+                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" style="height: 38px;">
+                            <i class='bx bx-search fs-6'></i>
+                        </button>
+                    </div>
+
+                    <!-- Dropdown Filter Kelas -->
+                    <div class="w-100 filter-box-wrap" style="max-width: 200px;">
+                        <select name="class_id" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="height: 38px; font-size: 0.85rem;">
+                            <option value="">Semua Kelas</option>
+                            @foreach($classes as $c)
+                            <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>
+                                Kelas {{ $c->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    @if(request('search') || request('class_id'))
+                    <div class="w-100 w-md-auto">
+                        <a href="{{ route('kesiswaan.students.index') }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
+                            <i class='bx bx-refresh fs-5 me-1'></i> Reset
+                        </a>
+                    </div>
+                    @endif
+                </form>
+
+                <!-- Sisi Kanan: Deretan Tombol Aksi (Stacked Layout di Mobile) -->
+                <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+                    <!-- 1. Cetak Kartu Massal (Solid Biru) -->
+                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#printCardsModal">
+                        <i class='bx bx-printer'></i>
+                        <span>Cetak Kartu</span>
+                    </button>
+
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                    <!-- 2. Import Excel (Solid Hijau) -->
+                    <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class='bx bx-file'></i>
+                        <span>Import Excel</span>
+                    </button>
+
+                    <!-- 3. Tambah Siswa (Solid Biru, Aksi Utama) -->
+                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class='bx bx-plus'></i>
+                        <span>Tambah Siswa</span>
+                    </button>
+
+                    <!-- 4. Hapus Semua Siswa (Solid Merah - Urutan Terakhir) -->
+                    <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Siswa" onclick="confirmDeleteAllStudents()">
+                        <i class='bx bx-trash'></i>
+                        <span>Hapus</span>
+                    </button>
+                    @endif
+                </div>
+
+            </div>
+        </div>
+
+        {{-- Tabel Data Siswa (Alignment Vertikal & Horizontal Presisi, Anti-Numpuk text-nowrap & table-responsive) --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
-                <thead class="bg-light">
-                    <tr class="align-middle text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.03em;">
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 1%; min-width: 45px;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 1%; min-width: 80px;">KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 12%;">NIS</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4">NAMA SISWA</th>
-                        <th class="text-start py-3 text-nowrap px-3">JENIS KELAMIN</th>
-                        <th class="text-start py-3 text-nowrap px-3">NAMA WALI</th>
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 180px;">AKSI</th>
+                <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
+                    <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">NO</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">KELAS</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">NIS</th>
+                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA SISWA</th>
+                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">JENIS KELAMIN</th>
+                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA WALI</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -44,6 +44,67 @@
 <style>
     /* Header Bar Alignment on Mobile (< 768px): Pojok Kanan Atas Sejajar */
     @media (max-width: 767.98px) {
+        .recap-mobile-period {
+            order: 0;
+        }
+        .recap-mobile-filters {
+            order: 1;
+        }
+        .recap-mobile-actions {
+            order: 2;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .recap-mobile-divider {
+            display: none;
+        }
+        .recap-mobile-submit {
+            width: 40px;
+            height: 36px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569 !important;
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        .recap-mobile-submit:hover,
+        .recap-mobile-submit:focus,
+        .recap-mobile-submit:active {
+            color: #334155 !important;
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        .recap-mobile-period .form-select,
+        .recap-mobile-filters .form-control,
+        .recap-mobile-filters .form-select {
+            height: 36px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.84rem;
+            color: #334155;
+            background-color: #ffffff;
+            border: 1px solid #d7dee8 !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+        }
+        .recap-mobile-filters .input-group > .form-select {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+        .recap-mobile-filters .input-group > .recap-mobile-submit {
+            border-left: 0 !important;
+            border-top-right-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+        }
+        .recap-mobile-card .form-label {
+            color: #64748b !important;
+            font-size: 0.75rem;
+            margin-bottom: 0.2rem !important;
+        }
+
         .app-header-bar {
             flex-direction: row !important;
             align-items: center !important;
@@ -334,57 +395,40 @@
     <!-- 1. KONTEN KHUSUS MOBILE (< 768px): KARTU TERPADU TOMBOL & FILTER REKAP   -->
     <!-- ========================================================================= -->
     <div class="d-block d-md-none mb-3">
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
-            <!-- Bagian Atas: Tombol Aksi (Export Excel, Cetak PDF, Harian, Mingguan, Bulanan) -->
-            <div class="row g-2">
-                <!-- 1. Export Excel -->
-                <div class="col-6">
-                    <a href="{{ route('admin.rekap.export-excel', $exportParams) }}" 
-                       class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold">
-                        <i class='bx bx-spreadsheet fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Ekspor Excel</span>
-                    </a>
-                </div>
+        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white recap-mobile-card">
+            <form method="GET" action="{{ route('admin.rekap') }}" class="recap-mobile-period mb-2">
+                @foreach(request()->except('type') as $key => $value)
+                    @if(is_scalar($value))
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+                <label for="mobileRecapType" class="form-label text-muted small fw-semibold mb-1">Periode</label>
+                <select id="mobileRecapType" name="type" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3" onchange="this.form.submit()">
+                    <option value="harian" {{ $type === 'harian' ? 'selected' : '' }}>Harian</option>
+                    <option value="mingguan" {{ $type === 'mingguan' ? 'selected' : '' }}>Mingguan</option>
+                    <option value="bulanan" {{ $type === 'bulanan' ? 'selected' : '' }}>Bulanan</option>
+                </select>
+            </form>
 
-                <!-- 2. Cetak PDF -->
-                <div class="col-6">
-                    <a href="{{ route('admin.rekap.export-pdf', $exportParams) }}" 
-                       class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold">
-                        <i class='bx bxs-file-pdf fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">PDF Report</span>
-                    </a>
-                </div>
-
-                <!-- 3. Periode Harian -->
-                <div class="col-4">
-                    <a href="{{ route('admin.rekap', array_merge(request()->except('type'), ['type' => 'harian'])) }}"
-                       class="btn {{ $type === 'harian' ? 'btn-primary' : 'btn-outline-primary' }} btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1 py-1.5 px-1 fw-semibold text-nowrap" style="font-size: 0.78rem;">
-                        <i class='bx bx-calendar-event'></i> Harian
-                    </a>
-                </div>
-
-                <!-- 4. Periode Mingguan -->
-                <div class="col-4">
-                    <a href="{{ route('admin.rekap', array_merge(request()->except('type'), ['type' => 'mingguan'])) }}"
-                       class="btn {{ $type === 'mingguan' ? 'btn-primary' : 'btn-outline-primary' }} btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1 py-1.5 px-1 fw-semibold text-nowrap" style="font-size: 0.78rem;">
-                        <i class='bx bx-calendar-week'></i> Mingguan
-                    </a>
-                </div>
-
-                <!-- 5. Periode Bulanan -->
-                <div class="col-4">
-                    <a href="{{ route('admin.rekap', array_merge(request()->except('type'), ['type' => 'bulanan'])) }}"
-                       class="btn {{ $type === 'bulanan' ? 'btn-primary' : 'btn-outline-primary' }} btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1 py-1.5 px-1 fw-semibold text-nowrap" style="font-size: 0.78rem;">
-                        <i class='bx bx-calendar'></i> Bulanan
-                    </a>
-                </div>
+            <!-- Tombol ekspor -->
+            <div class="d-flex flex-column gap-2 recap-mobile-actions">
+                <a href="{{ route('admin.rekap.export-excel', $exportParams) }}"
+                   class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold">
+                    <i class='bx bx-spreadsheet fs-6'></i>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">Ekspor Excel</span>
+                </a>
+                <a href="{{ route('admin.rekap.export-pdf', $exportParams) }}"
+                   class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold">
+                    <i class='bx bxs-file-pdf fs-6'></i>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">PDF Report</span>
+                </a>
             </div>
 
             <!-- Sekat Pemisah -->
-            <hr class="border-secondary-subtle my-3">
+            <hr class="border-secondary-subtle my-3 recap-mobile-divider">
 
-            <!-- Bagian Bawah: Form Filter Sesuai Periode Aktif -->
-            <form method="GET" action="{{ route('admin.rekap') }}" class="m-0">
+            <!-- Filter ditampilkan sebelum tombol ekspor dan pilihan periode -->
+            <form method="GET" action="{{ route('admin.rekap') }}" class="m-0 recap-mobile-filters">
                 <input type="hidden" name="type" value="{{ $type }}">
 
                 @if($type === 'harian')
@@ -395,19 +439,20 @@
 
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
-                        <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
-                            <option value="">Semua Kelas</option>
-                            @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>
-                                    Kelas {{ $c->name }} (Tingkat {{ $c->grade }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="input-group">
+                            <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
+                                <option value="">Semua Kelas</option>
+                                @foreach($classes as $c)
+                                    <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>
+                                        Kelas {{ $c->name }} (Tingkat {{ $c->grade }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data" aria-label="Tampilkan data">
+                                <i class='bx bx-search'></i>
+                            </button>
+                        </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs fw-semibold mt-1">
-                        <i class='bx bx-filter-alt me-1'></i> Tampilkan Data
-                    </button>
                 @elseif($type === 'mingguan')
                     <div class="row g-2 mb-2">
                         <div class="col-6">
@@ -422,19 +467,20 @@
 
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
-                        <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
-                            <option value="">Semua Kelas</option>
-                            @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>
-                                    Kelas {{ $c->name }} (Tingkat {{ $c->grade }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="input-group">
+                            <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
+                                <option value="">Semua Kelas</option>
+                                @foreach($classes as $c)
+                                    <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>
+                                        Kelas {{ $c->name }} (Tingkat {{ $c->grade }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data" aria-label="Tampilkan data">
+                                <i class='bx bx-search'></i>
+                            </button>
+                        </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs fw-semibold mt-1">
-                        <i class='bx bx-filter-alt me-1'></i> Tampilkan Data
-                    </button>
                 @else
                     <!-- BULANAN -->
                     <div class="row g-2 mb-2">
@@ -460,19 +506,20 @@
 
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
-                        <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
-                            <option value="">Semua Kelas</option>
-                            @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>
-                                    Kelas {{ $c->name }} (Tingkat {{ $c->grade }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="input-group">
+                            <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
+                                <option value="">Semua Kelas</option>
+                                @foreach($classes as $c)
+                                    <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>
+                                        Kelas {{ $c->name }} (Tingkat {{ $c->grade }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data" aria-label="Tampilkan data">
+                                <i class='bx bx-search'></i>
+                            </button>
+                        </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs fw-semibold mt-1">
-                        <i class='bx bx-filter-alt me-1'></i> Tampilkan Data
-                    </button>
                 @endif
             </form>
         </div>

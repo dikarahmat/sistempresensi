@@ -7,26 +7,26 @@
 @section('page_header_right')
 <!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
 <div class="d-none d-md-block">
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
         @if(Auth::check() && Auth::user()->role === 'admin')
         @if(Route::has('admin.classes.import'))
         <!-- Tombol Import Excel -->
-        <button type="button" class="btn btn-success btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#importClassModal">
+        <button type="button" class="btn btn-success btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importClassModal">
             <i class='bx bx-file fs-6'></i>
             <span>Import Excel</span>
         </button>
         @endif
 
-        <!-- Tombol Hapus Semua Kelas -->
-        <button type="button" class="btn btn-danger btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
-            <i class='bx bx-trash fs-6'></i>
-            <span>Hapus</span>
-        </button>
-
         <!-- Tombol Tambah Kelas -->
-        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addClassModal">
+        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addClassModal">
             <i class='bx bx-plus fs-6'></i>
             <span>Tambah Kelas</span>
+        </button>
+
+        <!-- Tombol Hapus Semua Kelas -->
+        <button type="button" class="btn btn-danger btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold w-100 w-md-auto" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
+            <i class='bx bx-trash fs-6'></i>
+            <span>Hapus</span>
         </button>
         @endif
     </div>
@@ -255,32 +255,26 @@
             
             @if(Auth::check() && Auth::user()->role === 'admin')
             <!-- Bagian Atas: Tombol Aksi Mobile (Baris 1: Import & Hapus, Baris 2: Tambah Kelas Full-Width) -->
-            <div class="row g-2">
+            <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
                 @if(Route::has('admin.classes.import'))
                 <!-- 1. Import Excel -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importClassModal">
-                        <i class='bx bx-file fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
-                    </button>
-                </div>
+                <button type="button" class="btn btn-success btn-sm w-100 w-md-auto rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importClassModal">
+                    <i class='bx bx-file fs-6'></i>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
+                </button>
                 @endif
 
-                <!-- 2. Hapus Semua Kelas -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
-                        <i class='bx bx-trash fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Hapus</span>
-                    </button>
-                </div>
+                <!-- 2. Tambah Kelas -->
+                <button type="button" class="btn btn-primary btn-sm w-100 w-md-auto rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                    <i class='bx bx-plus fs-6'></i>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Kelas</span>
+                </button>
 
-                <!-- 3. Tambah Kelas (Full-Width) -->
-                <div class="col-12">
-                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addClassModal">
-                        <i class='bx bx-plus fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Kelas</span>
-                    </button>
-                </div>
+                <!-- 3. Hapus Semua Kelas -->
+                <button type="button" class="btn btn-danger btn-sm w-100 w-md-auto rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
+                    <i class='bx bx-trash fs-6'></i>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">Hapus</span>
+                </button>
             </div>
 
             <!-- Sekat Pemisah -->
@@ -288,10 +282,10 @@
             @endif
 
             <!-- Bagian Bawah: Filter Tingkat Kelas Mobile -->
-            <form method="GET" action="{{ url()->current() }}" class="m-0">
+            <form method="GET" action="{{ url()->current() }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
                 <!-- Dropdown Filter Tingkat Kelas ("Semua Tingkat") -->
                 <div class="w-100">
-                    <select name="grade" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-sm rounded-3 fw-normal">
+                    <select name="grade" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-sm rounded-3 fw-normal w-100">
                         <option value="">Semua Tingkat</option>
                         <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>Kelas 7</option>
                         <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>Kelas 8</option>

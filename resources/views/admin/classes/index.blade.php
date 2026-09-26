@@ -4,159 +4,12 @@
 @section('page_title', 'Master Data Kelas')
 @section('page_subtitle', 'Kelola rombongan belajar dan penetapan wali kelas.')
 
-@section('page_header_right')
-<!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
-<div class="d-none d-md-block">
-    <div class="d-flex align-items-center gap-2">
-        @if(Auth::check() && Auth::user()->role === 'admin')
-        @if(Route::has('admin.classes.import'))
-        <!-- Tombol Import Excel -->
-        <button type="button" class="btn btn-success btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#importClassModal">
-            <i class='bx bx-file fs-6'></i>
-            <span>Import Excel</span>
-        </button>
-        @endif
-
-        <!-- Tombol Hapus Semua Kelas -->
-        <button type="button" class="btn btn-danger btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
-            <i class='bx bx-trash fs-6'></i>
-            <span>Hapus</span>
-        </button>
-
-        <!-- Tombol Tambah Kelas -->
-        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addClassModal">
-            <i class='bx bx-plus fs-6'></i>
-            <span>Tambah Kelas</span>
-        </button>
-        @endif
-    </div>
-</div>
-<!-- Form Hapus Semua Kelas (Tetap ada di DOM agar dapat dipicu Desktop maupun Mobile) -->
-<form id="deleteAllClassesForm" action="{{ route('admin.classes.destroy-all') }}" method="POST" class="d-none">
-    @csrf
-    @method('DELETE')
-</form>
-@endsection
-
 @push('styles')
 <style>
-    /* Tombol & Card */
-    .btn-green-excel {
-        background-color: #059669;
-        color: #ffffff;
-        border: none;
-        font-weight: 600;
-        font-size: 0.88rem;
-        border-radius: 8px;
-        padding: 0.55rem 1.15rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        box-shadow: 0 1px 2px rgba(5, 150, 105, 0.15);
-        transition: all 0.15s ease;
-    }
-    .btn-green-excel:hover { 
-        background-color: #047857; 
-        color: #ffffff; 
-        transform: translateY(-1px);
-    }
-
-    .btn-add-class {
-        background-color: #3b82f6;
-        color: #ffffff;
-        border: none;
-        font-weight: 600;
-        font-size: 0.88rem;
-        border-radius: 8px;
-        padding: 0.55rem 1.15rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        box-shadow: 0 1px 2px rgba(59, 130, 246, 0.15);
-        transition: all 0.15s ease;
-    }
-    .btn-add-class:hover { 
-        background-color: #2563eb; 
-        color: #ffffff; 
-        transform: translateY(-1px);
-    }
-
-    .search-container {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 0.45rem 0.65rem 0.45rem 1rem;
-        border: 1px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    }
-
-    .search-container input {
-        border: none;
-        outline: none;
-        width: 100%;
-        font-size: 0.9rem;
-        color: #334155;
-    }
-
-    .btn-search-blue {
-        background-color: #3b82f6;
-        color: #ffffff;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        padding: 0.45rem 1.25rem;
-    }
-    .btn-search-blue:hover { background-color: #2563eb; color: #ffffff; }
-
-    .btn-reset-gray {
-        background-color: #ffffff;
-        color: #64748b;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        padding: 0.45rem 1.25rem;
-        text-decoration: none;
-    }
-    .btn-reset-gray:hover { background-color: #f1f5f9; color: #334155; }
-
-    /* Filter Pills */
-    .filter-pill {
-        padding: 0.45rem 1rem;
-        border-radius: 20px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        text-decoration: none;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        color: #64748b;
-        transition: all 0.15s ease;
-    }
-    .filter-pill:hover, .filter-pill.active {
-        background: #3b82f6;
-        color: #ffffff;
-        border-color: #3b82f6;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
-    }
-
-    /* Tabel Kelas */
-    .table-zebra-custom {
-        width: 100%;
-        min-width: 780px;
-        margin-bottom: 0;
-    }
-
-    .table-responsive {
-        -webkit-overflow-scrolling: touch;
-        overflow-x: auto;
-    }
-
+    /* Zebra Striping Khusus (disamakan persis dengan Data Guru & Data Siswa) */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
-        background-color: #f1f5f9 !important;
+        background-color: #f8fafc !important;
     }
     .table-zebra-custom tbody tr:nth-child(odd) > td,
     .table-zebra-custom tbody tr.baris-putih > td {
@@ -165,17 +18,35 @@
     .table-zebra-custom tbody tr.baris-abu:hover > td,
     .table-zebra-custom tbody tr.baris-putih:hover > td,
     .table-zebra-custom tbody tr:hover > td {
-        background-color: #e2e8f0 !important;
+        background-color: #f1f5f9 !important;
+    }
+
+    .table-zebra-custom {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: auto;
     }
 
     .table-zebra-custom th,
     .table-zebra-custom td {
         vertical-align: middle;
     }
-
     .table-zebra-custom tbody td {
-        color: #000000 !important;
+        color: #1e293b !important;
         font-weight: 400 !important;
+    }
+
+    .indent-nama {
+        padding-left: 1.25rem !important;
+    }
+    @media (min-width: 992px) {
+        .indent-nama {
+            padding-left: 2rem !important;
+        }
     }
 
     .crud-center-wrapper {
@@ -185,23 +56,133 @@
         gap: 0.35rem;
     }
 
-    /* Pagination Ringkas */
     .pagination-compact .pagination {
         margin-bottom: 0;
         font-size: 0.82rem;
     }
     .pagination-compact .page-link {
-        padding: 0.25rem 0.6rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px !important;
     }
 
+    @media (max-width: 767.98px) {
+        .pagination-compact .pagination {
+            justify-content: center !important;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+    }
 
+    .table-zebra-custom thead th {
+        color: #111827 !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        background-color: #f8fafc !important;
+    }
+
+    /* ===== Action Bar Layout: Filter Stretch Memanjang, Sejajar 1 Baris (sama seperti Data Siswa/Guru) ===== */
+    .action-bar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+    @media (min-width: 992px) {
+        .action-bar-section {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+    }
+
+    /* Responsive Search + Dropdown Filter */
+    @media (max-width: 991.98px) {
+        .search-box-wrap,
+        .filter-box-wrap {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+    }
+    @media (min-width: 992px) {
+        .search-box-wrap {
+            max-width: 350px !important;
+        }
+        .filter-box-wrap {
+            max-width: 200px !important;
+        }
+    }
+    .btn-solid-pill,
+    button.btn-solid-pill,
+    a.btn-solid-pill {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        height: 38px !important;
+        border-radius: 6px !important; /* sama persis dengan .form-select */
+        border: none !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #ffffff;
+        white-space: nowrap;
+        padding: 0 1rem;
+        transition: filter 0.15s ease, transform 0.1s ease;
+        box-shadow: none !important;
+    }
+    .btn-solid-pill:hover {
+        filter: brightness(0.94);
+        color: #ffffff;
+    }
+    .btn-solid-pill:active {
+        transform: scale(0.98);
+    }
+    .btn-solid-green { background-color: #16a34a; }
+    .btn-solid-blue { background-color: #2563eb; }
+    .btn-solid-red { background-color: #dc2626; }
+
+    /* Row Action Buttons (Edit/Hapus per baris): Bentuk & Radius SAMA dengan tombol atas */
+    .btn-row-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        border: none;
+        border-radius: 6px !important;
+        padding: 0.32rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #ffffff;
+        white-space: nowrap;
+        transition: filter 0.15s ease;
+        box-shadow: none !important;
+    }
+    .btn-row-action:hover {
+        filter: brightness(0.94);
+        color: #ffffff;
+    }
+    .btn-row-action.action-edit { background-color: #f59e0b; }
+    .btn-row-action.action-delete { background-color: #dc2626; }
+
+    /* Dropdown filter disamakan bentuknya (kotak sudut tumpul) */
+    .filter-select-wrap select.form-select,
+    .search-filter-group select.form-select {
+        border-radius: 6px !important;
+        height: 38px;
+        font-size: 0.85rem;
+    }
 </style>
 @endpush
 
 @section('content')
     <!-- Alert Notifikasi -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center">
             <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
             <span>{{ session('success') }}</span>
@@ -211,7 +192,7 @@
     @endif
 
     @if(session('import_errors'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center mb-1">
             <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
             <strong>Beberapa baris data kelas gagal diimport:</strong>
@@ -226,7 +207,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center">
             <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
             <span>{{ session('error') }}</span>
@@ -236,7 +217,7 @@
     @endif
 
     @if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Terjadi kesalahan input:</div>
         <ul class="mb-0 ps-3 small">
             @foreach($errors->all() as $err)
@@ -247,124 +228,128 @@
     </div>
     @endif
 
+    @if(Auth::check() && Auth::user()->role === 'admin')
+    {{-- Form Hapus Semua Kelas (Hidden, dipanggil via confirmDeleteAllClasses()) --}}
+    <form id="deleteAllClassesForm" action="{{ route('admin.classes.destroy-all') }}" method="POST" class="d-none">
+        @csrf
+        @method('DELETE')
+    </form>
+    @endif
+
     <!-- ========================================================================= -->
-    <!-- 1. KONTEN KHUSUS MOBILE (< 768px): KARTU TERPADU TOMBOL, CARI & FILTER     -->
+    <!-- KARTU UTAMA MASTER DATA KELAS: CLEAN ACTION BAR & TABEL TERPADU           -->
+    <!-- (Layout & container disamakan persis dengan Data Guru & Data Siswa)      -->
     <!-- ========================================================================= -->
-    <div class="d-block d-md-none mb-3">
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
-            
-            @if(Auth::check() && Auth::user()->role === 'admin')
-            <!-- Bagian Atas: Tombol Aksi Mobile (Baris 1: Import & Hapus, Baris 2: Tambah Kelas Full-Width) -->
-            <div class="row g-2">
-                @if(Route::has('admin.classes.import'))
-                <!-- 1. Import Excel -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importClassModal">
-                        <i class='bx bx-file fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+
+        <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
+        <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
+            <div class="action-bar-section">
+
+                <!-- Sisi Kiri: Form Pencarian & Dropdown Tingkat Kelas (Flex Column on Mobile, Row on Desktop) -->
+                <form method="GET" action="{{ url()->current() }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
+                    <!-- Search Bar -->
+                    <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
+                        <input type="text" 
+                               name="search" 
+                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 w-100" 
+                               placeholder="Cari nama kelas..." 
+                               value="{{ request('search') }}"
+                               aria-label="Cari nama kelas"
+                               style="height: 38px; font-size: 0.85rem;">
+                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" style="height: 38px;">
+                            <i class='bx bx-search fs-6'></i>
+                        </button>
+                    </div>
+
+                    <!-- Dropdown Filter Tingkat Kelas -->
+                    <div class="w-100 filter-box-wrap" style="max-width: 200px;">
+                        <select name="grade" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="height: 38px; font-size: 0.85rem;">
+                            <option value="">Semua Tingkat</option>
+                            <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>Kelas 7</option>
+                            <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>Kelas 8</option>
+                            <option value="9" {{ request('grade') == '9' ? 'selected' : '' }}>Kelas 9</option>
+                        </select>
+                    </div>
+
+                    @if(request('search') || request('grade'))
+                    <div class="w-100 w-md-auto">
+                        <a href="{{ url()->current() }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
+                            <i class='bx bx-refresh fs-5 me-1'></i> Reset
+                        </a>
+                    </div>
+                    @endif
+                </form>
+
+                @if(Auth::check() && Auth::user()->role === 'admin')
+                <!-- Sisi Kanan: Deretan Tombol Aksi (Stacked Layout di Mobile) -->
+                <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+                    @if(Route::has('admin.classes.import'))
+                    <!-- 1. Import Excel (Solid Hijau) -->
+                    <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importClassModal">
+                        <i class='bx bx-file'></i>
+                        <span>Import Excel</span>
+                    </button>
+                    @endif
+
+                    <!-- 2. Tambah Kelas (Solid Biru, Aksi Utama) -->
+                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                        <i class='bx bx-plus'></i>
+                        <span>Tambah Kelas</span>
+                    </button>
+
+                    <!-- 3. Hapus Semua Kelas (Solid Merah - Urutan Terakhir) -->
+                    <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
+                        <i class='bx bx-trash'></i>
+                        <span>Hapus</span>
                     </button>
                 </div>
                 @endif
 
-                <!-- 2. Hapus Semua Kelas -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
-                        <i class='bx bx-trash fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Hapus</span>
-                    </button>
-                </div>
-
-                <!-- 3. Tambah Kelas (Full-Width) -->
-                <div class="col-12">
-                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addClassModal">
-                        <i class='bx bx-plus fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Kelas</span>
-                    </button>
-                </div>
             </div>
-
-            <!-- Sekat Pemisah -->
-            <hr class="border-secondary-subtle my-3">
-            @endif
-
-            <!-- Bagian Bawah: Filter Tingkat Kelas Mobile -->
-            <form method="GET" action="{{ url()->current() }}" class="m-0">
-                <!-- Dropdown Filter Tingkat Kelas ("Semua Tingkat") -->
-                <div class="w-100">
-                    <select name="grade" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-sm rounded-3 fw-normal">
-                        <option value="">Semua Tingkat</option>
-                        <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>Kelas 7</option>
-                        <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>Kelas 8</option>
-                        <option value="9" {{ request('grade') == '9' ? 'selected' : '' }}>Kelas 9</option>
-                    </select>
-                </div>
-            </form>
-
         </div>
-    </div>
 
-    <!-- ========================================================================= -->
-    <!-- 2. KONTEN KHUSUS DESKTOP (>= 768px): FILTER KELAS STANDAR                  -->
-    <!-- ========================================================================= -->
-    <div class="d-none d-md-block mb-3">
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ url()->current() }}" class="filter-pill {{ !request('grade') ? 'active' : '' }}">
-                Semua Kelas
-            </a>
-            <a href="{{ url()->current() . '?' . http_build_query(['grade' => '7']) }}" class="filter-pill {{ request('grade') == '7' ? 'active' : '' }}">
-                Kelas 7
-            </a>
-            <a href="{{ url()->current() . '?' . http_build_query(['grade' => '8']) }}" class="filter-pill {{ request('grade') == '8' ? 'active' : '' }}">
-                Kelas 8
-            </a>
-            <a href="{{ url()->current() . '?' . http_build_query(['grade' => '9']) }}" class="filter-pill {{ request('grade') == '9' ? 'active' : '' }}">
-                Kelas 9
-            </a>
-        </div>
-    </div>
-
-    <!-- Tabel Kelas -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        {{-- Tabel Master Data Kelas (Alignment & style disamakan persis dengan Data Guru & Data Siswa) --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
-                <thead class="bg-light">
-                    <tr class="text-secondary small fw-bold text-uppercase align-middle text-nowrap" style="letter-spacing: 0.03em;">
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 5%;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 8%;">KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3">NAMA KELAS</th>
-                        <th class="text-start py-3 text-nowrap px-3 pe-4">STATUS WALI KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3 ps-4">JUMLAH SISWA</th>
+                <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
+                    <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">NO</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">KELAS</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA KELAS</th>
+                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">STATUS WALI KELAS</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">JUMLAH SISWA</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 140px;">AKSI</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($classes as $index => $class)
-                    <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle text-nowrap">
+                    <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td class="text-center text-nowrap px-3">{{ $classes->firstItem() + $index }}</td>
                         <td class="text-center text-nowrap px-3">
                             {{ $class->grade ?? ($class->level == 'VII' ? '7' : ($class->level == 'VIII' ? '8' : '9')) }}
                         </td>
-                        <td class="text-center text-nowrap px-3">
+                        <td class="text-center text-nowrap fw-semibold text-dark px-3">
                             {{ $class->name }}
                         </td>
-                        <td class="text-start text-nowrap px-3 pe-4">
+                        <td class="text-start text-nowrap indent-nama px-3 pe-4 text-secondary">
                             {{ $class->teacher->name ?? 'Belum Ditentukan' }}
                         </td>
-                        <td class="text-center text-nowrap px-3 ps-4">
+                        <td class="text-center text-nowrap px-3">
                             {{ $class->students_count }} Siswa
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')
                         <td class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
-                                <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="Edit">
+                                <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="Edit">
                                     <i class='bx bx-edit-alt'></i> Edit
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
-                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="Hapus">
+                                <button type="button" class="btn-row-action action-delete" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="Hapus">
                                     <i class='bx bx-trash'></i> Hapus
                                 </button>
                                 <form id="deleteClassForm-{{ $class->id }}" action="{{ route('admin.classes.destroy', $class->id) }}" method="POST" class="d-none">
@@ -376,7 +361,7 @@
                         @endif
                     </tr>
                     @empty
-                    <tr>
+                    <tr class="align-middle">
                         <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted text-nowrap">
                             <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
                             Belum ada data kelas yang sesuai dengan filter.
@@ -388,17 +373,18 @@
         </div>
 
         @if($classes->hasPages())
-        <div class="px-4 py-2 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-white small">
-            <div class="text-muted small">
+        <div class="px-4 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white small">
+            <div class="text-muted small d-none d-md-block">
                 Menampilkan <span>{{ $classes->firstItem() ?? 0 }}</span> - <span>{{ $classes->lastItem() ?? 0 }}</span> dari <span>{{ $classes->total() }}</span> kelas
             </div>
-            <div class="pagination-compact">
+            <div class="pagination-compact w-100 w-md-auto d-flex justify-content-center justify-content-md-end">
                 {{ $classes->links('pagination::bootstrap-5') }}
             </div>
         </div>
         @endif
     </div>
 
+@if(Auth::check() && Auth::user()->role === 'admin')
 <!-- ================= MODAL EDIT KELAS (DIPINDAHKAN KE LUAR TABEL) ================= -->
 @foreach($classes as $class)
 <div class="modal fade" id="editClassModal{{ $class->id }}" tabindex="-1" aria-hidden="true">
@@ -519,16 +505,18 @@
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-green-excel rounded-3 px-4">Unggah & Import</button>
+                    <button type="submit" class="btn btn-success text-white rounded-3 px-4 fw-semibold">Unggah &amp; Import</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 @endif
+@endif
 
 @endsection
 
+@if(Auth::check() && Auth::user()->role === 'admin')
 @push('scripts')
 <script>
     function confirmDeleteClass(id, name) {
@@ -556,3 +544,4 @@
     }
 </script>
 @endpush
+@endif

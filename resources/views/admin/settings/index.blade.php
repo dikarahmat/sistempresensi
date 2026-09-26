@@ -43,6 +43,29 @@
         max-height: 100%;
         object-fit: contain;
     }
+
+    /* ===== Optimalisasi Mobile (< 768px): Clean Look — desktop tidak tersentuh ===== */
+    @media (max-width: 767.98px) {
+        .section-header {
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+        }
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 1.05rem;
+            border-radius: 8px;
+        }
+        .section-header h5 {
+            font-size: 1rem;
+        }
+        .logo-preview-box {
+            width: 64px;
+            height: 64px;
+            border-radius: 10px;
+        }
+    }
 </style>
 @endpush
 
@@ -168,39 +191,6 @@
             <div class="p-3 mt-3 rounded-3 bg-light border small text-secondary">
                 <i class='bx bx-info-circle text-primary me-1'></i> 
                 Siswa yang melakukan scan antara <strong x-text="checkIn">{{ $settings['check_in_time'] }}</strong> hingga <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> tercatat <strong>Tepat Waktu</strong>. Scan di atas <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> otomatis tercatat <strong>Terlambat</strong> lengkap dengan selisih menit keterlambatannya.
-            </div>
-        </div>
-
-        <!-- Card 3: Integrasi WhatsApp Gateway (Opsional) -->
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3">
-            <div class="section-header">
-                <div class="section-icon bg-success-subtle text-success">
-                    <i class='bx bxl-whatsapp'></i>
-                </div>
-                <div>
-                    <h5 class="fw-bold mb-0" style="color: #0f172a;">Integrasi WhatsApp Gateway (Opsional)</h5>
-                    <div class="text-muted small">Kirim pemberitahuan kedatangan siswa otomatis ke WhatsApp wali murid.</div>
-                </div>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <label class="form-label small fw-semibold">Status Layanan WA Gateway</label>
-                    <select name="whatsapp_gateway_status" class="form-select rounded-3">
-                        <option value="inactive" {{ $settings['whatsapp_gateway_status'] == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
-                        <option value="active" {{ $settings['whatsapp_gateway_status'] == 'active' ? 'selected' : '' }}>Aktif (Terkoneksi)</option>
-                    </select>
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <label class="form-label small fw-semibold">Nomor Pengirim / Sender</label>
-                    <input type="text" name="whatsapp_sender" class="form-control rounded-3" value="{{ old('whatsapp_sender', $settings['whatsapp_sender']) }}" placeholder="08xxxxxxxxxx">
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <label class="form-label small fw-semibold">API Token / Auth Key</label>
-                    <input type="password" name="whatsapp_api_token" class="form-control rounded-3" value="{{ old('whatsapp_api_token', $settings['whatsapp_api_token']) }}" placeholder="Bearer / Secret API Key">
-                </div>
             </div>
         </div>
 

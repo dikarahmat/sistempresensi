@@ -4,39 +4,7 @@
 @section('page_title', 'Data Guru & Wali Kelas')
 @section('page_subtitle', 'Kelola master guru pendidik, penugasan wali kelas, dan informasi kontak.')
 
-@section('page_header_right')
-<!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
-<div class="d-none d-md-block">
-    <div class="d-flex align-items-center gap-2">
-        @if(Auth::check() && Auth::user()->role === 'admin')
-        <!-- Tombol Import Excel -->
-        <button type="button" class="btn btn-success btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
-            <i class='bx bx-file fs-6'></i>
-            <span>Import Excel</span>
-        </button>
 
-        <!-- Tombol Hapus Semua Guru -->
-        <button type="button" class="btn btn-danger btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" title="Hapus Semua Data Guru" onclick="confirmDeleteAllTeachers()">
-            <i class='bx bx-trash fs-6'></i>
-            <span>Hapus</span>
-        </button>
-
-        <!-- Tombol Tambah Guru -->
-        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
-            <i class='bx bx-plus fs-6'></i>
-            <span>Tambah Guru</span>
-        </button>
-        @endif
-    </div>
-</div>
-@if(Auth::check() && Auth::user()->role === 'admin')
-<!-- Form Hapus Semua Guru (Tetap ada di DOM agar dapat dipicu Desktop maupun Mobile) -->
-<form id="deleteAllTeachersForm" action="{{ route('admin.guru.destroy-all') }}" method="POST" class="d-none">
-    @csrf
-    @method('DELETE')
-</form>
-@endif
-@endsection
 
 @push('styles')
 <style>
@@ -136,97 +104,78 @@
     .pagination-compact .page-link {
         padding: 0.25rem 0.6rem;
     }
+
+    /* ===== Action Bar Layout: Search Stretch Memanjang, Sejajar 1 Baris ===== */
+    .action-bar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+    @media (min-width: 992px) {
+        .action-bar-section {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+    }
+
+    /* Responsive Search */
+    @media (max-width: 991.98px) {
+        .search-box-wrap {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+    }
+    @media (min-width: 992px) {
+        .search-box-wrap {
+            max-width: 350px !important;
+        }
+    }
+    .btn-solid-pill,
+    button.btn-solid-pill,
+    a.btn-solid-pill {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        height: 38px !important;
+        border-radius: 6px !important;
+        border: none !important;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #ffffff;
+        white-space: nowrap;
+        padding: 0 1rem;
+        transition: filter 0.15s ease, transform 0.1s ease;
+        box-shadow: none !important;
+    }
+    .btn-solid-pill:hover {
+        filter: brightness(0.94);
+        color: #ffffff;
+    }
+    .btn-solid-pill:active {
+        transform: scale(0.98);
+    }
+    .btn-solid-green { background-color: #16a34a; }
+    .btn-solid-blue { background-color: #2563eb; }
+    .btn-solid-red { background-color: #dc2626; }
 </style>
 @endpush
 
 @section('content')
-    <!-- ========================================================================= -->
-    <!-- 1. KONTEN KHUSUS MOBILE (< 768px): KARTU TERPADU TOMBOL & PENCARIAN        -->
-    <!-- ========================================================================= -->
-    <div class="d-block d-md-none mb-3">
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
-            @if(Auth::check() && Auth::user()->role === 'admin')
-            <!-- Bagian Atas: Tombol Aksi Mobile (Baris 1: Import & Hapus, Baris 2: Tambah Guru Full-Width) -->
-            <div class="row g-2">
-                <!-- 1. Import Excel -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
-                        <i class='bx bx-file fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
-                    </button>
-                </div>
 
-                <!-- 2. Hapus Semua Guru -->
-                <div class="col-6">
-                    <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" title="Hapus Semua Data Guru" onclick="confirmDeleteAllTeachers()">
-                        <i class='bx bx-trash fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Hapus</span>
-                    </button>
-                </div>
+    @if(Auth::check() && Auth::user()->role === 'admin')
+    {{-- Form Hapus Semua Guru (Hidden, dipanggil via confirmDeleteAllTeachers()) --}}
+    <form id="deleteAllTeachersForm" action="{{ route('admin.guru.destroy-all') }}" method="POST" class="d-none">
+        @csrf
+        @method('DELETE')
+    </form>
+    @endif
 
-                <!-- 3. Tambah Guru (Full-Width) -->
-                <div class="col-12">
-                    <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
-                        <i class='bx bx-plus fs-6'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Guru</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Sekat Pemisah -->
-            <hr class="border-secondary-subtle my-3">
-            @endif
-
-            <!-- Bagian Bawah: Form Pencarian Mobile Menyatu Seamless -->
-            <form method="GET" action="{{ url()->current() }}" class="m-0">
-                <div class="input-group shadow-sm rounded-3 mb-2 w-100">
-                    <input type="text" 
-                           name="search" 
-                           class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 py-1.5" 
-                           placeholder="Cari berdasarkan nama lengkap atau NIP..." 
-                           value="{{ request('search') }}"
-                           aria-label="Cari nama lengkap atau NIP">
-                    <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary" type="submit">
-                        <i class='bx bx-search fs-6'></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- 2. KONTEN KHUSUS DESKTOP (>= 768px): FORM PENCARIAN STANDAR              -->
-    <!-- ========================================================================= -->
-    <div class="d-none d-md-block">
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-3">
-                <form method="GET" action="{{ url()->current() }}" class="row g-2 align-items-center">
-                    <div class="col-12 col-md">
-                        <div class="input-group shadow-sm rounded-3 w-100">
-                            <input type="text" 
-                                   name="search" 
-                                   class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 py-2" 
-                                   placeholder="Cari berdasarkan nama lengkap atau NIP..." 
-                                   value="{{ request('search') }}"
-                                   aria-label="Cari berdasarkan nama lengkap atau NIP">
-                            <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit">
-                                <i class='bx bx-search fs-5'></i>
-                            </button>
-                        </div>
-                    </div>
-                    @if(request('search'))
-                    <div class="col-auto">
-                        <a href="{{ url()->current() }}" class="btn btn-outline-secondary px-3 py-2 rounded-3">Reset</a>
-                    </div>
-                    @endif
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Alert Notifikasi -->
+    {{-- Alert Notifikasi --}}
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5" role="alert">
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center">
             <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
             <span>{{ session('success') }}</span>
@@ -236,7 +185,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center">
             <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
             <span>{{ session('error') }}</span>
@@ -246,7 +195,7 @@
     @endif
 
     @if(session('import_errors') && count(session('import_errors')) > 0)
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center mb-1">
             <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
             <strong>Catatan Import Excel:</strong>
@@ -261,7 +210,7 @@
     @endif
 
     @if(isset($errors) && $errors->any())
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Periksa data input:</div>
         <ul class="mb-0 ps-3 small">
             @foreach($errors->all() as $err)
@@ -272,8 +221,66 @@
     </div>
     @endif
 
-    <!-- Tabel Data Guru (Format Zebra Persis Data Siswa & Kelas) -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <!-- ========================================================================= -->
+    <!-- KARTU UTAMA DATA GURU & WALI KELAS: CLEAN ACTION BAR & TABEL TERPADU      -->
+    <!-- (Layout & container disamakan persis dengan Data Siswa)                  -->
+    <!-- ========================================================================= -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+
+        <!-- Action Bar & Search (Stretch Memanjang, Tombol Radius Konsisten) -->
+        <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
+            <div class="action-bar-section">
+
+                <!-- Sisi Kiri: Form Pencarian (Flex Column on Mobile, Row on Desktop) -->
+                <form method="GET" action="{{ url()->current() }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
+                    <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
+                        <input type="text"
+                               name="search"
+                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 w-100"
+                               placeholder="Cari berdasarkan nama lengkap atau NIP..."
+                               value="{{ request('search') }}"
+                               aria-label="Cari berdasarkan nama lengkap atau NIP"
+                               style="height: 38px; font-size: 0.85rem;">
+                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" style="height: 38px;">
+                            <i class='bx bx-search fs-6'></i>
+                        </button>
+                    </div>
+
+                    @if(request('search'))
+                    <div class="w-100 w-md-auto">
+                        <a href="{{ url()->current() }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
+                            <i class='bx bx-refresh fs-5 me-1'></i> Reset
+                        </a>
+                    </div>
+                    @endif
+                </form>
+
+                @if(Auth::check() && Auth::user()->role === 'admin')
+                <!-- Sisi Kanan: Deretan Tombol Aksi (Stacked Layout di Mobile) -->
+                <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+                    <!-- 1. Import Excel (Solid Hijau) -->
+                    <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
+                        <i class='bx bx-file'></i>
+                        <span>Import Excel</span>
+                    </button>
+
+                    <!-- 2. Tambah Guru (Solid Biru, Aksi Utama) -->
+                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
+                        <i class='bx bx-plus'></i>
+                        <span>Tambah Guru</span>
+                    </button>
+
+                    <!-- 3. Hapus Semua Guru (Solid Merah - Urutan Terakhir) -->
+                    <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Data Guru" onclick="confirmDeleteAllTeachers()">
+                        <i class='bx bx-trash'></i>
+                        <span>Hapus</span>
+                    </button>
+                </div>
+                @endif
+
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <thead class="bg-light">

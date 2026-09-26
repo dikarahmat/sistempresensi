@@ -87,6 +87,42 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
         }
 
+        /* ============================================================
+           OPTIMASI MOBILE (< 768px): CLEAN LOOK & TOUCH TARGET AMAN
+           ============================================================ */
+        @media (max-width: 767.98px) {
+            .kiosk-header {
+                padding: 0.65rem 1rem;
+            }
+            .clock-large {
+                font-size: 1.5rem;
+            }
+            main.container-fluid {
+                padding: 0.75rem 1rem !important; /* Grid native 16px */
+            }
+            .row.g-4 {
+                --bs-gutter-x: 1rem;
+                --bs-gutter-y: 1rem;
+            }
+            .kiosk-card {
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+            }
+            .kiosk-card.p-4 {
+                padding: 0.875rem !important;
+            }
+            .btn-kiosk-action {
+                padding: 0.5rem 0.7rem;
+                min-height: 40px;
+                min-width: 40px;
+                font-size: 0.8rem;
+            }
+            .tab-mode-btn {
+                padding: 0.55rem 0.85rem;
+                min-height: 40px;
+                font-size: 0.8rem;
+            }
+        }
+
         .input-scanner-box {
             background-color: #0b1329 !important;
             border: 2px solid #3b82f6 !important;
@@ -295,8 +331,7 @@
                     </div>
 
                     <!-- Indikator Tips Satpam -->
-                    <div class="pt-3 mt-3 border-top border-secondary border-opacity-25 small text-secondary d-flex align-items-center justify-content-between">
-                        <div><i class='bx bx-shield-quarter text-primary me-1'></i> Sistem Presensi Gerbang Terkoneksi WhatsApp Gateway</div>
+                    <div class="pt-3 mt-3 border-top border-secondary border-opacity-25 small text-secondary d-flex align-items-center justify-content-end">
                         <div class="mono text-muted" style="font-size: 0.72rem;">OnHadir Enterprise v2.0</div>
                     </div>
                 </div>

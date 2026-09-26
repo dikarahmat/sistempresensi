@@ -119,6 +119,44 @@
     .btn-modern-smooth:active {
         transform: translateY(0);
     }
+
+    @media (max-width: 767.98px) {
+        .stat-card-modern {
+            min-height: 118px;
+            padding: 0.75rem !important;
+            gap: 0.4rem;
+            border-radius: 12px !important;
+        }
+        .stat-card-modern > div {
+            min-width: 0;
+        }
+        .stat-card-modern span.text-uppercase {
+            font-size: 0.62rem !important;
+            line-height: 1.2;
+            letter-spacing: 0.02em !important;
+        }
+        .stat-card-modern h3 {
+            font-size: 1.45rem !important;
+            margin-bottom: 0.2rem !important;
+        }
+        .stat-card-modern span.small {
+            font-size: 0.67rem !important;
+            line-height: 1.2;
+        }
+        .stat-card-modern > i {
+            flex-shrink: 0;
+            font-size: 1.7rem !important;
+        }
+        .dashboard-panel {
+            padding: 0.75rem !important;
+            border-radius: 12px !important;
+        }
+        .stat-card-modern:hover,
+        .shortcut-card-interactive:hover,
+        .operasional-card-interactive:hover {
+            transform: none;
+        }
+    }
 </style>
 @endpush
 
@@ -127,11 +165,11 @@
     <!-- ========================================================================= -->
     <!-- 1. BARIS ATAS: 3 KARTU STATISTIK UTAMA (HOVER SCALE UP & SOFT SHADOW)    -->
     <!-- ========================================================================= -->
-    <div class="row g-3 mb-4">
+    <div class="row g-2 g-md-3 mb-3 mb-md-4">
         
         <!-- Card 1: Total Siswa Aktif -->
-        <div class="col-12 col-md-4">
-            <a href="{{ route('admin.siswa.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data siswa aktif">
+        <div class="col-6 col-md-4">
+            <a href="{{ route('admin.siswa.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data siswa aktif">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Total Siswa Aktif
@@ -148,8 +186,8 @@
         </div>
 
         <!-- Card 2: Total Rombongan Belajar -->
-        <div class="col-12 col-md-4">
-            <a href="{{ route('admin.kelas.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data rombongan belajar">
+        <div class="col-6 col-md-4">
+            <a href="{{ route('admin.kelas.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data rombongan belajar">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Total Rombongan Belajar
@@ -166,8 +204,8 @@
         </div>
 
         <!-- Card 3: Total Guru & Wali Kelas -->
-        <div class="col-12 col-md-4">
-            <a href="{{ route('admin.walikelas.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data guru dan wali kelas">
+        <div class="col-6 col-md-4">
+            <a href="{{ route('admin.walikelas.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data guru dan wali kelas">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Guru &amp; Wali Kelas Aktif
@@ -180,6 +218,23 @@
                     </span>
                 </div>
                 <i class='bx bxs-id-card text-success' style="font-size: 2.5rem;"></i>
+            </a>
+        </div>
+
+        <div class="col-6 d-md-none">
+            <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Lihat ketidakhadiran hari ini">
+                <div>
+                    <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                        Tidak Hadir Hari Ini
+                    </span>
+                    <h3 class="fw-bolder mb-1 text-dark" style="font-size: 2rem; letter-spacing: -0.02em;">
+                        {{ number_format($totalKetidakhadiran ?? 0, 0, ',', '.') }}
+                    </h3>
+                    <span class="text-secondary small d-block" style="font-size: 0.78rem;">
+                        Sakit, izin, atau alpha
+                    </span>
+                </div>
+                <i class='bx bx-user-x text-danger' style="font-size: 2.5rem;"></i>
             </a>
         </div>
 
@@ -221,7 +276,7 @@
         
         <!-- KOLOM KIRI (70%): CARD GRAFIK GARIS KEHADIRAN MINGGUAN -->
         <div class="col-12 col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
                     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
                         <div class="d-flex align-items-center gap-2.5">
@@ -261,7 +316,7 @@
 
         <!-- KOLOM KANAN (30%): CARD KETIDAKHADIRAN HARI INI (INTERAKTIF HOVER) -->
         <div class="col-12 col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
                     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
                         <div>
@@ -351,7 +406,7 @@
         
         <!-- CARD JADWAL OPERASIONAL SEKOLAH -->
         <div class="col-12 col-xl-4 col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
                     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
                         <div class="d-flex align-items-center gap-2.5">
@@ -397,7 +452,7 @@
 
         <!-- CARD PINTASAN CEPAT -->
         <div class="col-12 col-xl-8 col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
                     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
                         <div class="d-flex align-items-center gap-2.5">

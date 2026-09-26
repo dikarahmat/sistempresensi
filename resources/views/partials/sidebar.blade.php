@@ -78,25 +78,20 @@
         </div>
     </div>
 
-    <!-- TENGAH: Menu Utama (Scrollable) -->
-    <div class="flex-grow-1 overflow-auto py-2">
-        <ul class="nav nav-pills flex-column mb-auto gap-1">
-            
-            <!-- 1. GRUP UTAMA -->
+    <!-- Scrollable sidebar menu -->
+    <div class="flex-grow-1 overflow-auto py-2 sidebar-menu-scroll">
+        <ul class="nav nav-pills flex-column mb-auto gap-2">
             <li class="nav-item">
-                <div class="text-uppercase fw-bold text-white-50 mb-2" style="font-size: 0.65rem; letter-spacing: 1px; padding: 0 1.5rem;">UTAMA</div>
                 <a href="{{ $dashboardRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-2 {{ $isDashboardActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isDashboardActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
                     <i class='bx bxs-dashboard fs-5 {{ $isDashboardActive ? 'text-primary' : 'text-white' }}'></i> 
                     Dashboard
                 </a>
             </li>
 
-            <!-- 2. GRUP REKAP -->
             @if($absensiRoute || $kehadiranRoute || $rekapRoute)
-            <li class="nav-item mt-2">
-                <div class="text-uppercase fw-bold text-white-50 mb-2" style="font-size: 0.65rem; letter-spacing: 1px; padding: 0 1.5rem;">REKAP</div>
+            <li class="nav-item">
                 
                 @if($absensiRoute)
                 <a href="{{ $absensiRoute }}" 
@@ -125,10 +120,8 @@
             </li>
             @endif
 
-            <!-- 3. GRUP KALENDER AKADEMIK -->
             @if($userRole === 'admin')
-            <li class="nav-item mt-2">
-                <div class="text-uppercase fw-bold text-white-50 mb-2" style="font-size: 0.65rem; letter-spacing: 1px; padding: 0 1.5rem;">KALENDER AKADEMIK</div>
+            <li class="nav-item">
                 
                 <a href="{{ route('admin.academic-years.index') }}" 
                    class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.academic-years.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
@@ -146,9 +139,7 @@
             </li>
             @endif
 
-            <!-- 4. GRUP KELAS -->
-            <li class="nav-item mt-2">
-                <div class="text-uppercase fw-bold text-white-50 mb-2" style="font-size: 0.65rem; letter-spacing: 1px; padding: 0 1.5rem;">KELAS</div>
+            <li class="nav-item">
                 
                 <a href="{{ $siswaRoute }}" 
                    class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isSiswaActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
@@ -162,7 +153,7 @@
                    class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
                     <i class='bx bx-group fs-5 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'text-primary' : 'text-white' }}'></i> 
-                    Guru & Wali Kelas
+                    Guru
                 </a>
                 
                 <a href="{{ $userRole === 'kesiswaan' ? route('kesiswaan.classes.index') : route('admin.classes.index') }}" 
@@ -174,10 +165,8 @@
                 @endif
             </li>
 
-            <!-- 5. GRUP PENGATURAN -->
             @if($userRole === 'admin')
-            <li class="nav-item mt-2">
-                <div class="text-uppercase fw-bold text-white-50 mb-2" style="font-size: 0.65rem; letter-spacing: 1px; padding: 0 1.5rem;">PENGATURAN</div>
+            <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" 
                    class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.settings.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">

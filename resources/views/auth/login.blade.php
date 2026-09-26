@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Masuk ke Dashboard | {{ \App\Models\Setting::getSchoolName() }}</title>
 
     <!-- Global Favicon Dinamis -->
@@ -34,8 +34,14 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
             margin: 0;
-            background-color: #f1f5f9;
-            background-image: linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #edf4ff 100%);
+            background-color: #0f172a;
+            background-image:
+                linear-gradient(rgba(15, 23, 42, 0.58), rgba(15, 23, 42, 0.58)),
+                url("{{ asset('images/bg.webp') }}");
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -47,7 +53,7 @@
         .login-split-card {
             width: 100%;
             max-width: 1020px;
-            background: #ffffff;
+            background: transparent;
             border-radius: 20px;
             box-shadow: 0 25px 50px -12px rgba(59, 98, 246, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.8);
             display: flex;
@@ -71,10 +77,11 @@
             text-align: center;
             color: #ffffff;
             overflow: hidden;
-            background-color: #2563eb;
+            background-color: transparent;
         }
 
         .branding-bg-image {
+            display: none;
             position: absolute;
             inset: 0;
             width: 100%;
@@ -90,11 +97,9 @@
             position: absolute;
             inset: 0;
             background: linear-gradient(155deg, 
-                rgba(59, 98, 246, 0.65) 0%, 
-                rgba(37, 99, 235, 0.60) 50%, 
-                rgba(29, 78, 216, 0.70) 100%);
-            backdrop-filter: blur(1px);
-            -webkit-backdrop-filter: blur(1px);
+                rgba(59, 98, 246, 0.42) 0%,
+                rgba(37, 99, 235, 0.38) 50%,
+                rgba(29, 78, 216, 0.48) 100%);
             z-index: 1;
         }
 
@@ -390,27 +395,58 @@
         /* ============================================================ */
         @media (max-width: 991px) {
             body {
-                padding: 0.75rem;
+                min-height: 100vh;
+                min-height: 100svh;
+                padding:
+                    calc(1rem + env(safe-area-inset-top, 0px))
+                    calc(1rem + env(safe-area-inset-right, 0px))
+                    calc(1rem + env(safe-area-inset-bottom, 0px))
+                    calc(1rem + env(safe-area-inset-left, 0px));
                 align-items: flex-start;
+                background-color: #eff4ff;
+                background-image: linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #edf4ff 100%);
+                background-attachment: scroll;
             }
 
             .login-split-card {
                 flex-direction: column;
-                max-width: 100%;
+                width: 100%;
+                max-width: 448px;
+                min-height: 0;
                 border-radius: 16px;
                 margin: auto 0;
+                background: transparent;
+                box-shadow: none;
+                overflow: visible;
             }
 
             .branding-panel {
                 width: 100%;
                 min-width: 100%;
+                min-height: 0;
+                aspect-ratio: 16 / 9;
                 border-radius: 16px 16px 0 0;
-                padding: 1.75rem 1.25rem 1.5rem 1.25rem;
+                padding: 1rem 1.25rem;
+                background: linear-gradient(155deg, #3b62f6 0%, #2563eb 55%, #1d4ed8 100%);
+                justify-content: center;
+            }
+
+            .branding-bg-image {
+                display: block;
+            }
+
+            .branding-overlay {
+                background: linear-gradient(155deg,
+                    rgba(59, 98, 246, 0.65) 0%,
+                    rgba(37, 99, 235, 0.60) 50%,
+                    rgba(29, 78, 216, 0.70) 100%);
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
             }
 
             .school-logo-hero {
-                width: 64px;
-                height: 64px;
+                width: 56px;
+                height: 56px;
             }
 
             .logo-hero-wrapper {
@@ -435,12 +471,37 @@
 
             .form-panel {
                 width: 100%;
-                border-radius: 0 0 16px 16px;
-                padding: 2.25rem 1.25rem 2rem 1.25rem;
+                border-radius: 16px;
+                padding: 1.35rem 1.1rem 1.25rem;
+                background: rgba(255, 255, 255, 0.96);
+                box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
             }
 
             .form-heading {
-                font-size: 1.45rem;
+                font-size: 1.3rem;
+            }
+
+            .form-subtext {
+                font-size: 0.8rem;
+                margin-bottom: 1rem;
+            }
+
+            .form-group-item {
+                margin-bottom: 0.85rem;
+            }
+
+            .input-box-wrapper .form-input-field {
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+
+            .remember-container {
+                margin-bottom: 1rem;
+            }
+
+            .btn-submit-action {
+                min-height: 44px;
+                padding: 0.7rem 1rem;
             }
         }
     </style>
@@ -456,7 +517,7 @@
     <div class="branding-panel">
         
         <!-- Foto Gedung Sekolah di Latar Belakang -->
-        <img src="{{ asset('images/bg-school.jpg') }}" 
+        <img src="{{ asset('images/bg.webp') }}"
              alt="Gedung Sekolah" 
              class="branding-bg-image"
              onerror="this.style.display='none'">

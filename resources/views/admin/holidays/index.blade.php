@@ -161,14 +161,14 @@
     <div class="d-block d-md-none mb-3">
         <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
             <!-- Grid 2 Tombol Aksi Mobile -->
-            <div class="row g-2">
-                <div class="col-6">
+            <div class="d-flex flex-column gap-2">
+                <div class="w-100">
                     <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importHolidayModal">
                         <i class='bx bx-file fs-6'></i>
                         <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="w-100">
                     <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
                         <i class='bx bx-calendar-plus fs-6'></i>
                         <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Hari Libur</span>
