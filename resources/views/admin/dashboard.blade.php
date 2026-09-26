@@ -278,13 +278,13 @@
         <div class="col-12 col-lg-7">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <i class='bx bx-line-chart text-primary fs-4'></i>
-                            <span class="fw-bold text-dark" style="font-size: 0.95rem;">Grafik Garis Kehadiran Mingguan Per Rombel</span>
+                    <div class="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom border-light-subtle mb-3">
+                        <div class="d-flex align-items-center gap-2 min-w-0">
+                            <i class='bx bx-line-chart text-primary fs-4 flex-shrink-0'></i>
+                            <span class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">Grafik Garis Kehadiran Mingguan</span>
                         </div>
-                        <span class="badge bg-light text-secondary rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.74rem;">
-                            Minggu Ini: {{ \Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y') }}
+                        <span class="badge bg-light text-secondary rounded-pill px-2 px-md-3 py-1 py-md-1.5 fw-semibold flex-shrink-0 text-nowrap" style="font-size: 0.68rem;">
+                            {{ \Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y') }}
                         </span>
                     </div>
 
@@ -303,13 +303,13 @@
                     </div>
                 </div>
 
-                <!-- Keterangan Garis Tren & Total Rombel -->
-                <div class="mt-3 pt-2.5 border-top border-light-subtle d-flex flex-wrap align-items-center justify-content-between text-muted" style="font-size: 0.75rem;">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="d-inline-block rounded-circle" style="width: 10px; height: 10px; background: #2563eb;"></span>
-                        <strong class="text-dark">Garis Tren Persentase Kehadiran</strong> (Rombel {{ $classesList->first()->name ?? '7A' }} s/d {{ $classesList->last()->name ?? '9C' }})
+                <!-- Keterangan Garis Tren & Total Rombel (selalu satu baris, tidak bertumpuk) -->
+                <div class="mt-3 pt-2.5 border-top border-light-subtle d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted" style="font-size: 0.72rem;">
+                    <div class="d-flex align-items-center gap-2 min-w-0 text-truncate">
+                        <span class="d-inline-block rounded-circle flex-shrink-0" style="width: 10px; height: 10px; background: #2563eb;"></span>
+                        <span class="text-truncate"><strong class="text-dark">Garis Tren Kehadiran</strong> <span class="d-none d-sm-inline">({{ $classesList->first()->name ?? '7A' }} s/d {{ $classesList->last()->name ?? '9C' }})</span></span>
                     </div>
-                    <span class="fw-semibold text-dark">Total: {{ count($classesAttendance ?? []) }} Rombel</span>
+                    <span class="fw-semibold text-dark flex-shrink-0 text-nowrap">Total: {{ count($classesAttendance ?? []) }} Rombel</span>
                 </div>
             </div>
         </div>

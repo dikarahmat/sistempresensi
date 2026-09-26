@@ -113,6 +113,52 @@
         color: #0f172a !important;
         transform: translateY(-1px);
     }
+
+    /* ==========================================================================
+       PERBAIKAN MOBILE: rapatkan tabel & aksi agar tidak neurotransisi
+       ========================================================================== */
+    @media (max-width: 767.98px) {
+        /* Lebar minimum dikecilkan agar tabel tidak terlalu lebar di layar kecil */
+        .table-enterprise {
+            min-width: 560px;
+        }
+
+        .table-enterprise thead th {
+            font-size: 0.68rem;
+            padding: 0.5rem 0.6rem;
+            letter-spacing: 0.02em;
+        }
+
+        .table-enterprise thead th.py-3 {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+
+        .table-enterprise tbody td {
+            padding: 0.45rem 0.6rem;
+            font-size: 0.78rem;
+        }
+
+        /* Offset rata-kiri hacks desktop dinolkan agar kolom tidak terlihat meleset */
+        .table-enterprise tbody td > div[style*="padding-left"] {
+            padding-left: 0 !important;
+            width: auto !important;
+            justify-content: center !important;
+        }
+
+        .btn-action-presensi,
+        .btn-action-lihat {
+            font-size: 0.72rem;
+            padding: 0.3rem 0.55rem;
+            gap: 0.25rem;
+            min-height: 32px;
+        }
+
+        .btn-action-presensi i,
+        .btn-action-lihat i {
+            font-size: 0.95rem;
+        }
+    }
 </style>
 @endpush
 

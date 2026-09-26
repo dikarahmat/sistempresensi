@@ -42,11 +42,13 @@
     $isSiswaActive = request()->routeIs('admin.students.*') || request()->routeIs('guru.students*') || request()->routeIs('kesiswaan.students.*');
 @endphp
 
-<!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot -->
-<aside class="d-flex flex-column flex-shrink-0 text-white rounded-end" style="width: 260px; height: 100vh; background-color: #3b62f6; position: relative; z-index: 40;">
+<!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot
+     Layout dikendalikan CSS (app-sidebar-drawer), bukan inline style, agar
+     aturan !important di layout selalu menang di mobile & desktop. -->
+<aside class="d-flex flex-column flex-shrink-0 text-white rounded-end app-sidebar-panel">
     
 <!-- ATAS: Header Logo & Nama Sekolah (Ukuran Pas & Proporsional) -->
-    <div class="flex-shrink-0" style="padding: 1.5rem 1rem 1rem 1.25rem;">
+    <div class="sidebar-brand flex-shrink-0">
         <div class="d-flex align-items-center gap-2 pb-3 border-bottom border-light border-opacity-25">
             <!-- Pure Logo dibesarkan sedikit jadi 46px -->
             <img src="{{ asset(\App\Models\Setting::getLogo()) }}" 
@@ -79,7 +81,7 @@
     </div>
 
     <!-- Scrollable sidebar menu -->
-    <div class="flex-grow-1 overflow-auto py-2 sidebar-menu-scroll">
+    <div class="flex-grow-1 py-2 sidebar-menu-scroll">
         <ul class="nav nav-pills flex-column mb-auto gap-2">
             <li class="nav-item">
                 <a href="{{ $dashboardRoute }}" 
@@ -178,16 +180,14 @@
         </ul>
     </div>
 
-    <!-- BAWAH: Tombol Log Out -->
-    <div class="border-top border-light border-opacity-25 flex-shrink-0" style="padding: 1rem 0.75rem calc(1rem + env(safe-area-inset-bottom, 0px)); background-color: #3b62f6;">
+    <!-- BAWAH: Tombol Log Out (dikunci di dasar drawer, selalu terlihat & bisa diketuk) -->
+    <div class="sidebar-footer border-top border-light border-opacity-25 flex-shrink-0">
         <form action="{{ route('logout') }}" method="POST" class="m-0">
             @csrf
             <button type="submit" 
-                    class="btn w-100 d-flex align-items-center gap-3 text-white border-0" 
-                    style="padding: 0.6rem 0.75rem; background-color: transparent; border-radius: 12px; transition: 0.2s;"
-                    onmouseover="this.style.backgroundColor='#dc3545'" 
-                    onmouseout="this.style.backgroundColor='transparent'">
-                <i class='bx bx-log-out fs-5'></i> 
+                    class="sidebar-logout-btn"
+                    title="Keluar dari aplikasi">
+                <i class='bx bx-log-out'></i> 
                 Log Out
             </button>
         </form>

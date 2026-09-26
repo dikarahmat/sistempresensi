@@ -236,6 +236,58 @@
         font-weight: 600;
     }
 
+    /* Legenda Status: catatan kecil & unobtrusive di bawah filter */
+    .rekap-legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
+        padding: 0.4rem 0.6rem;
+        border: 1px dashed #e2e8f0;
+        border-radius: 10px;
+        background-color: #f8fafc;
+        color: #64748b;
+        font-size: 0.72rem;
+        line-height: 1.4;
+    }
+
+    .rekap-legend-label {
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.64rem;
+    }
+
+    .rekap-legend-items {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.3rem 0.55rem;
+    }
+
+    .rekap-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        white-space: nowrap;
+    }
+
+    .rekap-legend-item strong {
+        font-weight: 700;
+    }
+
+    @media (max-width: 575.98px) {
+        .rekap-legend {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.68rem;
+        }
+
+        .rekap-legend-items {
+            gap: 0.25rem 0.45rem;
+        }
+    }
+
     /* Table Custom Card & Smooth Horizontal Scroll */
     .table-responsive {
         -webkit-overflow-scrolling: touch;
@@ -614,32 +666,17 @@
     </div>
     @endif
 
-    <!-- Legenda Status Presensi Polos Tanpa Kotak (Teks Judul Disembunyikan di Mobile) -->
+    <!-- Legenda Status: catatan kecil discreet di bawah filter -->
     @if($type !== 'harian')
-    <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3 mb-3 text-secondary" style="font-size: 0.82rem;">
-        <span class="fw-semibold text-dark d-none d-md-block">Legenda Status Presensi:</span>
-        <div class="d-flex align-items-center gap-1">
-            <strong class="text-success fw-bold">H</strong> Hadir
-        </div>
-        <span class="text-muted">&bull;</span>
-        <div class="d-flex align-items-center gap-1">
-            <strong class="fw-bold" style="color: #d97706 !important;">T</strong> Terlambat
-        </div>
-        <span class="text-muted">&bull;</span>
-        <div class="d-flex align-items-center gap-1">
-            <strong class="text-primary fw-bold">S</strong> Sakit
-        </div>
-        <span class="text-muted">&bull;</span>
-        <div class="d-flex align-items-center gap-1">
-            <strong class="fw-bold" style="color: #7e22ce !important;">I</strong> Izin
-        </div>
-        <span class="text-muted">&bull;</span>
-        <div class="d-flex align-items-center gap-1">
-            <strong class="fw-bold" style="color: #ef4444 !important;">A</strong> Alpha
-        </div>
-        <span class="text-muted">&bull;</span>
-        <div class="d-flex align-items-center gap-1">
-            <strong class="fw-bold" style="color: #64748b !important;">L</strong> Libur
+    <div class="rekap-legend mb-3">
+        <span class="rekap-legend-label">Keterangan:</span>
+        <div class="rekap-legend-items">
+            <span class="rekap-legend-item"><strong class="text-success">H</strong> Hadir</span>
+            <span class="rekap-legend-item"><strong style="color: #d97706;">T</strong> Terlambat</span>
+            <span class="rekap-legend-item"><strong class="text-primary">S</strong> Sakit</span>
+            <span class="rekap-legend-item"><strong style="color: #7e22ce;">I</strong> Izin</span>
+            <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> Alpha</span>
+            <span class="rekap-legend-item"><strong style="color: #64748b;">L</strong> Libur</span>
         </div>
     </div>
     @endif

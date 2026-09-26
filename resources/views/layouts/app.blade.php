@@ -126,11 +126,15 @@
                 -webkit-transform: translate3d(0, 0, 0) !important;
             }
 
+            /* Aside di dalam drawer: kolom flex penuh tinggi supaya footer Logout
+               menempel di dasar dan area menu saja yang boleh menggulir. */
             .app-sidebar-drawer aside,
             aside aside {
                 width: 100% !important;
                 height: 100% !important;
+                min-height: 0 !important;
                 display: flex !important;
+                flex-direction: column !important;
                 visibility: visible !important;
                 pointer-events: auto !important;
                 transform: none !important;
@@ -349,15 +353,23 @@
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding: calc(1.5rem + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-height) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
+                /* padding-top sengaja 0: header sticky yang memegang area notch/status bar,
+                   supaya tidak ada celah putih yang bisa "bocor" di atas header. */
+                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-height) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
             }
 
             body {
                 font-size: 0.875rem !important;
             }
 
+            /* Subjudul halaman TETAP tampil di mobile (sebelumnya di-hidden sehingga
+               halaman tampak kosong). Hanya dikecilkan agar tidak memicu wrap. */
             .header-main-subtitle {
-                display: none !important;
+                display: block !important;
+                font-size: 0.7rem !important;
+                line-height: 1.25 !important;
+                margin-top: 1px !important;
+                white-space: nowrap;
             }
 
             .app-header-left {
@@ -474,6 +486,35 @@
             .table-responsive {
                 overscroll-behavior-x: contain !important;
                 -webkit-overflow-scrolling: touch !important;
+                border-radius: 0 !important;
+            }
+
+            /* Normalisasi container/card di mobile:
+               - kartu tidak lagi "melebar" melebihi layar
+               - garis batas table/card konsisten (tidak ada tepi yang menggantung) */
+            .card,
+            .table-custom-card,
+            .stat-card-modern,
+            .stat-card-polished,
+            .filter-card,
+            .modal-content {
+                max-width: 100% !important;
+                border-radius: 12px !important;
+            }
+
+            .card > .card-body,
+            .card > .p-3,
+            .card > .p-4,
+            .card > [class~="p-3.5"] {
+                min-width: 0 !important;
+            }
+
+            /* Cegah isi panjang (nama siswa, tabel, kode) memaksa card melebar */
+            .card,
+            .card-body,
+            .table-responsive > .table {
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
             }
 
             /* Cegah font-inflation saat rotasi layar */
@@ -564,20 +605,34 @@
             }
         }
 
+        /* Header UTAMA: melekat permanen di puncak scroll container.
+           - position:sticky + top:0  -> tidak pernah ikut ter-scroll atau menyusut
+           - flex-shrink:0             -> terkunci pada tinggi normal walau konten panjang
+           - padding-top aman-area     -> notch/status bar tidak menutupi isi header
+           - background solid          -> konten di bawah tidak "tembus" saat digulir */
         .app-header-bar {
             width: 100% !important;
             margin-bottom: 0.875rem !important;
+            flex-shrink: 0 !important;
         }
 
         @media (max-width: 1023.98px) {
             .app-header-bar {
                 position: sticky !important;
-                top: env(safe-area-inset-top, 0px) !important;
+                top: 0 !important;
                 z-index: 50 !important;
                 flex-shrink: 0 !important;
-                padding-top: 0.5rem !important;
+                margin-top: 0 !important;
+                margin-bottom: 0.625rem !important;
+                padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
                 padding-bottom: 0.5rem !important;
                 background-color: #ffffff !important;
+                box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06) !important;
+            }
+
+            /* Kreserve tinggi header melekat agar konten pertama tidak tertutup */
+            .content-scroll-wrapper > main > .flex-1:first-of-type {
+                min-width: 0;
             }
         }
 
@@ -670,6 +725,9 @@
             border-radius: 10px !important;
         }
 
+        /* Catatan: .table-responsive sengaja TIDAK diberi border-radius di sini.
+           Wadah tabel sudah dibulatkan oleh card induk (.rounded-4 + .overflow-hidden).
+           Kalau ikut dibulatkan, sudut header tabel tampak "terpotong"/meluber. */
         .card,
         .modal-content,
         .btn,
@@ -678,8 +736,7 @@
         .form-select,
         .input-group-text,
         .stat-card-polished,
-        .alert,
-        .table-responsive {
+        .alert {
             border-radius: 12px !important;
         }
 
@@ -809,9 +866,41 @@
             font-weight: 700;
         }
 
-        .sidebar-logout-btn {
-            border-radius: 12px !important;
-            transition: background-color 0.2s ease, color 0.2s ease;
+        .sidebar-brand {
+            padding: 1.5rem 1rem 1rem 1.25rem !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Panel sidebar (elemen <aside> dari partial) */
+        .app-sidebar-panel {
+            width: 16rem !important;
+            min-width: 16rem !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            background-color: #3b62f6 !important;
+        }
+
+        @media (max-width: 1023.98px) {
+            /* Ramping sedikit di layar kecil agar konten tetap punya ruang napas */
+            .sidebar-brand {
+                padding: 1rem 0.9rem 0.75rem 1rem !important;
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           SIDEBAR DRAWER: SCROLL AREA + LOGOUT (PERBAIKAN BENTUK & POSISI)
+           min-height:0 WAJIB ada. Tanpa itu, nilai default min-height:auto pada flex item
+           membuat area menu memanjang melebihi tinggi drawer, sehingga footer Logout
+           terdorong keluar & ter-clip (tidak terlihat / tidak bisa diketuk).
+           -------------------------------------------------------------------------- */
+        .sidebar-menu-scroll {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            max-height: 100%;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
         }
 
         .sidebar-menu-scroll::-webkit-scrollbar {
@@ -820,6 +909,67 @@
         .sidebar-menu-scroll::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.25);
             border-radius: 4px;
+        }
+
+        /* Footer Sidebar: dikunci di dasar drawer, tidak pernah tergeser keluar */
+        .sidebar-footer {
+            display: block !important;
+            margin-top: auto !important;
+            flex-shrink: 0 !important;
+            padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+            border: none !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+            background-color: #3b62f6 !important;
+        }
+
+        /* Tombol Log Out: kapsul melengkung penuh, target sentuh nyaman, hover/active
+           murni CSS (tanpa onmouseover) supaya tidak "nyangkut" di perangkat sentuh */
+        .sidebar-logout-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.7rem !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0.6rem 1rem !important;
+            border: none !important;
+            border-radius: 9999px !important;
+            background-color: transparent !important;
+            color: #fee2e2 !important;
+            font-weight: 600 !important;
+            font-size: 0.83rem !important;
+            line-height: 1.3 !important;
+            text-align: left !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            -webkit-tap-highlight-color: transparent !important;
+            touch-action: manipulation !important;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease !important;
+        }
+
+        .sidebar-logout-btn i {
+            font-size: 1.18rem !important;
+            color: #fee2e2 !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+            transition: color 0.2s ease !important;
+        }
+
+        .sidebar-logout-btn:hover,
+        .sidebar-logout-btn:focus-visible {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35) !important;
+            outline: none !important;
+        }
+
+        .sidebar-logout-btn:hover i,
+        .sidebar-logout-btn:focus-visible i {
+            color: #ffffff !important;
+        }
+
+        .sidebar-logout-btn:active {
+            background-color: #b91c1c !important;
+            transform: scale(0.98) !important;
         }
 
         /* --------------------------------------------------------------------------
@@ -950,6 +1100,42 @@
         .crud-center-wrapper .btn-danger:hover {
             background-color: #dc2626 !important;
             color: #ffffff !important;
+        }
+
+        /* --------------------------------------------------------------------------
+           INDIKATOR PROGRESS UNDUH / EKSPOR
+           Dipasang otomatis oleh delegated listener di bawah pada semua tautan &
+           tombol yang menuju endpoint export/download/template/print-card.
+           -------------------------------------------------------------------------- */
+        .dl-spinner {
+            display: none;
+            width: 0.9em;
+            height: 0.9em;
+            flex: 0 0 auto;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            opacity: 0.85;
+            animation: dl-spin 0.7s linear infinite;
+            vertical-align: -0.12em;
+        }
+
+        @keyframes dl-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dl-spinner {
+                animation-duration: 2.4s;
+            }
+        }
+
+        /* Status aktif: tombol terkunci agar tidak terkirim dua kali */
+        .is-downloading {
+            position: relative !important;
+            pointer-events: none !important;
+            opacity: 0.72 !important;
+            cursor: progress !important;
         }
     </style>
 </head>
@@ -1156,6 +1342,167 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /**
+     * Indikator proses pada Tombol Unduh / Ekspor
+     * --------------------------------------------
+     * Delegated listener (satu listener untuk seluruh halaman) sehingga tidak perlu
+     * menyisipkan markup baru di tiap view. Tombol yang dikenali:
+     *   - export-excel / export-pdf / export-csv
+     *   - download-qr / download-card
+     *   - print-card / print-cards / generate-qr
+     *   - template  (template Excel)
+     *
+     * Perilaku:
+     *   - Spinner disisipkan di samping label (label tetap terbaca).
+     *   - Tombol dikunci (pointer-events + aria-busy) agar tidak dobel-kirim.
+     *   - State dipulihkan otomatis setelah unduhan selesai atau setelah timeout,
+     *     sehingga tombol kembali normal bila unduhan hanya membuka dialog simpan.
+     */
+    (function () {
+        'use strict';
+
+        var DOWNLOAD_RE = /(export-(excel|pdf|csv)|download-(qr|card)|print-?cards?|generate-qr|(^|\/)template($|[/?#]|\.))/i;
+        var RESET_DELAY_MS = 4000;
+        var timers = new WeakMap();
+
+        function endpointOf(element) {
+            if (!element) return '';
+
+            var candidates = [];
+
+            if (element.tagName === 'A') {
+                candidates.push(element.getAttribute('href'));
+            } else if (element.tagName === 'FORM') {
+                candidates.push(element.getAttribute('action'));
+            } else if (element.tagName === 'BUTTON') {
+                candidates.push(element.getAttribute('formaction'));
+                if (element.form) candidates.push(element.form.getAttribute('action'));
+            }
+
+            for (var i = 0; i < candidates.length; i++) {
+                var value = candidates[i];
+                if (value && value.trim() && value.charAt(0) !== '#' && value.indexOf('javascript:') !== 0) {
+                    return value.trim();
+                }
+            }
+
+            return '';
+        }
+
+        function isDownloadAction(element, event) {
+            if (!element || element.hasAttribute('data-no-spinner')) return false;
+            if (element.getAttribute('target') === '_blank') return false;
+            if (event && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)) return false;
+
+            var endpoint = endpointOf(element);
+            if (!endpoint) return false;
+
+            return DOWNLOAD_RE.test(endpoint);
+        }
+
+        function spinnerFor(element) {
+            var spinner = document.createElement('span');
+            spinner.className = 'dl-spinner';
+            spinner.setAttribute('aria-hidden', 'true');
+            return spinner;
+        }
+
+        function startLoading(element) {
+            if (element.classList.contains('is-downloading')) return;
+
+            element.classList.add('is-downloading');
+            element.setAttribute('aria-busy', 'true');
+
+            /* Sisipkan spinner setelah elemen ikon pertama (bila ada) agar rapi,
+               jika tidak, taruh di awal konten. */
+            var icon = element.querySelector(':scope > i, :scope > svg');
+            var spinner = spinnerFor(element);
+            if (icon && icon.parentNode === element) {
+                icon.parentNode.insertBefore(spinner, icon.nextSibling);
+            } else {
+                element.insertBefore(spinner, element.firstChild);
+            }
+
+            var timer = setTimeout(function () {
+                stopLoading(element);
+            }, RESET_DELAY_MS);
+
+            timers.set(element, timer);
+        }
+
+        function stopLoading(element) {
+            if (!element || !element.classList.contains('is-downloading')) return;
+
+            var timer = timers.get(element);
+            if (timer) {
+                clearTimeout(timer);
+                timers.delete(element);
+            }
+
+            element.classList.remove('is-downloading');
+            element.removeAttribute('aria-busy');
+
+            var spinner = element.querySelector('.dl-spinner');
+            if (spinner && spinner.parentNode) {
+                spinner.parentNode.removeChild(spinner);
+            }
+        }
+
+        /* Tangkap klik SEDARI mungkin (capture) agar spinner tampil sebelum navigasi. */
+        document.addEventListener('click', function (event) {
+            if (event.defaultPrevented) return;
+
+            var target = event.target;
+            if (!target || typeof target.closest !== 'function') return;
+
+            var link = target.closest('a');
+            if (link && isDownloadAction(link, event)) {
+                startLoading(link);
+                return;
+            }
+
+            var button = target.closest('button[type="submit"], input[type="submit"]');
+            if (button && isDownloadAction(button, event)) {
+                startLoading(button);
+            }
+        }, true);
+
+        /* Tangkap submit form (mis. tombol "Cetak Kartu" berformulir POST). */
+        document.addEventListener('submit', function (event) {
+            if (event.defaultPrevented) return;
+
+            var form = event.target;
+            if (!form || form.tagName !== 'FORM' || !isDownloadAction(form, event)) return;
+
+            var submitter = event.submitter;
+            startLoading(submitter && submitter.tagName === 'BUTTON' ? submitter : form);
+        }, true);
+
+        /* Pemulihan state saat halaman kembali dari cache navigasi (bfcache)
+           atau saat tab diaktifkan kembali. */
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                document.querySelectorAll('.is-downloading').forEach(stopLoading);
+            }
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                document.querySelectorAll('.is-downloading').forEach(stopLoading);
+            }
+        });
+
+        /* API publik untuk dipakai view bila butuh spinner manual. */
+        window.PresensiDownload = {
+            start: startLoading,
+            stop: stopLoading,
+            matches: function (url) {
+                return !!url && DOWNLOAD_RE.test(url);
+            }
+        };
+    })();
+</script>
 <script>
     /**
      * Universal Soft UI Delete Confirmation Modal

@@ -5,19 +5,19 @@
 @section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y'))
 
 @section('page_header_right')
-<div class="d-flex flex-wrap align-items-center gap-2">
-    <a href="{{ route('kesiswaan.absensi.index', ['date' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;" title="Kembali">
-        <i class='bx bx-chevron-left'></i> Kembali
+<div class="d-flex align-items-center gap-2 flex-nowrap w-100 w-lg-auto class-attendance-toolbar">
+    <a href="{{ route('kesiswaan.absensi.index', ['date' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-light border rounded-3 px-2 px-sm-3 py-1.5 d-inline-flex align-items-center gap-1 shadow-2xs text-secondary fw-semibold flex-shrink-0 class-attendance-back" style="font-size: 0.82rem;" title="Kembali">
+        <i class='bx bx-chevron-left'></i> <span class="text-nowrap">Kembali</span>
     </a>
 
-    <form method="GET" action="{{ route('kesiswaan.absensi.show', $selectedClass->id ?? 1) }}" class="m-0">
-        <input type="date" name="tanggal" class="form-control form-control-sm rounded-3 py-1.5 px-2.5 bg-white border text-secondary fw-semibold" value="{{ $tanggal ?? date('Y-m-d') }}" onchange="this.form.submit()" style="font-size: 0.85rem;">
+    <form method="GET" action="{{ route('kesiswaan.absensi.show', $selectedClass->id ?? 1) }}" class="m-0 flex-grow-1 min-w-0 class-attendance-date">
+        <input type="date" name="tanggal" class="form-control form-control-sm rounded-3 py-1.5 px-2 bg-white border text-secondary fw-semibold w-100" value="{{ $tanggal ?? date('Y-m-d') }}" onchange="this.form.submit()" style="font-size: 0.82rem;">
     </form>
 
     @if(Auth::check() && Auth::user()->role === 'admin')
-    <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold btn-sm px-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1.5 shadow-2xs" style="font-size: 0.85rem;" onclick="toggleInlineScanner()">
+    <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold btn-sm px-2 px-sm-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1 shadow-2xs flex-shrink-0 class-attendance-scan" style="font-size: 0.82rem;" onclick="toggleInlineScanner()">
         <i class='bx bx-camera fs-5' id="toggleScannerIcon"></i>
-        <span id="toggleScannerText">Buka Scanner QR</span>
+        <span id="toggleScannerText" class="text-nowrap">Buka Scanner QR</span>
     </button>
     @endif
 </div>
@@ -281,37 +281,178 @@
         from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
     }
+
+    /* ==========================================================================
+       PERBAIKAN MOBILE: Toolbar, Ringkasan Status, dan Kotak Scanner
+       ========================================================================== */
+
+    /* --- 1. Ringkasan status: grid 3 kolom agar ringkas & rata --------------- */
+    .status-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .status-summary-grid .status-badge-pill {
+        width: 100%;
+        min-width: 0;
+        padding: 0.35rem 0.45rem;
+        gap: 0.25rem;
+        font-size: 0.72rem;
+        line-height: 1.2;
+        border-radius: 9px !important;
+    }
+
+    .status-summary-grid .status-badge-pill i {
+        font-size: 0.95rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .status-summary-grid .status-badge-pill span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (min-width: 576px) {
+        .status-summary-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .status-summary-grid .status-badge-pill {
+            width: auto;
+            padding: 0.5rem 1rem;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+        }
+    }
+
+    /* --- 2. Toolbar Kembali / Tanggal / Buka Scanner: satu baris, no wrap ---- */
+    @media (max-width: 575.98px) {
+        .class-attendance-toolbar {
+            gap: 6px !important;
+        }
+
+        .class-attendance-toolbar .class-attendance-back,
+        .class-attendance-toolbar .class-attendance-scan {
+            min-height: 36px;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            gap: 2px;
+        }
+
+        /* Input tanggal boleh menyusut, tapi tidak pernah melebihi baris */
+        .class-attendance-toolbar .class-attendance-date {
+            min-width: 0;
+        }
+
+        .class-attendance-toolbar .class-attendance-date .form-control {
+            min-height: 36px;
+            padding-left: 0.4rem;
+            padding-right: 0.4rem;
+        }
+
+        /* Di layar sangat sempit, label "Kembali" disembunyikan agar ketiga
+           kontrol tetap muat satu baris tanpa saling tumpang tindih. */
+        @media (max-width: 389.98px) {
+            .class-attendance-toolbar .class-attendance-back span {
+                display: none;
+            }
+        }
+    }
+
+    /* --- 3. Kotak Scanner: persegi rapi, bukan melonjong memanjang ---------- */
+    @media (max-width: 991.98px) {
+        .scanner-kiosk-card {
+            padding: 14px 12px;
+            border-radius: 14px;
+        }
+
+        .kiosk-switcher {
+            margin-bottom: 0.75rem;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .kiosk-switch-btn {
+            flex: 1 1 0;
+            justify-content: center;
+            padding: 0.42rem 0.6rem;
+            font-size: 0.78rem;
+        }
+
+        /* Kotak utama dipaksa rasio 1:1 sehingga selalu jadi bujur sangkar */
+        .scanner-viewport-container {
+            width: 100%;
+            max-width: 380px;
+            margin-left: auto;
+            margin-right: auto;
+            aspect-ratio: 1 / 1;
+            min-height: 0;
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .scanner-viewport-container.camera-active {
+            padding: 0;
+        }
+
+        #reader {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+            border-radius: 14px;
+        }
+
+        #cameraPlaceholder {
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+        }
+
+        #cameraPlaceholder i {
+            font-size: 2.25rem !important;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="pt-1 pb-4 space-y-3">
     
-    <!-- BADGE RINGKASAN STATUS (IKON DI KANAN) -->
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <!-- RINGKASAN STATUS: grid 3 kolom di mobile, tetap pill di desktop -->
+    <div class="status-summary-grid mb-3">
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countHadir ?? 0 }}</strong> Hadir</span>
-            <i class='bx bx-check-circle fs-6 icon-hadir'></i>
+            <i class='bx bx-check-circle icon-hadir'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countTerlambat ?? 0 }}</strong> Terlambat</span>
-            <i class='bx bx-time-five fs-6 icon-terlambat'></i>
+            <i class='bx bx-time-five icon-terlambat'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countSakit ?? 0 }}</strong> Sakit</span>
-            <i class='bx bx-plus-medical fs-6 icon-sakit'></i>
+            <i class='bx bx-plus-medical icon-sakit'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countIzin ?? 0 }}</strong> Izin</span>
-            <i class='bx bx-envelope fs-6 icon-izin'></i>
+            <i class='bx bx-envelope icon-izin'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countAlfa ?? 0 }}</strong> Alfa</span>
-            <i class='bx bx-x-circle fs-6 icon-alfa'></i>
+            <i class='bx bx-x-circle icon-alfa'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countBelumAbsen ?? 0 }}</strong> Belum</span>
-            <i class='bx bx-minus-circle fs-6 icon-belum'></i>
+            <i class='bx bx-minus-circle icon-belum'></i>
         </div>
     </div>
 
@@ -595,7 +736,7 @@
             if (tableCol) tableCol.className = 'col-12 col-lg-7 col-xl-8';
 
             if (btnToggle) {
-                btnToggle.className = 'btn btn-danger fw-semibold btn-sm px-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1.5 shadow-2xs';
+                btnToggle.className = 'btn btn-danger fw-semibold btn-sm px-2 px-sm-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1 shadow-2xs class-attendance-scan';
             }
             if (iconToggle) {
                 iconToggle.className = 'bx bx-camera-off fs-5';
@@ -612,7 +753,7 @@
             if (tableCol) tableCol.className = 'col-12';
 
             if (btnToggle) {
-                btnToggle.className = 'btn btn-primary fw-semibold btn-sm px-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1.5 shadow-2xs';
+                btnToggle.className = 'btn btn-primary fw-semibold btn-sm px-2 px-sm-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1 shadow-2xs class-attendance-scan';
             }
             if (iconToggle) {
                 iconToggle.className = 'bx bx-camera fs-5';
