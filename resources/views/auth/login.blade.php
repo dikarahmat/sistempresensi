@@ -403,6 +403,9 @@
                     calc(1rem + env(safe-area-inset-bottom, 0px))
                     calc(1rem + env(safe-area-inset-left, 0px));
                 align-items: flex-start;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
                 background-color: #eff4ff;
                 background-image: linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #edf4ff 100%);
                 background-attachment: scroll;
@@ -410,6 +413,7 @@
 
             .login-split-card {
                 flex-direction: column;
+                flex-shrink: 0;
                 width: 100%;
                 max-width: 448px;
                 min-height: 0;

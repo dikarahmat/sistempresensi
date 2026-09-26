@@ -47,7 +47,7 @@
             min-height: 100vh;
             background-color: #3b62f6 !important;
             color: var(--text-dark);
-            overflow-y: auto !important;
+            overflow: hidden !important;
             overflow-x: hidden !important;
             font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -314,6 +314,13 @@
            3. KONTEN UTAMA & WRAPPER SCROLL
            -------------------------------------------------------------------------- */
         .content-scroll-wrapper {
+            height: 100vh !important;
+            height: 100dvh !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
             box-sizing: border-box;
             scroll-behavior: smooth;
             scrollbar-width: none !important;
@@ -527,9 +534,13 @@
                 touch-action: manipulation !important;
                 -webkit-tap-highlight-color: transparent !important;
                 transition: color 0.15s ease, transform 0.12s cubic-bezier(0.32, 0.72, 0, 1) !important;
-                flex-shrink: 0 !important;
-                width: 32px !important;
-                height: 32px !important;
+                flex: 0 0 40px !important;
+                width: 40px !important;
+                min-width: 40px !important;
+                max-width: 40px !important;
+                height: 40px !important;
+                min-height: 40px !important;
+                max-height: 40px !important;
                 line-height: 1 !important;
             }
 
@@ -556,6 +567,18 @@
         .app-header-bar {
             width: 100% !important;
             margin-bottom: 0.875rem !important;
+        }
+
+        @media (max-width: 1023.98px) {
+            .app-header-bar {
+                position: sticky !important;
+                top: env(safe-area-inset-top, 0px) !important;
+                z-index: 50 !important;
+                flex-shrink: 0 !important;
+                padding-top: 0.5rem !important;
+                padding-bottom: 0.5rem !important;
+                background-color: #ffffff !important;
+            }
         }
 
         @media (min-width: 640px) {

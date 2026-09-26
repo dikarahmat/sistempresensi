@@ -716,7 +716,7 @@
                             $status = $row['status'];
                         @endphp
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                            <td class="text-center text-secondary">{{ $idx + 1 }}</td>
+                            <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
                             <td>{{ $st->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ route('admin.students.show', $st->id) }}" class="text-decoration-none text-dark">
@@ -806,7 +806,7 @@
                             $days = $row['days'];
                         @endphp
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                            <td class="text-center text-secondary">{{ $index + 1 }}</td>
+                            <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
                             <td>{{ $student->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="text-decoration-none text-dark">
@@ -892,7 +892,7 @@
                             $days = $row['days'];
                         @endphp
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                            <td class="text-center text-secondary">{{ $index + 1 }}</td>
+                            <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
                             <td>{{ $student->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="text-decoration-none text-dark">
@@ -947,5 +947,16 @@
                 </table>
             @endif
         </div>
+
+        @if($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator && $dataRows->hasPages())
+        <div class="px-3 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white">
+            <div class="text-muted small">
+                Menampilkan {{ $dataRows->firstItem() }}–{{ $dataRows->lastItem() }} dari {{ $dataRows->total() }} siswa
+            </div>
+            <div class="d-flex justify-content-center">
+                {{ $dataRows->onEachSide(1)->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
+        @endif
     </div>
 @endsection

@@ -15,6 +15,7 @@ use App\Models\Teacher;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -25,7 +26,7 @@ class RekapController extends Controller
     /**
      * Dapatkan data rekapitulasi berdasarkan tipe periode (Harian, Mingguan, Bulanan).
      */
-    protected function getRecapData(string $type, ?int $classId, array $inputs): array
+    protected function getRecapData(string $type, ?int $classId, array $inputs, bool $paginateStudents = false): array
     {
         Carbon::setLocale('id');
         $now = Carbon::now('Asia/Jakarta');
@@ -36,7 +37,12 @@ class RekapController extends Controller
         if ($classId) {
             $query->where('school_class_id', $classId);
         }
-        $students = $query->orderBy('name', 'asc')->get();
+        $studentPaginator = $paginateStudents
+            ? $query->orderBy('name', 'asc')->paginate(50)->withQueryString()
+            : null;
+        $students = $studentPaginator
+            ? $studentPaginator->getCollection()
+            : $query->orderBy('name', 'asc')->get();
 
 
         $totalHadir = 0;
@@ -120,7 +126,7 @@ class RekapController extends Controller
             return compact(
                 'type', 'date', 'dateObj', 'isHoliday', 'holidayDesc',
                 'students', 'dataRows', 'totalHadir', 'totalTerlambat',
-                'totalSakit', 'totalIzin', 'totalAlfa'
+                'totalSakit', 'totalIzin', 'totalAlfa', 'studentPaginator'
             );
         } elseif ($type === 'mingguan') {
             $startDate = $inputs['start_date'] ?? $now->copy()->startOfWeek()->toDateString();
@@ -215,7 +221,8 @@ class RekapController extends Controller
             return compact(
                 'type', 'startDate', 'endDate', 'startObj', 'endObj',
                 'dateColumns', 'students', 'dataRows', 'totalHadir',
-                'totalTerlambat', 'totalSakit', 'totalIzin', 'totalAlfa'
+                'totalTerlambat', 'totalSakit', 'totalIzin', 'totalAlfa',
+                'studentPaginator'
             );
         } else {
             // BULANAN
@@ -315,9 +322,22 @@ class RekapController extends Controller
             return compact(
                 'type', 'month', 'year', 'daysInMonth', 'holidayMap',
                 'students', 'dataRows', 'totalHadir', 'totalTerlambat',
-                'totalSakit', 'totalIzin', 'totalAlfa'
+                'totalSakit', 'totalIzin', 'totalAlfa', 'studentPaginator'
             );
         }
+    }
+
+    protected function paginateRecapRows(array $recap): array
+    {
+        $paginator = $recap['studentPaginator'] ?? null;
+        if ($paginator instanceof LengthAwarePaginator) {
+            $paginator->setCollection(collect($recap['dataRows'] ?? []));
+            $recap['dataRows'] = $paginator;
+        }
+
+        unset($recap['studentPaginator']);
+
+        return $recap;
     }
 
     /**
@@ -330,7 +350,8 @@ class RekapController extends Controller
         $classes = SchoolClass::orderBy('name')->get();
         $activeYear = AcademicYear::getActive();
 
-        $recap = $this->getRecapData($type, $classId, $request->all());
+        $recap = $this->getRecapData($type, $classId, $request->all(), true);
+        $recap = $this->paginateRecapRows($recap);
 
         return view('admin.attendances.rekap', array_merge($recap, [
             'type' => $type,
@@ -519,7 +540,8 @@ class RekapController extends Controller
                 'dateColumns' => [],
             ];
         } else {
-            $recap = $this->getRecapData($type, $resolvedClassId, $request->all());
+            $recap = $this->getRecapData($type, $resolvedClassId, $request->all(), true);
+            $recap = $this->paginateRecapRows($recap);
         }
 
         return view('walikelas.attendances.rekap', array_merge($recap, [

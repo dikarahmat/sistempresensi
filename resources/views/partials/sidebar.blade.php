@@ -179,7 +179,7 @@
     </div>
 
     <!-- BAWAH: Tombol Log Out -->
-    <div class="border-top border-light border-opacity-25" style="padding: 1rem 0.75rem; background-color: #3b62f6;">
+    <div class="border-top border-light border-opacity-25 flex-shrink-0" style="padding: 1rem 0.75rem calc(1rem + env(safe-area-inset-bottom, 0px)); background-color: #3b62f6;">
         <form action="{{ route('logout') }}" method="POST" class="m-0">
             @csrf
             <button type="submit" 

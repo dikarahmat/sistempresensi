@@ -80,6 +80,22 @@
         }
     }
 
+    function isDownloadDestination(href) {
+        try {
+            const url = new URL(href, window.location.href);
+            const path = url.pathname.toLowerCase();
+            const downloadRoute = /(?:^|\/)(?:export|download|template|print)(?:[-/._]|$)/i.test(path);
+            const fileExtension = /\.(?:pdf|xlsx?|csv|zip|docx?|png|jpe?g|webp)(?:$|\/)/i.test(path);
+            const downloadParameter = ['download', 'attachment'].some(function(key) {
+                return url.searchParams.has(key);
+            });
+
+            return downloadRoute || fileExtension || downloadParameter;
+        } catch (error) {
+            return false;
+        }
+    }
+
     window.addEventListener('load', hideLoader);
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
@@ -100,7 +116,7 @@
             return;
         }
 
-        if (anchor.hasAttribute('download') || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        if (anchor.hasAttribute('download') || isDownloadDestination(href) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
             return;
         }
 
@@ -122,6 +138,11 @@
     });
 
     document.addEventListener('submit', function(event) {
+        const form = event.target;
+        const action = form instanceof HTMLFormElement ? (form.getAttribute('action') || window.location.href) : '';
+        if (form instanceof HTMLFormElement && (form.hasAttribute('download') || isDownloadDestination(action))) {
+            return;
+        }
         showLoaderWithDelay();
     });
 

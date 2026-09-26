@@ -46,6 +46,9 @@
 
     /* ===== Optimalisasi Mobile (< 768px): Clean Look — desktop tidak tersentuh ===== */
     @media (max-width: 767.98px) {
+        .settings-mobile-form {
+            padding-bottom: 1rem;
+        }
         .section-header {
             gap: 0.6rem;
             margin-bottom: 1rem;
@@ -90,7 +93,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" class="settings-mobile-form">
         @csrf
 
         <!-- Card 1: Identitas Sekolah -->
