@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // <-- 1. TAMBAHKAN IMPORT INI
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +13,7 @@ use Illuminate\Support\Str;
 class Student extends Model
 {
     use HasFactory;
+    use SoftDeletes; // <-- 2. AKTIFKAN TRAIT SOFTDELETES DI SINI!
 
     protected $fillable = [
         'nis',
@@ -40,6 +42,8 @@ class Student extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    // ... sisa kode ke bawah biarkan tetap sama seperti punya lu ...
 
     protected static function booted(): void
     {
