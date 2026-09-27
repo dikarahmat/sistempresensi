@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Teacher;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -74,11 +75,21 @@ class AuthController extends Controller
 
         // 3. Cek apakah login menggunakan Username pendek atau prefix alias email (misal: 'admin', 'kesiswaan')
         //    Gunakan grouping where agar orWhere tidak "bocor" ke kondisi lain.
-        $user = User::where(function ($query) use ($loginInput) {
-            $query->where('username', $loginInput)
-                  ->orWhere('email', $loginInput)
-                  ->orWhere('email', 'like', $loginInput . '@%');
-        })->first();
+        //    Hanya query username jika kolom sudah ada di database.
+        $userQuery = User::query();
+        if (Schema::hasColumn('users', 'username')) {
+            $userQuery->where(function ($query) use ($loginInput) {
+                $query->where('username', $loginInput)
+                      ->orWhere('email', $loginInput)
+                      ->orWhere('email', 'like', $loginInput . '@%');
+            });
+        } else {
+            $userQuery->where(function ($query) use ($loginInput) {
+                $query->where('email', $loginInput)
+                      ->orWhere('email', 'like', $loginInput . '@%');
+            });
+        }
+        $user = $userQuery->first();
 
         if ($user && $this->verifyUserCredentials($user, $password)) {
             Auth::login($user, $remember);
@@ -90,10 +101,12 @@ class AuthController extends Controller
         // 4. Standar Auth::attempt sebagai fallback terakhir
         //    Deteksi field: email lengkap vs username pendek
         $attemptField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        if (Auth::attempt([$attemptField => $loginInput, 'password' => $password], $remember)) {
-            $request->session()->regenerate();
+        if (Schema::hasColumn('users', 'username') || $attemptField === 'email') {
+            if (Auth::attempt([$attemptField => $loginInput, 'password' => $password], $remember)) {
+                $request->session()->regenerate();
 
-            return $this->redirectBasedOnRole(Auth::user());
+                return $this->redirectBasedOnRole(Auth::user());
+            }
         }
 
         // Autentikasi Gagal
