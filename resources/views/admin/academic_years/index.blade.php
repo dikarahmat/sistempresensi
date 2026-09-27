@@ -341,8 +341,8 @@
         confirmUniversalDelete({
             title: 'Hapus Tahun Ajaran?',
             html: `Tindakan ini bersifat permanen. Anda akan menghapus data tahun ajaran <b class="text-dark">${name}</b> dari sistem.`,
-            confirmText: 'Ya, Hapus',
-            cancelText: 'Batal',
+            confirmText: 'Hapus',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById(`deleteYearForm-${id}`).submit();
             }

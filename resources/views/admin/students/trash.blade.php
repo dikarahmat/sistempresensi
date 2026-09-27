@@ -198,17 +198,12 @@
     }
 
     function confirmDeleteAllStudents() {
-        Swal.fire({
+        confirmUniversalDelete({
             title: 'Hapus Semua Siswa?',
             html: 'Seluruh data siswa akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.',
-            icon: 'error',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Ya, Hapus Semua',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
+            confirmText: 'Hapus Semua',
+            cancelText: 'Tidak',
+            onConfirm: function() {
                 document.getElementById('deleteAllStudentsForm').submit();
             }
         });

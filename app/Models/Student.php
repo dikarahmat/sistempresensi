@@ -36,6 +36,9 @@ class Student extends Model
 
     protected $casts = [
         'birth_date' => 'date',
+        'deleted_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     protected static function booted(): void

@@ -179,18 +179,26 @@
             </li>
             @endif
 
-            <!-- LOGOUT: Tombol keluar ditempatkan sebagai item menu terakhir, tepat di bawah Pengaturan -->
+            <!-- GARIS PEMBATAS: Memisahkan menu navigasi utama dengan tombol Logout.
+                 Styling identik dengan garis pembatas di bawah header logo (border-light border-opacity-25). -->
+            <li class="nav-item" style="padding: 0.5rem 0.75rem;">
+                <div class="border-bottom border-light border-opacity-25" style="border-top-width: 0;"></div>
+            </li>
+
+            <!-- LOGOUT: Tombol keluar ditempatkan di bawah garis pembatas, terpisah secara visual.
+                 Container menggunakan margin yang sama persis dengan menu item di atasnya. -->
             <li class="nav-item">
-                <form action="{{ route('logout') }}" method="POST" class="m-0">
-                    @csrf
-                    <button type="submit" 
-                            class="nav-link text-white d-flex align-items-center gap-3 sidebar-logout-btn"
-                            style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em; width: calc(100% - 1.5rem);">
-                        <i class='bx bx-log-out fs-5 text-white'></i> 
-                        Log Out
-                    </button>
-                </form>
+                <a href="{{ route('logout') }}" 
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                   class="nav-link text-white d-flex align-items-center gap-3"
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
+                    <i class='bx bx-log-out fs-5 text-white'></i> 
+                    Log Out
+                </a>
             </li>
         </ul>
     </div>
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
 </aside>

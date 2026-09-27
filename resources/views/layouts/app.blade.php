@@ -1328,14 +1328,16 @@
         }
         .swal2-popup.swal2-modal-soft .swal2-actions .btn {
             flex: 1 1 0 !important;
-            min-height: 42px !important;
-            padding: 0.55rem 1.5rem !important;
+            min-height: 44px !important;
+            padding: 0.6rem 1.5rem !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            font-size: 0.9rem !important;
-            font-weight: 500 !important;
-            border-radius: 0.5rem !important;
+            font-size: 0.85rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            border-radius: 0.75rem !important;
             margin: 0 !important;
             line-height: 1.25 !important;
             transition: all 0.2s ease !important;
@@ -1344,14 +1346,16 @@
             background-color: #dc2626 !important;
             border: 1px solid #dc2626 !important;
             color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25) !important;
         }
         .swal2-popup.swal2-modal-soft .swal2-actions .btn-danger:hover {
             background-color: #b91c1c !important;
             border-color: #b91c1c !important;
+            transform: translateY(-1px) !important;
         }
         .swal2-popup.swal2-modal-soft .swal2-actions .btn-light {
-            background-color: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
             color: #475569 !important;
         }
         .swal2-popup.swal2-modal-soft .swal2-actions .btn-light:hover {
@@ -1976,18 +1980,17 @@
     window.confirmUniversalDelete = function(options) {
         const opts = options || {};
         const title = opts.title || 'Hapus Data?';
-        const confirmText = opts.confirmText || 'Ya, Hapus';
-        const cancelText = opts.cancelText || 'Batal';
-        const iconClass = opts.icon === 'warning' ? 'bx bx-error' : 'bx bx-trash';
+        const confirmText = opts.confirmText || 'Hapus';
+        const cancelText = opts.cancelText || 'Tidak';
         const message = opts.html || opts.text || 'Tindakan ini bersifat permanen. Apakah Anda yakin ingin menghapus data ini?';
 
         const fullHtml = `
-            <div class="text-center">
-                <div class="d-inline-block bg-danger-subtle text-danger rounded-circle p-3 mb-3">
-                    <i class="${iconClass} fs-1 d-block" style="line-height: 1;"></i>
+            <div style="text-align: center;">
+                <div style="color: #dc2626; margin-bottom: 1rem;">
+                    <i class='bx bx-error' style="font-size: 2.5rem; line-height: 1; display: block;"></i>
                 </div>
-                <h5 class="fw-bold text-dark fs-5 mb-2">${title}</h5>
-                <div class="text-secondary lh-base mb-4" style="font-size: 0.9rem;">${message}</div>
+                <h5 style="font-weight: 700; color: #1e293b; font-size: 1.25rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em;">${title}</h5>
+                <div style="color: #64748b; line-height: 1.625; margin-bottom: 1.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.02em; text-align: justify; text-align-last: center; padding: 0 0.5rem;">${message}</div>
             </div>
         `;
 

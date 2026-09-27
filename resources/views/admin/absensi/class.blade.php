@@ -647,7 +647,10 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="2" class="text-center py-4 text-secondary">Belum ada data siswa di kelas ini.</td>
+                                <td colspan="6" class="text-center py-4 text-secondary">
+                                    <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                                    BELUM ADA DATA SISWA DI KELAS INI.
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>

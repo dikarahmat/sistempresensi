@@ -326,7 +326,7 @@
 
                     <!-- 3. Hapus Semua Guru (Solid Merah - Urutan Terakhir) -->
                     <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Data Guru" onclick="confirmDeleteAllTeachers()">
-                        <span>Hapus</span>
+                        <span>HAPUS</span>
                     </button>
                 </div>
                 @endif
@@ -408,9 +408,8 @@
                     @empty
                     <tr class="align-middle">
                         <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 7 : 6 }}" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-user-x fs-2 d-block mb-2'></i>
-                            <div class="fw-semibold">Belum ada data guru atau wali kelas tercatat.</div>
-                            <small class="text-muted">Gunakan tombol "Tambah Guru" atau "Import Excel" untuk menambahkan data.</small>
+                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                            BELUM ADA DATA GURU ATAU WALI KELAS YANG TERDAFTAR.
                         </td>
                     </tr>
                     @endforelse
@@ -640,8 +639,8 @@
         confirmUniversalDelete({
             title: 'Hapus Data Guru?',
             html: `Tindakan ini bersifat permanen. Anda akan menghapus data guru <b class="text-dark">${name}</b> dari sistem. Penugasan wali kelas yang bersangkutan akan otomatis dilepaskan.`,
-            confirmText: 'Ya, Hapus',
-            cancelText: 'Batal',
+            confirmText: 'Hapus',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById('deleteTeacherForm-' + id).submit();
             }
@@ -653,8 +652,8 @@
         confirmUniversalDelete({
             title: 'Hapus Seluruh Data Guru?',
             html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data guru</b> serta melepaskan penugasan wali kelas dari semua rombel.',
-            confirmText: 'Ya, Hapus Semua',
-            cancelText: 'Batal',
+            confirmText: 'Hapus Semua',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById('deleteAllTeachersForm').submit();
             }

@@ -266,7 +266,8 @@
                     @empty
                     <tr>
                         <td colspan="10" class="text-center py-5 text-muted fw-normal">
-                            Belum ada data siswa yang tercatat.
+                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                            BELUM ADA DATA SISWA YANG TERDAFTAR.
                         </td>
                     </tr>
                     @endforelse

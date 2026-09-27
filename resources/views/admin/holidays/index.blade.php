@@ -451,8 +451,8 @@
         confirmUniversalDelete({
             title: 'Hapus Hari Libur?',
             html: `Tindakan ini bersifat permanen. Anda akan menghapus agenda libur <b class="text-dark">${description}</b> dari kalender presensi sekolah.`,
-            confirmText: 'Ya, Hapus',
-            cancelText: 'Batal',
+            confirmText: 'Hapus',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById(`deleteHolidayForm-${id}`).submit();
             }

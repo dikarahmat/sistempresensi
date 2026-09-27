@@ -730,7 +730,8 @@
                             @empty
                             <tr class="text-nowrap">
                                 <td colspan="6" class="text-center py-3 text-secondary text-nowrap">
-                                    Tidak ada data siswa berstatus {{ ucfirst(request('status')) }} pada tanggal ini.
+                                    <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                                    BELUM ADA DATA SISWA BERSTATUS {{ strtoupper(request('status')) }} PADA TANGGAL INI.
                                 </td>
                             </tr>
                             @endforelse

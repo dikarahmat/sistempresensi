@@ -362,7 +362,8 @@
                     @empty
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted">
-                            Belum ada data siswa yang tercatat.
+                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                            BELUM ADA DATA SISWA YANG TERDAFTAR.
                         </td>
                     </tr>
                     @endforelse
@@ -567,8 +568,8 @@
         confirmUniversalDelete({
             title: 'Hapus Data Siswa?',
             html: `Tindakan ini bersifat permanen. Anda akan menghapus data siswa <b class="text-dark">${name}</b> dari sistem dan data tidak dapat dipulihkan.`,
-            confirmText: 'Ya, Hapus',
-            cancelText: 'Batal',
+            confirmText: 'Hapus',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById(`deleteStudentForm-${id}`).submit();
             }
@@ -579,8 +580,8 @@
         confirmUniversalDelete({
             title: 'Hapus Seluruh Data Siswa?',
             html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data siswa</b> beserta riwayat presensinya dari sistem.',
-            confirmText: 'Ya, Hapus Semua',
-            cancelText: 'Batal',
+            confirmText: 'Hapus Semua',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById('deleteAllStudentsForm').submit();
             }

@@ -23,7 +23,8 @@ class StudentController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Student::with('schoolClass');
+        // Hanya tampilkan siswa yang tidak diarsipkan (deleted_at IS NULL)
+        $query = Student::whereNull('deleted_at')->with('schoolClass');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -381,25 +382,17 @@ class StudentController extends Controller
         try {
             $studentName = $student->name;
 
-            // Hapus file foto dari storage jika ada
-            if ($student->photo && Storage::disk('public')->exists($student->photo)) {
-                Storage::disk('public')->delete($student->photo);
-            }
-
-            // Hapus seluruh riwayat presensi terkait untuk menjaga integritas database
-            $student->attendances()->delete();
-
-            // Hapus data siswa
-            $student->delete();
+            // Soft delete: set deleted_at (data masih bisa dipulihkan dari halaman trash)
+            $student->update(['deleted_at' => now()]);
 
             DB::commit();
             return redirect()->route('admin.students.index')
-                ->with('success', "Data siswa {$studentName} beserta riwayat presensinya berhasil dihapus!");
+                ->with('success', "Data siswa {$studentName} berhasil diarsipkan! Anda dapat memulihkannya dari halaman Sampah.");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.students.index')
-                ->with('error', 'Gagal menghapus siswa: ' . $e->getMessage());
+                ->with('error', 'Gagal mengarsipkan siswa: ' . $e->getMessage());
         }
     }
 
@@ -435,11 +428,15 @@ class StudentController extends Controller
     }
 
     /**
-     * Tampilkan halaman tempat sampah (soft deleted students).
+     * Tampilkan halaman tempat sampah (siswa yang diarsipkan).
+     * Menggunakan query manual dengan kolom deleted_at (tanpa trait SoftDeletes).
      */
     public function trash(): View
     {
-        $students = Student::onlyTrashed()->with('schoolClass')->orderBy('deleted_at', 'desc')->paginate(50);
+        $students = Student::whereNotNull('deleted_at')
+            ->with('schoolClass')
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(50);
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('admin.students.trash', compact('students', 'classes'));
@@ -447,11 +444,12 @@ class StudentController extends Controller
 
     /**
      * Pulihkan siswa dari tempat sampah.
+     * Menggunakan query manual: set deleted_at = null.
      */
     public function restore($id): RedirectResponse
     {
-        $student = Student::onlyTrashed()->findOrFail($id);
-        $student->restore();
+        $student = Student::whereNotNull('deleted_at')->findOrFail($id);
+        $student->update(['deleted_at' => null]);
 
         return redirect()->route('admin.students.trash')
             ->with('success', "Data siswa {$student->name} berhasil dipulihkan!");
@@ -459,10 +457,11 @@ class StudentController extends Controller
 
     /**
      * Hapus permanen siswa dari tempat sampah.
+     * Menggunakan query manual: hard delete dari database.
      */
     public function forceDelete($id): RedirectResponse
     {
-        $student = Student::onlyTrashed()->findOrFail($id);
+        $student = Student::whereNotNull('deleted_at')->findOrFail($id);
 
         DB::beginTransaction();
         try {
@@ -476,8 +475,8 @@ class StudentController extends Controller
             // Hapus seluruh riwayat presensi terkait
             $student->attendances()->delete();
 
-            // Hapus permanen data siswa
-            $student->forceDelete();
+            // Hapus permanen data siswa dari database
+            $student->delete();
 
             DB::commit();
             return redirect()->route('admin.students.trash')

@@ -525,8 +525,8 @@
         confirmUniversalDelete({
             title: 'Hapus Data Kelas?',
             html: `Tindakan ini bersifat permanen. Anda akan menghapus rombel kelas <b class="text-dark">${name}</b> dari sistem. Pastikan tidak ada data siswa aktif di dalam rombel ini.`,
-            confirmText: 'Ya, Hapus',
-            cancelText: 'Batal',
+            confirmText: 'Hapus',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById(`deleteClassForm-${id}`).submit();
             }
@@ -537,8 +537,8 @@
         confirmUniversalDelete({
             title: 'Hapus Seluruh Data Kelas?',
             html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data kelas</b> secara massal dari sistem.',
-            confirmText: 'Ya, Hapus Semua',
-            cancelText: 'Batal',
+            confirmText: 'Hapus Semua',
+            cancelText: 'Tidak',
             onConfirm: function() {
                 document.getElementById('deleteAllClassesForm').submit();
             }
