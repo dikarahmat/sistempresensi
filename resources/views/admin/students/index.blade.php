@@ -40,8 +40,16 @@
     }
 
     .table-responsive {
+        width: 100%;
+        overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
-        overflow-x: auto;
+        display: block;
+    }
+
+    .table-zebra-custom {
+        width: 100%;
+        min-width: 700px;
+        margin-bottom: 0;
     }
 
     .table-zebra-custom th,
@@ -315,7 +323,7 @@
                         <th class="text-start indent-nama">Nama Siswa</th>
                         <th class="text-start d-none d-md-table-cell">Jenis Kelamin</th>
                         <th class="text-start d-none d-md-table-cell">Nama Wali</th>
-                        <th class="text-center d-none d-md-table-cell" style="width: 180px;">Aksi</th>
+                        <th class="text-center" style="min-width: 180px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -331,7 +339,7 @@
                         <td class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
                         <td class="text-start d-none d-md-table-cell">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
                         <td class="text-start text-secondary d-none d-md-table-cell">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
-                        <td class="text-center d-none d-md-table-cell">
+                        <td class="text-center">
                             <div class="crud-center-wrapper">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail">
                                     Detail

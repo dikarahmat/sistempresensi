@@ -1171,6 +1171,22 @@
            membuat area menu memanjang melebihi tinggi drawer, sehingga footer Logout
            terdorong keluar & ter-clip (tidak terlihat / tidak bisa diketuk).
            -------------------------------------------------------------------------- */
+
+        /* Wrapper utama sidebar: flexbox vertikal dengan tinggi dinamis aman untuk mobile */
+        .main-sidebar,
+        .sidebar-container {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-height: 100vh !important;
+            max-height: 100dvh !important;
+            overflow: hidden !important;
+        }
+
+        /* Area menu scrollable: flex 1 1 auto dengan padding bawah untuk ruang napas */
+        .sidebar-menu-wrapper,
+        .menu-container,
         .sidebar-menu-scroll {
             flex: 1 1 auto !important;
             min-height: 0 !important;
@@ -1179,6 +1195,7 @@
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
+            padding-bottom: 20px !important;
         }
 
         .sidebar-menu-scroll::-webkit-scrollbar {
@@ -1189,12 +1206,17 @@
             border-radius: 4px;
         }
 
-        /* Footer Sidebar: dikunci di dasar drawer, tidak pernah tergeser keluar */
-        .sidebar-footer {
+        /* Footer Sidebar: dikunci di dasar drawer, tidak pernah tergeser keluar.
+           padding-bottom aman untuk perangkat mobile ber-gesture bar Android/iOS. */
+        .sidebar-footer,
+        .logout-section {
             display: block !important;
             margin-top: auto !important;
             flex-shrink: 0 !important;
-            padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+            width: 100% !important;
+            background: inherit !important;
+            z-index: 10 !important;
+            padding: 0.75rem 0.75rem calc(env(safe-area-inset-bottom, 15px) + 15px) !important;
             border: none !important;
             border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
             background-color: #3b62f6 !important;

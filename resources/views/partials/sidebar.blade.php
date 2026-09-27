@@ -45,7 +45,7 @@
 <!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot
      Layout dikendalikan CSS (app-sidebar-drawer), bukan inline style, agar
      aturan !important di layout selalu menang di mobile & desktop. -->
-<aside class="d-flex flex-column flex-shrink-0 text-white rounded-end app-sidebar-panel">
+<aside class="d-flex flex-column flex-shrink-0 text-white rounded-end app-sidebar-panel main-sidebar sidebar-container">
     
 <!-- ATAS: Header Logo & Nama Sekolah (Ukuran Pas & Proporsional) -->
     <div class="sidebar-brand flex-shrink-0">
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Scrollable sidebar menu -->
-    <div class="flex-grow-1 py-2 sidebar-menu-scroll">
+    <div class="flex-grow-1 py-2 sidebar-menu-scroll sidebar-menu-wrapper menu-container">
         <ul class="nav nav-pills flex-column mb-auto" style="gap: 0;">
             <li class="nav-item">
                 <a href="{{ $dashboardRoute }}" 
@@ -182,7 +182,7 @@
     </div>
 
     <!-- BAWAH: Tombol Log Out (dikunci di dasar drawer, selalu terlihat & bisa diketuk) -->
-    <div class="sidebar-footer border-top border-light border-opacity-25 flex-shrink-0">
+    <div class="sidebar-footer logout-section border-top border-light border-opacity-25 flex-shrink-0">
         <form action="{{ route('logout') }}" method="POST" class="m-0">
             @csrf
             <button type="submit" 
