@@ -1206,20 +1206,49 @@
             border-radius: 4px;
         }
 
-        /* Footer Sidebar: dikunci di dasar drawer, tidak pernah tergeser keluar.
-           padding-bottom aman untuk perangkat mobile ber-gesture bar Android/iOS. */
-        .sidebar-footer,
-        .logout-section {
-            display: block !important;
-            margin-top: auto !important;
-            flex-shrink: 0 !important;
-            width: 100% !important;
-            background: inherit !important;
-            z-index: 10 !important;
-            padding: 0.75rem 0.75rem calc(env(safe-area-inset-bottom, 15px) + 15px) !important;
+        /* Tombol Logout di dalam menu list: styling seragam dengan nav-link lainnya.
+           Tidak menggunakan position absolute/fixed agar ikut ter-scroll natural di HP Android. */
+        .sidebar-logout-btn {
+            display: flex !important;
+            align-items: center !important;
+            background: transparent !important;
             border: none !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
-            background-color: #3b62f6 !important;
+            text-align: left !important;
+            cursor: pointer !important;
+            font-family: 'Poppins', 'Roboto', sans-serif !important;
+            font-weight: 500 !important;
+            font-size: 0.83rem !important;
+            line-height: 1.3 !important;
+            color: #fee2e2 !important;
+            -webkit-tap-highlight-color: transparent !important;
+            touch-action: manipulation !important;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease !important;
+        }
+
+        .sidebar-logout-btn i {
+            font-size: 1.18rem !important;
+            color: #fee2e2 !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+            transition: color 0.2s ease !important;
+        }
+
+        .sidebar-logout-btn:hover,
+        .sidebar-logout-btn:focus-visible {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35) !important;
+            outline: none !important;
+        }
+
+        .sidebar-logout-btn:hover i,
+        .sidebar-logout-btn:focus-visible i {
+            color: #ffffff !important;
+        }
+
+        .sidebar-logout-btn:active {
+            background-color: #b91c1c !important;
+            transform: scale(0.98) !important;
         }
 
         /* Tombol Log Out: kapsul melengkung penuh, target sentuh nyaman, hover/active

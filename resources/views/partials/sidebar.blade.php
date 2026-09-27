@@ -178,20 +178,19 @@
                 </a>
             </li>
             @endif
-        </ul>
-    </div>
 
-    <!-- BAWAH: Tombol Log Out (dikunci di dasar drawer, selalu terlihat & bisa diketuk) -->
-    <div class="sidebar-footer logout-section border-top border-light border-opacity-25 flex-shrink-0">
-        <form action="{{ route('logout') }}" method="POST" class="m-0">
-            @csrf
-            <button type="submit" 
-                    class="sidebar-logout-btn"
-                    title="Keluar dari aplikasi"
-                    style="text-transform: uppercase; letter-spacing: 0.03em;">
-                <i class='bx bx-log-out'></i> 
-                Log Out
-            </button>
-        </form>
+            <!-- LOGOUT: Tombol keluar ditempatkan sebagai item menu terakhir, tepat di bawah Pengaturan -->
+            <li class="nav-item">
+                <form action="{{ route('logout') }}" method="POST" class="m-0">
+                    @csrf
+                    <button type="submit" 
+                            class="nav-link text-white d-flex align-items-center gap-3 sidebar-logout-btn"
+                            style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em; width: calc(100% - 1.5rem);">
+                        <i class='bx bx-log-out fs-5 text-white'></i> 
+                        Log Out
+                    </button>
+                </form>
+            </li>
+        </ul>
     </div>
 </aside>

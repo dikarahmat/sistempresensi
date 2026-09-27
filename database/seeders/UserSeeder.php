@@ -21,6 +21,7 @@ class UserSeeder extends Seeder
             ['email' => 'admin@smppresensipgri.sch.id'],
             [
                 'name' => 'Administrator SMP PGRI',
+                'username' => 'admin',
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'email_verified_at' => now(),
@@ -32,6 +33,7 @@ class UserSeeder extends Seeder
             ['email' => 'guru@smppresensipgri.sch.id'],
             [
                 'name' => 'Budi Santoso, S.Pd.',
+                'username' => 'guru',
                 'password' => Hash::make('guru123'),
                 'role' => 'guru',
                 'email_verified_at' => now(),
@@ -73,6 +75,7 @@ class UserSeeder extends Seeder
             ['email' => 'kesiswaan@smppresensipgri.sch.id'],
             [
                 'name' => 'Staf Bagian Kesiswaan',
+                'username' => 'kesiswaan',
                 'password' => Hash::make('kesiswaan123'),
                 'role' => 'kesiswaan',
                 'email_verified_at' => now(),

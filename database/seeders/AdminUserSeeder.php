@@ -17,6 +17,7 @@ class AdminUserSeeder extends Seeder
             ['email' => 'admin@smppresensipgri.sch.id'],
             [
                 'name' => 'Administrator PGRI',
+                'username' => 'admin',
                 'password' => Hash::make('password123'),
                 'role' => 'admin',
                 'email_verified_at' => now(),

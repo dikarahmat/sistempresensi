@@ -704,8 +704,8 @@
             }
         });
 
-        // Start Camera
-        function startCameraKiosk() {
+        // Start Camera dengan try-catch fallback berlapis untuk kompatibilitas Android
+        async function startCameraKiosk() {
             if (isCamRunning || typeof Html5Qrcode === 'undefined') return;
 
             const placeholder = document.getElementById('cameraPlaceholder');
@@ -715,44 +715,80 @@
                 html5QrKiosk = new Html5Qrcode("reader");
             }
 
-            // Detect mobile device
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const config = { fps: 10, qrbox: { width: 180, height: 180 } };
+            const onSuccess = (decodedText) => processCode(decodedText);
+            const onError = () => {};
 
-            // Smart-fallback: mobile → back camera (environment), desktop → front camera (user)
-            const facingMode = isMobile ? { exact: "environment" } : "user";
+            // Helper: tampilkan error yang user-friendly
+            function showCameraError(msg) {
+                console.error("Kamera error:", msg);
+                if (placeholder) {
+                    placeholder.style.display = 'flex';
+                    placeholder.innerHTML = `
+                        <i class='bx bx-camera-off text-danger' style="font-size: 3rem;"></i>
+                        <p class="text-danger small mt-2 mb-0 fw-semibold">${msg}</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="retryCamera()">
+                            <i class='bx bx-refresh'></i> Coba Lagi
+                        </button>
+                    `;
+                }
+            }
 
-            html5QrKiosk.start(
-                facingMode,
-                { fps: 10, qrbox: { width: 180, height: 180 } },
-                (decodedText) => {
-                    processCode(decodedText);
-                },
-                () => {}
-            ).then(() => {
-                isCamRunning = true;
-            }).catch(err => {
-                // Fallback: if exact environment fails, try any available camera
-                console.warn("Primary camera failed, trying fallback:", err);
-                return Html5Qrcode.getCameras().then(devices => {
-                    if (!devices || devices.length === 0) {
-                        throw new Error('No camera found');
+            // Helper: stop kamera sebelum retry (agar instance bersih)
+            async function retryCamera() {
+                isCamRunning = false;
+                try {
+                    if (html5QrKiosk) {
+                        await html5QrKiosk.stop().catch(() => {});
+                        html5QrKiosk.clear();
+                        html5QrKiosk = new Html5Qrcode("reader");
                     }
-                    return html5QrKiosk.start(
-                        devices[0].id,
-                        { fps: 10, qrbox: { width: 180, height: 180 } },
-                        (decodedText) => {
-                            processCode(decodedText);
-                        },
-                        () => {}
-                    );
-                }).then(() => {
+                } catch (e) { /* ignore */ }
+                await startCameraKiosk();
+            }
+
+            // Helper: start dengan config tertentu
+            async function tryStart(cameraConfig) {
+                try {
+                    await html5QrKiosk.start(cameraConfig, config, onSuccess, onError);
                     isCamRunning = true;
-                });
-            }).catch(err => {
-                console.error("Gagal start kamera:", err);
-                alert("Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.");
-                if (placeholder) placeholder.style.display = 'flex';
-            });
+                    return true;
+                } catch (e) {
+                    console.warn("Start failed with config:", cameraConfig, e);
+                    return false;
+                }
+            }
+
+            // ===== STRATEGI FALLBACK BERLAPIS =====
+
+            // 1. Coba facingMode "environment" (kamera belakang) - tanpa 'exact' agar lebih kompatibel
+            if (await tryStart({ facingMode: "environment" })) return;
+
+            // 2. Coba facingMode "user" (kamera depan) - untuk perangkat tanpa kamera belakang
+            if (await tryStart({ facingMode: "user" })) return;
+
+            // 3. Enumerate devices dan cari kamera belakang berdasarkan label
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                if (devices && devices.length > 0) {
+                    // Cari kamera belakang berdasarkan label (case-insensitive)
+                    const backCamera = devices.find(d => {
+                        const label = (d.label || '').toLowerCase();
+                        return label.includes('back') || label.includes('belakang') || 
+                               label.includes('rear') || label.includes('environment') ||
+                               label.includes('camera 1') || label.includes('kamera 1');
+                    });
+
+                    // Prioritas: kamera belakang > device pertama
+                    const targetDevice = backCamera || devices[0];
+                    if (await tryStart(targetDevice.id)) return;
+                }
+            } catch (e) {
+                console.warn("getCameras failed:", e);
+            }
+
+            // 4. Semua strategi gagal - tampilkan error
+            showCameraError("Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.");
         }
 
         function stopCameraKiosk() {

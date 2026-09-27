@@ -73,12 +73,13 @@ class AuthController extends Controller
             }
         }
 
-        // 3. Cek apakah login menggunakan Name / Username atau prefix alias email (misal: 'admin', 'kesiswaan')
-        $user = User::where('username', $loginInput)
-            ->orWhere('name', $loginInput)
-            ->orWhere('email', $loginInput)
-            ->orWhere('email', 'like', $loginInput . '@%')
-            ->first();
+        // 3. Cek apakah login menggunakan Username pendek atau prefix alias email (misal: 'admin', 'kesiswaan')
+        //    Gunakan grouping where agar orWhere tidak "bocor" ke kondisi lain.
+        $user = User::where(function ($query) use ($loginInput) {
+            $query->where('username', $loginInput)
+                  ->orWhere('email', $loginInput)
+                  ->orWhere('email', 'like', $loginInput . '@%');
+        })->first();
 
         if ($user && $this->verifyUserCredentials($user, $password)) {
             Auth::login($user, $remember);
@@ -87,8 +88,9 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole($user);
         }
 
-        // 4. Standar Auth::attempt sebagai fallback cerdas
-        $attemptField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+        // 4. Standar Auth::attempt sebagai fallback terakhir
+        //    Deteksi field: email lengkap vs username pendek
+        $attemptField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         if (Auth::attempt([$attemptField => $loginInput, 'password' => $password], $remember)) {
             $request->session()->regenerate();
 
