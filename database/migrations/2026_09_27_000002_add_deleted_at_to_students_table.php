@@ -8,22 +8,27 @@ return new class extends Migration
 {
     /**
      * Menambahkan kolom deleted_at nullable ke tabel students.
-     * Digunakan untuk soft delete manual (tanpa trait SoftDeletes).
+     * Idempotent: hanya tambahkan jika kolom belum ada.
      */
     public function up(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->timestamp('deleted_at')->nullable()->after('status');
+            if (!Schema::hasColumn('students', 'deleted_at')) {
+                $table->softDeletes();
+            }
         });
     }
 
     /**
      * Hapus kolom deleted_at dari tabel students.
+     * Idempotent: hanya hapus jika kolom ada.
      */
     public function down(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->dropColumn('deleted_at');
+            if (Schema::hasColumn('students', 'deleted_at')) {
+                $table->dropSoftDeletes();
+            }
         });
     }
 };
