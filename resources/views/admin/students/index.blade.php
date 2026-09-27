@@ -2,9 +2,20 @@
 
 @section('title', 'Data Siswa')
 @section('page_title', 'Data Siswa')
-@section('page_subtitle', 'Kelola informasi siswa, cetak kartu NISN, dan data rombongan belajar.')
+@section('page_subtitle', 'Kelola informasi siswa')
 
-
+@push('styles')
+<style>
+    /* Subtitle Data Siswa: full width, tidak terpotong (mobile & desktop) */
+    .header-main-subtitle {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        display: block !important;
+        width: 100% !important;
+    }
+</style>
+@endpush
 
 @push('styles')
 <style>
@@ -40,6 +51,9 @@
     .table-zebra-custom tbody td {
         color: #1e293b !important;
         font-weight: 400 !important;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
+        font-size: 0.78rem;
     }
 
     .indent-nama {
@@ -76,19 +90,18 @@
     }
 
     .table-zebra-custom thead th {
-        color: #111827 !important;
-        font-size: 0.75rem !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.05em;
-        border-top: none !important;
-        border-left: none !important;
-        border-right: none !important;
-        border-bottom: 1px solid #f1f5f9 !important;
+        color: #475569 !important;
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.03em;
+        border-bottom: 1.5px solid #edf2f7 !important;
         background-color: #f8fafc !important;
+        padding: 0.75rem 0.75rem;
+        font-family: 'Poppins', 'Roboto', sans-serif;
+        text-transform: uppercase;
     }
 
-    /* ===== Action Bar Layout: Search+Filter Stretch Memanjang, Sejajar 1 Baris ===== */
+    /* ===== Action Bar Layout ===== */
     .action-bar-section {
         display: flex;
         flex-direction: column;
@@ -119,6 +132,7 @@
             max-width: 200px !important;
         }
     }
+
     .btn-solid-pill,
     button.btn-solid-pill,
     a.btn-solid-pill {
@@ -127,7 +141,7 @@
         justify-content: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: 6px !important; /* sama persis dengan .form-control / .form-select */
+        border-radius: 6px !important;
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -136,6 +150,8 @@
         padding: 0 1rem;
         transition: filter 0.15s ease, transform 0.1s ease;
         box-shadow: none !important;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-solid-pill:hover {
         filter: brightness(0.94);
@@ -148,7 +164,7 @@
     .btn-solid-blue { background-color: #2563eb; }
     .btn-solid-red { background-color: #dc2626; }
 
-    /* Row Action Buttons (Detail/Edit/Hapus per baris): Bentuk & Radius SAMA dengan tombol atas */
+    /* Row Action Buttons */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
@@ -163,6 +179,8 @@
         white-space: nowrap;
         transition: filter 0.15s ease;
         box-shadow: none !important;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-row-action:hover {
         filter: brightness(0.94);
@@ -172,7 +190,7 @@
     .btn-row-action.action-edit { background-color: #f59e0b; }
     .btn-row-action.action-delete { background-color: #dc2626; }
 
-    /* Search bar & dropdown filter disamakan bentuknya (kotak sudut tumpul) */
+    /* Search bar & dropdown filter */
     .search-input-wrap input.form-control,
     .filter-select-wrap select.form-select,
     .search-filter-group input.form-control,
@@ -193,7 +211,6 @@
 
 @section('content')
 
-    {{-- Alert Notifikasi --}}
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
         <div class="d-flex align-items-center">
@@ -214,22 +231,19 @@
     </div>
     @endif
 
-    {{-- Form Delete All Students (Hidden, dipanggil via confirmDeleteAllStudents()) --}}
     <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
 
-    <!-- ========================================================================= -->
-    <!-- KARTU UTAMA DATA SISWA: CLEAN ACTION BAR & TABEL TERPADU (SIAKAD STYLE)   -->
-    <!-- ========================================================================= -->
+    <!-- KARTU UTAMA DATA SISWA -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
         
-        <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
-        <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
+        <!-- Action Bar & Filter -->
+        <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
                 
-                <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas (Flex Column on Mobile, Row on Desktop) -->
+                <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas -->
                 <form method="GET" action="{{ route('admin.students.index') }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
                     <!-- Search Bar -->
                     <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
@@ -239,7 +253,7 @@
                                placeholder="Cari nama atau NIS..." 
                                value="{{ request('search') }}"
                                aria-label="Cari nama atau NIS"
-                               style="height: 38px; font-size: 0.85rem;">
+                               style="height: 38px; font-size: 0.85rem; letter-spacing: 0.03em;">
                         <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" style="height: 38px;">
                             <i class='bx bx-search fs-6'></i>
                         </button>
@@ -247,7 +261,7 @@
 
                     <!-- Dropdown Filter Kelas -->
                     <div class="w-100 filter-box-wrap" style="max-width: 200px;">
-                        <select name="class_id" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="height: 38px; font-size: 0.85rem;">
+                        <select name="class_id" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="height: 38px; font-size: 0.82rem; letter-spacing: 0.02em;">
                             <option value="">Semua Kelas</option>
                             @foreach($classes as $c)
                             <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>
@@ -260,56 +274,48 @@
                     @if(request('search') || request('class_id'))
                     <div class="w-100 w-md-auto">
                         <a href="{{ route('admin.students.index') }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
-                            <i class='bx bx-refresh fs-5 me-1'></i> Reset
+                            Reset
                         </a>
                     </div>
                     @endif
                 </form>
 
-                <!-- Sisi Kanan: Deretan Tombol Aksi (Stacked Layout di Mobile) -->
+                <!-- Sisi Kanan: Deretan Tombol Aksi -->
                 <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
-                    <!-- 1. Cetak Kartu Massal (Solid Biru) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#printCardsModal">
-                        <i class='bx bx-printer'></i>
                         <span>Cetak Kartu</span>
                     </button>
 
                     @if(Auth::check() && Auth::user()->role === 'admin')
-                    <!-- 2. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <i class='bx bx-file'></i>
                         <span>Import Excel</span>
                     </button>
 
-                    <!-- 3. Tambah Siswa (Solid Biru, Aksi Utama) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <i class='bx bx-plus'></i>
                         <span>Tambah Siswa</span>
                     </button>
 
-                    <!-- 4. Hapus Semua Siswa (Solid Merah - Urutan Terakhir) -->
-                    <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Siswa" onclick="confirmDeleteAllStudents()">
-                        <i class='bx bx-trash'></i>
-                        <span>Hapus</span>
-                    </button>
+                    <a href="{{ route('admin.students.trash') }}" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Arsip Siswa">
+                        <span>Arsip</span>
+                    </a>
                     @endif
                 </div>
 
             </div>
         </div>
 
-        {{-- Tabel Data Siswa (Alignment Vertikal & Horizontal Presisi, Anti-Numpuk text-nowrap & table-responsive) --}}
+        <!-- Tabel Data Siswa -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
-                <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
-                    <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">NIS</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA SISWA</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">JENIS KELAMIN</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA WALI</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 45px;">No</th>
+                        <th class="text-center" style="width: 80px;">Kelas</th>
+                        <th class="text-center">NIS</th>
+                        <th class="text-start indent-nama">Nama Siswa</th>
+                        <th class="text-start d-none d-md-table-cell">Jenis Kelamin</th>
+                        <th class="text-start d-none d-md-table-cell">Nama Wali</th>
+                        <th class="text-center d-none d-md-table-cell" style="width: 180px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -318,24 +324,24 @@
                         $rawJk = strtolower(trim($student->jenis_kelamin ?? $student->gender ?? ''));
                         $isMale = in_array($rawJk, ['laki-laki', 'laki - laki', 'l', 'pria', 'male']);
                     @endphp
-                    <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td class="text-center text-nowrap px-3">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
-                        <td class="text-center text-nowrap px-3">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
-                        <td class="text-center text-nowrap font-monospace px-3">{{ $student->nis }}</td>
-                        <td class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $student->nama ?? $student->name }}</td>
-                        <td class="text-start text-nowrap px-3">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
-                        <td class="text-start text-nowrap px-3 text-secondary">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
-                        <td class="text-center text-nowrap px-3">
+                    <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
+                        <td class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
+                        <td class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
+                        <td class="text-center font-monospace">{{ $student->nis }}</td>
+                        <td class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
+                        <td class="text-start d-none d-md-table-cell">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
+                        <td class="text-start text-secondary d-none d-md-table-cell">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
+                        <td class="text-center d-none d-md-table-cell">
                             <div class="crud-center-wrapper">
                                 <a href="{{ route('admin.students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail">
-                                    <i class='bx bx-show'></i> Detail
+                                    Detail
                                 </a>
                                 @if(Auth::check() && Auth::user()->role === 'admin')
                                 <a href="{{ route('admin.students.edit', $student->id) }}" class="btn-row-action action-edit" title="Edit">
-                                    <i class='bx bx-edit'></i> Edit
+                                    Edit
                                 </a>
                                 <button type="button" class="btn-row-action action-delete" title="Hapus" onclick="confirmDeleteStudent('{{ $student->id }}', '{{ addslashes($student->nama ?? $student->name) }}')">
-                                    <i class='bx bx-trash'></i> Hapus
+                                    Hapus
                                 </button>
                                 <form id="deleteStudentForm-{{ $student->id }}" action="{{ route('admin.students.destroy', $student->id) }}" method="POST" class="d-none">
                                     @csrf
@@ -346,9 +352,8 @@
                         </td>
                     </tr>
                     @empty
-                    <tr class="align-middle">
-                        <td colspan="7" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
                             Belum ada data siswa yang tercatat.
                         </td>
                     </tr>

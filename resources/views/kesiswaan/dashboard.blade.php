@@ -229,6 +229,7 @@
                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">Grafik Garis Kehadiran Mingguan Per Rombel</span>
                         </div>
                         <span class="badge bg-light text-secondary rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.74rem;">
+                            @php \Carbon\Carbon::setLocale('id'); @endphp
                             Minggu Ini: {{ \Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y') }}
                         </span>
                     </div>

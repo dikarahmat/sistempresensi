@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\WaliKelas;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendWhatsAppAttendanceNotificationJob;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Holiday;
@@ -11,7 +10,6 @@ use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -235,11 +233,6 @@ class ScannerController extends Controller
                 ],
             ];
         });
-
-        // Notifikasi WhatsApp Otomatis ke Orang Tua dikirim secara Asynchronous via Queue Job
-        if (!empty($result['should_notify_wa']) && isset($result['attendance'])) {
-            SendWhatsAppAttendanceNotificationJob::dispatch($student, $result['attendance']);
-        }
 
         return response()->json($result['response'], $result['status_code'] ?? 200);
     }

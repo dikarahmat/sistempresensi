@@ -14,6 +14,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -114,37 +115,26 @@ class SecurityAuditFixesTest extends TestCase
     }
 
     /**
-     * 2. CRITICAL BOTTLENECK TEST: Notifikasi WhatsApp harus dikirim secara Asynchronous via Queue Job.
+     * 2. VERIFICATION TEST: Pastikan fitur WhatsApp sudah dihapus total dari codebase.
      */
-    public function test_whatsapp_notification_is_dispatched_via_asynchronous_queue_job(): void
+    public function test_whatsapp_feature_is_completely_removed(): void
     {
-        Queue::fake();
+        // Pastikan class WhatsAppService tidak ada
+        $this->assertFalse(class_exists(\App\Services\WhatsAppService::class));
 
-        // Aktifkan WhatsApp gateway di setting
-        Setting::set('whatsapp_gateway_status', 'active');
-        Setting::set('whatsapp_api_token', 'test_token_123');
+        // Pastikan class SendWhatsAppAttendanceNotificationJob tidak ada
+        $this->assertFalse(class_exists(\App\Jobs\SendWhatsAppAttendanceNotificationJob::class));
 
-        $student = Student::create([
-            'school_class_id' => $this->classA->id,
-            'nis' => '12345',
-            'name' => 'Ahmad Siswa',
-            'gender' => 'Laki-laki',
-            'parent_phone' => '081234567890',
-            'status' => 'active',
-            'qr_token' => 'QR-12345',
-        ]);
+        // Pastikan tidak ada file WhatsAppService
+        $this->assertFileDoesNotExist(app_path('Services/WhatsAppService.php'));
 
-        $this->actingAs($this->adminUser)
-            ->postJson(route('admin.scanner.process'), [
-                'qr_token' => 'QR-12345',
-                'type' => 'masuk',
-            ])
-            ->assertStatus(200);
+        // Pastikan tidak ada file SendWhatsAppAttendanceNotificationJob
+        $this->assertFileDoesNotExist(app_path('Jobs/SendWhatsAppAttendanceNotificationJob.php'));
 
-        // Pastikan Job ter-dispatch ke queue
-        Queue::assertPushed(SendWhatsAppAttendanceNotificationJob::class, function ($job) use ($student) {
-            return $job->student->id === $student->id;
-        });
+        // Pastikan tidak ada setting WhatsApp di database
+        $this->assertDatabaseMissing('settings', ['key' => 'whatsapp_gateway_status']);
+        $this->assertDatabaseMissing('settings', ['key' => 'whatsapp_api_token']);
+        $this->assertDatabaseMissing('settings', ['key' => 'whatsapp_sender']);
     }
 
     /**

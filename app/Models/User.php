@@ -53,29 +53,4 @@ class User extends Authenticatable
     {
         return $this->hasOne(Teacher::class, 'user_id');
     }
-
-    public function schoolClass()
-    {
-        return $this->hasOneThrough(SchoolClass::class, Teacher::class, 'user_id', 'teacher_id');
-    }
-
-    public function schoolClasses()
-    {
-        return $this->hasManyThrough(SchoolClass::class, Teacher::class, 'user_id', 'teacher_id');
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isGuru(): bool
-    {
-        return $this->role === 'guru';
-    }
-
-    public function isKesiswaan(): bool
-    {
-        return $this->role === 'kesiswaan';
-    }
 }

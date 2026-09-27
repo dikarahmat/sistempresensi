@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Master Data Kelas')
-@section('page_title', 'Master Data Kelas')
+@section('title', 'Data Kelas')
+@section('page_title', 'Data Kelas')
 @section('page_subtitle', 'Kelola rombongan belajar dan penetapan wali kelas.')
 
 @push('styles')
@@ -38,6 +38,10 @@
     .table-zebra-custom tbody td {
         color: #1e293b !important;
         font-weight: 400 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
+        font-size: 0.78rem;
     }
 
     .indent-nama {
@@ -76,14 +80,15 @@
     .table-zebra-custom thead th {
         color: #111827 !important;
         font-size: 0.75rem !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.03em;
         border-top: none !important;
         border-left: none !important;
         border-right: none !important;
         border-bottom: 1px solid #f1f5f9 !important;
         background-color: #f8fafc !important;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
     /* ===== Action Bar Layout: Filter Stretch Memanjang, Sejajar 1 Baris (sama seperti Data Siswa/Guru) ===== */
@@ -287,20 +292,17 @@
                     @if(Route::has('admin.classes.import'))
                     <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importClassModal">
-                        <i class='bx bx-file'></i>
                         <span>Import Excel</span>
                     </button>
                     @endif
 
                     <!-- 2. Tambah Kelas (Solid Biru, Aksi Utama) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addClassModal">
-                        <i class='bx bx-plus'></i>
                         <span>Tambah Kelas</span>
                     </button>
 
                     <!-- 3. Hapus Semua Kelas (Solid Merah - Urutan Terakhir) -->
                     <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
-                        <i class='bx bx-trash'></i>
                         <span>Hapus</span>
                     </button>
                 </div>
@@ -345,12 +347,12 @@
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="Edit">
-                                    <i class='bx bx-edit-alt'></i> Edit
+                                    Edit
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
                                 <button type="button" class="btn-row-action action-delete" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="Hapus">
-                                    <i class='bx bx-trash'></i> Hapus
+                                    Hapus
                                 </button>
                                 <form id="deleteClassForm-{{ $class->id }}" action="{{ route('admin.classes.destroy', $class->id) }}" method="POST" class="d-none">
                                     @csrf

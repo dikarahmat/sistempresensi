@@ -10,6 +10,7 @@
     <div>
         <span class="text-secondary fw-semibold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Tanggal Hari Ini</span>
         <strong class="text-dark fw-bold d-block" style="font-size: 0.88rem;">
+            @php \Carbon\Carbon::setLocale('id'); @endphp
             {{ $todayFormatted ?? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}
         </strong>
     </div>

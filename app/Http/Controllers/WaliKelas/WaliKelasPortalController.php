@@ -12,7 +12,6 @@ use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -325,7 +324,13 @@ class WaliKelasPortalController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        $classHistories = $classes->map(function ($cls) use ($todayAttendances, $activeStudentsByClass) {
+        // SEMUA absensi diambil dalam 1 query, lalu dikelompokkan di memori (anti N+1)
+        $allStudentIds = $activeStudents->pluck('id')->toArray();
+        $allAttendancesQuery = Attendance::whereIn('student_id', $allStudentIds);
+        $allAttendances = $allAttendancesQuery->get();
+        $attendancesByStudent = $allAttendances->groupBy('student_id');
+
+        $classHistories = $classes->map(function ($cls) use ($todayAttendances, $activeStudentsByClass, $attendancesByStudent) {
             $classStudents = $activeStudentsByClass->get($cls->id, collect());
             $studentIds = $classStudents->pluck('id');
             $totalStudents = (int) ($cls->total_students ?? $classStudents->count());

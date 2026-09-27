@@ -55,7 +55,9 @@
             max-width: 1020px;
             background: transparent;
             border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(59, 98, 246, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.8);
+            box-shadow:
+                0 25px 50px -12px rgba(59, 98, 246, 0.18),
+                0 0 0 1px rgba(226, 232, 240, 0.8);
             display: flex;
             overflow: hidden;
             min-height: 560px;
@@ -64,12 +66,13 @@
         /* ============================================================ */
         /* SISI KIRI: PANEL BRANDING                                    */
         /* ============================================================ */
+
         .branding-panel {
             width: 45%;
             min-width: 380px;
             position: relative;
             border-radius: 20px 0 0 20px;
-            padding: 3rem 2.25rem 2.25rem 2.25rem;
+            padding: 3rem 2.25rem 2.25rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -96,10 +99,12 @@
         .branding-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(155deg, 
+            background: linear-gradient(
+                155deg,
                 rgba(59, 98, 246, 0.42) 0%,
                 rgba(37, 99, 235, 0.38) 50%,
-                rgba(29, 78, 216, 0.48) 100%);
+                rgba(29, 78, 216, 0.48) 100%
+            );
             z-index: 1;
         }
 
@@ -142,7 +147,7 @@
             color: #dbeafe;
             margin-bottom: 0.4rem;
             display: inline-block;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
 
         .school-title-hero {
@@ -162,7 +167,7 @@
             line-height: 1.5;
             margin: 0 auto;
             font-weight: 500;
-            text-shadow: 0 1px 6px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
         }
 
         .badge-grid-hero {
@@ -187,7 +192,7 @@
             color: rgba(255, 255, 255, 0.98);
             font-size: 0.72rem;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .badge-soft-pill i {
@@ -202,16 +207,17 @@
             font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.85);
             font-weight: 600;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
 
         /* ============================================================ */
-        /* SISI KANAN: FORM LOGIN UNIVERSAL                             */
+        /* SISI KANAN: FORM LOGIN                                      */
         /* ============================================================ */
+
         .form-panel {
             width: 55%;
             flex: 1;
-            padding: 3.25rem 2.75rem 2.75rem 2.75rem;
+            padding: 3.25rem 2.75rem 2.75rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -246,6 +252,7 @@
         }
 
         /* Field Input */
+
         .form-group-item {
             margin-bottom: 1.2rem;
         }
@@ -266,6 +273,7 @@
             border-radius: 12px;
             padding: 0.15rem 0.5rem;
             transition: all 0.2s ease;
+            overflow: hidden;
         }
 
         .input-box-wrapper:focus-within {
@@ -285,6 +293,7 @@
             font-size: 1.2rem;
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .input-box-wrapper:focus-within .input-icon-box {
@@ -296,19 +305,66 @@
         }
 
         .input-box-wrapper .form-input-field {
-            border: none;
-            background: transparent;
+            border: none !important;
+            background: transparent !important;
             width: 100%;
+            min-width: 0;
             padding: 0.6rem 0.35rem;
             font-size: 0.9rem;
             font-weight: 600;
-            color: var(--text-main);
-            outline: none;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a;
+            caret-color: #0f172a;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .input-box-wrapper .form-input-field:focus {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            color: #0f172a !important;
         }
 
         .input-box-wrapper .form-input-field::placeholder {
-            color: #94a3b8;
+            color: #94a3b8 !important;
             font-weight: 400;
+            opacity: 1;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+
+        /*
+         * FIX CHROME AUTOFILL
+         * Menghilangkan blok biru autofill yang menutupi isi input.
+         */
+        .input-box-wrapper .form-input-field:-webkit-autofill,
+        .input-box-wrapper .form-input-field:-webkit-autofill:hover,
+        .input-box-wrapper .form-input-field:-webkit-autofill:focus,
+        .input-box-wrapper .form-input-field:-webkit-autofill:active {
+            -webkit-text-fill-color: #0f172a !important;
+            caret-color: #0f172a !important;
+            -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+            box-shadow: 0 0 0 1000px #f8fafc inset !important;
+            border: none !important;
+            outline: none !important;
+            transition: background-color 9999s ease-out 0s;
+        }
+
+        .input-box-wrapper:focus-within .form-input-field:-webkit-autofill,
+        .input-box-wrapper:focus-within .form-input-field:-webkit-autofill:hover,
+        .input-box-wrapper:focus-within .form-input-field:-webkit-autofill:focus,
+        .input-box-wrapper:focus-within .form-input-field:-webkit-autofill:active {
+            -webkit-text-fill-color: #0f172a !important;
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            box-shadow: 0 0 0 1000px #ffffff inset !important;
+        }
+
+        /* Firefox autofill */
+        .input-box-wrapper .form-input-field:autofill {
+            color: #0f172a !important;
+            background: transparent !important;
+            box-shadow: none !important;
         }
 
         .btn-toggle-eye {
@@ -319,7 +375,9 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
             font-size: 1.2rem;
+            flex-shrink: 0;
         }
 
         .btn-toggle-eye:hover {
@@ -337,6 +395,7 @@
         }
 
         /* Checkbox Ingat Saya */
+
         .remember-container {
             display: flex;
             align-items: center;
@@ -364,7 +423,8 @@
             margin: 0;
         }
 
-        /* Tombol Aksi Utama */
+        /* Tombol Login */
+
         .btn-submit-action {
             background-color: var(--royal-blue);
             color: #ffffff;
@@ -390,9 +450,16 @@
             transform: translateY(-1px);
         }
 
+        .btn-submit-action:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* ============================================================ */
-        /* OPTIMASI RESPONSIF MOBILE                                    */
+        /* RESPONSIVE MOBILE                                           */
         /* ============================================================ */
+
         @media (max-width: 991px) {
             body {
                 min-height: 100vh;
@@ -407,7 +474,12 @@
                 overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
                 background-color: #eff4ff;
-                background-image: linear-gradient(135deg, #eef5ff 0%, #f8fbff 50%, #edf4ff 100%);
+                background-image: linear-gradient(
+                    135deg,
+                    #eef5ff 0%,
+                    #f8fbff 50%,
+                    #edf4ff 100%
+                );
                 background-attachment: scroll;
             }
 
@@ -431,7 +503,12 @@
                 aspect-ratio: 16 / 9;
                 border-radius: 16px 16px 0 0;
                 padding: 1rem 1.25rem;
-                background: linear-gradient(155deg, #3b62f6 0%, #2563eb 55%, #1d4ed8 100%);
+                background: linear-gradient(
+                    155deg,
+                    #3b62f6 0%,
+                    #2563eb 55%,
+                    #1d4ed8 100%
+                );
                 justify-content: center;
             }
 
@@ -440,10 +517,12 @@
             }
 
             .branding-overlay {
-                background: linear-gradient(155deg,
+                background: linear-gradient(
+                    155deg,
                     rgba(59, 98, 246, 0.65) 0%,
                     rgba(37, 99, 235, 0.60) 50%,
-                    rgba(29, 78, 216, 0.70) 100%);
+                    rgba(29, 78, 216, 0.70) 100%
+                );
                 backdrop-filter: none;
                 -webkit-backdrop-filter: none;
             }
@@ -510,96 +589,127 @@
         }
     </style>
 </head>
+
 <body>
 
-<!-- Container Split Layout Dua Kolom -->
 <div class="login-split-card">
 
-    <!-- ============================================== -->
-    <!-- SISI KIRI: BRANDING PANEL                      -->
-    <!-- ============================================== -->
+    <!-- SISI KIRI: BRANDING PANEL -->
     <div class="branding-panel">
-        
-        <!-- Foto Gedung Sekolah di Latar Belakang -->
-        <img src="{{ asset('images/bg.webp') }}"
-             alt="Gedung Sekolah" 
-             class="branding-bg-image"
-             onerror="this.style.display='none'">
 
-        <!-- Overlay Gradasi Biru Terang Transparan -->
+        <img
+            src="{{ asset('images/bg.webp') }}"
+            alt="Gedung Sekolah"
+            class="branding-bg-image"
+            loading="lazy"
+            onerror="this.style.display='none'"
+        >
+
         <div class="branding-overlay"></div>
 
-        <!-- Bagian Tengah: Pure Logo Terpusat & Identitas Sekolah -->
         <div class="branding-center-wrapper">
             <div class="logo-hero-wrapper">
-                <img src="{{ asset(\App\Models\Setting::getLogo()) }}" 
-                     alt="Logo Sekolah" 
-                     class="school-logo-hero"
-                     onerror="this.outerHTML='<div class=\'fs-3 fw-bold text-white\'>SMP</div>'">
+                <img
+                    src="{{ asset(\App\Models\Setting::getLogo()) }}"
+                    alt="Logo Sekolah"
+                    class="school-logo-hero"
+                    loading="lazy"
+                    onerror="this.outerHTML='<div class=\'fs-3 fw-bold text-white\'>SMP</div>'"
+                >
             </div>
 
-            <span class="school-tagline">SISTEM PRESENSI TERINTEGRASI</span>
+            <span class="school-tagline">
+                SISTEM PRESENSI TERINTEGRASI
+            </span>
+
             <h1 class="school-title-hero">
                 {{ \App\Models\Setting::getSchoolName() }}
             </h1>
+
             <p class="school-desc-hero">
                 Portal manajemen kehadiran digital berbasis QR Code & pemantauan presensi terpadu secara realtime.
             </p>
         </div>
 
-        <!-- Bagian Bawah Kiri: Badges Fitur & Copyright (Tampil di Layar Besar) -->
-        <div class="w-100 d-none d-lg-block" style="position: relative; z-index: 2;">
+        <div
+            class="w-100 d-none d-lg-block"
+            style="position: relative; z-index: 2;"
+        >
             <div class="badge-grid-hero">
                 <span class="badge-soft-pill">
-                    <i class='bx bx-check-shield'></i> Terpusat
+                    <i class='bx bx-check-shield'></i>
+                    Terpusat
                 </span>
+
                 <span class="badge-soft-pill">
-                    <i class='bx bx-pulse'></i> Realtime
+                    <i class='bx bx-pulse'></i>
+                    Realtime
                 </span>
+
                 <span class="badge-soft-pill">
-                    <i class='bx bx-qr-scan'></i> QR Scanner
+                    <i class='bx bx-qr-scan'></i>
+                    QR Scanner
                 </span>
             </div>
+
             <div class="branding-copyright">
                 &copy; {{ date('Y') }} {{ \App\Models\Setting::getSchoolName() }}
             </div>
         </div>
     </div>
 
-    <!-- ============================================== -->
-    <!-- SISI KANAN: FORM LOGIN UNIVERSAL               -->
-    <!-- ============================================== -->
+    <!-- SISI KANAN: FORM LOGIN -->
     <div class="form-panel">
+
         <div>
-            <span class="form-header-badge">Portal Presensi Terpadu</span>
-            <h2 class="form-heading">Selamat Datang</h2>
-            <p class="form-subtext">Masukkan kredensial akun Anda untuk masuk ke sistem presensi.</p>
+            <span class="form-header-badge">
+                Portal Presensi Terpadu
+            </span>
+
+            <h2 class="form-heading">
+                Selamat Datang
+            </h2>
+
+            <p class="form-subtext">
+                Masukkan kredensial akun Anda untuk masuk ke sistem presensi.
+            </p>
         </div>
 
-        <!-- Form Login Universal -->
-        <form action="{{ route('login') }}" 
-              method="POST" 
-              id="formUniversalLogin" 
-              autocomplete="on">
+        <form
+            action="{{ route('login') }}"
+            method="POST"
+            id="formUniversalLogin"
+            autocomplete="on"
+        >
             @csrf
 
-            <!-- Input Email / Username / NIP -->
+            <!-- EMAIL / USERNAME -->
             <div class="form-group-item">
-                <label class="input-label-custom" for="loginInput">Email / Username</label>
+                <label
+                    class="input-label-custom"
+                    for="loginInput"
+                >
+                    Email / Username
+                </label>
+
                 <div class="input-box-wrapper {{ $errors->has('login') ? 'is-invalid-field' : '' }}">
                     <span class="input-icon-box">
                         <i class='bx bx-user'></i>
                     </span>
-                    <input type="text" 
-                           name="login" 
-                           id="loginInput" 
-                           class="form-input-field" 
-                           value="{{ old('login') }}" 
-                           required 
-                           autofocus
-                           placeholder="Masukkan Email, Username, atau NIP"
-                           autocomplete="username">
+
+                    <input
+                        type="text"
+                        name="login"
+                        id="loginInput"
+                        class="form-input-field"
+                        value="{{ old('login') }}"
+                        required
+                        autofocus
+                        placeholder="Masukkan Email, Username, atau NIP"
+                        autocomplete="username"
+                    >
                 </div>
+
                 @if($errors->has('login'))
                     <div class="field-error-feedback">
                         <i class='bx bx-error-circle'></i>
@@ -608,28 +718,44 @@
                 @endif
             </div>
 
-            <!-- Input Kata Sandi -->
+            <!-- PASSWORD -->
             <div class="form-group-item">
-                <label class="input-label-custom" for="passwordInput">Kata Sandi</label>
+                <label
+                    class="input-label-custom"
+                    for="passwordInput"
+                >
+                    Kata Sandi
+                </label>
+
                 <div class="input-box-wrapper {{ $errors->has('password') ? 'is-invalid-field' : '' }}">
                     <span class="input-icon-box">
                         <i class='bx bx-lock-alt'></i>
                     </span>
-                    <input type="password" 
-                           name="password" 
-                           id="passwordInput" 
-                           class="form-input-field" 
-                           required 
-                           placeholder="Masukkan kata sandi"
-                           autocomplete="current-password">
-                    <button type="button" 
-                            class="btn-toggle-eye" 
-                            onclick="togglePasswordVisibility('passwordInput', 'eyeIconUniversal')" 
-                            title="Lihat Kata Sandi"
-                            aria-label="Lihat Kata Sandi">
-                        <i class='bx bx-hide' id="eyeIconUniversal"></i>
+
+                    <input
+                        type="password"
+                        name="password"
+                        id="passwordInput"
+                        class="form-input-field"
+                        required
+                        placeholder="Masukkan kata sandi"
+                        autocomplete="current-password"
+                    >
+
+                    <button
+                        type="button"
+                        class="btn-toggle-eye"
+                        onclick="togglePasswordVisibility('passwordInput', 'eyeIconUniversal')"
+                        title="Lihat Kata Sandi"
+                        aria-label="Lihat Kata Sandi"
+                    >
+                        <i
+                            class='bx bx-hide'
+                            id="eyeIconUniversal"
+                        ></i>
                     </button>
                 </div>
+
                 @if($errors->has('password'))
                     <div class="field-error-feedback">
                         <i class='bx bx-error-circle'></i>
@@ -638,43 +764,83 @@
                 @endif
             </div>
 
-            <!-- Checkbox Ingat Saya -->
+            <!-- INGAT SAYA -->
             <div class="remember-container">
-                <input type="checkbox" name="remember" class="remember-checkbox" id="rememberMe" {{ old('remember') ? 'checked' : '' }}>
-                <label class="remember-label" for="rememberMe">Ingat Saya</label>
+                <input
+                    type="checkbox"
+                    name="remember"
+                    class="remember-checkbox"
+                    id="rememberMe"
+                    {{ old('remember') ? 'checked' : '' }}
+                >
+
+                <label
+                    class="remember-label"
+                    for="rememberMe"
+                >
+                    Ingat Saya
+                </label>
             </div>
 
-            <!-- Tombol Aksi "Masuk Sekarang" -->
-            <button type="submit" id="btnSubmitLogin" class="btn-submit-action">
-                <span id="btnTextLogin">Masuk Sekarang</span>
-                <span class="spinner-border spinner-border-sm d-none" id="spinnerLogin" role="status"></span>
+            <!-- LOGIN -->
+            <button
+                type="submit"
+                id="btnSubmitLogin"
+                class="btn-submit-action"
+            >
+                <span id="btnTextLogin">
+                    Masuk Sekarang
+                </span>
+
+                <span
+                    class="spinner-border spinner-border-sm d-none"
+                    id="spinnerLogin"
+                    role="status"
+                ></span>
             </button>
         </form>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     function togglePasswordVisibility(inputId, iconId) {
         const input = document.getElementById(inputId);
         const icon = document.getElementById(iconId);
+
         if (!input || !icon) return;
 
         const isPassword = input.getAttribute('type') === 'password';
-        input.setAttribute('type', isPassword ? 'text' : 'password');
+
+        input.setAttribute(
+            'type',
+            isPassword ? 'text' : 'password'
+        );
+
         icon.classList.toggle('bx-hide', !isPassword);
         icon.classList.toggle('bx-show', isPassword);
     }
 
     const form = document.getElementById('formUniversalLogin');
+
     if (form) {
         form.addEventListener('submit', function () {
             const btn = document.getElementById('btnSubmitLogin');
             const txt = document.getElementById('btnTextLogin');
             const spn = document.getElementById('spinnerLogin');
-            if (btn) btn.disabled = true;
-            if (txt) txt.textContent = 'Memverifikasi...';
-            if (spn) spn.classList.remove('d-none');
+
+            if (btn) {
+                btn.disabled = true;
+            }
+
+            if (txt) {
+                txt.textContent = 'Memverifikasi...';
+            }
+
+            if (spn) {
+                spn.classList.remove('d-none');
+            }
         });
     }
 </script>

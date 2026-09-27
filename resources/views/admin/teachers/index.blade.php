@@ -2,7 +2,20 @@
 
 @section('title', 'Data Guru & Wali Kelas')
 @section('page_title', 'Data Guru & Wali Kelas')
-@section('page_subtitle', 'Kelola master guru pendidik, penugasan wali kelas, dan informasi kontak.')
+@section('page_subtitle', 'Kelola data guru pendidik')
+
+@push('styles')
+<style>
+    /* Subtitle Data Guru: full width, tidak terpotong (mobile & desktop) */
+    .header-main-subtitle {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        display: block !important;
+        width: 100% !important;
+    }
+</style>
+@endpush
 
 @push('styles')
 <style>
@@ -38,6 +51,10 @@
     .table-zebra-custom tbody td {
         color: #1e293b !important;
         font-weight: 400 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
+        font-size: 0.78rem;
     }
 
     .indent-nama {
@@ -76,14 +93,15 @@
     .table-zebra-custom thead th {
         color: #111827 !important;
         font-size: 0.75rem !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.03em;
         border-top: none !important;
         border-left: none !important;
         border-right: none !important;
         border-bottom: 1px solid #f1f5f9 !important;
         background-color: #f8fafc !important;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
     /* ===== Responsive action bar: stacked on mobile, inline from tablet ===== */
@@ -143,6 +161,9 @@
         padding: 0 1rem;
         transition: filter 0.15s ease, transform 0.1s ease;
         box-shadow: none !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-solid-pill:hover {
         filter: brightness(0.94);
@@ -170,6 +191,9 @@
         white-space: nowrap;
         transition: filter 0.15s ease;
         box-shadow: none !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-row-action:hover {
         filter: brightness(0.94);
@@ -281,7 +305,7 @@
                     @if(request('search'))
                     <div class="w-100 w-md-auto">
                         <a href="{{ url()->current() }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
-                            <i class='bx bx-refresh fs-5 me-1'></i> Reset
+                            Reset
                         </a>
                     </div>
                     @endif
@@ -292,19 +316,16 @@
                 <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
                     <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
-                        <i class='bx bx-file'></i>
                         <span>Import Excel</span>
                     </button>
 
                     <!-- 2. Tambah Guru (Solid Biru, Aksi Utama) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
-                        <i class='bx bx-plus'></i>
                         <span>Tambah Guru</span>
                     </button>
 
                     <!-- 3. Hapus Semua Guru (Solid Merah - Urutan Terakhir) -->
                     <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Data Guru" onclick="confirmDeleteAllTeachers()">
-                        <i class='bx bx-trash'></i>
                         <span>Hapus</span>
                     </button>
                 </div>
@@ -367,14 +388,14 @@
                                             phone: '{{ $teacher->phone_number ?? $teacher->phone ?? '' }}',
                                             class_id: '{{ $assignedClass?->id ?? '' }}'
                                         })">
-                                    <i class='bx bx-edit-alt'></i> Edit
+                                    Edit
                                 </button>
 
                                 <!-- 2. Tombol Hapus Guru -->
                                 <button type="button" class="btn-row-action action-delete"
                                         title="Hapus Data Guru"
                                         onclick="confirmDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
-                                    <i class='bx bx-trash'></i> Hapus
+                                    Hapus
                                 </button>
                                 <form id="deleteTeacherForm-{{ $teacher->id }}" action="{{ route('admin.guru.destroy', $teacher->id) }}" method="POST" class="d-none">
                                     @csrf

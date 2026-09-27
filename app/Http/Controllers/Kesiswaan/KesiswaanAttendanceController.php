@@ -471,7 +471,18 @@ class KesiswaanAttendanceController extends Controller
             ->get()
             ->groupBy('school_class_id');
 
-        $classHistories = $classes->map(function ($cls) use ($selectedYearId, $activeYear, $todayAttendances, $activeStudentsByClass) {
+        // SEMUA absensi diambil dalam 1 query, lalu dikelompokkan di memori (anti N+1)
+        $allStudentIds = $activeStudentsByClass->flatten()->pluck('id')->toArray();
+        $allAttendancesQuery = Attendance::whereIn('student_id', $allStudentIds);
+        if ($selectedYearId) {
+            $allAttendancesQuery->where(function ($q) use ($selectedYearId) {
+                $q->where('academic_year_id', $selectedYearId)->orWhereNull('academic_year_id');
+            });
+        }
+        $allAttendances = $allAttendancesQuery->get();
+        $attendancesByStudent = $allAttendances->groupBy('student_id');
+
+        $classHistories = $classes->map(function ($cls) use ($selectedYearId, $activeYear, $todayAttendances, $activeStudentsByClass, $attendancesByStudent) {
             $classStudents = $activeStudentsByClass->get($cls->id, collect());
             $studentIds = $classStudents->pluck('id');
             $totalStudents = (int) ($cls->total_students ?? $classStudents->count());
@@ -493,20 +504,17 @@ class KesiswaanAttendanceController extends Controller
                 ? round(($todayHadir / $totalStudents) * 100)
                 : 0;
 
-            $attQuery = Attendance::whereIn('student_id', $studentIds);
-            if ($selectedYearId) {
-                $attQuery->where(function ($q) use ($selectedYearId) {
-                    $q->where('academic_year_id', $selectedYearId)->orWhereNull('academic_year_id');
-                });
+            // Ambil absensi kelas ini dari data yang sudah di-fetch (tanpa query tambahan)
+            $classAtts = collect();
+            foreach ($studentIds as $sid) {
+                $classAtts = $classAtts->merge($attendancesByStudent->get($sid, collect()));
             }
 
-            $totalHari = (int) $attQuery->distinct('date')->count('date');
-
-            $allAtts = $attQuery->get();
-            $countHadir = $allAtts->where('status', 'Hadir')->count();
-            $countSakit = $allAtts->where('status', 'Sakit')->count();
-            $countIzin = $allAtts->where('status', 'Izin')->count();
-            $countAlfa = $allAtts->where('status', 'Alfa')->count();
+            $totalHari = $classAtts->pluck('date')->unique()->count();
+            $countHadir = $classAtts->where('status', 'Hadir')->count();
+            $countSakit = $classAtts->where('status', 'Sakit')->count();
+            $countIzin = $classAtts->where('status', 'Izin')->count();
+            $countAlfa = $classAtts->where('status', 'Alfa')->count();
 
             $tahunAjaranStr = $cls->academicYear
                 ? ($cls->academicYear->name . ' – ' . $cls->academicYear->semester)

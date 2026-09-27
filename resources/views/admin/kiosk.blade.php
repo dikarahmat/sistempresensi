@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- HTML5 QR Code Scanner -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 
     <style>
         :root {
@@ -689,7 +689,7 @@
         }
 
         function initCameraDevices() {
-            Html5Qrcode.getCameras().then(devices => {
+            return Html5Qrcode.getCameras().then(devices => {
                 const select = document.getElementById('cameraSourceSelect');
                 select.innerHTML = '';
                 if (devices && devices.length) {
@@ -716,29 +716,46 @@
         }
 
         function startCameraScanning() {
-            const cameraId = document.getElementById('cameraSourceSelect').value;
-            if (!cameraId) {
-                Swal.fire({ icon: 'warning', title: 'Pilih Kamera', text: 'Perangkat kamera belum terdeteksi.' });
+            if (typeof Html5Qrcode === 'undefined') {
+                console.error("Html5Qrcode library not loaded");
                 return;
             }
 
-            html5QrCode = new Html5Qrcode("qr-reader");
-            html5QrCode.start(
-                cameraId,
-                { fps: 10, qrbox: { width: 220, height: 220 } },
-                (decodedText) => {
-                    processScanCode(decodedText);
-                },
-                (errorMessage) => {
-                    // scanning loop frame error (silent)
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+
+            // Step 1: Request camera permission first (prompts user if needed)
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                // Stop the test stream immediately
+                stream.getTracks().forEach(track => track.stop());
+
+                // Step 2: Enumerate available cameras (works now that permission is granted)
+                return Html5Qrcode.getCameras();
+            }).then(devices => {
+                if (!devices || devices.length === 0) {
+                    throw new Error('No camera found');
                 }
-            ).then(() => {
+
+                // Step 3: Start camera with first available device
+                return html5QrCode.start(
+                    devices[0].id,
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    (decodedText) => {
+                        processScanCode(decodedText);
+                    },
+                    (errorMessage) => {
+                        // scanning loop frame error (silent)
+                    }
+                );
+            }).then(() => {
                 isCameraRunning = true;
                 const btn = document.getElementById('btnToggleCamera');
                 btn.className = "btn btn-danger btn-sm w-100 fw-semibold rounded-3 py-2";
                 btn.innerHTML = "<i class='bx bx-stop-circle me-1'></i> Hentikan Kamera";
             }).catch(err => {
                 console.error("Gagal start kamera:", err);
+                alert("Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.");
             });
         }
 
@@ -754,6 +771,12 @@
                 }).catch(err => console.error(err));
             }
         }
+
+        // Auto-start camera saat halaman dimuat (Mode Gerbang)
+        document.addEventListener('DOMContentLoaded', function() {
+            switchMode('camera');
+            startCameraScanning();
+        });
     </script>
 </body>
 </html>

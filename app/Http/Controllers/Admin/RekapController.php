@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -331,7 +332,6 @@ class RekapController extends Controller
     {
         $paginator = $recap['studentPaginator'] ?? null;
         if ($paginator instanceof LengthAwarePaginator) {
-            $paginator->setCollection(collect($recap['dataRows'] ?? []));
             $recap['dataRows'] = $paginator;
         }
 
@@ -366,17 +366,22 @@ class RekapController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', '180');
+        try {
+            ini_set('memory_limit', '512M');
+            ini_set('max_execution_time', '180');
 
-        $type = $request->input('type', 'bulanan');
-        $classId = $request->filled('class_id') ? (int) $request->input('class_id') : null;
-        $selectedClass = $classId ? SchoolClass::find($classId) : null;
-        $className = $selectedClass ? Str::slug($selectedClass->name) : 'semua_kelas';
+            $type = $request->input('type', 'bulanan');
+            $classId = $request->filled('class_id') ? (int) $request->input('class_id') : null;
+            $selectedClass = $classId ? SchoolClass::find($classId) : null;
+            $className = $selectedClass ? Str::slug($selectedClass->name) : 'semua_kelas';
 
-        $fileName = "Rekap_Presensi_{$type}_{$className}_" . date('Ymd_His') . ".xlsx";
+            $fileName = "Rekap_Presensi_{$type}_{$className}_" . date('Ymd_His') . ".xlsx";
 
-        return Excel::download(new MultiPeriodAttendanceExport($type, array_merge($request->all(), ['class_id' => $classId])), $fileName);
+            return Excel::download(new MultiPeriodAttendanceExport($type, array_merge($request->all(), ['class_id' => $classId])), $fileName);
+        } catch (\Throwable $e) {
+            Log::error('Gagal export Excel: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', 'Gagal membuat file export. Silakan coba lagi atau hubungi admin.');
+        }
     }
 
     /**
@@ -384,60 +389,63 @@ class RekapController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', '180');
+        try {
+            ini_set('memory_limit', '512M');
+            ini_set('max_execution_time', '180');
 
-        Carbon::setLocale('id');
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', '180');
+            Carbon::setLocale('id');
 
-        $type = $request->input('type', 'bulanan');
-        $classId = $request->filled('class_id') ? (int) $request->input('class_id') : null;
-        $selectedClass = $classId ? SchoolClass::with('teacher')->find($classId) : null;
-        $className = $selectedClass ? $selectedClass->name : 'Semua Kelas';
+            $type = $request->input('type', 'bulanan');
+            $classId = $request->filled('class_id') ? (int) $request->input('class_id') : null;
+            $selectedClass = $classId ? SchoolClass::with('teacher')->find($classId) : null;
+            $className = $selectedClass ? $selectedClass->name : 'Semua Kelas';
 
-        $schoolName = Setting::getSchoolName();
-        $schoolAddress = Setting::getSchoolAddress();
-        $activeYear = AcademicYear::getActive();
+            $schoolName = Setting::getSchoolName();
+            $schoolAddress = Setting::getSchoolAddress();
+            $activeYear = AcademicYear::getActive();
 
-        $recap = $this->getRecapData($type, $classId, $request->all());
+            $recap = $this->getRecapData($type, $classId, $request->all());
 
-        $reportHeading = "LAPORAN REKAPITULASI PRESENSI - " . strtoupper($type);
-        if ($type === 'harian') {
-            $reportSubheading = "Tanggal: " . Carbon::parse($recap['date'])->translatedFormat('l, d F Y') . " | Kelas: {$className}";
-        } elseif ($type === 'mingguan') {
-            $reportSubheading = "Periode: " . Carbon::parse($recap['startDate'])->translatedFormat('d M Y') . " s/d " . Carbon::parse($recap['endDate'])->translatedFormat('d M Y') . " | Kelas: {$className}";
-        } else {
-            $reportSubheading = "Bulan: " . Carbon::createFromDate($recap['year'], $recap['month'], 1)->translatedFormat('F Y') . " | Kelas: {$className}";
+            $reportHeading = "LAPORAN REKAPITULASI PRESENSI - " . strtoupper($type);
+            if ($type === 'harian') {
+                $reportSubheading = "Tanggal: " . Carbon::parse($recap['date'])->translatedFormat('l, d F Y') . " | Kelas: {$className}";
+            } elseif ($type === 'mingguan') {
+                $reportSubheading = "Periode: " . Carbon::parse($recap['startDate'])->translatedFormat('d M Y') . " s/d " . Carbon::parse($recap['endDate'])->translatedFormat('d M Y') . " | Kelas: {$className}";
+            } else {
+                $reportSubheading = "Bulan: " . Carbon::createFromDate($recap['year'], $recap['month'], 1)->translatedFormat('F Y') . " | Kelas: {$className}";
+            }
+
+            // Ambil logo sekolah jika ada
+            $logoPath = Setting::getLogo();
+            $logoBase64 = null;
+            if (file_exists(public_path($logoPath))) {
+                $logoData = file_get_contents(public_path($logoPath));
+                $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
+            }
+
+            $rightSignatoryTitle = $selectedClass ? 'Wali Kelas ' . $selectedClass->name : 'Petugas Presensi';
+
+            $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
+                'title' => "Laporan Presensi {$type} - {$className}",
+                'schoolName' => $schoolName,
+                'schoolAddress' => $schoolAddress,
+                'reportHeading' => $reportHeading,
+                'reportSubheading' => $reportSubheading,
+                'logoBase64' => $logoBase64,
+                'activeYear' => $activeYear,
+                'headmasterName' => Setting::getHeadmasterName(),
+                'headmasterNip' => Setting::getHeadmasterNip(),
+                'teacherName' => $selectedClass?->teacher?->name,
+                'teacherNip' => $selectedClass?->teacher?->nip,
+                'rightSignatoryTitle' => $rightSignatoryTitle,
+            ]))->setPaper('a4', 'landscape');
+
+            $fileName = "Rekap_Presensi_{$type}_" . Str::slug($className) . ".pdf";
+            return $pdf->download($fileName);
+        } catch (\Throwable $e) {
+            Log::error('Gagal export PDF: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', 'Gagal membuat file export. Silakan coba lagi atau hubungi admin.');
         }
-
-        // Ambil logo sekolah jika ada
-        $logoPath = Setting::getLogo();
-        $logoBase64 = null;
-        if (file_exists(public_path($logoPath))) {
-            $logoData = file_get_contents(public_path($logoPath));
-            $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
-        }
-
-        $rightSignatoryTitle = $selectedClass ? 'Wali Kelas ' . $selectedClass->name : 'Petugas Presensi';
-
-        $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
-            'title' => "Laporan Presensi {$type} - {$className}",
-            'schoolName' => $schoolName,
-            'schoolAddress' => $schoolAddress,
-            'reportHeading' => $reportHeading,
-            'reportSubheading' => $reportSubheading,
-            'logoBase64' => $logoBase64,
-            'activeYear' => $activeYear,
-            'headmasterName' => Setting::getHeadmasterName(),
-            'headmasterNip' => Setting::getHeadmasterNip(),
-            'teacherName' => $selectedClass?->teacher?->name,
-            'teacherNip' => $selectedClass?->teacher?->nip,
-            'rightSignatoryTitle' => $rightSignatoryTitle,
-        ]))->setPaper('a4', 'landscape');
-
-        $fileName = "Rekap_Presensi_{$type}_" . Str::slug($className) . ".pdf";
-        return $pdf->download($fileName);
     }
 
     /**

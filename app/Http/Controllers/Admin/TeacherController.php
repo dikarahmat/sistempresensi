@@ -101,18 +101,20 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'nip' => 'nullable|string|max:50|unique:teachers,nip',
+            'nip' => 'required|regex:/^[0-9]{18}$/|unique:teachers,nip',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'birth_place' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'required|regex:/^[0-9]{10,14}$/',
             'email' => 'nullable|email|max:255',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'school_class_id' => 'nullable|exists:school_classes,id',
         ], [
             'name.required' => 'Nama lengkap guru wajib diisi.',
+            'nip.regex' => 'NIP harus berupa angka 18 digit.',
             'nip.unique' => 'NIP sudah terdaftar pada guru lain.',
             'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'phone_number.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
             'photo.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
@@ -176,17 +178,19 @@ class TeacherController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'nip' => 'nullable|string|max:50|unique:teachers,nip,' . $teacher->id,
+            'nip' => 'required|regex:/^[0-9]{18}$/|unique:teachers,nip,' . $teacher->id,
             'gender' => 'required|in:Laki-laki,Perempuan',
             'birth_place' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
-            'phone_number' => 'nullable|string|max:20',
+            'phone_number' => 'required|regex:/^[0-9]{10,14}$/',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'school_class_id' => 'nullable',
         ], [
             'name.required' => 'Nama lengkap guru wajib diisi.',
+            'nip.regex' => 'NIP harus berupa angka 18 digit.',
             'nip.unique' => 'NIP sudah terdaftar pada guru lain.',
             'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'phone_number.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
             'photo.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 

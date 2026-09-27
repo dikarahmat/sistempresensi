@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 
-use App\Jobs\SendWhatsAppAttendanceNotificationJob;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Setting;
@@ -269,11 +268,6 @@ class ScannerController extends Controller
                 ],
             ];
         });
-
-        // Notifikasi WhatsApp ke Orang Tua dikirim secara Asynchronous via Queue Job SETELAH DB::transaction selesai
-        if (!empty($result['should_notify_wa']) && isset($result['attendance'])) {
-            SendWhatsAppAttendanceNotificationJob::dispatch($student, $result['attendance']);
-        }
 
         return response()->json($result['response'], $result['status_code'] ?? 200);
     }

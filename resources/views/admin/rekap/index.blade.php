@@ -4,6 +4,19 @@
 @section('page_title', 'Rekap Presensi Siswa')
 @section('page_subtitle', 'Kelola rekapitulasi kehadiran siswa harian, mingguan, dan bulanan.')
 
+@push('styles')
+<style>
+    /* Subtitle Rekap: full width, tidak terpotong (mobile & desktop) */
+    .header-main-subtitle {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        display: block !important;
+        width: 100% !important;
+    }
+</style>
+@endpush
+
 @section('page_header_right')
 @php
     $exportParams = [

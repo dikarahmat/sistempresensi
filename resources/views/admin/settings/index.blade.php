@@ -2,7 +2,20 @@
 
 @section('title', 'Pengaturan Sistem')
 @section('page_title', 'Pengaturan Sistem Dinamis')
-@section('page_subtitle', 'Sesuaikan profil sekolah, toleransi keterlambatan presensi, dan gateway notifikasi.')
+@section('page_subtitle', 'Sesuaikan profil sekolah, toleransi keterlambatan')
+
+@push('styles')
+<style>
+    /* Subtitle Pengaturan: full width, tidak terpotong (mobile & desktop) */
+    .header-main-subtitle {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        display: block !important;
+        width: 100% !important;
+    }
+</style>
+@endpush
 
 @push('styles')
 <style>

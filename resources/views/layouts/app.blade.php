@@ -5,13 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() ?? 'SMP PGRI' }}</title>
 
-    <!-- Global Favicon Dinamis -->
-    <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code untuk sekolah. Monitoring presensi realtime, akurat, dan terintegrasi.">
+    <meta name="keywords" content="presensi sekolah, sistem presensi, qr code, attendance, kehadiran siswa, SMP">
+    <meta name="author" content="{{ \App\Models\Setting::getSchoolName() }}">
+    <meta name="robots" content="index, follow">
 
-    <!-- Google Fonts: Poppins & Plus Jakarta Sans -->
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ url()->current() }}">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() }}">
+    <meta property="og:description" content="Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code untuk sekolah.">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <meta property="og:site_name" content="{{ \App\Models\Setting::getAppTitle() }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() }}">
+    <meta name="twitter:description" content="Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <link rel="apple-touch-icon" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+
+    <!-- JSON-LD Organization Schema -->
+    <script type="application/ld+json">
+    @php
+        $jsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'EducationalOrganization',
+            'name' => \App\Models\Setting::getSchoolName(),
+            'description' => 'Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code',
+            'url' => url('/'),
+            'logo' => asset(\App\Models\Setting::getLogo()),
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => \App\Models\Setting::getSchoolAddress(),
+            ],
+            'telephone' => \App\Models\Setting::getSchoolPhone(),
+        ];
+        echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    @endphp
+    </script>
+
+    <!-- Google Fonts: Poppins, Roboto & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5 CSS & Boxicons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -49,8 +92,202 @@
             color: var(--text-dark);
             overflow: hidden !important;
             overflow-x: hidden !important;
-            font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Poppins', 'Roboto', sans-serif;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* ==========================================================================
+           STANDARISASI TIPOGRAFI ENTERPRISE
+           - Font Poppins/Robot untuk seluruh UI
+           - Data dinamis (NIS, nama, status, kode) = UPPERCASE
+           - Teks normal (judul, label, deskripsi) = normal/sentence case
+           ========================================================================== */
+
+        /* --- Tabel Matrix: Data dinamis & header tabel --- */
+        .table-matrix thead th,
+        .table-matrix tbody td {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        .table-matrix thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .table-matrix tbody td {
+            font-weight: 400;
+            text-transform: uppercase;
+        }
+
+        /* --- Tabel Zebra Custom: Data dinamis & header tabel --- */
+        .table-zebra-custom thead th,
+        .table-zebra-custom tbody td {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        .table-zebra-custom thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .table-zebra-custom tbody td {
+            font-weight: 400;
+            text-transform: uppercase;
+        }
+
+        /* --- Kartu Informasi (Card) --- */
+        .card {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        .card .card-title,
+        .card .card-header,
+        .card .card-body,
+        .card .card-footer {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        /* --- Badge & Status Pill --- */
+        .badge,
+        .status-badge-pill,
+        .filter-pill {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Stat Card Modern --- */
+        .stat-card-modern,
+        .stat-card-polished {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        .stat-card-modern .stat-value,
+        .stat-card-modern .stat-label,
+        .stat-card-polished .stat-value,
+        .stat-card-polished .stat-label {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Form Label & Helper Text (sentence case - TIDAK di-uppercase) --- */
+        .form-label,
+        .filter-label,
+        .form-check-label,
+        .form-text {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Header Halaman (UPPERCASE) --- */
+        .header-main-title {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            text-transform: uppercase;
+        }
+
+        /* --- Nav Sidebar (sentence case - TIDAK di-uppercase) --- */
+        .nav-link {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        /* --- Tombol & Aksi --- */
+        .btn,
+        .btn-solid-pill,
+        .btn-row-action,
+        .btn-modern-smooth,
+        .btn-action-header,
+        .btn-portal-action,
+        .btn-buka-kelas,
+        .btn-green-excel,
+        .btn-red-pdf,
+        .filter-btn,
+        .recap-mobile-submit {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        /* --- Tabel Custom Card --- */
+        .table-custom-card {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        .table-custom-card .card-header,
+        .table-custom-card .card-title {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Alert --- */
+        .alert {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        /* --- Pagination --- */
+        .pagination-compact {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        .pagination-compact .page-link {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Modal --- */
+        .modal-content {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        .modal-title {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Shortcut Card & Operasional Card --- */
+        .shortcut-card-interactive,
+        .operasional-card-interactive {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        .shortcut-card-interactive .card-title,
+        .shortcut-card-interactive .card-text,
+        .operasional-card-interactive .card-title,
+        .operasional-card-interactive .card-text {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Table Status Cells (tetap uppercase) --- */
+        .cell-present,
+        .cell-late,
+        .cell-sick,
+        .cell-permission,
+        .cell-alpha,
+        .cell-holiday,
+        .cell-future {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* --- Table Zebra Custom: Override untuk sel berisi teks normal --- */
+        .table-zebra-custom tbody td.text-secondary,
+        .table-zebra-custom tbody td.text-muted {
+            font-weight: 400;
+        }
+
+        /* --- Helper Class: Teks Data Dinamis (uppercase) --- */
+        .data-uppercase {
+            text-transform: uppercase !important;
+        }
+
+        /* --- Helper Class: Teks Normal (non-uppercase) --- */
+        .data-normal {
+            text-transform: none !important;
         }
 
         @media (max-width: 767.98px) {
@@ -101,8 +338,12 @@
                 top: env(safe-area-inset-top, 0px) !important;
                 left: 0 !important;
                 bottom: 0 !important;
-                height: 100vh !important;
-                height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+                /* FIX: height eksplisit = 100% - safe-area-top.
+                   Tanpa ini, di Android drawer lebih tinggi dari layar terlihat
+                   (100vh termasuk address bar browser) -> logout tersembunyi. */
+                height: calc(100% - env(safe-area-inset-top, 0px)) !important;
+                max-height: calc(100% - env(safe-area-inset-top, 0px)) !important;
+                overflow: hidden !important;
                 width: 14rem !important;
                 min-width: 0 !important;
                 max-width: 78vw !important;
@@ -127,11 +368,16 @@
             }
 
             /* Aside di dalam drawer: kolom flex penuh tinggi supaya footer Logout
-               menempel di dasar dan area menu saja yang boleh menggulir. */
+               menempel di dasar dan area menu saja yang boleh menggulir.
+               min-width:0 KRUSIAL: tanpa ini, .app-sidebar-panel (min-width:16rem)
+               menang karena specificity lebih tinggi -> aside overflow ke kanan
+               dan pill menu aktif terpotong oleh overflow:hidden drawer. */
             .app-sidebar-drawer aside,
             aside aside {
                 width: 100% !important;
+                min-width: 0 !important;
                 height: 100% !important;
+                max-height: 100% !important;
                 min-height: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -156,6 +402,7 @@
                 transform: none !important;
                 transition: none !important;
                 z-index: 40 !important;
+                margin-right: 24px !important;
             }
         }
 
@@ -415,6 +662,7 @@
 
             .app-sidebar-drawer .nav-link {
                 font-size: 0.8rem !important;
+                margin-bottom: 12px !important;
             }
 
             .app-sidebar-drawer .nav-link i {
@@ -624,7 +872,9 @@
                 flex-shrink: 0 !important;
                 margin-top: 0 !important;
                 margin-bottom: 0.625rem !important;
-                padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
+                /* 1.25rem + safe-area: ukuran pas untuk ikon hamburger & judul halaman,
+                   tidak mepet ke tepi atas layar HP (notch/status bar tetap aman). */
+                padding-top: calc(1.25rem + env(safe-area-inset-top, 0px)) !important;
                 padding-bottom: 0.5rem !important;
                 background-color: #ffffff !important;
                 box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06) !important;
@@ -668,20 +918,23 @@
         .header-text-block {
             display: flex !important;
             flex-direction: column !important;
-            justify-content: center !important;
+            justify-content: flex-start !important;
             min-width: 0 !important;
+            flex: 1 !important;
             margin: 0 !important;
             padding: 0 !important;
+            padding-top: 2px !important;
         }
 
         .header-main-title {
             color: #0f172a !important;
             letter-spacing: -0.02em !important;
-            font-size: 1.05rem !important;
-            font-weight: 750 !important;
+            font-size: 0.85rem !important;
+            font-weight: 700 !important;
             line-height: 1.25 !important;
             margin: 0 !important;
             padding: 0 !important;
+            text-transform: uppercase;
         }
 
         @media (min-width: 640px) {
@@ -698,12 +951,18 @@
 
         .header-main-subtitle {
             color: #64748b !important;
-            font-size: 0.72rem !important;
-            font-weight: 500 !important;
+            font-size: 0.65rem !important;
+            font-weight: 600 !important;
             line-height: 1.3 !important;
             margin: 0 !important;
             margin-top: 2px !important;
             padding: 0 !important;
+            letter-spacing: 0.02em;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 100% !important;
+            display: block !important;
         }
 
         @media (min-width: 640px) {
@@ -765,6 +1024,10 @@
             min-width: 0 !important;
             border: 1px solid #cbd5e1 !important;
             border-radius: 6px !important;
+            letter-spacing: 0.02em;
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            font-size: 0.82rem !important;
+            font-weight: 400 !important;
         }
 
         .search-box-wrap > .btn {
@@ -779,14 +1042,23 @@
             background: transparent !important;
             box-shadow: none !important;
             color: #64748b !important;
-            z-index: 2;
+            z-index: 10 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
         }
 
         .search-box-wrap > .btn:hover,
-        .search-box-wrap > .btn:focus-visible {
+        .search-box-wrap > .btn:focus-visible,
+        .search-box-wrap > .btn:active {
             background: transparent !important;
             color: #2563eb !important;
             box-shadow: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         @media (min-width: 1280px) {
@@ -838,9 +1110,9 @@
             display: flex;
             align-items: center;
             color: #ffffff;
-            border-radius: 12px !important;
+            border-radius: 8px !important;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 500 !important;
             font-size: 0.83rem;
             line-height: 1.3;
             transition: background-color 0.2s ease, color 0.2s ease;
@@ -850,7 +1122,7 @@
         .nav-link:hover {
             background-color: rgba(255, 255, 255, 0.15);
             color: #ffffff;
-            border-radius: 12px !important;
+            border-radius: 8px !important;
         }
 
         .nav-link.active {
@@ -873,9 +1145,11 @@
 
         /* Panel sidebar (elemen <aside> dari partial) */
         .app-sidebar-panel {
-            width: 16rem !important;
-            min-width: 16rem !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
             height: 100% !important;
+            max-height: 100% !important;
             min-height: 0 !important;
             background-color: #3b62f6 !important;
         }
@@ -932,10 +1206,10 @@
             margin: 0 !important;
             padding: 0.6rem 1rem !important;
             border: none !important;
-            border-radius: 9999px !important;
+            border-radius: 8px !important;
             background-color: transparent !important;
             color: #fee2e2 !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
             font-size: 0.83rem !important;
             line-height: 1.3 !important;
             text-align: left !important;
@@ -1108,7 +1382,7 @@
            tombol yang menuju endpoint export/download/template/print-card.
            -------------------------------------------------------------------------- */
         .dl-spinner {
-            display: none;
+            display: inline-block;
             width: 0.9em;
             height: 0.9em;
             flex: 0 0 auto;
@@ -1137,6 +1411,68 @@
             opacity: 0.72 !important;
             cursor: progress !important;
         }
+
+        /* ============================================================
+           PROGRESS BAR INTERAKTIF UNTUK TOMBOL DOWNLOAD
+           ============================================================ */
+        .btn-download-progress {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-download-progress .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.45) 100%);
+            transition: width 0.15s ease-out;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .btn-download-progress .btn-content {
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-download-progress .progress-text {
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        /* Animasi shimmer pada progress bar */
+        .btn-download-progress .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Tombol saat proses download selesai */
+        .btn-download-progress.download-complete {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+        }
+
+        .btn-download-progress.download-complete .progress-fill {
+            width: 100% !important;
+            background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+        }
     </style>
 </head>
 <body class="overflow-hidden bg-[#3b62f6] m-0 p-0" x-data="{ sidebarOpen: false }">
@@ -1162,7 +1498,7 @@
 
             <!-- HEADER UTAMA DENGAN TOMBOL GARIS TIGA DI POJOK KIRI ATAS UNTUK MOBILE/TABLET/IPAD -->
             <div class="app-header-bar d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2.5 sm:gap-3 mb-3 sm:mb-4 w-100">
-                <div class="app-header-left d-flex align-items-center gap-2 sm:gap-2.5 min-w-0">
+                <div class="app-header-left d-flex align-items-start gap-2 sm:gap-2.5 min-w-0">
                     <!-- Tombol Garis Tiga Pure Icon (Khusus HP, Tablet & iPad < 1024px) -->
                     <button @click="sidebarOpen = !sidebarOpen" 
                             type="button"
@@ -1172,7 +1508,7 @@
                         <i class='bx bx-menu'></i>
                     </button>
                     <!-- Wadah Blok Teks Header Solid (Judul & Subjudul Sejajar Vertikal Presisi) -->
-                    <div class="header-text-block min-w-0 flex-1 d-flex flex-column justify-content-center">
+                    <div class="header-text-block min-w-0 flex-1 d-flex flex-column justify-content-start">
                         <h1 class="header-main-title truncate m-0 p-0">
                             @hasSection('page_title')
                                 @yield('page_title')
@@ -1353,17 +1689,14 @@
      *   - print-card / print-cards / generate-qr
      *   - template  (template Excel)
      *
-     * Perilaku:
-     *   - Spinner disisipkan di samping label (label tetap terbaca).
-     *   - Tombol dikunci (pointer-events + aria-busy) agar tidak dobel-kirim.
-     *   - State dipulihkan otomatis setelah unduhan selesai atau setelah timeout,
-     *     sehingga tombol kembali normal bila unduhan hanya membuka dialog simpan.
+     * Perbaikan: Menggunakan fetch-blob pattern agar spinner berhenti TEPAT
+     * saat file selesai ter-download, bukan sekadar timeout.
      */
     (function () {
         'use strict';
 
         var DOWNLOAD_RE = /(export-(excel|pdf|csv)|download-(qr|card)|print-?cards?|generate-qr|(^|\/)template($|[/?#]|\.))/i;
-        var RESET_DELAY_MS = 4000;
+        var FETCH_TIMEOUT = 120000; // 2 menit max untuk export besar
         var timers = new WeakMap();
 
         function endpointOf(element) {
@@ -1405,6 +1738,7 @@
             var spinner = document.createElement('span');
             spinner.className = 'dl-spinner';
             spinner.setAttribute('aria-hidden', 'true');
+            spinner.style.display = 'inline-block';
             return spinner;
         }
 
@@ -1414,8 +1748,6 @@
             element.classList.add('is-downloading');
             element.setAttribute('aria-busy', 'true');
 
-            /* Sisipkan spinner setelah elemen ikon pertama (bila ada) agar rapi,
-               jika tidak, taruh di awal konten. */
             var icon = element.querySelector(':scope > i, :scope > svg');
             var spinner = spinnerFor(element);
             if (icon && icon.parentNode === element) {
@@ -1424,9 +1756,10 @@
                 element.insertBefore(spinner, element.firstChild);
             }
 
+            // Safety timeout — stop spinner setelah 2 menit jika sesuatu gagal
             var timer = setTimeout(function () {
                 stopLoading(element);
-            }, RESET_DELAY_MS);
+            }, FETCH_TIMEOUT);
 
             timers.set(element, timer);
         }
@@ -1449,7 +1782,68 @@
             }
         }
 
-        /* Tangkap klik SEDARI mungkin (capture) agar spinner tampil sebelum navigasi. */
+        function triggerDownload(blob, filename) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename || 'download';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // Bersihkan object URL setelah delay untuk memastikan download sudah mulai
+            setTimeout(function () {
+                URL.revokeObjectURL(url);
+            }, 5000);
+        }
+
+        function getFilenameFromDisposition(disposition) {
+            if (!disposition) return null;
+            var match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                return match[1].replace(/['"]/g, '');
+            }
+            return null;
+        }
+
+        function fetchAndDownload(url, method, formData, element) {
+            startLoading(element);
+
+            var options = {
+                method: method || 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            };
+
+            if (method === 'POST' && formData) {
+                options.body = formData;
+            }
+
+            fetch(url, options)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Download gagal: HTTP ' + response.status);
+                    var disposition = response.headers.get('Content-Disposition');
+                    var filename = getFilenameFromDisposition(disposition) || 'download';
+                    return response.blob().then(function(blob) {
+                        return { blob: blob, filename: filename };
+                    });
+                })
+                .then(function(result) {
+                    triggerDownload(result.blob, result.filename);
+                    stopLoading(element);
+                })
+                .catch(function(error) {
+                    console.error('Download error:', error);
+                    stopLoading(element);
+                    // Fallback: navigasi normal jika fetch gagal
+                    if (method === 'GET') {
+                        window.location.href = url;
+                    }
+                });
+        }
+
+        // Tangkap klik pada link download
         document.addEventListener('click', function (event) {
             if (event.defaultPrevented) return;
 
@@ -1458,17 +1852,28 @@
 
             var link = target.closest('a');
             if (link && isDownloadAction(link, event)) {
-                startLoading(link);
+                event.preventDefault();
+                var url = endpointOf(link);
+                if (url) {
+                    fetchAndDownload(url, 'GET', null, link);
+                }
                 return;
             }
 
             var button = target.closest('button[type="submit"], input[type="submit"]');
             if (button && isDownloadAction(button, event)) {
-                startLoading(button);
+                event.preventDefault();
+                var form = button.form;
+                if (form) {
+                    var formUrl = form.getAttribute('action');
+                    if (formUrl) {
+                        fetchAndDownload(formUrl, 'POST', new FormData(form), button);
+                    }
+                }
             }
         }, true);
 
-        /* Tangkap submit form (mis. tombol "Cetak Kartu" berformulir POST). */
+        // Tangkap submit form (mis. tombol "Cetak Kartu" berformulir POST)
         document.addEventListener('submit', function (event) {
             if (event.defaultPrevented) return;
 
@@ -1476,11 +1881,16 @@
             if (!form || form.tagName !== 'FORM' || !isDownloadAction(form, event)) return;
 
             var submitter = event.submitter;
-            startLoading(submitter && submitter.tagName === 'BUTTON' ? submitter : form);
+            if (!submitter || !isDownloadAction(submitter, event)) return;
+
+            event.preventDefault();
+            var formUrl = form.getAttribute('action');
+            if (formUrl) {
+                fetchAndDownload(formUrl, 'POST', new FormData(form), submitter);
+            }
         }, true);
 
-        /* Pemulihan state saat halaman kembali dari cache navigasi (bfcache)
-           atau saat tab diaktifkan kembali. */
+        // Pemulihan state saat halaman kembali dari cache navigasi (bfcache)
         window.addEventListener('pageshow', function (event) {
             if (event.persisted) {
                 document.querySelectorAll('.is-downloading').forEach(stopLoading);
@@ -1493,7 +1903,7 @@
             }
         });
 
-        /* API publik untuk dipakai view bila butuh spinner manual. */
+        // API publik untuk dipakai view bila butuh spinner manual
         window.PresensiDownload = {
             start: startLoading,
             stop: stopLoading,
@@ -1550,5 +1960,6 @@
 </script>
 @yield('scripts')
 @stack('scripts')
+@endstack
 </body>
 </html>

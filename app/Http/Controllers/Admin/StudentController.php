@@ -11,6 +11,7 @@ use App\Models\Student;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -54,20 +55,19 @@ class StudentController extends Controller
         $validated = $request->validate([
             'school_class_id' => 'required|exists:school_classes,id',
             'name' => 'required|string|max:255',
-            'nis' => 'required|string|max:30|unique:students,nis',
-            'nisn' => 'nullable|string|max:30|unique:students,nisn',
+            'nis' => 'required|regex:/^[a-zA-Z0-9\/\.\-]+$/|min:4|max:20|unique:students,nis',
+            'nisn' => 'required|regex:/^[0-9]{10}$/|unique:students,nisn',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'birth_place' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'address' => 'nullable|string',
             'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'nullable|string|max:20',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'parent_phone' => 'required|regex:/^[0-9]{10,14}$/',
+        ], [
+            'nis.regex' => 'NIS harus berupa kombinasi huruf/angka/simbol 4-20 karakter.',
+            'nisn.regex' => 'NISN harus berupa angka 10 digit.',
+            'parent_phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
         ]);
-
-        if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('students', 'public');
-        }
 
         $validated['qr_token'] = (string) Str::uuid();
         $validated['status'] = 'Aktif';
@@ -94,23 +94,19 @@ class StudentController extends Controller
         $validated = $request->validate([
             'school_class_id' => 'required|exists:school_classes,id',
             'name' => 'required|string|max:255',
-            'nis' => 'required|string|max:30|unique:students,nis,' . $student->id,
-            'nisn' => 'nullable|string|max:30|unique:students,nisn,' . $student->id,
+            'nis' => 'required|regex:/^[a-zA-Z0-9\/\.\-]+$/|min:4|max:20|unique:students,nis,' . $student->id,
+            'nisn' => 'required|regex:/^[0-9]{10}$/|unique:students,nisn,' . $student->id,
             'gender' => 'required|in:Laki-laki,Perempuan',
             'birth_place' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'address' => 'nullable|string',
             'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'nullable|string|max:20',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'parent_phone' => 'required|regex:/^[0-9]{10,14}$/',
+        ], [
+            'nis.regex' => 'NIS harus berupa kombinasi huruf/angka/simbol 4-20 karakter.',
+            'nisn.regex' => 'NISN harus berupa angka 10 digit.',
+            'parent_phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
         ]);
-
-        if ($request->hasFile('photo')) {
-            if ($student->photo && Storage::disk('public')->exists($student->photo)) {
-                Storage::disk('public')->delete($student->photo);
-            }
-            $validated['photo'] = $request->file('photo')->store('students', 'public');
-        }
 
         if (empty($student->qr_token)) {
             $validated['qr_token'] = (string) Str::uuid();
@@ -136,7 +132,11 @@ class StudentController extends Controller
         $query = Student::with('schoolClass')->where('status', 'Aktif');
 
         if ($request->filled('student_ids') && is_array($request->student_ids)) {
-            $query->whereIn('id', $request->student_ids);
+            // Validasi: pastikan semua student_ids adalah integer dan valid
+            $validatedIds = array_filter(array_map('intval', $request->student_ids));
+            if (!empty($validatedIds)) {
+                $query->whereIn('id', $validatedIds);
+            }
         } elseif (!$request->boolean('all') && $request->input('print_type') !== 'all' && $request->filled('class_id') && $request->class_id !== 'all') {
             $query->where('school_class_id', $request->class_id);
         }
@@ -266,6 +266,11 @@ class StudentController extends Controller
 
     public function downloadQr(Student $student)
     {
+        // Validasi: hanya admin yang bisa download QR (route sudah dilindungi middleware)
+        if (!Auth::user() || Auth::user()->role !== 'admin') {
+            abort(403, 'Akses ditolak.');
+        }
+
         $token = $student->qr_token ?? $student->nis;
         $fileName = 'QR_' . $student->nis . '_' . Str::slug($student->name) . '.svg';
 
@@ -426,6 +431,62 @@ class StudentController extends Controller
             DB::rollBack();
             report($e);
             return redirect()->route('admin.students.index')->with('error', 'Gagal menghapus semua data siswa: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tampilkan halaman tempat sampah (soft deleted students).
+     */
+    public function trash(): View
+    {
+        $students = Student::onlyTrashed()->with('schoolClass')->orderBy('deleted_at', 'desc')->paginate(50);
+        $classes = SchoolClass::orderBy('name')->get();
+
+        return view('admin.students.trash', compact('students', 'classes'));
+    }
+
+    /**
+     * Pulihkan siswa dari tempat sampah.
+     */
+    public function restore($id): RedirectResponse
+    {
+        $student = Student::onlyTrashed()->findOrFail($id);
+        $student->restore();
+
+        return redirect()->route('admin.students.trash')
+            ->with('success', "Data siswa {$student->name} berhasil dipulihkan!");
+    }
+
+    /**
+     * Hapus permanen siswa dari tempat sampah.
+     */
+    public function forceDelete($id): RedirectResponse
+    {
+        $student = Student::onlyTrashed()->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $studentName = $student->name;
+
+            // Hapus file foto dari storage jika ada
+            if ($student->photo && Storage::disk('public')->exists($student->photo)) {
+                Storage::disk('public')->delete($student->photo);
+            }
+
+            // Hapus seluruh riwayat presensi terkait
+            $student->attendances()->delete();
+
+            // Hapus permanen data siswa
+            $student->forceDelete();
+
+            DB::commit();
+            return redirect()->route('admin.students.trash')
+                ->with('success', "Data siswa {$studentName} berhasil dihapus permanen!");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return redirect()->route('admin.students.trash')
+                ->with('error', 'Gagal menghapus permanen siswa: ' . $e->getMessage());
         }
     }
 }

@@ -3,7 +3,6 @@
 use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AttendanceController;
-use App\Http\Controllers\Admin\ClassPromotionController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\RekapController as AdminRekapController;
 use App\Http\Controllers\Admin\ScannerController as AdminScannerController;
@@ -67,19 +66,14 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::post('/absensi/override', [AttendanceController::class, 'override'])->name('absensi.override');
     Route::post('/kehadiran/override', [AttendanceController::class, 'override'])->name('kehadiran.override');
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
-    Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel');
-    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf');
+    Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
+    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
 
     // Scanner & Mode Gerbang / Kiosk Absensi
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
     Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
-    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process');
-
-    // Menu Kenaikan Kelas & Mutasi Rombel Massal
-    Route::get('/kenaikan-kelas', [ClassPromotionController::class, 'index'])->name('kenaikan-kelas.index');
-    Route::post('/kenaikan-kelas/promote', [ClassPromotionController::class, 'promote'])->name('kenaikan-kelas.promote');
-    Route::get('/kenaikan-kelas/students/{schoolClass}', [ClassPromotionController::class, 'getStudents'])->name('kenaikan-kelas.students');
+    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
     // Master Tahun Ajaran
     Route::post('academic-years/{academic_year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
@@ -104,11 +98,19 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
     Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
     Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import');
-    // Route::post('students/upload-photos-zip', [AdminStudentController::class, 'processUploadPhotosZip'])->name('students.upload-photos-zip');
     Route::get('students/{student}/download-qr', [AdminStudentController::class, 'downloadQr'])->name('students.download-qr');
     Route::get('students/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
     Route::get('students/{id}/print-card', [AdminStudentController::class, 'printCard'])->name('students.print-card');
     Route::get('students-print-all', [AdminStudentController::class, 'printCard'])->name('students.print-all');
+    
+    // Soft Delete Routes
+    Route::get('students/trash', [AdminStudentController::class, 'trash'])->name('students.trash');
+    Route::post('students/{id}/restore', [AdminStudentController::class, 'restore'])->name('students.restore');
+    Route::delete('students/{id}/force-delete', [AdminStudentController::class, 'forceDelete'])->name('students.force-delete');
+    
+    // Riwayat Presensi per Siswa (akses dari menu Kehadiran)
+    Route::get('kehadiran/siswa/{student}/history', [\App\Http\Controllers\Admin\AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    
     Route::resource('students', AdminStudentController::class);
 
     // Manajemen Data Guru & Wali Kelas (/admin/guru)
@@ -153,7 +155,7 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
 
     // Scanner Mandiri (Dinonaktifkan: Redirect ke Presensi)
     Route::get('/scanner', [WaliKelasScannerController::class, 'index'])->name('scanner');
-    Route::post('/scanner/process', [WaliKelasScannerController::class, 'store'])->name('scanner.process');
+    Route::post('/scanner/process', [WaliKelasScannerController::class, 'store'])->name('scanner.process')->middleware('throttle:30,1');
 
     // Siswa Binaan
     Route::get('/students', [WaliKelasStudentController::class, 'index'])->name('students');
@@ -165,14 +167,14 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
 
     // Rekap
     Route::get('/rekap', [AdminRekapController::class, 'guruIndex'])->name('rekap');
-    Route::get('/rekap/export-excel', [AdminRekapController::class, 'guruExportExcel'])->name('rekap.export-excel');
-    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'guruExportPdf'])->name('rekap.export-pdf');
+    Route::get('/rekap/export-excel', [AdminRekapController::class, 'guruExportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
+    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'guruExportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
 });
 
 // ============================================================================
 // 3. GROUP KESISWAAN (Strict Read-Only)
 // ============================================================================
-Route::prefix('kesiswaan')->name('kesiswaan.')->middleware(['role.kesiswaan'])->group(function () {
+Route::prefix('kesiswaan')->name('kesiswaan.')->middleware(['role:kesiswaan'])->group(function () {
     Route::get('/dashboard', [KesiswaanDashboardController::class, 'index'])->name('dashboard');
 
     // Presensi (Identik Admin Absensi Daily & Class)
@@ -197,7 +199,7 @@ Route::prefix('kesiswaan')->name('kesiswaan.')->middleware(['role.kesiswaan'])->
 
     // Rekap Presensi Multi-Periode (Identik Admin Rekap)
     Route::get('/rekap', [KesiswaanRekapController::class, 'index'])->name('rekap.index');
-    Route::get('/rekap/export-excel', [KesiswaanRekapController::class, 'exportExcel'])->name('rekap.export-excel');
-    Route::get('/rekap/export-pdf', [KesiswaanRekapController::class, 'exportPdf'])->name('rekap.export-pdf');
-    Route::get('/rekap/export-csv', [KesiswaanRekapController::class, 'exportCsv'])->name('rekap.export-csv');
+    Route::get('/rekap/export-excel', [KesiswaanRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
+    Route::get('/rekap/export-pdf', [KesiswaanRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/export-csv', [KesiswaanRekapController::class, 'exportCsv'])->name('rekap.export-csv')->middleware('throttle:10,1');
 });

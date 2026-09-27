@@ -6,11 +6,8 @@
 
 @section('page_header_right')
 <div class="d-flex gap-2">
-    <a href="{{ route('admin.students.show', $student->id) }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;">
-        <i class='bx bx-show'></i> Detail
-    </a>
-    <a href="{{ route('admin.students.index') }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;">
-        <i class='bx bx-chevron-left'></i> Kembali
+    <a href="{{ route('admin.students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.85rem;">
+        Kembali
     </a>
 </div>
 @endsection
@@ -118,7 +115,7 @@
                 </div>
                 <div class="col-12 col-md-6">
                     <label class="form-label">Tanggal Lahir</label>
-                    <input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $student->birth_date) }}">
+                    <input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $student->birth_date ? $student->birth_date->format('Y-m-d') : '') }}">
                 </div>
             </div>
 
@@ -147,12 +144,6 @@
                     <label class="form-label">Nomor HP Orang Tua</label>
                     <input type="text" name="parent_phone" class="form-control" value="{{ old('parent_phone', $student->parent_phone) }}" placeholder="Contoh: 08985444487">
                 </div>
-            </div>
-
-            <!-- Foto Siswa -->
-            <div class="mb-4">
-                <label class="form-label">Perbarui Foto Siswa (opsional)</label>
-                <input type="file" name="photo" class="form-control" accept="image/*">
             </div>
 
             <!-- Tombol Simpan & Batal -->

@@ -54,6 +54,7 @@
             <img src="{{ asset(\App\Models\Setting::getLogo()) }}" 
                  alt="Logo Sekolah" 
                  class="" style="width: 46px; height: 46px; object-fit: contain;"
+                 loading="lazy"
                  onerror="this.style.display='none'">
             @php
                 $rawSchoolName = trim(\App\Models\Setting::getSchoolName());
@@ -71,7 +72,7 @@
                 }
             @endphp
             <!-- Font-size dinaikkan halus ke 0.9rem -->
-            <div class="d-flex flex-column text-uppercase fw-bold text-nowrap" style="font-size: 0.9rem; letter-spacing: 0px; line-height: 1.2;">
+            <div class="d-flex flex-column text-uppercase fw-medium text-nowrap" style="font-size: 0.9rem; letter-spacing: 0px; line-height: 1.2;">
                 <span>{{ $brandLine1 }}</span>
                 @if(!empty($brandLine2))
                 <span>{{ $brandLine2 }}</span>
@@ -82,11 +83,11 @@
 
     <!-- Scrollable sidebar menu -->
     <div class="flex-grow-1 py-2 sidebar-menu-scroll">
-        <ul class="nav nav-pills flex-column mb-auto gap-2">
+        <ul class="nav nav-pills flex-column mb-auto" style="gap: 0;">
             <li class="nav-item">
                 <a href="{{ $dashboardRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isDashboardActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isDashboardActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bxs-dashboard fs-5 {{ $isDashboardActive ? 'text-primary' : 'text-white' }}'></i> 
                     Dashboard
                 </a>
@@ -97,8 +98,8 @@
                 
                 @if($absensiRoute)
                 <a href="{{ $absensiRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isAbsensiActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isAbsensiActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-qr-scan fs-5 {{ $isAbsensiActive ? 'text-primary' : 'text-white' }}'></i> 
                     Presensi
                 </a>
@@ -106,16 +107,16 @@
 
                 @if($kehadiranRoute)
                 <a href="{{ $kehadiranRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isKehadiranActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKehadiranActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-calendar-check fs-5 {{ $isKehadiranActive ? 'text-primary' : 'text-white' }}'></i> 
                     Kehadiran
                 </a>
                 @endif
 
                 <a href="{{ $rekapRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isRekapActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isRekapActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-folder-open fs-5 {{ $isRekapActive ? 'text-primary' : 'text-white' }}'></i> 
                     Rekap
                 </a>
@@ -126,15 +127,15 @@
             <li class="nav-item">
                 
                 <a href="{{ route('admin.academic-years.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.academic-years.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.academic-years.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-time fs-5 {{ request()->routeIs('admin.academic-years.*') ? 'text-primary' : 'text-white' }}'></i> 
                     Tahun Ajaran
                 </a>
                 
                 <a href="{{ route('admin.holidays.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.holidays.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.holidays.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-calendar-x fs-5 {{ request()->routeIs('admin.holidays.*') ? 'text-primary' : 'text-white' }}'></i> 
                     Hari Libur
                 </a>
@@ -144,23 +145,23 @@
             <li class="nav-item">
                 
                 <a href="{{ $siswaRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ $isSiswaActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isSiswaActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-user fs-5 {{ $isSiswaActive ? 'text-primary' : 'text-white' }}'></i> 
                     Siswa
                 </a>
 
                 @if($userRole === 'admin' || $userRole === 'kesiswaan')
                 <a href="{{ $userRole === 'kesiswaan' ? route('kesiswaan.teachers.index') : route('admin.guru.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-group fs-5 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'text-primary' : 'text-white' }}'></i> 
                     Guru
                 </a>
                 
                 <a href="{{ $userRole === 'kesiswaan' ? route('kesiswaan.classes.index') : route('admin.classes.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.classes.*') || request()->routeIs('admin.kelas.*') || request()->routeIs('kesiswaan.classes.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.classes.*') || request()->routeIs('admin.kelas.*') || request()->routeIs('kesiswaan.classes.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-buildings fs-5 {{ request()->routeIs('admin.classes.*') || request()->routeIs('admin.kelas.*') || request()->routeIs('kesiswaan.classes.*') ? 'text-primary' : 'text-white' }}'></i> 
                     Kelas
                 </a>
@@ -170,8 +171,8 @@
             @if($userRole === 'admin')
             <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 mb-1 {{ request()->routeIs('admin.settings.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s;">
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.settings.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
                     <i class='bx bx-cog fs-5 {{ request()->routeIs('admin.settings.*') ? 'text-primary' : 'text-white' }}'></i> 
                     Pengaturan
                 </a>
@@ -186,7 +187,8 @@
             @csrf
             <button type="submit" 
                     class="sidebar-logout-btn"
-                    title="Keluar dari aplikasi">
+                    title="Keluar dari aplikasi"
+                    style="text-transform: uppercase; letter-spacing: 0.03em;">
                 <i class='bx bx-log-out'></i> 
                 Log Out
             </button>

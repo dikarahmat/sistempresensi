@@ -107,9 +107,9 @@ Setelah menjalankan perintah `migrate --seed`, gunakan akun berikut untuk masuk 
 
 | Role | Email / Username | Password |
 | :--- | :--- | :--- |
-| **Admin** | admin@smp.com | password123 |
-| **Wali Kelas** | *(NIP Guru dari file Excel/Seeder)* | password123 |
-| **Kesiswaan** | kesiswaan@smp.com | password123 |
+| **Admin** | admin@smp.com | admin123 |
+| **Wali Kelas** | *(NIP Guru dari file Excel/Seeder)* | guru123 |
+| **Kesiswaan** | kesiswaan@smp.com | kesiswaan123 |
 
 *(Silakan cek file `database/seeders/UserSeeder.php` untuk melihat detail akun lainnya yang digenerate).*
 

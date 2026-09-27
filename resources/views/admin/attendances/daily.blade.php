@@ -2,7 +2,16 @@
 
 @section('title', 'Presensi Hari Ini')
 @section('page_title', 'Presensi Hari Ini')
-@section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y'))
+@section('page_subtitle')
+    @php
+        \Carbon\Carbon::setLocale('id');
+        $tanggalStr = \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y');
+    @endphp
+    <span class="d-inline-flex flex-column flex-md-row align-items-start align-items-md-center gap-1 gap-md-2">
+        <span class="d-none d-md-inline">Pindai QR code siswa atau gunakan mode gerbang untuk mencatat kehadiran hari ini</span>
+        <span>{{ $tanggalStr }}</span>
+    </span>
+@endsection
 
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">
@@ -607,6 +616,7 @@
                     <!-- Mode Kamera -->
                     <div id="cameraView" class="w-100 h-100 position-relative">
                         <div id="reader" style="width: 100%; min-height: 220px; border-radius: 12px; overflow: hidden;"></div>
+                        <div id="cameraError" class="alert alert-danger d-none mt-2" role="alert" style="font-size: 0.85rem;"></div>
                         <div id="cameraPlaceholder" class="py-4 position-absolute top-50 start-50 translate-middle w-100" style="background: #fafbfd; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
                             <i class='bx bx-qr-scan text-secondary' style="font-size: 3rem;"></i>
                             <p class="text-secondary small mt-2 mb-0 fw-semibold">Tempelkan kartu QR ke kamera</p>
@@ -817,7 +827,7 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
     let isScannerOpen = false;
     let html5QrKiosk = null;
@@ -1032,30 +1042,66 @@
     function startCamera() {
         if (isCamRunning) return;
         if (typeof Html5Qrcode === 'undefined') {
-            console.warn('Html5Qrcode library not loaded');
+            console.error('Html5Qrcode library not loaded. Make sure the script is loaded.');
+            showCameraError('Library scanner tidak dimuat. Muat ulang halaman.');
+            return;
+        }
+
+        // Check if browser supports camera
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('Camera not supported in this browser');
+            showCameraError('Browser tidak mendukung akses kamera.');
             return;
         }
 
         const placeholder = document.getElementById('cameraPlaceholder');
         if (placeholder) placeholder.style.display = 'none';
 
-        html5QrKiosk = new Html5Qrcode("reader");
+        const errorDiv = document.getElementById('cameraError');
+        if (errorDiv) errorDiv.classList.add('d-none');
 
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                html5QrKiosk.start(
-                    devices[0].id,
-                    { fps: 10, qrbox: { width: 180, height: 180 } },
-                    (decodedText) => {
-                        processCode(decodedText);
-                    },
-                    () => {}
-                ).then(() => { isCamRunning = true; });
+        if (!html5QrKiosk) {
+            html5QrKiosk = new Html5Qrcode("reader");
+        }
+
+        // Step 1: Request camera permission first (prompts user if needed)
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+            // Stop the test stream immediately
+            stream.getTracks().forEach(track => track.stop());
+
+            // Step 2: Enumerate available cameras (works now that permission is granted)
+            return Html5Qrcode.getCameras();
+        }).then(devices => {
+            if (!devices || devices.length === 0) {
+                throw new Error('No camera found');
             }
+
+            // Step 3: Start camera with first available device
+            return html5QrKiosk.start(
+                devices[0].id,
+                { fps: 10, qrbox: { width: 180, height: 180 } },
+                (decodedText) => {
+                    processCode(decodedText);
+                },
+                () => {}
+            );
+        }).then(() => {
+            isCamRunning = true;
+            console.log('Camera started successfully');
         }).catch(err => {
-            console.error(err);
+            console.error('Failed to start camera:', err);
+            showCameraError('Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.');
             if (placeholder) placeholder.style.display = 'flex';
         });
+    }
+
+    function showCameraError(message) {
+        console.error(message);
+        const errorDiv = document.getElementById('cameraError');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('d-none');
+        }
     }
 
     function stopCamera() {

@@ -10,7 +10,6 @@ use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\View\View;
 

@@ -419,7 +419,7 @@
         </div>
         <div class="kiosk-clock-group text-end">
             <div id="realtimeClock" class="fw-bold font-monospace" style="font-size: 1.8rem; line-height: 1.1; color: #0f172a;">00:00:00</div>
-            <div class="kiosk-date-text text-secondary small mt-0.5" style="font-size: 0.8rem;">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}</div>
+            <div class="kiosk-date-text text-secondary small mt-0.5" style="font-size: 0.8rem;">{{ \Carbon\Carbon::setLocale('id') ? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') : '' }}</div>
         </div>
     </header>
 

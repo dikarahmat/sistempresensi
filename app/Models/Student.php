@@ -6,14 +6,34 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Student extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'nis',
+        'nisn',
+        'name',
+        'gender',
+        'birth_date',
+        'birth_place',
+        'religion',
+        'address',
+        'phone',
+        'email',
+        'school_class_id',
+        'status',
+        'photo',
+        'qr_token',
+        'parent_name',
+        'parent_phone',
+        'parent_occupation',
+        'notes',
+    ];
 
     protected $casts = [
         'birth_date' => 'date',
@@ -44,14 +64,6 @@ class Student extends Model
     }
 
     public function schoolClass(): BelongsTo
-    {
-        return $this->belongsTo(SchoolClass::class, 'school_class_id');
-    }
-
-    /**
-     * Alias relasi class agar kompatibel saat dipanggil $student->class
-     */
-    public function class(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class, 'school_class_id');
     }

@@ -496,7 +496,7 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 
     <script>
         // Realtime Clock
@@ -694,24 +694,40 @@
         // Start Camera
         function startCameraKiosk() {
             if (isCamRunning || typeof Html5Qrcode === 'undefined') return;
-            
+
             const placeholder = document.getElementById('cameraPlaceholder');
             if (placeholder) placeholder.style.display = 'none';
-            
-            html5QrKiosk = new Html5Qrcode("reader");
 
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    html5QrKiosk.start(
-                        devices[0].id,
-                        { fps: 10, qrbox: { width: 180, height: 180 } },
-                        (decodedText) => {
-                            processCode(decodedText);
-                        },
-                        () => {}
-                    ).then(() => { isCamRunning = true; });
+            if (!html5QrKiosk) {
+                html5QrKiosk = new Html5Qrcode("reader");
+            }
+
+            // Step 1: Request camera permission first (prompts user if needed)
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                // Stop the test stream immediately
+                stream.getTracks().forEach(track => track.stop());
+
+                // Step 2: Enumerate available cameras (works now that permission is granted)
+                return Html5Qrcode.getCameras();
+            }).then(devices => {
+                if (!devices || devices.length === 0) {
+                    throw new Error('No camera found');
                 }
-            }).catch(err => console.error(err));
+
+                // Step 3: Start camera with first available device
+                return html5QrKiosk.start(
+                    devices[0].id,
+                    { fps: 10, qrbox: { width: 180, height: 180 } },
+                    (decodedText) => {
+                        processCode(decodedText);
+                    },
+                    () => {}
+                );
+            }).then(() => { isCamRunning = true; }).catch(err => {
+                console.error("Gagal start kamera:", err);
+                alert("Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.");
+                if (placeholder) placeholder.style.display = 'flex';
+            });
         }
 
         function stopCameraKiosk() {

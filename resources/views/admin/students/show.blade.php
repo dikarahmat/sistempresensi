@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
 @section('title', 'Detail Siswa')
-@section('page_title', 'Detail Siswa: ' . $student->name)
+@section('page_title', 'Detail Siswa')
 @section('page_subtitle', 'Informasi biodata, kelas, dan kode QR presensi siswa')
 
 @section('page_header_right')
 <div class="d-flex gap-2">
     <a href="{{ route('admin.students.edit', $student->id) }}" class="btn-edit-yellow shadow-xs">
-        <i class='bx bx-edit-alt'></i> Edit
+        Edit
     </a>
-    <a href="{{ route('admin.students.index') }}" class="btn-back-white shadow-xs">
-        <i class='bx bx-chevron-left'></i> Kembali
+    <a href="{{ route('admin.students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.88rem;">
+        Kembali
     </a>
 </div>
 @endsection
@@ -94,7 +94,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.4rem;
         width: 100%;
         text-decoration: none;
         margin-bottom: 0.75rem;
@@ -163,12 +162,12 @@
 
                 <!-- Tombol Download QR Saja -->
                 <a href="{{ route('admin.students.download-qr', $student->id) }}" class="btn-download-blue">
-                    <i class='bx bx-download fs-5'></i> Download
+                    Download
                 </a>
 
                 <!-- Tombol Download Kartu Presensi PDF -->
                 <a href="{{ route('admin.students.download-card', $student->id) }}" class="btn-download-green" id="btnDownloadCard" style="text-decoration: none;">
-                    <i class='bx bx-id-card fs-5'></i> Download Kartu Presensi
+                    Download Kartu Presensi
                 </a>
             </div>
         </div>

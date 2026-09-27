@@ -1,8 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Master Hari Libur')
-@section('page_title', 'Master Hari Libur & Cuti')
-@section('page_subtitle', 'Daftar hari libur nasional, libur semester, dan cuti bersama yang dikecualikan dari presensi.')
+@section('title', 'Hari Libur')
+@section('page_title', 'Hari Libur & Cuti')
+@section('page_subtitle', 'Daftar hari libur nasional')
+
+@push('styles')
+<style>
+    /* Subtitle Hari Libur: full width, tidak terpotong (mobile & desktop) */
+    .header-main-subtitle {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        display: block !important;
+        width: 100% !important;
+    }
+</style>
+@endpush
 
 @section('page_header_right')
 <!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
@@ -10,12 +23,12 @@
     <div class="d-flex align-items-center gap-2">
         <!-- Tombol Import Excel -->
         <button type="button" class="btn btn-green-excel btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#importHolidayModal">
-            <i class='bx bx-file'></i> Import Excel
+            Import Excel
         </button>
 
         <!-- Tombol Tambah Hari Libur -->
         <button type="button" class="btn btn-add-holiday btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
-            <i class='bx bx-calendar-plus'></i> Tambah Hari Libur
+            Tambah Hari Libur
         </button>
     </div>
 </div>
@@ -102,8 +115,8 @@
     .table-holidays tbody td {
         color: #000000 !important;
         font-weight: 400 !important;
-        font-size: 0.88rem;
-        padding: 0.95rem 1rem;
+        font-size: 0.85rem;
+        padding: 0.85rem 1rem;
     }
 
     /* Indentasi Teks Kiri */
@@ -164,13 +177,11 @@
             <div class="d-flex flex-column gap-2">
                 <div class="w-100">
                     <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importHolidayModal">
-                        <i class='bx bx-file fs-6'></i>
                         <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
                     </button>
                 </div>
                 <div class="w-100">
                     <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
-                        <i class='bx bx-calendar-plus fs-6'></i>
                         <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Hari Libur</span>
                     </button>
                 </div>
@@ -198,7 +209,7 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-holidays table-zebra-custom text-nowrap">
                 <thead class="bg-light text-nowrap">
-                    <tr class="text-secondary small fw-bold text-uppercase text-nowrap" style="letter-spacing: 0.03em;">
+                    <tr class="text-secondary fw-bold text-uppercase text-nowrap" style="letter-spacing: 0.03em; font-size: 0.78rem;">
                         <th class="text-center py-3 px-3 text-nowrap" style="width: 6%;">NO</th>
                         <th class="text-center py-3 px-3 text-nowrap" style="width: 14%;">Tipe</th>
                         <th class="text-start indent-tanggal py-3 px-3 text-nowrap" style="width: 28%;">Tanggal / Periode</th>
@@ -237,12 +248,12 @@
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editHolidayModal{{ $holiday->id }}" title="Edit">
-                                    <i class='bx bx-edit-alt'></i> Edit
+                                    Edit
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
                                 <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteHoliday('{{ $holiday->id }}', '{{ addslashes($holiday->description) }}')" title="Hapus">
-                                    <i class='bx bx-trash'></i> Hapus
+                                    Hapus
                                 </button>
                                 <form id="deleteHolidayForm-{{ $holiday->id }}" action="{{ route('admin.holidays.destroy', $holiday->id) }}" method="POST" class="d-none">
                                     @csrf

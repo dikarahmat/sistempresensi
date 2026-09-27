@@ -25,9 +25,6 @@ class SettingController extends Controller
             'check_in_time' => Setting::get('check_in_time', '06:45'),
             'late_limit_time' => Setting::get('late_limit_time', '07:15'),
             'check_out_time' => Setting::get('check_out_time', '14:30'),
-            'whatsapp_gateway_status' => Setting::get('whatsapp_gateway_status', 'inactive'),
-            'whatsapp_api_token' => Setting::get('whatsapp_api_token', ''),
-            'whatsapp_sender' => Setting::get('whatsapp_sender', ''),
         ];
 
         return view('admin.settings.index', compact('settings'));
@@ -46,9 +43,6 @@ class SettingController extends Controller
             'check_in_time' => 'required|string',
             'late_limit_time' => 'required|string',
             'check_out_time' => 'nullable|string',
-            'whatsapp_gateway_status' => 'nullable|in:active,inactive',
-            'whatsapp_api_token' => 'nullable|string|max:255',
-            'whatsapp_sender' => 'nullable|string|max:50',
         ]);
 
         Setting::set('school_name', trim($request->school_name));
@@ -62,9 +56,6 @@ class SettingController extends Controller
         if ($request->filled('check_out_time')) {
             Setting::set('check_out_time', $request->check_out_time);
         }
-        Setting::set('whatsapp_gateway_status', $request->whatsapp_gateway_status ?? 'inactive');
-        Setting::set('whatsapp_api_token', trim($request->whatsapp_api_token ?? ''));
-        Setting::set('whatsapp_sender', trim($request->whatsapp_sender ?? ''));
 
         if ($request->hasFile('school_logo')) {
             $oldLogo = Setting::get('school_logo');

@@ -148,7 +148,7 @@
 </style>
 @endpush
 
-@@section('content')
+@section('content')
 
     {{-- Alert Notifikasi --}}
     @if(session('success'))

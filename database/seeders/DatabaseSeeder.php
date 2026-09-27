@@ -32,13 +32,18 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
+            // WAJIB diganti sebelum production, ini cuma untuk development/seeding awal
             User::updateOrCreate(
                 ['username' => $account['username']],
                 [
                     'name' => $account['name'],
                     'role' => $account['role'],
                     'email' => $account['email'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make(match($account['role']) {
+                        'admin' => 'admin123',
+                        'guru' => 'guru123',
+                        'kesiswaan' => 'kesiswaan123',
+                    }),
                 ]
             );
         }

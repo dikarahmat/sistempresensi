@@ -4,23 +4,6 @@
 @section('page_title', 'Presensi Kelas ' . ($selectedClass->name ?? '-'))
 @section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y'))
 
-@section('page_header_right')
-<div class="d-flex align-items-center gap-2 flex-nowrap w-100 w-lg-auto class-attendance-toolbar">
-    <a href="{{ route('admin.absensi.index', ['date' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-light border rounded-3 px-2 px-sm-3 py-1.5 d-inline-flex align-items-center gap-1 shadow-2xs text-secondary fw-semibold flex-shrink-0 class-attendance-back" style="font-size: 0.82rem;" title="Kembali">
-        <i class='bx bx-chevron-left'></i> <span class="text-nowrap">Kembali</span>
-    </a>
-
-    <form method="GET" action="{{ route('admin.absensi.show', $selectedClass->id ?? 1) }}" class="m-0 flex-grow-1 min-w-0 class-attendance-date">
-        <input type="date" name="tanggal" class="form-control form-control-sm rounded-3 py-1.5 px-2 bg-white border text-secondary fw-semibold w-100" value="{{ $tanggal ?? date('Y-m-d') }}" onchange="this.form.submit()" style="font-size: 0.82rem;">
-    </form>
-
-    <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold btn-sm px-2 px-sm-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1 shadow-2xs flex-shrink-0 class-attendance-scan" style="font-size: 0.82rem;" onclick="toggleInlineScanner()">
-        <i class='bx bx-camera fs-5' id="toggleScannerIcon"></i>
-        <span id="toggleScannerText" class="text-nowrap">Buka Scanner QR</span>
-    </button>
-</div>
-@endsection
-
 @push('styles')
 <style>
     .page-subtitle-date {
@@ -29,19 +12,20 @@
         color: #475569;
     }
     
-    /* Badge Ringkasan Minimalis: Ikon di Kanan, Background Putih */
+    /* Badge Ringkasan Minimalis: pill kecil seperti tombol */
     .status-badge-pill {
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 0.6rem;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem !important;
-        font-size: 0.85rem;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.7rem;
+        border-radius: 9999px !important;
+        font-size: 0.78rem;
         font-weight: 600;
         background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: none;
         color: #1e293b;
+        line-height: 1.2;
     }
     .icon-hadir { color: #10b981; }
     .icon-terlambat { color: #f59e0b; }
@@ -81,8 +65,7 @@
         font-size: 0.75rem;
         padding: 0.8rem 1rem;
         border-bottom: 1.5px solid #edf2f7;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
+        white-space: nowrap !important;
     }
     /* Zebra Striping Khusus (Sesuai Benchmark Data Siswa) */
     .table-enterprise tbody tr:nth-child(even) > td,
@@ -284,11 +267,35 @@
        PERBAIKAN MOBILE: Toolbar, Ringkasan Status, dan Kotak Scanner
        ========================================================================== */
 
-    /* --- 1. Ringkasan status: grid 3 kolom agar ringkas & rata --------------- */
+    /* --- 1. Ringkasan status: grid kecil-kecil, 3 kolom di mobile --- */
     .status-summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
+    }
+
+    /* Scanner QR tetap full width, tidak ikut terpotong grid */
+    .status-summary-grid .class-attendance-scan {
+        grid-column: 1 / -1;
+        width: 100% !important;
+        padding: 0.6rem 1rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* Scanner QR tetap full width, tidak ikut terpotong grid */
+    .status-summary-grid .class-attendance-scan {
+        grid-column: 1 / -1;
+        width: 100% !important;
+        padding: 0.6rem 1rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* Scanner QR tetap full width, tidak ikut terpotong grid */
+    .status-summary-grid .class-attendance-scan {
+        grid-column: 1 / -1;
+        width: 100% !important;
+        padding: 0.6rem 1rem !important;
+        font-size: 0.82rem !important;
     }
 
     .status-summary-grid .status-badge-pill {
@@ -298,13 +305,10 @@
         gap: 0.25rem;
         font-size: 0.72rem;
         line-height: 1.2;
-        border-radius: 9px !important;
-    }
-
-    .status-summary-grid .status-badge-pill i {
-        font-size: 0.95rem;
-        line-height: 1;
-        flex-shrink: 0;
+        border-radius: 8px !important;
+        justify-content: center;
+        display: flex;
+        align-items: center;
     }
 
     .status-summary-grid .status-badge-pill span {
@@ -315,16 +319,13 @@
 
     @media (min-width: 576px) {
         .status-summary-grid {
-            display: flex;
-            flex-wrap: wrap;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 8px;
         }
 
         .status-summary-grid .status-badge-pill {
-            width: auto;
-            padding: 0.5rem 1rem;
-            gap: 0.6rem;
-            font-size: 0.85rem;
+            padding: 0.4rem 0.5rem;
+            font-size: 0.75rem;
         }
     }
 
@@ -426,31 +427,29 @@
 @section('content')
 <div class="pt-1 pb-4 space-y-3">
     
-    <!-- RINGKASAN STATUS: grid 3 kolom di mobile, tetap pill di desktop -->
+    <!-- RINGKASAN STATUS + SCANNER: satu container -->
     <div class="status-summary-grid mb-3">
+        <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold py-1.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs w-100 class-attendance-scan" style="font-size: 0.82rem;" onclick="toggleInlineScanner()">
+            <i class='bx bx-camera fs-5' id="toggleScannerIcon"></i>
+            <span id="toggleScannerText" class="text-nowrap">Buka Scanner QR</span>
+        </button>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countHadir ?? 0 }}</strong> Hadir</span>
-            <i class='bx bx-check-circle icon-hadir'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countTerlambat ?? 0 }}</strong> Terlambat</span>
-            <i class='bx bx-time-five icon-terlambat'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countSakit ?? 0 }}</strong> Sakit</span>
-            <i class='bx bx-plus-medical icon-sakit'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countIzin ?? 0 }}</strong> Izin</span>
-            <i class='bx bx-envelope icon-izin'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countAlfa ?? 0 }}</strong> Alfa</span>
-            <i class='bx bx-x-circle icon-alfa'></i>
         </div>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countBelumAbsen ?? 0 }}</strong> Belum</span>
-            <i class='bx bx-minus-circle icon-belum'></i>
         </div>
     </div>
 
@@ -525,13 +524,11 @@
                     <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
                         <thead class="bg-light">
                             <tr class="text-dark small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
-                                <th class="text-center py-3" style="width: 5%;">No.</th>
-                                <th class="py-3" style="width: 27%;">Nama Siswa</th>
-                                <th class="py-3" style="width: 15%;">NIS</th>
-                                <th class="text-center py-3" style="width: 13%;">Jam Masuk</th>
-                                <th class="text-center py-3" style="width: 13%;">Jam Pulang</th>
-                                <th class="text-center py-3" style="width: 12%;">Status</th>
-                                <th class="text-center py-3" style="width: 15%;">Aksi</th>
+                                <th class="text-center py-3" style="width: 8%; white-space: nowrap;">NO</th>
+                                <th class="py-3" style="width: 30%; white-space: nowrap;">NAMA SISWA</th>
+                                <th class="text-center py-3" style="width: 15%; white-space: nowrap;">JAM MASUK</th>
+                                <th class="text-center py-3" style="width: 20%; white-space: nowrap;">STATUS</th>
+                                <th class="text-center py-3" style="width: 27%; white-space: nowrap;">AKSI</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -539,16 +536,10 @@
                             <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                                 <td class="text-center text-secondary fw-semibold">{{ $index + 1 }}</td>
                                 <td>
-                                    <div class="fw-semibold text-dark">{{ $student->name ?? '-' }}</div>
-                                </td>
-                                <td>
-                                    <span class="font-monospace text-secondary">{{ $student->nis ?: '-' }}</span>
+                                    <div class="text-dark">{{ $student->name ?? '-' }}</div>
                                 </td>
                                 <td class="text-center text-secondary font-monospace">
                                     {{ $student->jam_masuk ?? '—' }}
-                                </td>
-                                <td class="text-center text-secondary font-monospace">
-                                    {{ $student->jam_pulang ?? '—' }}
                                 </td>
                                 <td class="text-center">
                                     @php
@@ -585,11 +576,6 @@
                                         <!-- Tombol Simpan Cepat (Checklist) -->
                                         <button type="submit" class="btn-save-quick" title="Simpan Status">
                                             <i class='bx bx-check fs-5'></i>
-                                        </button>
-
-                                        <!-- Tombol Ikon Edit / Modal Detail (Pensil) -->
-                                        <button type="button" class="btn-edit-modal" data-bs-toggle="modal" data-bs-target="#modalOverrideSiswa{{ $student->id }}" title="Edit Detail / Upload Surat">
-                                            <i class='bx bx-edit-alt fs-6'></i>
                                         </button>
                                     </form>
 
@@ -649,7 +635,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-secondary">Belum ada data siswa di kelas ini.</td>
+                                <td colspan="2" class="text-center py-4 text-secondary">Belum ada data siswa di kelas ini.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -663,7 +649,7 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
     let isScannerOpen = false;
     let html5QrKiosk = null;

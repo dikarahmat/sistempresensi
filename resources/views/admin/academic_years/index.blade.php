@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Master Tahun Ajaran')
-@section('page_title', 'Master Tahun Ajaran')
+@section('title', 'Tahun Ajaran')
+@section('page_title', 'Tahun Ajaran')
 @section('page_subtitle', 'Kelola periode akademik dan tentukan satu tahun ajaran aktif sistem.')
 
 @section('page_header_right')
 <!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
 <div class="d-none d-md-block">
     <button type="button" class="btn btn-add-year btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#addYearModal">
-        <i class='bx bx-plus me-1'></i> Tambah Tahun Ajaran
+        Tambah Tahun Ajaran
     </button>
 </div>
 @endsection
@@ -35,13 +35,22 @@
     /* Tabel Tahun Ajaran */
     .table-years {
         width: 100%;
-        min-width: 780px;
+        min-width: 600px;
         margin-bottom: 0;
+    }
+
+    .table-years thead th {
+        text-transform: uppercase !important;
+    }
+
+    .table-years tbody td {
+        text-transform: uppercase !important;
     }
 
     .table-responsive {
         -webkit-overflow-scrolling: touch;
         overflow-x: auto;
+        scrollbar-width: thin;
     }
 
     /* Zebra Striping Khusus (Sesuai Benchmark Data Siswa) */
@@ -74,8 +83,8 @@
     .table-years tbody td {
         color: #000000 !important;
         font-weight: 400 !important;
-        font-size: 0.88rem;
-        padding: 0.95rem 1rem;
+        font-size: 0.85rem;
+        padding: 0.85rem 1rem;
     }
 
     .col-status-aktif {
@@ -133,7 +142,6 @@
     <div class="d-block d-md-none mb-3">
         <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
             <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addYearModal">
-                <i class='bx bx-plus fs-6'></i>
                 <span>Tambah Tahun Ajaran</span>
             </button>
         </div>
@@ -144,18 +152,18 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-years text-nowrap">
                 <thead class="bg-light">
-                    <tr class="text-secondary small fw-bold text-uppercase align-middle text-nowrap" style="letter-spacing: 0.03em;">
+                    <tr class="text-secondary small fw-bold align-middle text-uppercase text-nowrap" style="letter-spacing: 0.03em;">
                         <th class="text-center py-3 text-nowrap px-3" style="width: 6%;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3">TAHUN AJARAN</th>
-                        <th class="text-center py-3 text-nowrap px-3">SEMESTER</th>
-                        <th class="text-center py-3 text-nowrap px-3">PERIODE TANGGAL</th>
+                        <th class="text-center py-3 text-nowrap px-3">Tahun Ajaran</th>
+                        <th class="text-center py-3 text-nowrap px-3">Semester</th>
+                        <th class="text-center py-3 text-nowrap px-3 d-none d-md-table-cell">Periode Tanggal</th>
                         <th class="text-center py-3 text-nowrap px-3">
-                            <span class="col-status-aktif">STATUS AKTIF</span>
+                            <span class="col-status-aktif">Status Aktif</span>
                         </th>
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 11%;">AKSI</th>
+                        <th class="text-center py-3 text-nowrap px-3" style="width: 11%;">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-uppercase">
                     @forelse($academicYears as $index => $year)
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle text-nowrap">
                         <td class="text-center text-nowrap px-3">{{ $academicYears->firstItem() + $index }}</td>
@@ -172,8 +180,7 @@
                         <td class="text-center text-nowrap px-3">
                             Semester {{ $year->semester }}
                         </td>
-                        <td class="text-center text-nowrap px-3">
-                            <i class='bx bx-calendar text-secondary me-1'></i>
+                        <td class="text-center text-nowrap px-3 d-none d-md-table-cell">
                             {{ \Carbon\Carbon::parse($year->start_date)->translatedFormat('d M Y') }} &mdash; 
                             {{ \Carbon\Carbon::parse($year->end_date)->translatedFormat('d M Y') }}
                         </td>

@@ -21,18 +21,18 @@ class UserSeeder extends Seeder
             ['email' => 'admin@smppresensipgri.sch.id'],
             [
                 'name' => 'Administrator SMP PGRI',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'email_verified_at' => now(),
             ]
         );
 
-        // 2. Akun Guru / Wali Kelas (Budi Santoso, S.Pd. - password default adalah NIP)
+        // 2. Akun Guru / Wali Kelas (Budi Santoso, S.Pd.)
         $guruUser = User::updateOrCreate(
             ['email' => 'guru@smppresensipgri.sch.id'],
             [
                 'name' => 'Budi Santoso, S.Pd.',
-                'password' => Hash::make('198503122010011002'),
+                'password' => Hash::make('guru123'),
                 'role' => 'guru',
                 'email_verified_at' => now(),
             ]
@@ -73,7 +73,7 @@ class UserSeeder extends Seeder
             ['email' => 'kesiswaan@smppresensipgri.sch.id'],
             [
                 'name' => 'Staf Bagian Kesiswaan',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('kesiswaan123'),
                 'role' => 'kesiswaan',
                 'email_verified_at' => now(),
             ]

@@ -700,8 +700,16 @@
 
             Html5Qrcode.getCameras().then(devices => {
                 if (devices && devices.length) {
+                    // Prioritaskan kamera belakang (environment)
+                    const backCamera = devices.find(device => 
+                        device.label.toLowerCase().includes('back') || 
+                        device.label.toLowerCase().includes('environment') ||
+                        device.label.toLowerCase().includes('belakang')
+                    );
+                    const selectedCamera = backCamera || devices[0];
+                    
                     html5QrKiosk.start(
-                        devices[0].id,
+                        selectedCamera.id,
                         { fps: 10, qrbox: { width: 180, height: 180 } },
                         (decodedText) => {
                             processCode(decodedText);

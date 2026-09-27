@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserRole;
 use App\Http\Middleware\RoleKesiswaanMiddleware;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserRole::class,
             'role.kesiswaan' => RoleKesiswaanMiddleware::class,
         ]);
+
+        // Security headers global
+        $middleware->append(SecurityHeaders::class);
 
         // Trust Railway's reverse proxy agar Laravel tau request aslinya HTTPS
         $middleware->trustProxies(at: '*');

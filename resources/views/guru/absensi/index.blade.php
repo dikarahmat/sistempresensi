@@ -45,6 +45,9 @@
         border-radius: 8px;
         line-height: 1.25;
         white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-action-header i {
         font-size: 1.15rem;
@@ -77,9 +80,9 @@
         justify-content: center;
         gap: 0.35rem;
         width: 100%;
-        padding: 0.42rem 0.65rem;
+        padding: 0.35rem 0.5rem;
         border-radius: 8px;
-        font-size: 0.80rem;
+        font-size: 0.72rem;
         font-weight: 600;
         text-decoration: none !important;
         transition: all 0.15s ease-in-out;
@@ -89,6 +92,9 @@
         text-align: center;
         white-space: nowrap;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-portal-action i {
         font-size: 1.2rem;
@@ -268,7 +274,7 @@
     .table-enterprise thead th {
         background-color: #f8fafc;
         color: #0f172a !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
         font-size: 0.75rem;
         padding: 0.65rem 0.75rem;
         border-bottom: 1.5px solid #edf2f7;
@@ -276,6 +282,7 @@
         letter-spacing: 0.03em;
         white-space: nowrap;
         line-height: 1.2;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
     .table-enterprise tbody tr.baris-abu > td,
@@ -300,6 +307,9 @@
         vertical-align: middle;
         border-bottom: 1px solid #f1f5f9;
         line-height: 1.25;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
     /* Khusus Tampilan Mobile (< 768px): Tabel Full Width Pas 1 Layar */
@@ -378,6 +388,9 @@
         transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
         line-height: 1.25;
         white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-buka-kelas:hover {
         background-color: #254fd9;
@@ -548,8 +561,7 @@
                     <a href="{{ route('guru.scanner') }}" 
                        class="btn-portal-action btn-portal-gate shadow-2xs w-100" 
                        title="Mode Gerbang">
-                        <i class='bx bx-scan'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Mode Gerbang</span>
+                        <span class="text-nowrap" style="font-size: 0.72rem;">Mode Gerbang</span>
                     </a>
                 </div>
 
@@ -559,8 +571,7 @@
                             class="btn-portal-action btn-portal-scanner shadow-2xs w-100" 
                             onclick="toggleInlineScanner()"
                             title="Buka Scanner QR">
-                        <i class='bx bx-camera' id="toggleScannerIconMobile"></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;" id="toggleScannerTextMobile">Scanner QR</span>
+                        <span class="text-nowrap" style="font-size: 0.72rem;" id="toggleScannerTextMobile">Scanner QR</span>
                     </button>
                 </div>
             </div>

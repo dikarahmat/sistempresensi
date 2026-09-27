@@ -288,6 +288,54 @@ class SystemAuditAndPerformanceTest extends TestCase
         $response->assertViewHas(['classesList', 'waliKelasList', 'classesAttendance']);
     }
 
+    public function test_daily_attendance_summary_aggregates_in_database_without_double_counting_late_students(): void
+    {
+        $class = SchoolClass::create([
+            'name' => '7A',
+            'grade' => '7',
+            'academic_year_id' => $this->academicYear->id,
+        ]);
+
+        $onTimeStudent = Student::create([
+            'school_class_id' => $class->id,
+            'name' => 'Siswa Tepat Waktu',
+            'nis' => '7001',
+            'nisn' => '7001001',
+            'gender' => 'Laki-laki',
+            'status' => 'Aktif',
+            'qr_token' => 'QR-7001',
+        ]);
+        $lateStudent = Student::create([
+            'school_class_id' => $class->id,
+            'name' => 'Siswa Terlambat',
+            'nis' => '7002',
+            'nisn' => '7001002',
+            'gender' => 'Perempuan',
+            'status' => 'Aktif',
+            'qr_token' => 'QR-7002',
+        ]);
+
+        foreach ([[$onTimeStudent, 'Tepat Waktu'], [$lateStudent, 'Terlambat']] as [$student, $remark]) {
+            Attendance::create([
+                'student_id' => $student->id,
+                'academic_year_id' => $this->academicYear->id,
+                'date' => '2025-08-01',
+                'status' => 'Hadir',
+                'time_remark' => $remark,
+            ]);
+        }
+
+        $response = $this->actingAs($this->admin)->getJson(route('admin.absensi.index', [
+            'tanggal' => '2025-08-01',
+        ]));
+
+        $response->assertOk()
+            ->assertJsonPath('kelasList.0.total_siswa', 2)
+            ->assertJsonPath('kelasList.0.hadir', 2)
+            ->assertJsonPath('kelasList.0.terlambat', 1)
+            ->assertJsonPath('hadir_count', 2);
+    }
+
     /**
      * Test 8: Class Attendance Scanner View Standardization
      */
