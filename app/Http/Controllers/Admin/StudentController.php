@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -23,8 +24,12 @@ class StudentController extends Controller
 {
     public function index(Request $request): View
     {
-        // SoftDeletes otomatis mengecualikan siswa yang diarsipkan
         $query = Student::with('schoolClass');
+
+        // Hanya filter deleted_at jika kolom sudah ada di database
+        if (Schema::hasColumn('students', 'deleted_at')) {
+            $query->whereNull('deleted_at');
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -423,10 +428,14 @@ class StudentController extends Controller
      */
     public function trash(): View
     {
-        $students = Student::onlyTrashed()
-            ->with('schoolClass')
-            ->orderBy('deleted_at', 'desc')
-            ->paginate(50);
+        $query = Student::with('schoolClass');
+
+        // Hanya filter deleted_at jika kolom sudah ada di database
+        if (Schema::hasColumn('students', 'deleted_at')) {
+            $query->whereNotNull('deleted_at');
+        }
+
+        $students = $query->orderBy('deleted_at', 'desc')->paginate(50);
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('admin.students.trash', compact('students', 'classes'));
@@ -437,8 +446,19 @@ class StudentController extends Controller
      */
     public function restore($id): RedirectResponse
     {
-        $student = Student::onlyTrashed()->findOrFail($id);
-        $student->restore();
+        $query = Student::where('id', $id);
+
+        // Hanya filter deleted_at jika kolom sudah ada di database
+        if (Schema::hasColumn('students', 'deleted_at')) {
+            $query->whereNotNull('deleted_at');
+        }
+
+        $student = $query->firstOrFail();
+
+        // Hanya update deleted_at jika kolom sudah ada
+        if (Schema::hasColumn('students', 'deleted_at')) {
+            $student->update(['deleted_at' => null]);
+        }
 
         return redirect()->route('admin.students.trash')
             ->with('success', "Data siswa {$student->name} berhasil dipulihkan!");
@@ -449,7 +469,14 @@ class StudentController extends Controller
      */
     public function forceDelete($id): RedirectResponse
     {
-        $student = Student::onlyTrashed()->findOrFail($id);
+        $query = Student::where('id', $id);
+
+        // Hanya filter deleted_at jika kolom sudah ada di database
+        if (Schema::hasColumn('students', 'deleted_at')) {
+            $query->whereNotNull('deleted_at');
+        }
+
+        $student = $query->firstOrFail();
 
         DB::beginTransaction();
         try {
@@ -464,7 +491,7 @@ class StudentController extends Controller
             $student->attendances()->delete();
 
             // Hapus permanen data siswa dari database
-            $student->forceDelete();
+            $student->delete();
 
             DB::commit();
             return redirect()->route('admin.students.trash')
