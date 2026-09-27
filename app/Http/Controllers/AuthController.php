@@ -97,8 +97,8 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        // 5. Cek jika input adalah NISN Siswa
-        if (Student::where('nisn', $loginInput)->exists()) {
+        // 5. Cek jika input adalah NISN Siswa (hanya jika input numerik — NISN selalu angka)
+        if (ctype_digit($loginInput) && Student::where('nisn', $loginInput)->exists()) {
             return back()->withInput($request->only('login', 'remember'))->withErrors([
                 'login' => 'Portal mandiri siswa saat ini sedang disiapkan oleh pihak sekolah.',
             ]);
