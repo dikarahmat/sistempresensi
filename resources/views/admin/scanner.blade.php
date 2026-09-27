@@ -125,18 +125,31 @@
             border: 2px solid #2563eb;
             background: #000000;
             padding: 0;
+            aspect-ratio: 1 / 1 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: hidden !important;
         }
 
         #reader {
             width: 100% !important;
             height: 100% !important;
             border: none !important;
+            aspect-ratio: 1 / 1 !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: hidden !important;
         }
 
         #reader video {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover;
+            object-fit: cover !important;
+            transform: translate(-50%, -50%) !important;
             border-radius: 14px;
         }
 
@@ -702,28 +715,40 @@
                 html5QrKiosk = new Html5Qrcode("reader");
             }
 
-            // Step 1: Request camera permission first (prompts user if needed)
-            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-                // Stop the test stream immediately
-                stream.getTracks().forEach(track => track.stop());
+            // Detect mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-                // Step 2: Enumerate available cameras (works now that permission is granted)
-                return Html5Qrcode.getCameras();
-            }).then(devices => {
-                if (!devices || devices.length === 0) {
-                    throw new Error('No camera found');
-                }
+            // Smart-fallback: mobile → back camera (environment), desktop → front camera (user)
+            const facingMode = isMobile ? { exact: "environment" } : "user";
 
-                // Step 3: Start camera with first available device
-                return html5QrKiosk.start(
-                    devices[0].id,
-                    { fps: 10, qrbox: { width: 180, height: 180 } },
-                    (decodedText) => {
-                        processCode(decodedText);
-                    },
-                    () => {}
-                );
-            }).then(() => { isCamRunning = true; }).catch(err => {
+            html5QrKiosk.start(
+                facingMode,
+                { fps: 10, qrbox: { width: 180, height: 180 } },
+                (decodedText) => {
+                    processCode(decodedText);
+                },
+                () => {}
+            ).then(() => {
+                isCamRunning = true;
+            }).catch(err => {
+                // Fallback: if exact environment fails, try any available camera
+                console.warn("Primary camera failed, trying fallback:", err);
+                return Html5Qrcode.getCameras().then(devices => {
+                    if (!devices || devices.length === 0) {
+                        throw new Error('No camera found');
+                    }
+                    return html5QrKiosk.start(
+                        devices[0].id,
+                        { fps: 10, qrbox: { width: 180, height: 180 } },
+                        (decodedText) => {
+                            processCode(decodedText);
+                        },
+                        () => {}
+                    );
+                }).then(() => {
+                    isCamRunning = true;
+                });
+            }).catch(err => {
                 console.error("Gagal start kamera:", err);
                 alert("Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.");
                 if (placeholder) placeholder.style.display = 'flex';

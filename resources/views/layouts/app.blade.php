@@ -338,11 +338,15 @@
                 top: env(safe-area-inset-top, 0px) !important;
                 left: 0 !important;
                 bottom: 0 !important;
-                /* FIX: height eksplisit = 100% - safe-area-top.
-                   Tanpa ini, di Android drawer lebih tinggi dari layar terlihat
-                   (100vh termasuk address bar browser) -> logout tersembunyi. */
-                height: calc(100% - env(safe-area-inset-top, 0px)) !important;
-                max-height: calc(100% - env(safe-area-inset-top, 0px)) !important;
+                /* FIX BENAR: dvh mengikuti tinggi layar AKTUAL (termasuk saat address bar
+                   browser masih terlihat), beda dengan vh/% yang mengasumsikan address bar
+                   sudah hilang -> itu sebabnya Logout kepotong di luar layar yang terlihat.
+                   Baris 100vh ditulis dulu sebagai fallback, lalu 100dvh override-nya
+                   di browser yang sudah support (pola sama seperti .content-scroll-wrapper). */
+                height: calc(100vh - env(safe-area-inset-top, 0px)) !important;
+                height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+                max-height: calc(100vh - env(safe-area-inset-top, 0px)) !important;
+                max-height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
                 overflow: hidden !important;
                 width: 14rem !important;
                 min-width: 0 !important;

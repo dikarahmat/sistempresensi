@@ -227,19 +227,31 @@
         border: 2px solid #2563eb;
         background: #000000;
         padding: 0;
+        aspect-ratio: 1 / 1 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: hidden !important;
     }
 
     #reader {
         width: 100% !important;
         height: 100% !important;
-        min-height: 220px;
         border: none !important;
+        aspect-ratio: 1 / 1 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: hidden !important;
     }
 
     #reader video {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
         width: 100% !important;
         height: 100% !important;
-        object-fit: cover;
+        object-fit: cover !important;
+        transform: translate(-50%, -50%) !important;
         border-radius: 14px;
     }
 
