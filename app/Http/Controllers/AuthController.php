@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -97,14 +96,7 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        // 5. Cek jika input adalah NISN Siswa (hanya jika input numerik — NISN selalu angka)
-        if (ctype_digit($loginInput) && Student::where('nisn', $loginInput)->exists()) {
-            return back()->withInput($request->only('login', 'remember'))->withErrors([
-                'login' => 'Portal mandiri siswa saat ini sedang disiapkan oleh pihak sekolah.',
-            ]);
-        }
-
-        // 6. Autentikasi Gagal
+        // Autentikasi Gagal
         return back()->withInput($request->only('login', 'remember'))->withErrors([
             'login' => 'Email/Username atau kata sandi yang Anda masukkan salah.',
         ]);
