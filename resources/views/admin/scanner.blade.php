@@ -4,100 +4,302 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Presensi Gerbang | {{ \App\Models\Setting::getSchoolName() }}</title>
-
-    <!-- Global Favicon Dinamis -->
+    <title>Presensi Gerbang | {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
     <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
 
-    <!-- Google Fonts: Plus Jakarta Sans -->
+    <!-- Google Fonts: Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap 5 & Boxicons -->
+    <!-- Bootstrap 5 CSS & Boxicons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
+    <!-- HTML5 QR Code Scanner (lokal, 2.3.8) -->
+    <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
+
     <style>
+        :root {
+            /* Latar halaman = foto sekolah (public/images/bg.webp) + kabut putih tipis,
+               supaya halaman tidak polos tetapi teks/kamera tetap mudah dibaca
+               (desktop maupun mobile) */
+            --kiosk-bg: #dbe4f0;
+            --kiosk-bg-image: url('{{ asset('images/bg.webp') }}');
+            --kiosk-card: rgba(255, 255, 255, 0.60);
+            --kiosk-veil: rgba(255, 255, 255, 0.72);
+            --kiosk-border: rgba(255, 255, 255, 0.65);
+            --kiosk-text: #0f172a;
+            --kiosk-muted: #5a6a80;
+            --kiosk-primary: #2563eb;
+        }
+
+        html {
+            /* Warna cadangan bila foto gagal dimuat */
+            background-color: var(--kiosk-bg);
+        }
+
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #ffffff;
-            color: #0f172a;
-            min-height: 100vh;
+            font-family: 'Roboto', sans-serif;
+            /* Transparan supaya lapisan foto (::before) di bawahnya terlihat */
+            background-color: transparent;
+            color: var(--kiosk-text);
             margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            overflow-x: hidden;
         }
 
-        /* Top Bar Minimalis (Desktop Default) */
-        .kiosk-topbar {
-            padding: 1.25rem 2.5rem;
+        /* ===== LATAR FOTO SEKOLAH (fixed, tidak bergeser saat halaman digulir) ===== */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image: var(--kiosk-bg-image);
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+
+        /* Kabut putih: menjaga keterbacaan teks di atas foto */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(120% 85% at 50% 38%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.78) 100%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.28) 35%, rgba(255, 255, 255, 0.70) 100%);
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* ===== HEADER: Kaca Transparan (logo kiri, jam kanan) ===== */
+        .kiosk-header {
+            background: var(--kiosk-veil);
+            -webkit-backdrop-filter: blur(10px) saturate(140%);
+            backdrop-filter: blur(10px) saturate(140%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+            padding: 0.9rem 1.25rem;
+            width: 100%;
+        }
+
+        .kiosk-header-inner {
+            width: 100%;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
         }
 
-        .kiosk-brand-group {
+        .kiosk-brand-text {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .kiosk-brand {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 0.75rem;
+            min-width: 0;
         }
 
-        .kiosk-title-block {
-            text-align: left;
+        .kiosk-brand-logo,
+        .kiosk-brand-fallback {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            flex-shrink: 0;
         }
 
-        .kiosk-clock-group {
-            text-align: right;
+        .kiosk-brand-logo {
+            object-fit: contain;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
         }
 
-        /* Center Content Card Style */
-        .kiosk-center-wrapper {
+        .kiosk-brand-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            color: var(--kiosk-primary);
+            font-size: 1.5rem;
+        }
+
+        .kiosk-school-name {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #0f172a;
+        }
+
+        .kiosk-subtitle {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--kiosk-muted);
+            margin-top: 1px;
+        }
+
+        /* ===== JAM DIGITAL (Mentok Kanan) ===== */
+        .kiosk-clock-block { 
+            text-align: right; 
+        }
+
+        .kiosk-clock {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+        }
+
+        .kiosk-date {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--kiosk-muted);
+            margin-top: 1px;
+        }
+
+        /* ===== JAM OPERASIONAL (dari Pengaturan) ===== */
+        .kiosk-hours {
+            margin: 0.85rem 0 0;
+            font-size: 0.76rem;
+            font-weight: 400;
+            color: var(--kiosk-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+        .kiosk-hours strong {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--kiosk-text);
+        }
+
+        /* ===== AREA UTAMA (Kotak Card Putih Kamera Di Tengah) ===== */
+        .kiosk-main {
             flex-grow: 1;
+            min-height: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem calc(4.5rem + env(safe-area-inset-bottom, 0px));
+        }
+
+        .kiosk-card-box {
+            /* Panel kaca: foto sekolah tetap terlihat, kamera tetap fokus di tengah */
+            background: rgba(255, 255, 255, 0.55) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+            backdrop-filter: blur(14px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18) !important;
+            border-radius: 1.5rem !important;
+            padding: 1.25rem !important;
+            width: 100%;
+            max-width: 420px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
         }
 
-        .kiosk-card-box {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        /* ===== BAR BAWAH: Kaca Transparan (kiri & kanan) ===== */
+        .kiosk-bottom-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.72);
+            -webkit-backdrop-filter: blur(10px) saturate(140%);
+            backdrop-filter: blur(10px) saturate(140%);
+            border-top: 1px solid rgba(255, 255, 255, 0.55);
+            padding: 0.6rem 1.25rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
             width: 100%;
-            max-width: 480px;
-            padding: 24px;
+        }
+
+        .btn-kiosk-action {
+            padding: 0.45rem 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            border: 1px solid var(--kiosk-border);
+            background: rgba(255, 255, 255, 0.82);
+            color: var(--kiosk-text);
+        }
+        .btn-kiosk-action:hover {
+            background: #ffffff;
+            color: var(--kiosk-text);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+    </style>
+
+    {{-- ============ CSS KAMERA ============ --}}
+    <style>
+        /* ==========================================================================
+           KAMERA GERBANG (sama persis untuk /admin/scanner & /admin/absensi/kiosk)
+           Ubah ukuran kamera hanya di --gerbang-camera-size di bawah.
+           ========================================================================== */
+        :root {
+            --gerbang-camera-size: 320px;   /* sisi kotak kamera (persegi 1:1) */
+            --gerbang-camera-radius: 16px;
+            --gerbang-scan-ratio: 70%;     /* harus sama dengan GERBANG_SCAN_RATIO di JS */
+            --gerbang-card-max: 380px;
+        }
+
+        /* ===== KARTU KAMERA: PANEL KACA =====
+           Panel bening di atas foto sekolah; ukuran & radius diatur di blok utama. */
+        .kiosk-card-box {
             text-align: center;
             position: relative;
         }
 
-        /* Switcher Pill di Atas Card */
+        /* ===== SWITCHER PILL: Kamera | Alat Scanner (kaca) ===== */
         .kiosk-switcher {
             display: inline-flex;
-            background: #f8fafc;
+            align-items: center;
+            gap: 0.25rem;
             padding: 4px;
+            background: rgba(255, 255, 255, 0.65);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 50rem;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .kiosk-switch-btn {
-            background: transparent;
-            border: none;
-            padding: 0.45rem 1.2rem;
-            border-radius: 50rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #64748b;
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.5rem 1.05rem;
+            min-height: 40px;
+            border-radius: 50rem;
+            cursor: pointer;
             transition: all 0.15s ease;
         }
+
+        .kiosk-switch-btn:hover { color: #1e293b; }
 
         .kiosk-switch-btn.active {
             background: #2563eb;
@@ -105,37 +307,38 @@
             box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
         }
 
-        /* Viewport / Area Scanner (Posisi Tetap Stabil) */
+        /* ===== VIEWPORT SCANNER =====
+           Ukuran dikunci di sini (bukan hanya saat .camera-active) supaya mode
+           "Alat Scanner" juga tetap persegi dan tidak melebar. Tanpa garis/latar pembatas. */
         .scanner-viewport-container {
-            border: 2px dashed #cbd5e1;
-            border-radius: 16px;
-            background: #fafbfd;
-            padding: 24px;
-            min-height: 240px;
+            position: relative;
+            width: min(100%, var(--gerbang-camera-size));
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            border: none;
+            border-radius: var(--gerbang-camera-radius);
+            background: rgba(15, 23, 42, 0.88);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.35);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
             overflow: hidden;
             transition: all 0.2s ease;
         }
 
         .scanner-viewport-container.camera-active {
-            border: 2px solid #2563eb;
+            border: none;
             background: #000000;
-            padding: 0;
-            aspect-ratio: 1 / 1 !important;
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            overflow: hidden !important;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.45);
         }
 
         #reader {
+            position: relative;
             width: 100% !important;
             height: 100% !important;
             border: none !important;
+            background: #000000;
             aspect-ratio: 1 / 1 !important;
             min-height: 0 !important;
             max-height: none !important;
@@ -143,17 +346,58 @@
         }
 
         #reader video {
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
+            display: block;
             width: 100% !important;
             height: 100% !important;
+            min-width: 100% !important;
+            min-height: 100% !important;
             object-fit: cover !important;
-            transform: translate(-50%, -50%) !important;
             border-radius: 14px;
         }
 
-        /* Overlay Notifikasi */
+        /* iOS/Safari: sembunyikan kontrol media bawaan agar tidak "ngeframe" */
+        #reader video::-webkit-media-controls,
+        #reader video::-webkit-media-controls-enclosure,
+        #reader video::-webkit-media-controls-panel {
+            display: none !important;
+        }
+
+        /* Canvas internal html5-qrcode tidak boleh tampil */
+        #reader canvas { display: none !important; }
+
+        /* Area luar qrbox digelapkan library; shader putih bawaan disembunyikan
+           supaya tidak ada kotak putih menggantung di luar video. */
+        #qr-shaded-region { pointer-events: none !important; }
+        #qr-shaded-region > div { display: none !important; }
+        /* ===== BRACKET 4 SUDUT (sejajar & simetris dengan qrbox proporsional) ===== */
+        .kiosk-scan-frame {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        .kiosk-scan-box {
+            position: relative;
+            width: var(--gerbang-scan-ratio);
+            height: var(--gerbang-scan-ratio);
+        }
+
+        .kiosk-corner {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border: 5px solid #ffffff;
+        }
+        .kiosk-corner--tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+        .kiosk-corner--tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+        .kiosk-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+        .kiosk-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+
+        /* ===== OVERLAY SUKSES / GAGAL ===== */
         .overlay-status {
             position: absolute;
             top: 0;
@@ -165,13 +409,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1.2rem;
+            padding: 1rem;
             text-align: center;
             backdrop-filter: blur(6px);
             animation: fadeInScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
-        /* Sukses: Gradient Emerald */
+
         .overlay-success {
             background: linear-gradient(135deg, rgba(13, 148, 136, 0.96) 0%, rgba(16, 185, 129, 0.96) 100%);
             color: #ffffff;
@@ -179,12 +422,39 @@
             border-radius: 14px;
         }
 
-        /* Gagal/Error: Danger Banget */
         .overlay-error {
-            background: #dc2626 !important;
-            color: #ffffff !important;
+            background: #dc2626;
+            color: #ffffff;
             box-shadow: 0 0 25px rgba(220, 38, 38, 0.5);
             border-radius: 14px;
+        }
+
+        .overlay-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.4rem;
+            margin-bottom: 0.4rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .overlay-title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+            color: #ffffff;
+            overflow-wrap: anywhere;
+        }
+
+        .overlay-sub {
+            margin-top: 0.25rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            line-height: 1.35;
+            color: #ffffff;
+            overflow-wrap: anywhere;
         }
 
         @keyframes fadeInScale {
@@ -192,337 +462,269 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        /* Bottom Footer Nav */
-        .kiosk-footer {
-            padding: 1.25rem 2.5rem;
+        /* ===== PLACEHOLDER KAMERA (pesan izin + tombol Coba Lagi) ===== */
+        .kiosk-placeholder {
+            position: absolute;
+            inset: 0;
+            z-index: 7;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.94);
         }
 
-        .btn-kiosk-nav {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #475569;
+        .kiosk-placeholder-text {
+            margin: 0.5rem 0 0;
+            font-size: 0.76rem;
             font-weight: 600;
-            font-size: 0.85rem;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            display: inline-flex;
+            line-height: 1.35;
+            color: #64748b;
+        }
+
+        /* ===== MODE ALAT SCANNER USB (dalam kotak yang sama) ===== */
+        #hardwareView {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 0.4rem;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-        .btn-kiosk-nav:hover {
-            background: #f1f5f9;
-            color: #0f172a;
-            border-color: #94a3b8;
+            justify-content: center;
+            padding: 0.9rem;
         }
 
-        /* Khusus Tampilan Mobile (Logo & Jam Proporsional di Atas, Kotak Kamera Menggunakan -6.5rem) */
-        @media (max-width: 639.98px) {
-            .kiosk-topbar {
-                padding: 1.5rem 1rem 0.4rem 1rem !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                text-align: center !important;
-                gap: 0.5rem !important;
-            }
+        /* ===== MOBILE (<= 768px): HEADER TERSUSUN VERTIKAL =====
+           Baris 1 : logo + nama sekolah  (kiri-kanan, di tengah)
+           Baris 2 : jam digital + tanggal (di tengah)
+           Baris 3 : scanner / kamera (tetap di tengah layar) */
+        @media (max-width: 768px) {
+            /* Kamerakan dikecilkan sedikit supaya muat di HP dan tetap center */
+            :root { --gerbang-camera-size: 300px; }
 
-            .kiosk-brand-group {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                text-align: center !important;
-                gap: 0.4rem !important;
-                margin-top: 0 !important;
+            /* Foto tetap dipakai di HP, fokus ke bagian tengah atas (gedung + papan nama) */
+            body::before {
+                background-position: center 32%;
             }
-
-            /* Logo Diperbesar & Murni Tanpa Background / Shadow */
-            .kiosk-logo {
-                width: 72px !important;
-                height: 72px !important;
-                margin: 0 auto !important;
-                background: transparent !important;
-                background-color: transparent !important;
-                border: none !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                filter: none !important;
-                object-fit: contain !important;
+            body::after {
+                background:
+                    radial-gradient(130% 80% at 50% 30%, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.80) 100%),
+                    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.30) 32%, rgba(255, 255, 255, 0.72) 100%);
             }
-
-            .kiosk-logo-fallback {
-                width: 72px !important;
-                height: 72px !important;
-                margin: 0 auto !important;
-                box-shadow: none !important;
-                border-radius: 14px !important;
-            }
-
-            .kiosk-title-block {
-                text-align: center !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-            }
-
-            /* Teks Utama Diperbesar & Tegas */
-            .kiosk-school-name {
-                font-size: 1.35rem !important;
-                font-weight: 800 !important;
-                text-align: center !important;
-                margin: 0 !important;
-                line-height: 1.2 !important;
-                letter-spacing: -0.02em !important;
-                color: #0f172a !important;
-            }
-
-            .kiosk-subtext {
-                font-size: 0.85rem !important;
-                font-weight: 500 !important;
-                color: #64748b !important;
-                text-align: center !important;
-                margin-top: 2px !important;
-            }
-
-            /* Jam Digital & Tanggal */
-            .kiosk-clock-group {
-                text-align: center !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                margin-top: 0.2rem !important;
-                gap: 1px !important;
-            }
-
-            #realtimeClock {
-                font-size: 1.55rem !important;
-                font-weight: 700 !important;
-                letter-spacing: 0.02em !important;
-                text-align: center !important;
-                line-height: 1.1 !important;
-                color: #1e293b !important;
-            }
-
-            .kiosk-date-text {
-                font-size: 0.78rem !important;
-                color: #64748b !important;
-                text-align: center !important;
-                margin-top: 2px !important;
-            }
-
-            /* Wrapper Center */
-            .kiosk-center-wrapper {
-                flex-grow: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 0 1rem 0.5rem 1rem !important;
-                width: 100% !important;
-            }
-
-            /* KOTAK CARD KAMERA DENGAN MARGIN-TOP -6.5rem */
             .kiosk-card-box {
-                max-width: 440px !important;
-                width: 100% !important;
-                padding: 1.15rem 1rem !important;
-                margin-top: -6.5rem !important; /* Diterapkan sesuai permintaan -6.5rem */
-                margin-bottom: 0 !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-                border-radius: 16px !important;
+                background: rgba(255, 255, 255, 0.58) !important;
+                padding: 1rem !important;
             }
 
-            .kiosk-switcher {
-                margin: 0 auto 0.9rem auto !important;
+            /* Header dikunci tinggi & rata tengah:
+               -> isi header duduk sedikit lebih bawah
+               -> tinggi header tidak pernah berubah
+               -> posisi kamera di tengah TIDAK PERNAH bergeser */
+            .kiosk-header {
+                height: 196px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.75rem 1rem;
+                overflow: hidden;
+                flex: 0 0 auto;
             }
+            .kiosk-header-inner {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.45rem;
+                text-align: center;
+            }
+            /* Baris 1: logo (tunggal) */
+            .kiosk-brand-logo,
+            .kiosk-brand-fallback { width: 54px; height: 54px; min-width: 54px; }
+            .kiosk-brand-fallback { font-size: 1.7rem; }
+            .kiosk-brand {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                max-width: 100%;
+                text-align: center;
+            }
+            /* Baris 2: nama sekolah + "Absensi Gerbang" */
+            .kiosk-brand-text { text-align: center; }
+            .kiosk-school-name {
+                font-size: 1.1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .kiosk-subtitle { font-size: 0.72rem; margin-top: 2px; }
+            /* Baris 3: jam + tanggal */
+            .kiosk-clock-block { text-align: center; }
+            .kiosk-clock { font-size: 1.7rem; }
+            .kiosk-date { font-size: 0.68rem; margin-top: 2px; }
 
-            .kiosk-switch-btn {
-                padding: 0.35rem 0.9rem !important;
-                font-size: 0.82rem !important;
-            }
+            /* Di HP: tombol "Layar Penuh" disembunyikan (HP sudah layar penuh) */
+            .kiosk-fullscreen-btn { display: none !important; }
 
-            .scanner-viewport-container {
-                min-height: 220px !important;
-                margin: 0 auto 0.75rem auto !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
+            /* Di HP: "Keluar Mode Gerbang" jadi ikon saja, pojok kiri bawah, warna merah */
+            .kiosk-exit-btn {
+                padding: 0.5rem 0.7rem;
+                gap: 0;
+                color: #dc2626;
+                border-color: #fecaca;
+                background: #ffffff;
             }
+            .kiosk-exit-btn .kiosk-action-text { display: none; }
+            .kiosk-exit-btn i {
+                font-size: 1.55rem;
+                line-height: 1;
+                color: #dc2626;
+            }
+            .kiosk-exit-btn:hover,
+            .kiosk-exit-btn:focus {
+                background: #fef2f2;
+                color: #b91c1c;
+                border-color: #fca5a5;
+            }
+        }
 
-            /* Footer Nav Khusus Mobile: Posisi Mutlak Menempel di Pojok Kiri Bawah Layar */
-            .kiosk-footer {
-                position: fixed !important;
-                bottom: 0.75rem !important;
-                left: 0.75rem !important;
-                z-index: 1050 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                width: auto !important;
-                background: transparent !important;
-                border: none !important;
-                display: flex !important;
-                align-items: center !important;
-            }
-
-            .btn-kiosk-fullscreen {
-                display: none !important;
-            }
-
-            /* Murni Ikon Pintu Keluar Saja di Sudut Kiri Bawah Layar */
-            .btn-kiosk-exit {
-                width: auto !important;
-                height: auto !important;
-                min-width: unset !important;
-                padding: 6px !important;
-                margin: 0 !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                background: transparent !important;
-                background-color: transparent !important;
-                border: none !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                text-decoration: none !important;
-                transition: opacity 0.15s ease, transform 0.15s ease !important;
-            }
-
-            .btn-kiosk-exit i {
-                font-size: 1.85rem !important;
-                line-height: 1 !important;
-                color: #dc2626 !important;
-                display: block !important;
-            }
-
-            .btn-kiosk-exit:hover i {
-                color: #b91c1c !important;
-            }
-
-            .btn-kiosk-exit:active {
-                opacity: 0.7 !important;
-                transform: scale(0.92) !important;
-            }
-
-            .btn-kiosk-exit-text {
-                display: none !important;
-            }
+        @media (max-width: 480px) {
+            :root { --gerbang-camera-size: 272px; }
+            .kiosk-header { height: 182px; padding: 0.5rem 0.9rem; }
+            .kiosk-header-inner { gap: 0.4rem; }
+            .kiosk-brand { gap: 0.4rem; }
+            .kiosk-brand-logo,
+            .kiosk-brand-fallback { width: 46px; height: 46px; min-width: 46px; }
+            .kiosk-brand-fallback { font-size: 1.4rem; }
+            .kiosk-school-name { font-size: 1rem; }
+            .kiosk-subtitle { font-size: 0.68rem; }
+            .kiosk-clock { font-size: 1.55rem; }
+            .kiosk-date { font-size: 0.64rem; }
+            .kiosk-switcher { margin-bottom: 0.75rem; }
+            .kiosk-switch-btn { padding: 0.42rem 0.75rem; font-size: 0.78rem; min-height: 38px; }
+            .overlay-title { font-size: 0.92rem; }
+            .overlay-sub { font-size: 0.72rem; }
+            .kiosk-corner { width: 24px; height: 24px; }
         }
     </style>
 </head>
+
 <body>
 
-    <!-- 1. TOP BAR DENGAN LOGO SEKOLAH -->
-    <header class="kiosk-topbar">
-        <div class="kiosk-brand-group d-flex align-items-center gap-3">
-            <img src="{{ asset(\App\Models\Setting::getLogo()) }}" alt="Logo" class="kiosk-logo rounded-3 shadow-2xs" onerror="this.outerHTML='<div class=\'rounded-3 bg-primary text-white fw-bold d-flex align-items-center justify-content-center shadow-2xs kiosk-logo-fallback\' style=\'width:44px;height:44px;\'>SMP</div>'" style="width: 44px; height: 44px; object-fit: contain;">
-            <div class="kiosk-title-block">
-                <h4 class="kiosk-school-name fw-bold mb-0" style="letter-spacing: -0.02em; color: #0f172a; font-size: 1.2rem;">{{ \App\Models\Setting::getSchoolName() }}</h4>
-                <span class="kiosk-subtext text-secondary small">Presensi Gerbang</span>
+    <!-- 1. HEADER: Mentok Kiri (Logo) & Mentok Kanan (Jam) -->
+    <header class="kiosk-header">
+        <div class="kiosk-header-inner">
+            <div class="kiosk-brand">
+                <img src="{{ asset(\App\Models\Setting::getLogo()) }}" alt="Logo Sekolah" class="kiosk-brand-logo" onerror="this.outerHTML='<i class=\'bx bxs-school kiosk-brand-fallback\'></i>'">
+                <div class="kiosk-brand-text">
+                    <p class="kiosk-school-name">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</p>
+                    <div class="kiosk-subtitle">Absensi Gerbang</div>
+                </div>
             </div>
-        </div>
-        <div class="kiosk-clock-group text-end">
-            <div id="realtimeClock" class="fw-bold font-monospace" style="font-size: 1.8rem; line-height: 1.1; color: #0f172a;">00:00:00</div>
-            <div class="kiosk-date-text text-secondary small mt-0.5" style="font-size: 0.8rem;">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}</div>
+
+            <div class="kiosk-clock-block">
+                <div id="liveClock" class="kiosk-clock mono">00:00:00</div>
+                <div id="liveDate" class="kiosk-date">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}</div>
+            </div>
         </div>
     </header>
 
-    <!-- 2. CENTER CONTENT -->
-    <audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
-
-    <main class="kiosk-center-wrapper">
+    <!-- 2. KOTAK CARD KAMERA DI TENGAH -->
+    <main class="kiosk-main">
         <div class="kiosk-card-box">
-            
-            <!-- Switcher Button (Kamera / Alat Scanner) -->
-            <div class="kiosk-switcher">
-                <button type="button" id="btnTabCamera" class="kiosk-switch-btn active" onclick="switchMode('camera')">
-                    <i class='bx bx-camera fs-5'></i> Kamera
+
+            <!-- Switcher Pill: Kamera | Alat Scanner -->
+            <div class="kiosk-switcher" role="tablist" aria-label="Metode input presensi">
+                <button type="button" id="btnTabCamera" class="kiosk-switch-btn active" onclick="switchMode('camera')" role="tab" aria-selected="true">
+                    <i class='bx bx-camera'></i> Kamera
                 </button>
-                <button type="button" id="btnTabHardware" class="kiosk-switch-btn" onclick="switchMode('hardware')">
-                    <i class='bx bx-barcode-reader fs-5'></i> Alat Scanner
+                <button type="button" id="btnTabHardware" class="kiosk-switch-btn" onclick="switchMode('hardware')" role="tab" aria-selected="false">
+                    <i class='bx bx-barcode-reader'></i> Alat Scanner
                 </button>
             </div>
 
-            <!-- Scanner Box Area -->
-            <div id="scannerBox" class="scanner-viewport-container mb-3 camera-active">
-                
+            <!-- Scanner Box: persegi 1:1 (ukuran diatur --gerbang-camera-size) -->
+            <div id="scannerBox" class="scanner-viewport-container camera-active">
+
                 <!-- Mode Kamera -->
                 <div id="cameraView" class="w-100 h-100">
-                    <div id="reader" style="width: 100%; min-height: 220px; border-radius: 12px; overflow: hidden;"></div>
-                    <div id="cameraPlaceholder" class="py-4 position-absolute top-50 start-50 translate-middle w-100" style="background: #fafbfd; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
-                        <i class='bx bx-qr-scan text-secondary' style="font-size: 3rem;"></i>
-                        <p class="text-secondary small mt-2 mb-0 fw-semibold">Tempelkan kartu QR ke kamera</p>
+                    <div id="reader"></div>
+                    <div id="cameraPlaceholder" class="kiosk-placeholder">
+                        <i class='bx bx-qr-scan' style="font-size: 2.4rem; color: #94a3b8;"></i>
+                        <p class="kiosk-placeholder-text">Tempelkan kartu QR ke kamera</p>
+                    </div>
+                    <!-- Bracket 4 sudut, sejajar & simetris dengan qrbox proporsional -->
+                    <div class="kiosk-scan-frame" aria-hidden="true">
+                        <div class="kiosk-scan-box">
+                            <span class="kiosk-corner kiosk-corner--tl"></span>
+                            <span class="kiosk-corner kiosk-corner--tr"></span>
+                            <span class="kiosk-corner kiosk-corner--bl"></span>
+                            <span class="kiosk-corner kiosk-corner--br"></span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Mode Alat Scanner -->
-                <div id="hardwareView" class="d-none w-100 py-3">
-                    <i class='bx bx-scan text-primary' style="font-size: 3rem;"></i>
-                    <p class="text-dark fw-semibold small mt-2 mb-3">Arahkan fokus tetap di sini, lalu scan kartu dengan alat</p>
-                    <div class="px-4">
-                        <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="Siap menerima scan..." autofocus autocomplete="off">
+                <!-- Mode Alat Scanner USB -->
+                <div id="hardwareView" class="d-none">
+                    <i class='bx bx-scan' style="font-size: 2.2rem; color: #2563eb;"></i>
+                    <p class="kiosk-placeholder-text">Fokuskan alat di sini, lalu scan kartu siswa</p>
+                    <div class="w-100 mt-2 px-1">
+                        <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="Siap menerima scan..." autocomplete="off">
                     </div>
                 </div>
 
                 <!-- Overlay Sukses -->
                 <div id="overlaySuccess" class="overlay-status overlay-success d-none">
-                    <div class="rounded-circle bg-white bg-opacity-25 p-2 mb-2 d-inline-flex">
-                        <i class='bx bx-check fs-2 text-white'></i>
-                    </div>
-                    <h6 class="fw-bold text-white mb-0 px-2" id="successText" style="font-size: 1.05rem; letter-spacing: -0.01em;">Nama Siswa — Hadir jam 07:00</h6>
+                    <span class="overlay-icon"><i class='bx bx-check fs-4'></i></span>
+                    <h6 class="overlay-title" id="successText">Nama Siswa</h6>
+                    <p class="overlay-sub" id="successMeta">Kelas · Hadir Tepat Waktu</p>
                 </div>
 
                 <!-- Overlay Gagal -->
                 <div id="overlayError" class="overlay-status overlay-error d-none">
-                    <div class="rounded-circle bg-white bg-opacity-25 p-2 mb-2 d-inline-flex">
-                        <i class='bx bx-error-circle fs-2 text-white'></i>
-                    </div>
-                    <h6 class="fw-bold text-white mb-1" style="font-size: 1.05rem;">Peringatan Presensi</h6>
-                    <p class="text-white small mb-0 fw-medium px-2" id="errorText" style="font-size: 0.82rem;">Siswa sudah presensi hari ini.</p>
+                    <span class="overlay-icon"><i class='bx bx-error-circle fs-4'></i></span>
+                    <h6 class="overlay-title" id="errorTitle">Peringatan Presensi</h6>
+                    <p class="overlay-sub" id="errorText">Siswa sudah presensi hari ini.</p>
                 </div>
 
             </div>
 
-            <!-- Jam Operasional di Bawah Kotak -->
-            <div class="text-secondary" style="font-size: 0.78rem;">
-                Jam masuk <span class="fw-semibold text-dark">{{ $checkInTime ?? '07:00' }}</span> · Jam pulang <span class="fw-semibold text-dark">{{ $checkOutTime ?? '14:00' }}</span>
-            </div>
-
+            <!-- Jam operasional, nilainya dari Pengaturan (bukan hardcode) -->
+            <p class="kiosk-hours">
+                Jam masuk <strong>{{ $checkInTime ?? '07:00' }}</strong>
+                &middot; Batas terlambat <strong>{{ $lateLimitTime ?? '07:15' }}</strong>
+                &middot; Jam pulang <strong>{{ $checkOutTime ?? '14:00' }}</strong>
+            </p>
         </div>
     </main>
 
-    <!-- 3. BOTTOM FOOTER NAV -->
-    <footer class="kiosk-footer">
-        <a href="{{ route('admin.absensi.index') }}" class="btn-kiosk-nav btn-kiosk-exit" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
-            <i class='bx bx-log-out fs-5'></i> <span class="btn-kiosk-exit-text">Keluar Mode Gerbang</span>
+    <!-- 3. BAR BAWAH: Mentok Kiri & Mentok Kanan -->
+    <div class="kiosk-bottom-bar">
+        <a href="{{ route('admin.absensi.index') }}" class="btn-kiosk-action kiosk-exit-btn" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
+            <i class='bx bx-log-out'></i>
+            <span class="kiosk-action-text">Keluar Mode Gerbang</span>
         </a>
-        <button type="button" class="btn-kiosk-nav btn-kiosk-fullscreen" onclick="toggleFullscreen()">
-            <i class='bx bx-fullscreen fs-5'></i> Layar Penuh
+        <button type="button" class="btn-kiosk-action kiosk-fullscreen-btn" onclick="toggleFullscreen()" title="Buka Layar Penuh" aria-label="Layar Penuh">
+            <i class='bx bx-fullscreen'></i>
+            <span class="kiosk-action-text">Layar Penuh</span>
         </button>
-    </footer>
+    </div>
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
+    <audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Realtime Clock
         function updateClock() {
             const now = new Date();
-            document.getElementById('realtimeClock').innerText = now.toTimeString().split(' ')[0];
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveClock').innerText = `${hours}:${minutes}:${seconds}`;
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Fullscreen Toggle
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => console.error(err));
@@ -530,9 +732,27 @@
                 document.exitFullscreen();
             }
         }
+    </script>
 
-        // Suara Beep dari file audio/beep.mp3
-        function playBeepSound() {
+    {{-- ============ JS KAMERA ============ --}}
+    <script>
+        /* ==========================================================================
+           JS KAMERA GERBANG (sama persis untuk /admin/scanner & /admin/absensi/kiosk)
+           Pilihan kamera otomatis:
+             - Android / iOS / iPad -> kamera BELAKANG (facingMode: environment)
+             - Laptop / PC          -> kamera DEPAN    (facingMode: user)
+           ========================================================================== */
+
+        // Rasio sisi qrbox terhadap sisi viewfinder (harus sama dgn --gerbang-scan-ratio)
+        const GERBANG_SCAN_RATIO = 0.7;
+
+        let html5QrKiosk = null;
+        let isCamRunning = false;
+        let isProcessingScan = false;
+        let resetTimer = null;
+
+        /* ================= SUARA BEEP (audio/beep.mp3) ================= */
+        function playBeep() {
             const beep = document.getElementById('beepSound');
             if (beep) {
                 beep.currentTime = 0;
@@ -540,140 +760,206 @@
             }
         }
 
-        let isProcessing = false;
-        let resetTimer = null;
+        // Alias nama fungsi versi lama
+        function playBeepSound() { playBeep(); }
+
+        /* ================= DETEKSI PERANGKAI ================= */
+        // Deteksi iOS/iPadOS (iPadOS 13+ kini mengirim UA "Macintosh")
+        function isIOSDevice() {
+            const ua = navigator.userAgent || '';
+            return /iPad|iPhone|iPod/.test(ua) ||
+                   (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+        }
+
+        function isAndroidDevice() {
+            return /Android/i.test(navigator.userAgent || '');
+        }
+
+        function isMobileDevice() {
+            const ua = navigator.userAgent || '';
+            return isIOSDevice() || isAndroidDevice() ||
+                   /IEMobile|Opera Mini|Windows Phone|Mobi/i.test(ua);
+        }
+
+        // Label kamera belakang (dipakai saat harus enumerate device)
+        function isBackCameraLabel(label) {
+            const l = (label || '').toLowerCase();
+            return l.includes('back') || l.includes('belakang') ||
+                   l.includes('rear') || l.includes('environment');
+        }
+
+        // Label kamera depan
+        function isFrontCameraLabel(label) {
+            const l = (label || '').toLowerCase();
+            return l.includes('front') || l.includes('depan') ||
+                   l.includes('user') || l.includes('facing');
+        }
+
+        // ===== HARDENING VIDEO UNTUK iOS / SAFARI =====
+        // iOS butuh playsinline + muted, dan ukuran video sering tidak ikut kotak
+        // sehingga tampilannya "ngeframe" / tidak penuh. Fungsi ini memaksa
+        // video benar-benar mengisi kotak persegi dan tetap inline.
+        function fixVideoFrame() {
+            const reader = document.getElementById('reader');
+            if (!reader) return;
+            const video = reader.querySelector('video');
+            if (!video) return;
+
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            video.muted = true;
+
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.minWidth = '100%';
+            video.style.minHeight = '100%';
+            video.style.objectFit = 'cover';
+
+            if (!video.__frameFixed) {
+                video.__frameFixed = true;
+                ['loadedmetadata', 'resize', 'playing'].forEach(function(ev) {
+                    video.addEventListener(ev, fixVideoFrame);
+                });
+            }
+        }
+
+        /* ================= PROSES SCAN (endpoint gerbang) ================= */
+        function getCsrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return (meta && meta.getAttribute('content')) || @json(csrf_token());
+        }
 
         function processCode(token) {
             const cleanToken = (token || '').trim();
-            if (!cleanToken || isProcessing) return;
-            isProcessing = true;
+            if (!cleanToken || isProcessingScan) return;
+            isProcessingScan = true;
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-            fetch("{{ route('admin.scanner.process') }}", {
-                method: "POST",
+            fetch(@json(route('admin.scanner.process')), {
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": csrfToken,
-                    "Accept": "application/json"
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ qr_token: cleanToken })
             })
             .then(res => res.json().then(data => ({ status: res.status, body: data })))
             .then(({ status, body }) => {
                 if (status === 200 && body.success) {
-                    playBeepSound();
+                    playBeep();
                     showOverlaySuccess(body);
                 } else {
-                    playBeepSound();
-                    showOverlayError(body.message || 'QR Code tidak valid.');
+                    playBeep();
+                    showOverlayError(body.message || 'QR Code tidak valid!', body.student);
                 }
             })
-            .catch(err => {
-                console.error(err);
-                playBeepSound();
+            .catch(() => {
+                playBeep();
                 showOverlayError('Terjadi kendala koneksi ke server.');
             });
         }
 
-        // Tampilkan Overlay Sukses Modern Emerald
+        // Alias nama fungsi versi lama
+        function processScanCode(qrToken) { processCode(qrToken); }
+
+        function refocusHardwareInput() {
+            const view = document.getElementById('hardwareView');
+            const input = document.getElementById('hardwareInput');
+            if (view && input && !view.classList.contains('d-none')) {
+                input.focus();
+            }
+        }
+        /* ================= OVERLAY HASIL SCAN ================= */
         function showOverlaySuccess(data) {
-            const overlaySucc = document.getElementById('overlaySuccess');
-            const successText = document.getElementById('successText');
+            const overlay = document.getElementById('overlaySuccess');
+            const textEl = document.getElementById('successText');
+            const metaEl = document.getElementById('successMeta');
+            if (!overlay || !textEl || !metaEl) return;
 
-            const studentName = data.student.name;
-            const statusLabel = data.type === 'check_out' ? 'Pulang' : (data.remark || 'Hadir');
-            const now = new Date();
-            const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const nama = (data.student && data.student.name) || '-';
+            const kelas = (data.student && data.student.class) || '-';
+            const waktu = data.time_short ? data.time_short + ' WIB' : '';
 
-            successText.innerText = `${studentName} — ${statusLabel} jam ${timeStr}`;
-            overlaySucc.classList.remove('d-none');
+            let status = 'Hadir';
+            if (data.type === 'check_out') {
+                status = 'Presensi Pulang';
+            } else if (data.is_late) {
+                status = 'Terlambat +' + data.late_minutes + ' mnt';
+            } else if (data.display_remark) {
+                status = data.display_remark;
+            }
 
-            resetOverlayState(1000);
+            textEl.innerText = nama;
+            metaEl.innerText = 'Kelas ' + kelas + ' · ' + status + (waktu ? ' · ' + waktu : '');
+            overlay.classList.remove('d-none');
+            resetOverlayState(2000);
         }
 
-        // Tampilkan Overlay Gagal
-        function showOverlayError(errorMsg) {
-            const overlayErr = document.getElementById('overlayError');
-            const errorText = document.getElementById('errorText');
+        function showOverlayError(message, student) {
+            const overlay = document.getElementById('overlayError');
+            const titleEl = document.getElementById('errorTitle');
+            const textEl = document.getElementById('errorText');
+            if (!overlay || !titleEl || !textEl) return;
 
-            errorText.innerText = errorMsg;
-            overlayErr.classList.remove('d-none');
+            const adaSiswa = student && student.name;
+            titleEl.innerText = adaSiswa ? 'Presensi Gagal' : 'Kartu Tidak Dikenali';
+            const kelas = adaSiswa && student.class ? ' (Kelas ' + student.class + ')' : '';
+            const nama = adaSiswa ? student.name : 'Siswa tidak ditemukan';
+            textEl.innerText = nama + kelas + (message ? ' — ' + message : '');
 
-            resetOverlayState(1000);
+            overlay.classList.remove('d-none');
+            resetOverlayState(2000);
         }
 
-        // Reset Overlay kembali normal setelah 1 detik
-        function resetOverlayState(delay = 1000) {
+        function resetOverlayState(delay = 2000) {
             if (resetTimer) clearTimeout(resetTimer);
             resetTimer = setTimeout(() => {
-                document.getElementById('overlaySuccess').classList.add('d-none');
-                document.getElementById('overlayError').classList.add('d-none');
-                
-                isProcessing = false;
-
-                const isHardwareActive = document.getElementById('btnTabHardware').classList.contains('active');
-                if (isHardwareActive) {
-                    const inputEl = document.getElementById('hardwareInput');
-                    if (inputEl) inputEl.focus();
-                }
+                const ok = document.getElementById('overlaySuccess');
+                const err = document.getElementById('overlayError');
+                if (ok) ok.classList.add('d-none');
+                if (err) err.classList.add('d-none');
+                isProcessingScan = false;
+                refocusHardwareInput();
             }, delay);
         }
 
-        // Switcher Mode Kamera / Hardware
-        let html5QrKiosk = null;
-        let isCamRunning = false;
-
-        function switchMode(mode) {
-            if (isProcessing) return;
-            const btnCam = document.getElementById('btnTabCamera');
-            const btnHard = document.getElementById('btnTabHardware');
-            const viewCam = document.getElementById('cameraView');
-            const viewHard = document.getElementById('hardwareView');
-            const boxArea = document.getElementById('scannerBox');
-
-            if (mode === 'camera') {
-                btnCam.classList.add('active');
-                btnHard.classList.remove('active');
-                viewCam.classList.remove('d-none');
-                viewHard.classList.add('d-none');
-                boxArea.classList.add('camera-active');
-                startCameraKiosk();
-            } else {
-                btnHard.classList.add('active');
-                btnCam.classList.remove('active');
-                viewHard.classList.remove('d-none');
-                viewCam.classList.add('d-none');
-                boxArea.classList.remove('camera-active');
-                stopCameraKiosk();
-
-                const inputEl = document.getElementById('hardwareInput');
-                if (inputEl) inputEl.focus();
-            }
+        /* ================= PLACEHOLDER KAMERA (pesan izin + Coba Lagi) ================= */
+        function showCameraPlaceholder(html) {
+            const placeholder = document.getElementById('cameraPlaceholder');
+            if (!placeholder) return;
+            placeholder.innerHTML = html;
+            placeholder.style.display = 'flex';
         }
 
-        // Hardware Input Listener
-        const hardInput = document.getElementById('hardwareInput');
-        if (hardInput) {
-            hardInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    processCode(this.value);
-                    this.value = '';
-                }
-            });
+        function resetCameraPlaceholder() {
+            showCameraPlaceholder(
+                `<i class='bx bx-qr-scan' style="font-size: 2.4rem; color: #94a3b8;"></i>
+                 <p class="kiosk-placeholder-text">Tempelkan kartu QR ke kamera</p>`
+            );
         }
 
-        // Keep focus on hardware input if active
-        window.addEventListener('click', function(e) {
-            if (!document.getElementById('hardwareView').classList.contains('d-none') && !isProcessing) {
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
-                    hardInput.focus();
-                }
-            }
-        });
+        function showCameraError(msg) {
+            showCameraPlaceholder(
+                `<i class='bx bx-camera-off' style="font-size: 2.2rem; color: #dc2626;"></i>
+                 <p class="kiosk-placeholder-text" style="color:#dc2626;">${msg}</p>
+                 <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="retryCamera()">
+                     <i class='bx bx-refresh'></i> Coba Lagi
+                 </button>`
+            );
+        }
 
-        // Start Camera dengan try-catch fallback berlapis untuk kompatibilitas Android
+        async function retryCamera() {
+            isCamRunning = false;
+            try {
+                if (html5QrKiosk) {
+                    await html5QrKiosk.stop().catch(() => {});
+                    html5QrKiosk.clear();
+                    html5QrKiosk = new Html5Qrcode("reader");
+                }
+            } catch (e) { /* ignore */ }
+            await startCameraKiosk();
+        }
+        /* ================= START / STOP KAMERA ================= */
         async function startCameraKiosk() {
             if (isCamRunning || typeof Html5Qrcode === 'undefined') return;
 
@@ -684,95 +970,163 @@
                 html5QrKiosk = new Html5Qrcode("reader");
             }
 
-            const config = { fps: 10, qrbox: { width: 180, height: 180 } };
+            const config = {
+                fps: 10,
+                aspectRatio: 1.0,
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    const s = Math.floor(Math.min(viewfinderWidth, viewfinderHeight) * GERBANG_SCAN_RATIO);
+                    return { width: s, height: s };
+                }
+            };
             const onSuccess = (decodedText) => processCode(decodedText);
             const onError = () => {};
 
-            // Helper: tampilkan error yang user-friendly
-            function showCameraError(msg) {
-                console.error("Kamera error:", msg);
-                if (placeholder) {
-                    placeholder.style.display = 'flex';
-                    placeholder.innerHTML = `
-                        <i class='bx bx-camera-off text-danger' style="font-size: 3rem;"></i>
-                        <p class="text-danger small mt-2 mb-0 fw-semibold">${msg}</p>
-                        <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="retryCamera()">
-                            <i class='bx bx-refresh'></i> Coba Lagi
-                        </button>
-                    `;
-                }
-            }
-
-            // Helper: stop kamera sebelum retry (agar instance bersih)
-            async function retryCamera() {
-                isCamRunning = false;
-                try {
-                    if (html5QrKiosk) {
-                        await html5QrKiosk.stop().catch(() => {});
-                        html5QrKiosk.clear();
-                        html5QrKiosk = new Html5Qrcode("reader");
-                    }
-                } catch (e) { /* ignore */ }
-                await startCameraKiosk();
-            }
-
-            // Helper: start dengan config tertentu
             async function tryStart(cameraConfig) {
                 try {
                     await html5QrKiosk.start(cameraConfig, config, onSuccess, onError);
                     isCamRunning = true;
+                    // Paksa video mengisi kotak (khusus iOS/Safari)
+                    fixVideoFrame();
+                    setTimeout(fixVideoFrame, 350);
                     return true;
                 } catch (e) {
-                    console.warn("Start failed with config:", cameraConfig, e);
+                    console.warn("Kamera tidak tersedia:", cameraConfig, e);
                     return false;
                 }
             }
 
-            // ===== STRATEGI FALLBACK BERLAPIS =====
+            // ---- Logika fallback kamera (SAMA untuk /admin/scanner & Mode Kiosk) ----
+            // HP Android / iOS / iPad : kamera BELAKANG (rear / environment)
+            // Laptop / PC            : kamera DEPAN   (front / user)
+            //
+            // CATATAN iOS: Safari tidak menghormati facingMode 'environment' polos,
+            // sering kali mengembalikan kamera DEPAN. Karena itu di iOS kita coba
+            // exact 'environment' lebih dulu.
+            const ios = isIOSDevice();
+            const mobile = ios || isAndroidDevice() || isMobileDevice();
 
-            // 1. Coba facingMode "environment" (kamera belakang) - tanpa 'exact' agar lebih kompatibel
-            if (await tryStart({ facingMode: "environment" })) return;
+            // Urutan kandidat kamera (disesuaikan per platform)
+            let candidates;
+            if (ios) {
+                // iOS/Safari: WAJIB exact dulu, facingMode polos sering dikembalikan ke kamera depan
+                candidates = [
+                    { facingMode: { exact: 'environment' } },
+                    { facingMode: 'environment' },
+                    { facingMode: { exact: 'user' } },
+                    { facingMode: 'user' }
+                ];
+            } else if (mobile) {
+                // Android: facingMode polos sudah andal untuk kamera belakang
+                candidates = [
+                    { facingMode: 'environment' },
+                    { facingMode: { exact: 'environment' } },
+                    { facingMode: 'user' }
+                ];
+            } else {
+                // Laptop/PC: kamera depan lebih dulu
+                candidates = [
+                    { facingMode: 'user' },
+                    { facingMode: 'environment' }
+                ];
+            }
 
-            // 2. Coba facingMode "user" (kamera depan) - untuk perangkat tanpa kamera belakang
-            if (await tryStart({ facingMode: "user" })) return;
+            if (ios) {
+                console.info("Perangkat iOS terdeteksi -> memakai kamera belakang.");
+            } else if (mobile) {
+                console.info("Perangkat mobile terdeteksi -> memakai kamera belakang.");
+            } else {
+                console.info("Perangkat desktop/laptop terdeteksi -> memakai kamera depan.");
+            }
 
-            // 3. Enumerate devices dan cari kamera belakang berdasarkan label
+            for (let i = 0; i < candidates.length; i++) {
+                if (await tryStart(candidates[i])) return;
+            }
+
+            // Jaring pengaman terakhir: enumerate device
             try {
                 const devices = await Html5Qrcode.getCameras();
                 if (devices && devices.length > 0) {
-                    // Cari kamera belakang berdasarkan label (case-insensitive)
-                    const backCamera = devices.find(d => {
-                        const label = (d.label || '').toLowerCase();
-                        return label.includes('back') || label.includes('belakang') || 
-                               label.includes('rear') || label.includes('environment') ||
-                               label.includes('camera 1') || label.includes('kamera 1');
-                    });
-
-                    // Prioritas: kamera belakang > device pertama
-                    const targetDevice = backCamera || devices[0];
-                    if (await tryStart(targetDevice.id)) return;
+                    const back = devices.find(d => isBackCameraLabel(d.label));
+                    const front = devices.find(d => isFrontCameraLabel(d.label));
+                    const order = mobile ? [back, front] : [front, back];
+                    for (let i = 0; i < order.length; i++) {
+                        if (order[i] && await tryStart(order[i].id)) return;
+                    }
+                    for (let i = 0; i < devices.length; i++) {
+                        if (await tryStart(devices[i].id)) return;
+                    }
                 }
             } catch (e) {
-                console.warn("getCameras failed:", e);
+                console.warn("getCameras gagal:", e);
             }
 
-            // 4. Semua strategi gagal - tampilkan error
-            showCameraError("Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.");
+            isCamRunning = false;
+            showCameraError("Kamera tidak dapat diakses. Izinkan akses kamera di browser.");
         }
 
         function stopCameraKiosk() {
-            if (isCamRunning && html5QrKiosk) {
+            if (html5QrKiosk && isCamRunning) {
+                isCamRunning = false;
                 html5QrKiosk.stop().then(() => {
-                    isCamRunning = false;
-                    html5QrKiosk.clear();
-                    const placeholder = document.getElementById('cameraPlaceholder');
-                    if (placeholder) placeholder.style.display = 'flex';
+                    resetCameraPlaceholder();
                 }).catch(err => console.error(err));
             }
         }
+        /* ================= SWITCHER MODE KAMERA / ALAT SCANNER ================= */
+        function switchMode(mode) {
+            if (isProcessingScan) return;
+            const btnCam = document.getElementById('btnTabCamera');
+            const btnHard = document.getElementById('btnTabHardware');
+            const viewCam = document.getElementById('cameraView');
+            const viewHard = document.getElementById('hardwareView');
+            const boxArea = document.getElementById('scannerBox');
+            if (!btnCam || !btnHard || !viewCam || !viewHard || !boxArea) return;
 
-        // Default start camera langsung on load
-        document.addEventListener("DOMContentLoaded", function() {
+            if (mode === 'camera') {
+                btnCam.classList.add('active');
+                btnHard.classList.remove('active');
+                btnCam.setAttribute('aria-selected', 'true');
+                btnHard.setAttribute('aria-selected', 'false');
+                viewCam.classList.remove('d-none');
+                viewHard.classList.add('d-none');
+                boxArea.classList.add('camera-active');
+                startCameraKiosk();
+            } else {
+                btnHard.classList.add('active');
+                btnCam.classList.remove('active');
+                btnHard.setAttribute('aria-selected', 'true');
+                btnCam.setAttribute('aria-selected', 'false');
+                viewHard.classList.remove('d-none');
+                viewCam.classList.add('d-none');
+                boxArea.classList.remove('camera-active');
+                stopCameraKiosk();
+                refocusHardwareInput();
+            }
+        }
+
+        /* ================= INPUT ALAT SCANNER USB + AUTO-START ================= */
+        document.addEventListener('DOMContentLoaded', function() {
+            const hardInput = document.getElementById('hardwareInput');
+            if (hardInput) {
+                hardInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        processCode(this.value);
+                        this.value = '';
+                    }
+                });
+            }
+
+            // Jaga fokus input alat scanner tetap di posnya
+            window.addEventListener('click', function(e) {
+                const view = document.getElementById('hardwareView');
+                if (!view || view.classList.contains('d-none')) return;
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+                    refocusHardwareInput();
+                }
+            });
+
+            // Auto-start kamera saat halaman dimuat
             switchMode('camera');
         });
     </script>
