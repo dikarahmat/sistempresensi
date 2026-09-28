@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\HolidayTemplateExport;
 use App\Http\Controllers\Controller;
-
+use App\Imports\HolidaysImport;
 use App\Models\Holiday;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class HolidayController extends Controller
 {
@@ -16,6 +18,47 @@ class HolidayController extends Controller
     {
         $holidays = Holiday::orderByRaw('COALESCE(start_date, date) desc')->paginate(15);
         return view('admin.holidays.index', compact('holidays'));
+    }
+
+    /**
+     * Unduh template Excel kosong untuk import hari libur.
+     */
+    public function template()
+    {
+        return Excel::download(
+            new HolidayTemplateExport(),
+            'Template_Hari_Libur.xlsx'
+        );
+    }
+
+    /**
+     * Import hari libur dari file Excel/CSV.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ], [
+            'file_excel.required' => 'Pilih file Excel hari libur yang akan diunggah.',
+            'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
+        ]);
+
+        try {
+            $import = new HolidaysImport();
+            Excel::import($import, $request->file('file_excel'));
+
+            $message = "Import selesai! {$import->getImportedCount()} hari libur berhasil diimpor.";
+            if ($import->getSkippedCount() > 0) {
+                $message .= " ({$import->getSkippedCount()} baris dilewati)";
+            }
+
+            return redirect()->route('admin.holidays.index')
+                ->with('success', $message)
+                ->with('import_errors', $import->getErrors());
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.holidays.index')
+                ->with('error', 'Gagal memproses file Excel: ' . $e->getMessage());
+        }
     }
 
     public function store(Request $request): RedirectResponse
