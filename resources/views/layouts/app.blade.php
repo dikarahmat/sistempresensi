@@ -664,9 +664,11 @@
                 font-size: 1.25rem !important;
             }
 
+            /* Catatan: jarak vertikal antar menu sidebar TIDAK diatur di sini,
+               melainkan pada satu aturan global `.app-sidebar-drawer .nav-link`
+               di bagian bawah stylesheet agar mobile & desktop identik (16px). */
             .app-sidebar-drawer .nav-link {
                 font-size: 0.8rem !important;
-                margin-bottom: 12px !important;
             }
 
             .app-sidebar-drawer .nav-link i {
@@ -1140,6 +1142,18 @@
         .nav-link.active i {
             color: #3b62f6 !important;
             font-weight: 700;
+        }
+
+        /* --------------------------------------------------------------------------
+           JARAK VERTIKAL ANTAR ITEM MENU SIDEBAR = 16px (SATU aturan untuk SEMUA
+           breakpoint: drawer mobile < 1024px & sidebar statis desktop >= 1024px).
+           Sebelumnya hanya mobile yang punya margin-bottom (12px) sedangkan desktop 0
+           sehingga ritme menunya beda. Aturan ini sengaja diletakkan SETELAH blok
+           @media (max-width: 767.98px) supaya menang atas margin inline sidebar
+           (`style="margin: 0 0.75rem"` pada partial sidebar.blade.php).
+           -------------------------------------------------------------------------- */
+        .app-sidebar-drawer .nav-link {
+            margin-bottom: 16px !important;
         }
 
         .sidebar-brand {

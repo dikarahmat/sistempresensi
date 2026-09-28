@@ -258,11 +258,9 @@
                 </div>
                 <div class="d-flex align-items-center gap-2.5">
                     <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
-                        <i class='bx bx-calendar-check'></i>
                         <span>Presensi Hari Ini</span>
                     </a>
                     <a href="{{ route('admin.rekap') }}" class="btn btn-primary rounded-3 shadow-sm px-4 py-2 fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
-                        <i class='bx bx-bar-chart-alt-2'></i>
                         <span>Rekap Lengkap</span>
                     </a>
                 </div>
@@ -324,7 +322,7 @@
                             <h6 class="fw-bold text-dark mb-0.5" style="font-size: 0.95rem;">Ketidakhadiran Hari Ini</h6>
                             <p class="text-secondary small mb-0" style="font-size: 0.74rem;">Siswa yang berhalangan hadir</p>
                         </div>
-                        <span class="badge {{ ($totalKetidakhadiran ?? 0) > 0 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }} px-3 py-1.5 fw-bold rounded-pill" style="font-size: 0.76rem;">
+                        <span class="fw-bold text-dark" style="font-size: 0.76rem;">
                             {{ $totalKetidakhadiran ?? 0 }} Siswa
                         </span>
                     </div>
@@ -337,7 +335,6 @@
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between"
                            title="Lihat detail siswa sakit hari ini">
                             <div class="d-flex align-items-center gap-3">
-                                <i class='bx bx-plus-medical text-primary fs-3' style="width: 26px; text-align: center;"></i>
                                 <div>
                                     <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Sakit</span>
                                     <span class="text-secondary small" style="font-size: 0.73rem;">Surat keterangan dokter</span>
@@ -371,7 +368,6 @@
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between"
                            title="Lihat detail siswa alpha hari ini">
                             <div class="d-flex align-items-center gap-3">
-                                <i class='bx bx-x-circle text-danger fs-3' style="width: 26px; text-align: center;"></i>
                                 <div>
                                     <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Alpha</span>
                                     <span class="text-secondary small" style="font-size: 0.73rem;">Tanpa keterangan sah</span>
@@ -391,7 +387,6 @@
                     <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" 
                        class="btn btn-primary rounded-3 shadow-sm w-100 fw-bold py-2.5 d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth" 
                        style="font-size: 0.85rem;">
-                        <i class='bx bx-list-check fs-5'></i>
                         <span>Buka Tabel Presensi Hari Ini</span>
                     </a>
                 </div>
@@ -414,7 +409,7 @@
                             <i class='bx bx-time-five text-primary fs-4'></i>
                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">Jadwal Operasional Sekolah</span>
                         </div>
-                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 fw-bold" style="font-size: 0.72rem;">
+                        <span class="fw-bold text-dark" style="font-size: 0.72rem;">
                             Aktif
                         </span>
                     </div>
@@ -445,7 +440,6 @@
                 <a href="{{ route('admin.pengaturan.jadwal') }}" 
                    class="btn btn-primary rounded-3 shadow-sm w-100 mt-3 py-2.5 px-3 fw-semibold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth"
                    style="font-size: 0.85rem;">
-                    <i class='bx bx-slider'></i>
                     <span>Ubah Pengaturan Jadwal</span>
                 </a>
             </div>

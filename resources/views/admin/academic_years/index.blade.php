@@ -171,7 +171,7 @@
                             <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                 <span>{{ $year->name }}</span>
                                 @if($year->is_active)
-                                    <span class="badge bg-success text-white px-2 py-0.5 rounded-pill" style="font-size: 0.7rem;">
+                                    <span class="fw-bold text-success" style="font-size: 0.7rem;">
                                         AKTIF
                                     </span>
                                 @endif
@@ -181,6 +181,7 @@
                             Semester {{ $year->semester }}
                         </td>
                         <td class="text-center text-nowrap px-3 d-none d-md-table-cell">
+                            @php \Carbon\Carbon::setLocale('id'); @endphp
                             {{ \Carbon\Carbon::parse($year->start_date)->translatedFormat('d M Y') }} &mdash; 
                             {{ \Carbon\Carbon::parse($year->end_date)->translatedFormat('d M Y') }}
                         </td>
@@ -201,12 +202,12 @@
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editYearModal{{ $year->id }}" title="Edit">
-                                    <i class='bx bx-edit-alt'></i> Edit
+                                    Edit
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
                                 <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteYear('{{ $year->id }}', '{{ $year->name }}')" {{ $year->is_active ? 'disabled title="Tidak dapat menghapus tahun ajaran aktif"' : 'title="Hapus"' }}>
-                                    <i class='bx bx-trash'></i> Hapus
+                                    Hapus
                                 </button>
                                 <form id="deleteYearForm-{{ $year->id }}" action="{{ route('admin.academic-years.destroy', $year->id) }}" method="POST" class="d-none">
                                     @csrf

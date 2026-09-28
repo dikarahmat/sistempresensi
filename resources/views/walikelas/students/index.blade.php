@@ -14,29 +14,6 @@
             <span>Cetak Kartu</span>
         </button>
 
-        @if(Auth::check() && Auth::user()->role === 'admin')
-        <!-- Tombol Import Excel -->
-        <button type="button" class="btn btn-success btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#importModal">
-            <i class='bx bx-file fs-6'></i>
-            <span>Import Excel</span>
-        </button>
-
-        <!-- Tombol Hapus Semua Siswa -->
-        <button type="button" class="btn btn-danger btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" title="Hapus Semua Siswa" onclick="confirmDeleteAllStudents()">
-            <i class='bx bx-trash fs-6'></i>
-            <span>Hapus</span>
-        </button>
-        <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all') }}" method="POST" class="d-none">
-            @csrf
-            @method('DELETE')
-        </form>
-
-        <!-- Tombol Tambah Siswa -->
-        <button type="button" class="btn btn-primary btn-sm rounded-3 shadow-xs d-inline-flex align-items-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-            <i class='bx bx-plus fs-6'></i>
-            <span>Tambah Siswa</span>
-        </button>
-        @endif
     </div>
 </div>
 @endsection
@@ -249,25 +226,6 @@
                         <span>Cetak Kartu</span>
                     </button>
 
-                    @if(Auth::check() && Auth::user()->role === 'admin')
-                    <!-- 2. Import Excel (Solid Hijau) -->
-                    <button type="button" class="btn-solid-pill btn-solid-green w-100 w-lg-auto" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <i class='bx bx-file'></i>
-                        <span>Import Excel</span>
-                    </button>
-
-                    <!-- 3. Tambah Siswa (Solid Biru, Aksi Utama) -->
-                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-lg-auto" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <i class='bx bx-plus'></i>
-                        <span>Tambah Siswa</span>
-                    </button>
-
-                    <!-- 4. Hapus Semua Siswa (Solid Merah - Urutan Terakhir) -->
-                    <button type="button" class="btn-solid-pill btn-solid-red w-100 w-lg-auto" title="Hapus Semua Siswa" onclick="confirmDeleteAllStudents()">
-                        <i class='bx bx-trash'></i>
-                        <span>Hapus</span>
-                    </button>
-                    @endif
                 </div>
 
             </div>
@@ -304,18 +262,6 @@
                                 <a href="{{ route('guru.students.show', $student->id) }}" class="btn btn-sm btn-success" title="Detail">
                                     <i class='bx bx-show'></i> Detail
                                 </a>
-                                @if(Auth::check() && Auth::user()->role === 'admin')
-                                <a href="{{ route('admin.students.edit', $student->id) }}" class="btn btn-sm btn-warning text-white" title="Edit">
-                                    <i class='bx bx-edit'></i> Edit
-                                </a>
-                                <button type="button" class="btn btn-sm btn-danger" title="Hapus" onclick="confirmDeleteStudent('{{ $student->id }}', '{{ addslashes($student->nama ?? $student->name) }}')">
-                                    <i class='bx bx-trash'></i> Hapus
-                                </button>
-                                <form id="deleteStudentForm-{{ $student->id }}" action="{{ route('admin.students.destroy', $student->id) }}" method="POST" class="d-none">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -398,116 +344,6 @@
     </div>
 </div>
 
-@if(Auth::check() && Auth::user()->role === 'admin')
-<!-- MODAL TAMBAH SISWA -->
-<div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Tambah Siswa Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('admin.students.store') }}" method="POST">
-                @csrf
-                <div class="modal-body py-3">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control rounded-3" placeholder="Masukkan nama lengkap siswa" required>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">NIS <span class="text-danger">*</span></label>
-                            <input type="text" name="nis" class="form-control rounded-3" placeholder="Nomor Induk Siswa" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">NISN <span class="text-muted">(Opsional)</span></label>
-                            <input type="text" name="nisn" class="form-control rounded-3" placeholder="Nomor Induk Siswa Nasional">
-                        </div>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Kelas <span class="text-danger">*</span></label>
-                            <select name="school_class_id" class="form-select rounded-3" required>
-                                <option value="">Pilih Kelas</option>
-                                @foreach($classes as $c)
-                                <option value="{{ $c->id }}">Kelas {{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Jenis Kelamin <span class="text-danger">*</span></label>
-                            <select name="gender" class="form-select rounded-3" required>
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Tempat Lahir</label>
-                            <input type="text" name="birth_place" class="form-control rounded-3" placeholder="Contoh: Bandung">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Tanggal Lahir</label>
-                            <input type="date" name="birth_date" class="form-control rounded-3">
-                        </div>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Nama Orang Tua / Wali</label>
-                            <input type="text" name="parent_name" class="form-control rounded-3" placeholder="Nama Orang Tua">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">No. WhatsApp / HP</label>
-                            <input type="text" name="parent_phone" class="form-control rounded-3" placeholder="08xxxxxxxxxx">
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label small fw-semibold">Alamat Lengkap</label>
-                        <textarea name="address" class="form-control rounded-3" rows="2" placeholder="Alamat tempat tinggal siswa"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan Siswa</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL IMPORT EXCEL -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom-0">
-                <h5 class="fw-bold mb-0">Import Data Siswa Excel</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('admin.students.import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
-                        <div class="mb-2">
-                            Format kolom file Excel: <strong>NIS, NISN, Nama Lengkap, Kelas, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, Alamat, Nama Wali, No WhatsApp</strong> (.xlsx atau .csv)
-                        </div>
-                        <a href="{{ route('admin.students.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
-                            <i class='bx bx-download me-1'></i> Unduh Template Excel (.xlsx) Kosong
-                        </a>
-                    </div>
-                    <label class="form-label small fw-semibold">Pilih File Excel</label>
-                    <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success rounded-3 px-4 fw-semibold">Unggah &amp; Import</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
-
 @endsection
 
 @push('scripts')
@@ -526,30 +362,5 @@
         }
     }
 
-    @if(Auth::check() && Auth::user()->role === 'admin')
-    function confirmDeleteStudent(id, name) {
-        confirmUniversalDelete({
-            title: 'Hapus Data Siswa?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus data siswa <b class="text-dark">${name}</b> dari sistem dan data tidak dapat dipulihkan.`,
-            confirmText: 'Ya, Hapus',
-            cancelText: 'Batal',
-            onConfirm: function() {
-                document.getElementById(`deleteStudentForm-${id}`).submit();
-            }
-        });
-    }
-
-    function confirmDeleteAllStudents() {
-        confirmUniversalDelete({
-            title: 'Hapus Seluruh Data Siswa?',
-            html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data siswa</b> beserta riwayat presensinya dari sistem.',
-            confirmText: 'Ya, Hapus Semua',
-            cancelText: 'Batal',
-            onConfirm: function() {
-                document.getElementById('deleteAllStudentsForm').submit();
-            }
-        });
-    }
-    @endif
 </script>
 @endpush

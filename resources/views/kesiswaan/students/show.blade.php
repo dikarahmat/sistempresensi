@@ -6,11 +6,6 @@
 
 @section('page_header_right')
 <div class="d-flex gap-2">
-    @if(Auth::check() && Auth::user()->role === 'admin')
-    <a href="{{ route('admin.students.edit', $student->id) }}" class="btn-edit-yellow shadow-xs">
-        <i class='bx bx-edit-alt'></i> Edit
-    </a>
-    @endif
     <a href="{{ route('kesiswaan.students.index') }}" class="btn-back-white shadow-xs">
         <i class='bx bx-chevron-left'></i> Kembali
     </a>
