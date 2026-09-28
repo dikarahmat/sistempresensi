@@ -229,7 +229,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $response = $this->actingAs($this->admin)->delete(route('admin.guru.destroy', $teacher->id));
         $response->assertRedirect(route('admin.guru.index'));
 
-        $this->assertDatabaseMissing('teachers', ['id' => $teacher->id]);
+        $this->assertSoftDeleted('teachers', ['id' => $teacher->id]);
         $this->assertNull($class->fresh()->teacher_id);
 
         // Test destroyAll

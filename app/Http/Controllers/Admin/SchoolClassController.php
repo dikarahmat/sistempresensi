@@ -123,12 +123,14 @@ class SchoolClassController extends Controller
             $studentIds = $class->students()->pluck('id');
             if ($studentIds->isNotEmpty()) {
                 Attendance::whereIn('student_id', $studentIds)->delete();
-                // Hapus data siswa di kelas ini
-                $class->students()->delete();
+                // Hapus permanen data siswa di kelas ini (aktif maupun arsip)
+                $class->students()->withTrashed()->forceDelete();
             }
 
-            // Hapus kelas
-            $class->delete();
+            // Hapus permanen kelas (SchoolClass memakai trait SoftDeletes,
+            // tetapi karena tidak ada halaman Arsip kelas, hapus = permanen
+            // agar tidak menimbulkan konflik unique name + academic_year_id)
+            $class->forceDelete();
 
             DB::commit();
             return redirect()->route('admin.classes.index')
@@ -154,12 +156,11 @@ class SchoolClassController extends Controller
                 }
             });
 
-            // Bersihkan riwayat presensi dan siswa
+            // Bersihkan riwayat presensi, siswa (aktif + arsip), dan kelas (aktif + arsip)
+            // secara PERMANEN sesuai perilaku tombol "Hapus Semua".
             Attendance::query()->delete();
-            Student::query()->delete();
-
-            // Bersihkan seluruh data kelas
-            SchoolClass::query()->delete();
+            Student::withTrashed()->forceDelete();
+            SchoolClass::withTrashed()->forceDelete();
 
             DB::commit();
             return redirect()->route('admin.classes.index')->with('success', 'Semua data kelas beserta siswa dan riwayat presensi berhasil dibersihkan!');

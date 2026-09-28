@@ -440,7 +440,7 @@
                     <h5 class="fw-bold mb-0">Tambah Data Guru & Wali Kelas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('admin.guru.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.guru.store') }}" method="POST">
                     @csrf
                     <div class="modal-body py-3">
                         <div class="alert alert-primary border-0 rounded-3 py-2 px-3 small mb-3 d-flex align-items-center gap-2" style="background-color: #eff6ff; color: #1d4ed8;">
@@ -488,10 +488,7 @@
                                 <label class="form-label small fw-semibold">No. Telepon / WhatsApp</label>
                                 <input type="text" name="phone_number" class="form-control rounded-3" placeholder="08xxxxxxxxxx">
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold">Foto Profil (Opsional)</label>
-                                <input type="file" name="photo" class="form-control rounded-3" accept="image/*">
-                            </div>
+
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
@@ -513,7 +510,7 @@
                     <h5 class="fw-bold mb-0">Edit Data Guru & Wali Kelas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="editTeacherForm" method="POST" enctype="multipart/form-data">
+                <form id="editTeacherForm" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="modal-body py-3">
@@ -557,10 +554,7 @@
                                 <label class="form-label small fw-semibold">No. Telepon / WhatsApp</label>
                                 <input type="text" name="phone_number" id="edit_phone" class="form-control rounded-3">
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold">Ubah Foto Profil (Opsional)</label>
-                                <input type="file" name="photo" class="form-control rounded-3" accept="image/*">
-                            </div>
+
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">

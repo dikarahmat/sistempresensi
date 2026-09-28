@@ -71,7 +71,6 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
-
     // Scanner & Mode Gerbang / Kiosk Absensi
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
@@ -79,19 +78,19 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 
     // Master Tahun Ajaran
     Route::post('academic-years/{academic_year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
-    Route::resource('academic-years', AcademicYearController::class)->except(['show']);
+    Route::resource('academic-years', AcademicYearController::class)->except(['show', 'create', 'edit']);
 
     // Master Hari Libur & Import
     Route::get('holidays/template', [HolidayController::class, 'template'])->name('holidays.template');
     Route::post('holidays/import', [HolidayController::class, 'import'])->name('holidays.import');
-    Route::resource('holidays', HolidayController::class)->except(['show']);
+    Route::resource('holidays', HolidayController::class)->except(['show', 'create', 'edit']);
 
     // Master Kelas, Import, & Hapus Semua
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
     Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAll'])->name('classes.destroy-all');
     Route::get('classes/template', [SchoolClassController::class, 'template'])->name('classes.template');
     Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import');
-    Route::resource('classes', SchoolClassController::class)->except(['show']);
+    Route::resource('classes', SchoolClassController::class)->except(['show', 'create', 'edit']);
 
     // Master Siswa, Import, Upload Foto ZIP, & Hapus Semua
     Route::get('/siswa', [AdminStudentController::class, 'index'])->name('siswa.index');
@@ -120,13 +119,18 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAll'])->name('guru.destroy-all');
     Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
     Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import');
-    Route::resource('guru', TeacherController::class)->parameters(['guru' => 'teacher']);
+    Route::resource('guru', TeacherController::class)->parameters(['guru' => 'teacher'])->only(['index', 'store', 'update', 'destroy']);
 
     // Kompatibilitas Route Teachers
     Route::delete('teachers/destroy-all', [TeacherController::class, 'destroyAll'])->name('teachers.destroy-all');
     Route::get('teachers/template', [TeacherController::class, 'downloadTemplate'])->name('teachers.template');
     Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
-    Route::resource('teachers', TeacherController::class)->except(['show']);
+    Route::resource('teachers', TeacherController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Soft Delete Routes untuk Teachers
+    Route::get('teachers/trash', [TeacherController::class, 'trash'])->name('teachers.trash');
+    Route::post('teachers/{id}/restore', [TeacherController::class, 'restore'])->name('teachers.restore');
+    Route::delete('teachers/{id}/force-delete', [TeacherController::class, 'forceDelete'])->name('teachers.force-delete');
 
     // Pengaturan Sistem Dinamis
     Route::get('/pengaturan/jadwal', [SettingController::class, 'index'])->name('pengaturan.jadwal');
@@ -155,10 +159,6 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     Route::get('/kehadiran', [WaliKelasPortalController::class, 'dailyAttendance'])->name('kehadiran');
     Route::post('/kehadiran/override', [WaliKelasPortalController::class, 'overrideAttendance'])->name('kehadiran.override');
 
-    // Scanner Mandiri (Dinonaktifkan: Redirect ke Presensi)
-    Route::get('/scanner', [WaliKelasScannerController::class, 'index'])->name('scanner');
-    Route::post('/scanner/process', [WaliKelasScannerController::class, 'store'])->name('scanner.process')->middleware('throttle:30,1');
-
     // Siswa Binaan
     Route::get('/students', [WaliKelasStudentController::class, 'index'])->name('students');
     Route::get('/students/{student}', [WaliKelasStudentController::class, 'show'])->name('students.show');
@@ -171,6 +171,10 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     Route::get('/rekap', [AdminRekapController::class, 'guruIndex'])->name('rekap');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'guruExportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'guruExportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+
+    // Scanner QR (Mode Presensi)
+    Route::get('/scanner', [WaliKelasScannerController::class, 'index'])->name('scanner');
+    Route::post('/scanner/process', [WaliKelasScannerController::class, 'store'])->name('scanner.process')->middleware('throttle:30,1');
 });
 
 // ============================================================================

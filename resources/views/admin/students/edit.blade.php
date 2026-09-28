@@ -79,7 +79,7 @@
     @endif
 
     <div class="card-modern">
-        <form action="{{ route('admin.students.update', $student->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.students.update', $student->id) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -104,6 +104,18 @@
                 <div class="col-12 col-md-6">
                     <label class="form-label">NIS</label>
                     <input type="text" name="nis" class="form-control" value="{{ old('nis', $student->nis) }}" required>
+                </div>
+            </div>
+
+            <!-- NISN & No. HP Siswa -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label">NISN (Opsional)</label>
+                    <input type="text" name="nisn" class="form-control" value="{{ old('nisn', $student->nisn) }}" placeholder="10 digit angka" maxlength="10">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Nomor HP Siswa (Opsional)</label>
+                    <input type="text" name="phone" class="form-control" value="{{ old('phone', $student->phone) }}" placeholder="08xxxxxxxxxx">
                 </div>
             </div>
 

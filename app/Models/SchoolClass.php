@@ -5,10 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SchoolClass extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = ['name', 'grade', 'level', 'academic_year_id', 'teacher_id'];
+
+    protected $casts = [
+        'deleted_at' => 'datetime',
+    ];
 
     public function academicYear(): BelongsTo
     {

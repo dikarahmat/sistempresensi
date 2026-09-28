@@ -60,15 +60,26 @@
             <div class="col-6">
                 <label class="form-label small fw-semibold">Jenis Kelamin</label>
                 <select name="gender" class="form-select" required>
-                    <option value="L" {{ old('gender') == 'L' ? 'selected' : '' }}>Laki-Laki (L)</option>
-                    <option value="P" {{ old('gender') == 'P' ? 'selected' : '' }}>Perempuan (P)</option>
+                    <option value="Laki-laki" {{ old('gender') == 'Laki-laki' || old('gender') == 'L' ? 'selected' : '' }}>Laki-Laki</option>
+                    <option value="Perempuan" {{ old('gender') == 'Perempuan' || old('gender') == 'P' ? 'selected' : '' }}>Perempuan</option>
                 </select>
             </div>
         </div>
 
+        <div class="row g-3 mb-3">
+            <div class="col-6">
+                <label class="form-label small fw-semibold">Nama Orang Tua / Wali (Opsional)</label>
+                <input type="text" name="parent_name" class="form-control" value="{{ old('parent_name') }}" placeholder="Contoh: Bambang Susilo">
+            </div>
+            <div class="col-6">
+                <label class="form-label small fw-semibold">Nomor HP Orang Tua (Opsional)</label>
+                <input type="text" name="parent_phone" class="form-control" value="{{ old('parent_phone') }}" placeholder="08xxxxxxxxxx">
+            </div>
+        </div>
+
         <div class="mb-4">
-            <label class="form-label small fw-semibold">Nomor WhatsApp Orang Tua / Siswa (Opsional)</label>
-            <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number') }}" placeholder="08xxxxxxxxxx">
+            <label class="form-label small fw-semibold">Nomor WhatsApp Siswa (Opsional)</label>
+            <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" placeholder="08xxxxxxxxxx">
         </div>
 
         <div class="d-flex justify-content-end gap-2">

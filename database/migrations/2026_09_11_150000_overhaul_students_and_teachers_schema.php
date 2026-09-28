@@ -37,25 +37,30 @@ return new class extends Migration {
         });
 
         // 3. Reset total data students dan teachers (auto-increment ke 1)
-        if (DB::getDriverName() === 'mysql') {
-            DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
-        }
-        
-        // Bersihkan data presensi yang bergantung pada siswa
-        DB::table('attendances')->truncate();
-        
-        // Reset kelas agar relasi teacher_id menjadi null
-        DB::table('school_classes')->update(['teacher_id' => null]);
-        
-        // Kosongkan tabel siswa dan wali kelas
-        DB::table('students')->truncate();
-        DB::table('teachers')->truncate();
-        
-        // Reset auto increment
-        if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE students AUTO_INCREMENT = 1;');
-            DB::statement('ALTER TABLE teachers AUTO_INCREMENT = 1;');
-            DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+        //    PERHATIAN: Blok reset data bersifat DESTRUKTIF. Hanya jalankan di
+        //    lingkungan non-production (development/local). Di production
+        //    (Railway) migrasi harus murni perubahan skema tanpa menghapus data.
+        if (!app()->environment('production')) {
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+            }
+
+            // Bersihkan data presensi yang bergantung pada siswa
+            DB::table('attendances')->truncate();
+
+            // Reset kelas agar relasi teacher_id menjadi null
+            DB::table('school_classes')->update(['teacher_id' => null]);
+
+            // Kosongkan tabel siswa dan wali kelas
+            DB::table('students')->truncate();
+            DB::table('teachers')->truncate();
+
+            // Reset auto increment
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement('ALTER TABLE students AUTO_INCREMENT = 1;');
+                DB::statement('ALTER TABLE teachers AUTO_INCREMENT = 1;');
+                DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+            }
         }
     }
 

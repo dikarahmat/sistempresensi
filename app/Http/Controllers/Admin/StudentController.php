@@ -26,11 +26,6 @@ class StudentController extends Controller
     {
         $query = Student::with('schoolClass');
 
-        // Hanya filter deleted_at jika kolom sudah ada di database
-        if (Schema::hasColumn('students', 'deleted_at')) {
-            $query->whereNull('deleted_at');
-        }
-
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -62,16 +57,18 @@ class StudentController extends Controller
             'school_class_id' => 'required|exists:school_classes,id',
             'name' => 'required|string|max:255',
             'nis' => 'required|regex:/^[a-zA-Z0-9\/\.\-]+$/|min:4|max:20|unique:students,nis',
-            'nisn' => 'required|regex:/^[0-9]{10}$/|unique:students,nisn',
+            'nisn' => 'nullable|regex:/^[0-9]{10}$/|unique:students,nisn',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'birth_place' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'address' => 'nullable|string',
+            'phone' => 'nullable|regex:/^[0-9]{10,14}$/',
             'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'required|regex:/^[0-9]{10,14}$/',
+            'parent_phone' => 'nullable|regex:/^[0-9]{10,14}$/',
         ], [
             'nis.regex' => 'NIS harus berupa kombinasi huruf/angka/simbol 4-20 karakter.',
             'nisn.regex' => 'NISN harus berupa angka 10 digit.',
+            'phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
             'parent_phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
         ]);
 
@@ -101,16 +98,18 @@ class StudentController extends Controller
             'school_class_id' => 'required|exists:school_classes,id',
             'name' => 'required|string|max:255',
             'nis' => 'required|regex:/^[a-zA-Z0-9\/\.\-]+$/|min:4|max:20|unique:students,nis,' . $student->id,
-            'nisn' => 'required|regex:/^[0-9]{10}$/|unique:students,nisn,' . $student->id,
+            'nisn' => 'nullable|regex:/^[0-9]{10}$/|unique:students,nisn,' . $student->id,
             'gender' => 'required|in:Laki-laki,Perempuan',
             'birth_place' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'address' => 'nullable|string',
+            'phone' => 'nullable|regex:/^[0-9]{10,14}$/',
             'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'required|regex:/^[0-9]{10,14}$/',
+            'parent_phone' => 'nullable|regex:/^[0-9]{10,14}$/',
         ], [
             'nis.regex' => 'NIS harus berupa kombinasi huruf/angka/simbol 4-20 karakter.',
             'nisn.regex' => 'NISN harus berupa angka 10 digit.',
+            'phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
             'parent_phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
         ]);
 
@@ -399,20 +398,12 @@ class StudentController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Hapus seluruh file foto dari disk public storage secara terchunk
-            Student::whereNotNull('photo')->chunkById(200, function ($students) {
-                foreach ($students as $student) {
-                    if ($student->photo && Storage::disk('public')->exists($student->photo)) {
-                        Storage::disk('public')->delete($student->photo);
-                    }
-                }
-            });
-
             // Hapus seluruh riwayat presensi terlebih dahulu guna mencegah foreign key constraint violation
             \App\Models\Attendance::query()->delete();
 
-            // Hapus seluruh data siswa
-            Student::query()->delete();
+            // Hapus permanen seluruh data siswa, termasuk yang masih berada di arsip
+            // (tombol "Hapus Semua Siswa (Permanen)" pada halaman Arsip).
+            Student::withTrashed()->forceDelete();
 
             DB::commit();
             return redirect()->route('admin.students.index')->with('success', 'Seluruh data siswa beserta riwayat presensi berhasil dibersihkan!');
@@ -428,14 +419,11 @@ class StudentController extends Controller
      */
     public function trash(): View
     {
-        $query = Student::with('schoolClass');
+        $students = Student::onlyTrashed()
+            ->with('schoolClass')
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(50);
 
-        // Hanya filter deleted_at jika kolom sudah ada di database
-        if (Schema::hasColumn('students', 'deleted_at')) {
-            $query->whereNotNull('deleted_at');
-        }
-
-        $students = $query->orderBy('deleted_at', 'desc')->paginate(50);
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('admin.students.trash', compact('students', 'classes'));
@@ -446,19 +434,12 @@ class StudentController extends Controller
      */
     public function restore($id): RedirectResponse
     {
-        $query = Student::where('id', $id);
-
-        // Hanya filter deleted_at jika kolom sudah ada di database
-        if (Schema::hasColumn('students', 'deleted_at')) {
-            $query->whereNotNull('deleted_at');
-        }
-
-        $student = $query->firstOrFail();
-
-        // Hanya update deleted_at jika kolom sudah ada
-        if (Schema::hasColumn('students', 'deleted_at')) {
-            $student->update(['deleted_at' => null]);
-        }
+        // Wajib pakai onlyTrashed(): global scope SoftDeletes otomatis menambahkan
+        // "deleted_at is null" ke setiap query, sehingga whereNotNull('deleted_at')
+        // menghasilkan query mustahil (selalu kosong) -> firstOrFail() melempar
+        // ModelNotFoundException -> halaman 404 saat tombol "Pulihkan" diklik.
+        $student = Student::onlyTrashed()->findOrFail($id);
+        $student->restore();
 
         return redirect()->route('admin.students.trash')
             ->with('success', "Data siswa {$student->name} berhasil dipulihkan!");
@@ -469,29 +450,18 @@ class StudentController extends Controller
      */
     public function forceDelete($id): RedirectResponse
     {
-        $query = Student::where('id', $id);
-
-        // Hanya filter deleted_at jika kolom sudah ada di database
-        if (Schema::hasColumn('students', 'deleted_at')) {
-            $query->whereNotNull('deleted_at');
-        }
-
-        $student = $query->firstOrFail();
+        // onlyTrashed() => hanya siswa yang ada di arsip yang bisa dihapus permanen
+        $student = Student::onlyTrashed()->findOrFail($id);
 
         DB::beginTransaction();
         try {
             $studentName = $student->name;
 
-            // Hapus file foto dari storage jika ada
-            if ($student->photo && Storage::disk('public')->exists($student->photo)) {
-                Storage::disk('public')->delete($student->photo);
-            }
-
             // Hapus seluruh riwayat presensi terkait
             $student->attendances()->delete();
 
             // Hapus permanen data siswa dari database
-            $student->delete();
+            $student->forceDelete();
 
             DB::commit();
             return redirect()->route('admin.students.trash')
