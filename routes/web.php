@@ -60,6 +60,9 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
     Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
     Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
+    // Route statis WAJIB didaftarkan sebelum route berparameter dinamis di bawahnya,
+    // supaya /admin/absensi/kiosk tidak ditangkap {schoolClass} (showClass('kiosk') -> TypeError).
+    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
     Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
@@ -71,7 +74,6 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 
     // Scanner & Mode Gerbang / Kiosk Absensi
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
-    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
     Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
