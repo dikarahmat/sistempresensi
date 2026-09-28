@@ -16,7 +16,7 @@ class DailyAttendanceSummary
 
         $latestAttendance = DB::table('attendances')
             ->selectRaw('student_id, MAX(id) AS attendance_id')
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->groupBy('student_id');
 
         $summaries = DB::table('school_classes')

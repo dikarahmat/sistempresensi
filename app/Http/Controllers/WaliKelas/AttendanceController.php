@@ -68,7 +68,7 @@ class AttendanceController extends Controller
 
         if (!$schoolClass && $teacherClasses->isNotEmpty()) {
             if ($activeYear) {
-                $schoolClass = $teacherClasses->firstWhere('academic_year_id', $activeYear->id);
+                $schoolClass = $teacherClasses->firstWhere('academic_year_id', $activeYear?->id);
             }
             if (!$schoolClass) {
                 $schoolClass = $teacherClasses->first(function ($c) {

@@ -606,7 +606,8 @@ class AttendanceController extends Controller
 
         $stats = [
             'hadir' => $attendances->where('status', 'Hadir')->count(),
-            'terlambat' => $attendances->where('status', 'Terlambat')->count(),
+            // Keterlambatan disimpan pada kolom time_remark (status tetap 'Hadir')
+            'terlambat' => $attendances->filter(fn ($att) => $att->status === 'Hadir' && $att->time_remark === 'Terlambat')->count(),
             'sakit' => $attendances->where('status', 'Sakit')->count(),
             'izin' => $attendances->where('status', 'Izin')->count(),
             'alfa' => $attendances->where('status', 'Alfa')->count(),

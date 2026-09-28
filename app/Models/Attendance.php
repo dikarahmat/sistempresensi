@@ -9,10 +9,14 @@ class Attendance extends Model
 {
     protected $fillable = [
         'student_id', 'academic_year_id', 'date', 'check_in',
-        'check_out', 'status', 'time_remark', 'notes', 'proof_document'
+        'check_out', 'status', 'time_remark', 'is_late', 'late_minutes', 'notes', 'proof_document'
     ];
 
-    protected $casts = ['date' => 'date'];
+    protected $casts = [
+        'date' => 'date',
+        'is_late' => 'boolean',
+        'late_minutes' => 'integer',
+    ];
 
     public function student(): BelongsTo
     {

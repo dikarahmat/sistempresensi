@@ -79,7 +79,7 @@ class StudentController extends Controller
         // Prioritas 1: Kelas binaan di tahun ajaran aktif
         if (!$schoolClass && $teacherClasses->isNotEmpty()) {
             if ($activeYear) {
-                $schoolClass = $teacherClasses->firstWhere('academic_year_id', $activeYear->id);
+                $schoolClass = $teacherClasses->firstWhere('academic_year_id', $activeYear?->id);
             }
             // Prioritas 2: Kelas yang memiliki data siswa
             if (!$schoolClass) {
