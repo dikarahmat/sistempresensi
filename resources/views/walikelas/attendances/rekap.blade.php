@@ -648,24 +648,30 @@
                     <tbody>
                         @forelse($dataRows ?? [] as $idx => $row)
                         @php
-                            $st = $row['student'];
-                            $status = $row['status'];
+                            // Null-safe: baris bisa kehilangan relasi siswa (mis. data siswa terhapus/pindah).
+                            // Baris tetap dirender memakai fallback agar data lain di tabel tidak ikut hilang.
+                            $st = is_array($row) ? ($row['student'] ?? null) : $row;
+                            $status = is_array($row) ? ($row['status'] ?? '-') : '-';
+                            $checkIn = is_array($row) ? ($row['check_in'] ?? '-') : '-';
+                            $lateText = is_array($row) ? ($row['late_text'] ?? '-') : '-';
+                            $proofDoc = is_array($row) ? ($row['proof_document'] ?? null) : null;
+                            $notes = is_array($row) ? ($row['notes'] ?? '-') : '-';
                         @endphp
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
-                            <td>{{ $st->nis }}</td>
+                            <td>{{ $st?->nis ?? '-' }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
-                                <span class="fw-semibold text-dark">{{ $st->name }}</span>
+                                <span class="fw-semibold text-dark">{{ $st?->name ?? 'Siswa tidak ditemukan' }}</span>
                             </td>
-                            <td>{{ $st->schoolClass ? $st->schoolClass->name : ($schoolClass->name ?? '-') }}</td>
+                            <td>{{ $st?->schoolClass?->name ?? ($schoolClass->name ?? '-') }}</td>
                             <td class="text-center">
-                                {{ $row['check_in'] }}
+                                {{ $checkIn }}
                             </td>
                             <td class="text-center">
-                                @if($row['late_text'] === 'Tepat Waktu')
+                                @if($lateText === 'Tepat Waktu')
                                     <span class="text-success small">Tepat Waktu</span>
-                                @elseif(str_starts_with($row['late_text'], '+'))
-                                    <span class="text-warning-emphasis small">{{ $row['late_text'] }}</span>
+                                @elseif(str_starts_with($lateText, '+'))
+                                    <span class="text-warning-emphasis small">{{ $lateText }}</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -688,12 +694,12 @@
                                 @endif
                             </td>
                             <td class="text-start">
-                                @if(isset($row['proof_document']) && $row['proof_document'])
-                                    <a href="{{ asset('storage/' . $row['proof_document']) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-2 me-1" style="font-size: 0.75rem;">
+                                @if($proofDoc)
+                                    <a href="{{ asset('storage/' . $proofDoc) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-2 me-1" style="font-size: 0.75rem;">
                                         <i class='bx bx-file'></i> Surat
                                     </a>
                                 @endif
-                                <span class="small text-muted">{{ $row['notes'] !== '-' ? $row['notes'] : '' }}</span>
+                                <span class="small text-muted">{{ $notes !== '-' ? $notes : '' }}</span>
                             </td>
                         </tr>
                         @empty
@@ -736,16 +742,17 @@
                     <tbody>
                         @forelse($dataRows ?? [] as $index => $row)
                         @php
-                            $student = $row['student'];
-                            $days = $row['days'];
+                            // Null-safe: baris bisa kehilangan relasi siswa (mis. data siswa terhapus/pindah).
+                            $student = is_array($row) ? ($row['student'] ?? null) : $row;
+                            $days = is_array($row) ? ($row['days'] ?? []) : [];
                         @endphp
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
-                            <td>{{ $student->nis }}</td>
+                            <td>{{ $student?->nis ?? '-' }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
-                                <span class="fw-semibold text-dark">{{ $student->name }}</span>
+                                <span class="fw-semibold text-dark">{{ $student?->name ?? 'Siswa tidak ditemukan' }}</span>
                             </td>
-                            <td>{{ $student->schoolClass ? $student->schoolClass->name : ($schoolClass->name ?? '-') }}</td>
+                            <td>{{ $student?->schoolClass?->name ?? ($schoolClass->name ?? '-') }}</td>
 
                             <!-- Dynamic Day Letters Tanpa Kotak -->
                             @foreach($dateColumns ?? [] as $col)
@@ -770,13 +777,13 @@
                             @endforeach
 
                             <!-- Counter H, T, S, I, A, % (Pure Text) -->
-                            <td class="text-success fw-bold">{{ $row['hadir'] }}</td>
-                            <td class="fw-bold" style="color: #d97706 !important;">{{ $row['terlambat'] }}</td>
-                            <td class="text-primary fw-bold">{{ $row['sakit'] }}</td>
-                            <td class="fw-bold" style="color: #7e22ce !important;">{{ $row['izin'] }}</td>
-                            <td class="fw-bold" style="color: #ef4444 !important;">{{ $row['alfa'] }}</td>
+                            <td class="text-success fw-bold">{{ $row['hadir'] ?? 0 }}</td>
+                            <td class="fw-bold" style="color: #d97706 !important;">{{ $row['terlambat'] ?? 0 }}</td>
+                            <td class="text-primary fw-bold">{{ $row['sakit'] ?? 0 }}</td>
+                            <td class="fw-bold" style="color: #7e22ce !important;">{{ $row['izin'] ?? 0 }}</td>
+                            <td class="fw-bold" style="color: #ef4444 !important;">{{ $row['alfa'] ?? 0 }}</td>
                             {{-- Pure Text Persentase Kehadiran --}}
-                            <td class="text-dark fw-bold">{{ $row['percentage'] }}%</td>
+                            <td class="text-dark fw-bold">{{ $row['percentage'] ?? 0 }}%</td>
                         </tr>
                         @empty
                         <tr>
@@ -822,19 +829,20 @@
                     <tbody>
                         @forelse($dataRows ?? [] as $index => $row)
                         @php
-                            $student = $row['student'];
-                            $days = $row['days'];
+                            // Null-safe: baris bisa kehilangan relasi siswa (mis. data siswa terhapus/pindah).
+                            $student = is_array($row) ? ($row['student'] ?? null) : $row;
+                            $days = is_array($row) ? ($row['days'] ?? []) : [];
                         @endphp
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
-                            <td>{{ $student->nis }}</td>
+                            <td>{{ $student?->nis ?? '-' }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
-                                <span class="fw-semibold text-dark">{{ $student->name }}</span>
+                                <span class="fw-semibold text-dark">{{ $student?->name ?? 'Siswa tidak ditemukan' }}</span>
                             </td>
-                            <td>{{ $student->schoolClass ? $student->schoolClass->name : ($schoolClass->name ?? '-') }}</td>
+                            <td>{{ $student?->schoolClass?->name ?? ($schoolClass->name ?? '-') }}</td>
                             <td>
-                                <span class="small {{ $student->gender == 'Perempuan' ? 'text-pink' : 'text-primary' }}" style="{{ $student->gender == 'Perempuan' ? 'color:#ec4899;' : '' }}">
-                                    {{ $student->gender == 'Perempuan' ? 'P' : 'L' }}
+                                <span class="small {{ $student?->gender == 'Perempuan' ? 'text-pink' : 'text-primary' }}" style="{{ $student?->gender == 'Perempuan' ? 'color:#ec4899;' : '' }}">
+                                    {{ $student?->gender == 'Perempuan' ? 'P' : 'L' }}
                                 </span>
                             </td>
 
@@ -861,13 +869,13 @@
                             @endfor
 
                             <!-- Counter H, T, S, I, A, % (Pure Text) -->
-                            <td class="text-success fw-bold">{{ $row['hadir'] }}</td>
-                            <td class="fw-bold" style="color: #d97706 !important;">{{ $row['terlambat'] }}</td>
-                            <td class="text-primary fw-bold">{{ $row['sakit'] }}</td>
-                            <td class="fw-bold" style="color: #7e22ce !important;">{{ $row['izin'] }}</td>
-                            <td class="fw-bold" style="color: #ef4444 !important;">{{ $row['alfa'] }}</td>
+                            <td class="text-success fw-bold">{{ $row['hadir'] ?? 0 }}</td>
+                            <td class="fw-bold" style="color: #d97706 !important;">{{ $row['terlambat'] ?? 0 }}</td>
+                            <td class="text-primary fw-bold">{{ $row['sakit'] ?? 0 }}</td>
+                            <td class="fw-bold" style="color: #7e22ce !important;">{{ $row['izin'] ?? 0 }}</td>
+                            <td class="fw-bold" style="color: #ef4444 !important;">{{ $row['alfa'] ?? 0 }}</td>
                             {{-- Pure Text Persentase Kehadiran --}}
-                            <td class="text-dark fw-bold">{{ $row['percentage'] }}%</td>
+                            <td class="text-dark fw-bold">{{ $row['percentage'] ?? 0 }}%</td>
                         </tr>
                         @empty
                         <tr>

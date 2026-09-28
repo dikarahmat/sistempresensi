@@ -332,6 +332,15 @@ class RekapController extends Controller
     {
         $paginator = $recap['studentPaginator'] ?? null;
         if ($paginator instanceof LengthAwarePaginator) {
+            // PENTING: dataRows dari getRecapData() berisi baris rekap berbentuk array
+            // (['student' => Student, 'days' => [...], 'status' => ...]) yang urutannya
+            // identik dengan koleksi siswa pada halaman paginator ini.
+            //
+            // JANGAN menimpa dataRows dengan $paginator (koleksi model Student):
+            // view rekap (admin & guru) membaca $row['student'], sehingga bila item
+            // berupa model Student maka $row['student'] selalu null dan halaman
+            // rekap error 500 ("Attempt to read property 'nis' on null").
+            $paginator->setCollection(collect($recap['dataRows'] ?? [])->values());
             $recap['dataRows'] = $paginator;
         }
 
