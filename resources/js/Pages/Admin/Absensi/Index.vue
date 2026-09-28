@@ -81,34 +81,12 @@ function openClassDetail(classId) {
   applyFilter();
 }
 
-// Web Audio API Beep Feedback
-function playBeep(isSuccess) {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    if (isSuccess) {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(0.18, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.18);
-    } else {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(330, ctx.currentTime);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.28);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.28);
-    }
-  } catch (e) {
-    // Audio Context not supported or blocked
+// Beek Feedback dari file audio/beep.mp3
+function playBeep() {
+  const beep = document.getElementById('beepSound');
+  if (beep) {
+    beep.currentTime = 0;
+    beep.play().catch(() => {});
   }
 }
 
@@ -121,7 +99,7 @@ async function handleUsbScan() {
   try {
     const response = await axios.post('/admin/scanner/process', { qr_token: token });
     const data = response.data;
-    playBeep(true);
+    playBeep();
     scanFeedback.value = {
       show: true,
       success: true,
@@ -135,7 +113,7 @@ async function handleUsbScan() {
     // Reload Inertia props softly
     router.reload({ only: ['kelasList', 'total_siswa', 'sudah_absen', 'belum_absen', 'processed_students'] });
   } catch (err) {
-    playBeep(false);
+    playBeep();
     const errData = err.response?.data || {};
     scanFeedback.value = {
       show: true,
@@ -155,6 +133,8 @@ async function handleUsbScan() {
 
 <template>
   <Head title="Absensi Hari Ini" />
+
+  <audio id="beepSound" src="/audio/beep.mp3" preload="auto"></audio>
 
   <div class="p-6 max-w-7xl mx-auto space-y-6">
     <!-- 1. Header & Top Action Buttons -->

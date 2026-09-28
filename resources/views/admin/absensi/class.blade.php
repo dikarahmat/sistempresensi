@@ -663,6 +663,8 @@
 </div>
 @endsection
 
+<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
+
 @push('scripts')
 <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
@@ -673,45 +675,37 @@
     let resetTimer = null;
     let activeMode = 'camera';
 
-    // Web Audio API Generator Suara Beep Browser Identik Mode Gerbang
-    let audioCtx = null;
+    // Suara Beep dari file audio/beep.mp3
+    function playBeepSound(success = true) {
+        const beep = document.getElementById('beepSound');
+        if (beep) {
+            beep.currentTime = 0;
+            beep.play().catch(() => playBrowserBeep(success));
+        } else {
+            playBrowserBeep(success);
+        }
+    }
 
+    // Beep standar browser via WebAudio — fallback bila file audio tidak tersedia
     function playBrowserBeep(success = true) {
         try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            if (success) {
-                // Suara Beep Sukses (Tit Tinggi Renyah 2500Hz)
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(2500, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } else {
-                // Suara Beep Error (Buzzer Rendah 150-300Hz)
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            }
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const oscillator = ctx.createOscillator();
+            const gain = ctx.createGain();
+            oscillator.connect(gain);
+            gain.connect(ctx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = success ? 880 : 440;
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (success ? 0.25 : 0.5));
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + (success ? 0.25 : 0.5));
+            oscillator.onended = () => ctx.close();
         } catch (e) {
-            console.warn('Audio error:', e);
+            // abaikan bila browser memblokir AudioContext
         }
     }
 
@@ -809,7 +803,7 @@
         .then(res => res.json().then(data => ({ status: res.status, body: data })))
         .then(({ status, body }) => {
             if (status === 200 && body.success) {
-                playBrowserBeep(true);
+                playBeepSound(true);
                 showOverlaySuccess(body);
 
                 // Reload otomatis setelah notifikasi tampil agar data tabel diperbarui
@@ -817,13 +811,13 @@
                     window.location.reload();
                 }, 1200);
             } else {
-                playBrowserBeep(false);
+                playBeepSound(false);
                 showOverlayError(body.message || 'QR Code tidak valid.');
             }
         })
         .catch(err => {
             console.error(err);
-            playBrowserBeep(false);
+            playBeepSound(false);
             showOverlayError('Terjadi kendala koneksi ke server.');
         });
     }
@@ -884,20 +878,35 @@
 
         html5QrKiosk = new Html5Qrcode("reader");
 
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                html5QrKiosk.start(
-                    devices[0].id,
-                    { fps: 10, qrbox: { width: 180, height: 180 } },
-                    (decodedText) => {
-                        processCode(decodedText);
-                    },
-                    () => {}
-                ).then(() => { isCamRunning = true; });
-            }
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const facingMode = isMobile ? { exact: "environment" } : "user";
+
+        html5QrKiosk.start(
+            facingMode,
+            { fps: 10, qrbox: { width: 180, height: 180 } },
+            (decodedText) => {
+                processCode(decodedText);
+            },
+            () => {}
+        ).then(() => {
+            isCamRunning = true;
         }).catch(err => {
-            console.error(err);
-            if (placeholder) placeholder.style.display = 'flex';
+            console.warn("Kamera utama gagal, coba fallback:", err);
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    return html5QrKiosk.start(
+                        devices[0].id,
+                        { fps: 10, qrbox: { width: 180, height: 180 } },
+                        (decodedText) => { processCode(decodedText); },
+                        () => {}
+                    );
+                }
+            }).then(() => {
+                isCamRunning = true;
+            }).catch(err2 => {
+                console.error("Gagal start kamera:", err2);
+                if (placeholder) placeholder.style.display = 'flex';
+            });
         });
     }
 

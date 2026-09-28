@@ -834,6 +834,7 @@
 @endsection
 
 @push('scripts')
+<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
     let isScannerOpen = false;
@@ -843,43 +844,12 @@
     let resetTimer = null;
     let activeMode = 'camera';
 
-    // Web Audio API Generator Suara Beep Browser
-    let audioCtx = null;
-
-    function playBrowserBeep(success = true) {
-        try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            if (success) {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(2500, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } else {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            }
-        } catch (e) {
-            console.warn('Audio error:', e);
+    // Suara Beep dari file audio/beep.mp3
+    function playBeepSound() {
+        const beep = document.getElementById('beepSound');
+        if (beep) {
+            beep.currentTime = 0;
+            beep.play().catch(() => {});
         }
     }
 
@@ -983,20 +953,20 @@
         .then(res => res.json().then(data => ({ status: res.status, body: data })))
         .then(({ status, body }) => {
             if (status === 200 && body.success) {
-                playBrowserBeep(true);
+                playBeepSound();
                 showOverlaySuccess(body);
 
                 setTimeout(() => {
                     window.location.reload();
                 }, 1200);
             } else {
-                playBrowserBeep(false);
+                playBeepSound();
                 showOverlayError(body.message || 'QR Code tidak valid.');
             }
         })
         .catch(err => {
             console.error(err);
-            playBrowserBeep(false);
+            playBeepSound();
             showOverlayError('Terjadi kendala koneksi ke server.');
         });
     }

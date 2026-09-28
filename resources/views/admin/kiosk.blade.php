@@ -437,6 +437,8 @@
         </div>
     </main>
 
+    <audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -465,39 +467,12 @@
             }
         }
 
-        // 3. SYNTHESIZED SOUND EFFECTS (Web Audio API - No External Assets Needed)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+        // 3. SOUND EFFECTS (audio/beep.mp3)
         function playBeep(success = true) {
-            try {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                if (success) {
-                    // Two-tone high chime (beep-beep!)
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-                    osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime + 0.08); // D6
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.25);
-                } else {
-                    // Low warning buzz
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.35);
-                }
-            } catch (e) {
-                console.warn("Audio not initialized:", e);
+            const beep = document.getElementById('beepSound');
+            if (beep) {
+                beep.currentTime = 0;
+                beep.play().catch(() => {});
             }
         }
 

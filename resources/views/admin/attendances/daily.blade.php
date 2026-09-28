@@ -16,7 +16,7 @@
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">
     <!-- Tombol Mode Gerbang (Direct ke Kiosk / Scanner Gerbang) -->
-    <a href="{{ Route::has('admin.scanner.kiosk') ? route('admin.scanner.kiosk') : (Route::has('admin.scanner') ? route('admin.scanner') : url('/admin/scanner/kiosk')) }}" 
+    <a href="{{ route('admin.absensi.kiosk') }}" 
        class="btn btn-action-header btn-outline-primary fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
        title="Mode Gerbang">
         <i class='bx bx-scan'></i>
@@ -575,7 +575,7 @@
 
                 <!-- 2. Mode Gerbang -->
                 <div class="w-100">
-                          <a href="{{ Route::has('admin.scanner.kiosk') ? route('admin.scanner.kiosk') : (Route::has('admin.scanner') ? route('admin.scanner') : url('/admin/scanner/kiosk')) }}"
+                          <a href="{{ route('admin.absensi.kiosk') }}"
                               class="btn-portal-action btn-portal-gate shadow-2xs w-100"
                        title="Mode Gerbang">
                         <i class='bx bx-scan'></i>
@@ -839,6 +839,8 @@
 </div>
 @endsection
 
+<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
+
 @push('scripts')
 <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
@@ -849,45 +851,12 @@
     let resetTimer = null;
     let activeMode = 'camera';
 
-    // Web Audio API Generator Suara Beep Browser
-    let audioCtx = null;
-
-    function playBrowserBeep(success = true) {
-        try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            if (success) {
-                // Suara Beep Sukses (Tit Tinggi Renyah)
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(2500, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } else {
-                // Suara Beep Error (Buzzer Rendah)
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            }
-        } catch (e) {
-            console.warn('Audio error:', e);
+    // Suara Beep dari file audio/beep.mp3
+    function playBeepSound() {
+        const beep = document.getElementById('beepSound');
+        if (beep) {
+            beep.currentTime = 0;
+            beep.play().catch(() => {});
         }
     }
 
@@ -991,7 +960,7 @@
         .then(res => res.json().then(data => ({ status: res.status, body: data })))
         .then(({ status, body }) => {
             if (status === 200 && body.success) {
-                playBrowserBeep(true);
+                playBeepSound();
                 showOverlaySuccess(body);
 
                 // Reload otomatis setelah notifikasi tampil agar tabel statistik terupdate
@@ -999,13 +968,13 @@
                     window.location.reload();
                 }, 1200);
             } else {
-                playBrowserBeep(false);
+                playBeepSound();
                 showOverlayError(body.message || 'QR Code tidak valid.');
             }
         })
         .catch(err => {
             console.error(err);
-            playBrowserBeep(false);
+            playBeepSound();
             showOverlayError('Terjadi kendala koneksi ke server.');
         });
     }
