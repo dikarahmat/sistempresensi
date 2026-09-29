@@ -39,14 +39,18 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self)');
 
         // Content Security Policy (seimbang antara keamanan dan fungsionalitas)
-        // Catatan: 'unsafe-inline' diperlukan karena banyak inline event handler (onclick, onchange, dll)
-        // yang dipakai di view-view Blade. Untuk produksi, pertimbangkan migrasi ke file eksternal + nonce.
+        // Catatan:
+        // - 'unsafe-inline' diperlukan karena banyak inline event handler (onclick, onchange, dll)
+        //   yang dipakai di view-view Blade.
+        // - 'unsafe-eval' diperlukan oleh Alpine.js (build standar) untuk mengevaluasi
+        //   ekspresi seperti @click="sidebarOpen = !sidebarOpen" dan x-show="sidebarOpen".
+        // - connect-src cdn.jsdelivr.net mengizinkan source map (.map) dari CDN saat DevTools terbuka.
         $csp = "default-src 'self'; "
-            . "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://code.jquery.com; "
+            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://code.jquery.com; "
             . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; "
             . "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://unpkg.com; "
             . "img-src 'self' data: blob: https://cdn.jsdelivr.net https://unpkg.com; "
-            . "connect-src 'self'; "
+            . "connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com; "
             . "frame-ancestors 'self'; "
             . "base-uri 'self'; "
             . "form-action 'self';";
@@ -55,7 +59,7 @@ class SecurityHeaders
 
         // HSTS hanya di production
         if (app()->environment('production')) {
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 
         return $response;
