@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Presensi Gerbang | {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
     <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
@@ -181,6 +181,13 @@
             margin-top: 2px;
             opacity: 0.9;
             text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+        }
+
+        /* ===== HEADER KHUSUS MOBILE (logo + nama sekolah) =====
+           Default display:none: TIDAK tampil & TIDAK mempengaruhi layout desktop.
+           Hanya diaktifkan di dalam @media (max-width: 767px) di bawah. */
+        .kiosk-mobile-header {
+            display: none;
         }
     </style>
 
@@ -515,6 +522,165 @@
             .overlay-sub { font-size: 0.72rem; }
             .kiosk-corner { width: 24px; height: 24px; }
         }
+
+        /* ==========================================================================
+           MOBILE KHUSUS (max-width: 767px)
+           Latar putih bersih, header (logo + nama + jam + tanggal) di atas,
+           kamera + toggle lock center di sisa ruang. SEMUA aturan di bawah ini
+           hanya berlaku di layar mobile — desktop (>= 768px) TIDAK terpengaruh.
+           ========================================================================== */
+        @media (max-width: 767px) {
+            /* 1. Latar putih bersih: foto sekolah & overlay hitam dimatikan */
+            html { background-color: #ffffff; }
+            body {
+                min-height: 100vh;
+                min-height: 100dvh;
+                background-color: #ffffff;
+                background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            }
+            body::before { display: none; } /* foto sekolah (desktop tetap tampil) */
+            body::after { display: none; }   /* overlay hitam tipis (desktop tetap tampil) */
+
+            /* 2. Header: logo + nama sekolah + subjudul, rata tengah, tanpa kartu/border
+                  (posisi atas diturunkan 1cm dari tepi atas layar) */
+            .kiosk-mobile-header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: max(calc(1.1rem + 1cm), env(safe-area-inset-top, 0px)) 1rem 0;
+                flex: 0 0 auto;
+            }
+            .kiosk-mobile-logo {
+                display: block;
+                width: clamp(56px, 17vw, 72px);
+                height: auto;
+                object-fit: contain;
+            }
+            .kiosk-mobile-name {
+                font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+                font-size: 1.25rem;
+                font-weight: 700;
+                line-height: 1.25;
+                color: #0f172a;
+                text-wrap: balance;
+                margin-top: 0.25rem;
+            }
+            .kiosk-mobile-sub {
+                font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+                font-size: 0.8rem;
+                font-weight: 500;
+                color: #64748b;
+                margin-top: 0.1rem;
+            }
+
+            /* 3. Jam & tanggal: mengalir rata tengah di bawah header (bukan fixed
+                  kanan-atas), warna gelap & tanpa text-shadow di atas latar putih.
+                  Elemen jam/tanggal yang sudah ada (liveClock & liveDate) dipakai
+                  ulang oleh kode jam yang sama — TANPA duplikasi id. */
+            .kiosk-clock {
+                position: static;
+                align-items: center;
+                color: #0f172a;
+                opacity: 1;
+                padding: 0.35rem 1rem 0;
+                flex: 0 0 auto;
+            }
+            .kiosk-clock:hover { opacity: 1; }
+            .kiosk-clock-time {
+                font-size: 2rem;
+                color: #0f172a;
+                text-shadow: none;
+            }
+            .kiosk-clock-date {
+                font-size: 0.8rem;
+                color: #64748b;
+                opacity: 1;
+                text-shadow: none;
+            }
+
+            /* 4. Area kamera: ambil sisa ruang, center penuh (lock center, flex —
+                  bukan absolut/px hardcode), posisi stabil saat overlay muncul */
+            .kiosk-main {
+                flex: 1 1 auto;
+                align-items: center;
+                justify-content: center;
+                padding: 0.35rem 1rem calc(4rem + env(safe-area-inset-bottom, 0px));
+            }
+
+            /* 5. Kotak kamera: persegi min(86vw, 360px) — video tetap cover penuh.
+                  Batas dvh menjaga: header yang turun 2cm + toggle + ikon bawah
+                  selalu muat dalam tinggi layar (tanpa scroll) di HP pendek. */
+            :root {
+                --gerbang-camera-size: min(86vw, 360px, calc(100vh - 400px));
+                --gerbang-camera-size: min(86vw, 360px, calc(100dvh - 400px));
+            }
+
+            /* Toggle menempel di atas kotak kamera (tanpa kartu putih), tetap jelas */
+            .kiosk-switcher {
+                margin-top: 0.5rem;
+                opacity: 1;
+            }
+
+            /* 6. Ikon keluar & layar penuh: icon-only abu gelap, tap area 44px */
+            .kiosk-corner-btn {
+                width: 44px;
+                height: 44px;
+                color: #475569;
+                opacity: 1;
+            }
+            .kiosk-corner-btn:hover { opacity: 1; }
+            .kiosk-corner-btn:focus-visible {
+                outline: 2px solid rgba(71, 85, 105, 0.6);
+            }
+            .kiosk-corner-btn i {
+                filter: none;
+                font-size: 1.35rem;
+            }
+
+            /* 7. Overlay hasil scan & placeholder error: center di dalam kotak,
+                  teks/ikon tidak keluar dari kotak kamera */
+            .scan-result-overlay { padding: 0.6rem; }
+            .scan-result-content { gap: 0.5rem; }
+            .scan-result-svg { width: min(120px, 55%); height: auto; }
+            .scan-result-name { font-size: 1rem; }
+            .scan-result-status { font-size: 0.8rem; }
+        }
+
+        /* ==========================================================================
+           LAYAR PENDEK: (max-width: 767px) + (tinggi < 640px / landscape HP)
+           Header lebih rapat, logo & jam dikecilkan, kamera dibatasi dvh supaya
+           UTUH terlihat tanpa scroll — posisi tetap center.
+           ========================================================================== */
+        @media (max-width: 767px) and (max-height: 639px) {
+            .kiosk-mobile-header {
+                padding-top: max(0.25rem, env(safe-area-inset-top, 0px));
+            }
+            .kiosk-mobile-logo { width: 48px; }
+            .kiosk-mobile-name {
+                font-size: 0.95rem;
+                margin-top: 0.1rem;
+            }
+            .kiosk-mobile-sub { font-size: 0.65rem; }
+            .kiosk-clock { padding-top: 0.15rem; }
+            .kiosk-clock-time { font-size: 1.5rem; }
+            .kiosk-clock-date { font-size: 0.65rem; }
+            .kiosk-main {
+                padding-top: 0.2rem;
+                padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
+            }
+            .kiosk-switcher { margin-top: 0.375rem; }
+            :root {
+                /* Batas dvh: header rapat + toggle + padding muat dalam tinggi layar */
+                --gerbang-camera-size: min(86vw, 360px, calc(100vh - 250px));
+                --gerbang-camera-size: min(86vw, 360px, calc(100dvh - 250px));
+            }
+            .kiosk-placeholder { padding: 0.5rem; }
+            .kiosk-placeholder i { font-size: 1.7rem !important; }
+            .kiosk-placeholder-text { font-size: 0.7rem; }
+            .scan-result-content { gap: 0.35rem; }
+            .scan-result-svg { width: min(120px, 46%); height: auto; }
+        }
     </style>
 </head>
 
@@ -529,6 +695,14 @@
     <button type="button" class="kiosk-corner-btn kiosk-fullscreen-corner" onclick="toggleFullscreen()" title="Buka Layar Penuh" aria-label="Layar Penuh">
         <i class='bx bx-fullscreen'></i>
     </button>
+
+    <!-- Header khusus MOBILE (<=767px): logo + nama sekolah, rata tengah.
+         Default display:none sehingga tampilan desktop tidak berubah sama sekali. -->
+    <div class="kiosk-mobile-header">
+        <img class="kiosk-mobile-logo" src="{{ asset(\App\Models\Setting::getLogo()) }}" alt="Logo Sekolah">
+        <div class="kiosk-mobile-name">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</div>
+        <div class="kiosk-mobile-sub">Presensi Gerbang</div>
+    </div>
 
     <!-- Jam Digital: tengah atas, pill glass tipis -->
     <div class="kiosk-clock" aria-label="Jam digital">

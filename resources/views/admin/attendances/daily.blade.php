@@ -843,6 +843,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
+<script src="{{ asset('js/camera-select.js') }}"></script>
 <script>
     let isScannerOpen = false;
     let html5QrKiosk = null;
@@ -1035,6 +1036,11 @@
             showCameraError('Browser tidak mendukung akses kamera.');
             return;
         }
+        if (typeof CameraSelect === 'undefined') {
+            console.error('CameraSelect script not loaded');
+            showCameraError('Script kamera tidak dimuat. Muat ulang halaman.');
+            return;
+        }
 
         const placeholder = document.getElementById('cameraPlaceholder');
         if (placeholder) placeholder.style.display = 'none';
@@ -1042,38 +1048,39 @@
         const errorDiv = document.getElementById('cameraError');
         if (errorDiv) errorDiv.classList.add('d-none');
 
-        if (!html5QrKiosk) {
-            html5QrKiosk = new Html5Qrcode("reader");
-        }
+        // Semua start/stop kamera lewat antrean serial agar tidak pernah
+        // paralel (mencegah error "Cannot transition to a new state").
+        CameraSelect.run(async () => {
+            if (isCamRunning) return;
 
-        // Step 1: Request camera permission first (prompts user if needed)
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-            // Stop the test stream immediately
-            stream.getTracks().forEach(track => track.stop());
-
-            // Step 2: Enumerate available cameras (works now that permission is granted)
-            return Html5Qrcode.getCameras();
-        }).then(devices => {
-            if (!devices || devices.length === 0) {
-                throw new Error('No camera found');
-            }
-
-            // Step 3: Start camera with first available device
-            return html5QrKiosk.start(
-                devices[0].id,
-                { fps: 10, qrbox: { width: 180, height: 180 } },
-                (decodedText) => {
+            // Pemilihan kamera SAMA PERSIS dengan mode gerbang
+            // (public/js/scanner.js): HP -> kamera belakang, laptop -> depan.
+            const result = await CameraSelect.startSmartCamera({
+                containerId: 'reader',
+                getInstance: () => html5QrKiosk,
+                createInstance: () => { html5QrKiosk = new Html5Qrcode("reader"); },
+                releaseInstance: async () => {
+                    await CameraSelect.safeStop(html5QrKiosk, 'reader');
+                    html5QrKiosk = null;
+                    const el = document.getElementById('reader');
+                    if (el) el.innerHTML = '';
+                },
+                config: { fps: 10, qrbox: { width: 180, height: 180 } },
+                onSuccess: (decodedText) => {
                     processCode(decodedText);
                 },
-                () => {}
-            );
-        }).then(() => {
-            isCamRunning = true;
-            console.log('Camera started successfully');
-        }).catch(err => {
-            console.error('Failed to start camera:', err);
-            showCameraError('Kamera tidak dapat diakses. Pastikan izin kamera diberikan di browser.');
-            if (placeholder) placeholder.style.display = 'flex';
+                onError: () => {}
+            });
+
+            if (result && result.success) {
+                isCamRunning = true;
+                console.log('Camera started successfully');
+            } else {
+                const msg = CameraSelect.errorMessageFor(result && result.error);
+                console.error(msg, result && result.error);
+                showCameraError(msg);
+                if (placeholder) placeholder.style.display = 'flex';
+            }
         });
     }
 
@@ -1087,18 +1094,25 @@
     }
 
     function stopCamera() {
-        if (isCamRunning && html5QrKiosk) {
-            html5QrKiosk.stop().then(() => {
-                isCamRunning = false;
-                html5QrKiosk.clear();
-                const placeholder = document.getElementById('cameraPlaceholder');
-                if (placeholder) placeholder.style.display = 'flex';
-            }).catch(err => {
+        CameraSelect.run(async () => {
+            if (!(isCamRunning && html5QrKiosk)) return;
+            try {
+                await CameraSelect.safeStop(html5QrKiosk, 'reader');
+            } catch (err) {
                 console.error(err);
-                isCamRunning = false;
-            });
-        }
+            }
+            isCamRunning = false;
+            const placeholder = document.getElementById('cameraPlaceholder');
+            if (placeholder) placeholder.style.display = 'flex';
+        });
     }
+
+    // Matikan kamera (safeStop) saat halaman ditutup/di-refresh
+    window.addEventListener('beforeunload', function () {
+        if (typeof CameraSelect !== 'undefined' && html5QrKiosk) {
+            CameraSelect.run(async () => { await CameraSelect.safeStop(html5QrKiosk, 'reader'); });
+        }
+    });
 
     // Live Real-Time Filtering Tabel Kelas Harian
     function filterDailyClasses(query) {
