@@ -79,9 +79,13 @@ class WaliKelasPortalController extends Controller
                 $schoolClass = $teacherClasses->firstWhere('academic_year_id', $activeYear?->id);
             }
             if (!$schoolClass) {
-                $schoolClass = $teacherClasses->first(function ($c) {
-                    return Student::where('school_class_id', $c->id)->exists();
-                });
+                // Optimasi: gunakan withCount untuk menghindari N+1 query
+                $classIds = $teacherClasses->pluck('id');
+                $classWithStudents = SchoolClass::whereIn('id', $classIds)
+                    ->withCount('students')
+                    ->orderByDesc('students_count')
+                    ->first();
+                $schoolClass = $classWithStudents ?? $teacherClasses->first();
             }
             if (!$schoolClass) {
                 $schoolClass = $teacherClasses->first();
@@ -404,6 +408,21 @@ class WaliKelasPortalController extends Controller
             'notes' => 'nullable|string|max:500',
             'proof_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
+
+        // Validasi tambahan: pastikan file upload aman
+        if ($request->hasFile('proof_document')) {
+            $file = $request->file('proof_document');
+            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
+            $mime = $file->getMimeType();
+            if (!in_array($mime, $allowedMimes, true)) {
+                return back()->with('error', 'Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.');
+            }
+            $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+            $ext = strtolower($file->extension());
+            if (!in_array($ext, $allowedExts, true)) {
+                return back()->with('error', 'Ekstensi file tidak diizinkan.');
+            }
+        }
 
         [$teacher, $schoolClass, $activeYear] = $this->getTeacherAndClass();
 

@@ -139,7 +139,7 @@ class SchoolClassController extends Controller
             DB::rollBack();
             report($e);
             return redirect()->route('admin.classes.index')
-                ->with('error', 'Gagal menghapus kelas: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus kelas. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -167,7 +167,7 @@ class SchoolClassController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.classes.index')->with('error', 'Gagal menghapus semua data kelas: ' . $e->getMessage());
+            return redirect()->route('admin.classes.index')->with('error', 'Gagal menghapus semua data kelas. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -196,8 +196,9 @@ class SchoolClassController extends Controller
 
             return redirect()->route('admin.classes.index')->with('success', 'Data kelas berhasil diimpor dari Excel!');
         } catch (\Throwable $e) {
+            report($e);
             return redirect()->route('admin.classes.index')
-                ->with('error', 'Gagal memproses file Excel: ' . $e->getMessage());
+                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
         }
     }
 }

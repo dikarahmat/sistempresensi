@@ -721,6 +721,23 @@ class AttendanceController extends Controller
             'proof_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
+        // Validasi tambahan: pastikan file upload aman
+        if ($request->hasFile('proof_document')) {
+            $file = $request->file('proof_document');
+            // Validasi MIME type server-side
+            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
+            $mime = $file->getMimeType();
+            if (!in_array($mime, $allowedMimes, true)) {
+                return back()->with('error', 'Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.');
+            }
+            // Validasi ekstensi
+            $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+            $ext = strtolower($file->extension());
+            if (!in_array($ext, $allowedExts, true)) {
+                return back()->with('error', 'Ekstensi file tidak diizinkan.');
+            }
+        }
+
         $activeYear = AcademicYear::getActive();
 
         $status = $request->status;

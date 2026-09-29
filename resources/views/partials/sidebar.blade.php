@@ -186,19 +186,19 @@
             </li>
 
             <!-- LOGOUT: Tombol keluar ditempatkan di bawah garis pembatas, terpisah secara visual.
-                 Container menggunakan margin yang sama persis dengan menu item di atasnya. -->
-            <li class="nav-item">
-                <a href="{{ route('logout') }}" 
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                   class="nav-link text-white d-flex align-items-center gap-3"
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-log-out fs-5 text-white'></i> 
-                    Log Out
-                </a>
+                 Container menggunakan margin yang sama persis dengan menu item di atasnya.
+                 Form POST langsung (tanpa JS inline) supaya aman dari CSP. -->
+            <li class="nav-item" style="margin: 0 0.75rem;">
+                <form action="{{ route('logout') }}" method="POST" class="m-0 p-0">
+                    @csrf
+                    <button type="submit" 
+                            class="nav-link text-white d-flex align-items-center gap-3 w-100"
+                            style="padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em; background: transparent; border: none; text-align: left; cursor: pointer;">
+                        <i class='bx bx-log-out fs-5 text-white'></i> 
+                        Log Out
+                    </button>
+                </form>
             </li>
         </ul>
     </div>
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-        @csrf
-    </form>
 </aside>

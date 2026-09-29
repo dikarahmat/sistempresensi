@@ -315,8 +315,9 @@ class StudentController extends Controller
 
             return $redirect;
         } catch (\Throwable $e) {
+            report($e);
             return redirect()->route('admin.students.index')
-                ->with('error', 'Gagal memproses file Excel: ' . $e->getMessage());
+                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -410,7 +411,7 @@ class StudentController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.students.index')->with('error', 'Gagal menghapus semua data siswa: ' . $e->getMessage());
+            return redirect()->route('admin.students.index')->with('error', 'Gagal menghapus semua data siswa. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -470,7 +471,7 @@ class StudentController extends Controller
             DB::rollBack();
             report($e);
             return redirect()->route('admin.students.trash')
-                ->with('error', 'Gagal menghapus permanen siswa: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus permanen siswa. Silakan coba lagi atau hubungi admin.');
         }
     }
 }

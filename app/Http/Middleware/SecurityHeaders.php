@@ -38,13 +38,15 @@ class SecurityHeaders
         // Permissions Policy
         $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self)');
 
-        // Content Security Policy (longgar untuk development, bisa diperketat)
+        // Content Security Policy (seimbang antara keamanan dan fungsionalitas)
+        // Catatan: 'unsafe-inline' diperlukan karena banyak inline event handler (onclick, onchange, dll)
+        // yang dipakai di view-view Blade. Untuk produksi, pertimbangkan migrasi ke file eksternal + nonce.
         $csp = "default-src 'self'; "
-            . "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://code.jquery.com; "
+            . "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://code.jquery.com; "
             . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; "
             . "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://unpkg.com; "
-            . "img-src 'self' data: blob: https:; "
-            . "connect-src 'self' https:; "
+            . "img-src 'self' data: blob: https://cdn.jsdelivr.net https://unpkg.com; "
+            . "connect-src 'self'; "
             . "frame-ancestors 'self'; "
             . "base-uri 'self'; "
             . "form-action 'self';";

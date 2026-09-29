@@ -23,8 +23,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security headers global
         $middleware->append(SecurityHeaders::class);
 
-        // Trust Railway's reverse proxy agar Laravel tau request aslinya HTTPS
-        $middleware->trustProxies(at: '*');
+        // Trust reverse proxy yang diketahui (Railway, Heroku, dll)
+        // Jangan gunakan '*' karena tidak aman - hanya proxy yang dipercaya
+        $middleware->trustProxies(at: [
+            // Railway
+            '10.0.0.0/8',
+            '172.16.0.0/12',
+            '192.168.0.0/16',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

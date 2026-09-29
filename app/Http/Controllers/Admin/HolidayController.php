@@ -56,8 +56,9 @@ class HolidayController extends Controller
                 ->with('success', $message)
                 ->with('import_errors', $import->getErrors());
         } catch (\Throwable $e) {
+            report($e);
             return redirect()->route('admin.holidays.index')
-                ->with('error', 'Gagal memproses file Excel: ' . $e->getMessage());
+                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
         }
     }
 

@@ -180,7 +180,7 @@ class TeacherController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.guru.index')->with('error', 'Gagal menghapus data guru: ' . $e->getMessage());
+            return redirect()->route('admin.guru.index')->with('error', 'Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -207,7 +207,7 @@ class TeacherController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.guru.index')->with('error', 'Gagal menghapus data guru: ' . $e->getMessage());
+            return redirect()->route('admin.guru.index')->with('error', 'Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -247,8 +247,9 @@ class TeacherController extends Controller
                 ->with('success', $message)
                 ->with('import_errors', $import->getErrors());
         } catch (\Throwable $e) {
+            report($e);
             return redirect()->route('admin.guru.index')
-                ->with('error', 'Gagal memproses file Excel: ' . $e->getMessage());
+                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -304,7 +305,7 @@ class TeacherController extends Controller
             DB::rollBack();
             report($e);
             return redirect()->route('admin.teachers.trash')
-                ->with('error', 'Gagal menghapus permanen guru: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus permanen guru. Silakan coba lagi atau hubungi admin.');
         }
     }
 }

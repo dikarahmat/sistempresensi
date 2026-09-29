@@ -47,7 +47,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,
 Route::post('/login/guru', [AuthController::class, 'loginGuru'])->name('login.guru')->middleware('throttle:5,1');
 Route::post('/login/admin', [AuthController::class, 'loginAdmin'])->name('login.admin')->middleware('throttle:5,1');
 Route::post('/login/kesiswaan', [AuthController::class, 'loginKesiswaan'])->name('login.kesiswaan')->middleware('throttle:5,1');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('throttle:10,1');
 
 // ============================================================================
 // 1. GROUP ADMIN
@@ -66,8 +66,8 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
-    Route::post('/absensi/override', [AttendanceController::class, 'override'])->name('absensi.override');
-    Route::post('/kehadiran/override', [AttendanceController::class, 'override'])->name('kehadiran.override');
+    Route::post('/absensi/override', [AttendanceController::class, 'override'])->name('absensi.override')->middleware('throttle:20,1');
+    Route::post('/kehadiran/override', [AttendanceController::class, 'override'])->name('kehadiran.override')->middleware('throttle:20,1');
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
@@ -82,14 +82,14 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 
     // Master Hari Libur & Import
     Route::get('holidays/template', [HolidayController::class, 'template'])->name('holidays.template');
-    Route::post('holidays/import', [HolidayController::class, 'import'])->name('holidays.import');
+    Route::post('holidays/import', [HolidayController::class, 'import'])->name('holidays.import')->middleware('throttle:10,1');
     Route::resource('holidays', HolidayController::class)->except(['show', 'create', 'edit']);
 
     // Master Kelas, Import, & Hapus Semua
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
     Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAll'])->name('classes.destroy-all');
     Route::get('classes/template', [SchoolClassController::class, 'template'])->name('classes.template');
-    Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import');
+    Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import')->middleware('throttle:10,1');
     Route::resource('classes', SchoolClassController::class)->except(['show', 'create', 'edit']);
 
     // Master Siswa, Import, Upload Foto ZIP, & Hapus Semua
@@ -98,7 +98,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::delete('students/destroy-all', [AdminStudentController::class, 'destroyAll'])->name('students.destroy-all');
     Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
     Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
-    Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import');
+    Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import')->middleware('throttle:10,1');
     Route::get('students/{student}/download-qr', [AdminStudentController::class, 'downloadQr'])->name('students.download-qr');
     Route::get('students/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
     Route::get('students/{id}/print-card', [AdminStudentController::class, 'printCard'])->name('students.print-card');
@@ -118,13 +118,13 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/walikelas', [TeacherController::class, 'index'])->name('walikelas.index');
     Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAll'])->name('guru.destroy-all');
     Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
-    Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import');
+    Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import')->middleware('throttle:10,1');
     Route::resource('guru', TeacherController::class)->parameters(['guru' => 'teacher'])->only(['index', 'store', 'update', 'destroy']);
 
     // Kompatibilitas Route Teachers
     Route::delete('teachers/destroy-all', [TeacherController::class, 'destroyAll'])->name('teachers.destroy-all');
     Route::get('teachers/template', [TeacherController::class, 'downloadTemplate'])->name('teachers.template');
-    Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
+    Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import')->middleware('throttle:10,1');
     Route::resource('teachers', TeacherController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Soft Delete Routes untuk Teachers
@@ -135,7 +135,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // Pengaturan Sistem Dinamis
     Route::get('/pengaturan/jadwal', [SettingController::class, 'index'])->name('pengaturan.jadwal');
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('settings', [SettingController::class, 'update'])->name('settings.update')->middleware('throttle:10,1');
 
     // Manajemen Role & Permission
     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.index');
