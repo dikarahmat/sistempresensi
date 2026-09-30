@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
@@ -31,7 +32,8 @@ class Setting extends Model
     {
         self::$runtimeCache = null;
         try {
-            \Illuminate\Support\Facades\Cache::forget('system_settings_all');
+            Cache::forget('system_settings_all');
+            Cache::forget('setting_school_logo');
         } catch (\Throwable $e) {
             // Ignore cache exceptions on bootstrapping
         }
@@ -48,7 +50,7 @@ class Setting extends Model
         }
 
         try {
-            self::$runtimeCache = \Illuminate\Support\Facades\Cache::rememberForever(
+            self::$runtimeCache = Cache::rememberForever(
                 'system_settings_all',
                 function () {
                     return self::pluck('value', 'key')->toArray();
@@ -134,15 +136,17 @@ class Setting extends Model
 
     public static function getLogo(): string
     {
-        $logo = self::get('school_logo');
-        if ($logo) {
-            if (file_exists(public_path('storage/' . $logo))) {
-                return 'storage/' . $logo;
+        return Cache::remember('setting_school_logo', 3600, function () {
+            $logo = self::get('school_logo');
+            if ($logo) {
+                if (file_exists(public_path('storage/' . $logo))) {
+                    return 'storage/' . $logo;
+                }
+                if (file_exists(public_path($logo))) {
+                    return $logo;
+                }
             }
-            if (file_exists(public_path($logo))) {
-                return $logo;
-            }
-        }
-        return 'images/logo.webp';
+            return 'images/logo.webp';
+        });
     }
 }
