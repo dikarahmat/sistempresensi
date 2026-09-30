@@ -301,7 +301,7 @@
                 @csrf
                 <div class="modal-body py-3">
                     <p class="text-secondary small mb-3">
-                        Pilih opsi pencetakan kartu presensi siswa. Berkas PDF kartu akan siap dicetak pada kertas A4 (8 kartu per lembar).
+                        Pilih opsi pencetakan kartu presensi siswa. Berkas PDF kartu akan siap dicetak pada kertas A4 landscape (10 kartu per lembar, ukuran kartu CR80 portrait).
                     </p>
 
                     <div class="mb-3">
@@ -330,7 +330,7 @@
                     </div>
 
                     <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-0" id="printInfoBox">
-                        <i class='bx bx-info-circle me-1'></i> Kartu akan digenerate dengan QR Code presensi dan pas foto siswa secara otomatis.
+                        <i class='bx bx-info-circle me-1'></i> Kartu akan digenerate dengan QR Code presensi siswa secara otomatis (tanpa pas foto).
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">

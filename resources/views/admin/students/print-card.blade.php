@@ -6,23 +6,28 @@
     <title>Kartu Presensi Siswa - {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
 
     <style>
-        /* Pengaturan Kertas A4 & Margins Identik dengan Cetak Massal */
+        /* Pengaturan Kertas A4 LANDSCAPE — margin 0 supaya background abu-abu
+           bisa tercetak penuh sampai tepi kertas. Jarak aman 6 mm per sisi
+           diberikan lewat body padding + .page-sheet (lihat di bawah). */
         @page {
-            size: A4 portrait;
-            margin: 6mm 6mm 6mm 6mm;
+            size: A4 landscape;
+            margin: 0;
         }
 
         * {
-            box-sizing: border-box;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+        }
+
+        html {
+            background-color: #e5e7eb;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f1f5f9;
+            padding: 0 6mm 6mm 6mm;
+            background-color: #e5e7eb;
             color: #0f172a;
         }
 
@@ -32,13 +37,14 @@
                 display: none !important;
             }
             body {
-                background-color: #ffffff !important;
-                padding: 0 !important;
+                background-color: #e5e7eb !important;
                 margin: 0 !important;
+                padding: 0 6mm 6mm 6mm !important;
             }
             .page-container {
                 padding: 0 !important;
                 margin: 0 !important;
+                width: 100% !important;
                 max-width: 100% !important;
                 box-shadow: none !important;
             }
@@ -51,30 +57,36 @@
             display: block;
         }
 
-        /* Tabel Pengatur Posisi Kartu (Grid 2 Kolom, cell 50% persis seperti Cetak Massal) */
-        .page-table {
+        /* Area cetak */
+        .page-container {
             width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Pembungkus per lembar: memberi jarak 6 mm di atas kartu. */
+        .page-sheet {
+            padding-top: 6mm;
+        }
+
+        /* Grid kartu: 5 kolom x 2 baris = 10 kartu / lembar (kartu KTP)
+           5 x 53,98 mm + 4 x 3 mm = 281,9 mm, muat penuh di area cetak 285 mm */
+        .page-table {
+            width: 285mm;
             border-collapse: collapse;
             table-layout: fixed;
             margin: 0 auto;
         }
 
         .page-cell {
-            width: 50%;
-            vertical-align: top;
-            padding: 2mm 2.5mm;
-            box-sizing: border-box;
+            width: 20%;
+            padding: 1.5mm 0;
+            vertical-align: middle;
+            text-align: center;
         }
 
-        /* Kotak Kartu Pelajar / Presensi */
-        .card-container {
-            width: 100%;
-            border: 1px solid #94a3b8;
-            border-collapse: collapse;
-            table-layout: fixed;
-            background-color: #ffffff;
-            border-radius: 4px;
-            overflow: hidden;
+        /* Baris kartu tidak boleh terpotong pindah halaman */
+        .card-row {
+            page-break-inside: avoid !important;
         }
 
         /* Styling Toolbar Action Bar */
@@ -116,7 +128,6 @@
     </style>
 </head>
 <body>
-
 @php
     // Deteksi siswa tunggal dari berbagai kemungkinan nama variabel controller
     $studentItem = $student ?? $siswa ?? (isset($students) ? $students->first() : null);
@@ -178,7 +189,7 @@
                         Pratinjau Kartu Presensi Siswa
                     </div>
                     <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                        Nama: <strong>{{ $studentName }}</strong> &bull; NIS: <strong>{{ $studentNis }}</strong> &bull; Format Standar Kertas A4
+                        Nama: <strong>{{ $studentName }}</strong> &bull; NIS: <strong>{{ $studentNis }}</strong> &bull; Kartu KTP (53,98 x 85,6 mm) &mdash; Kertas A4 Landscape
                     </div>
                 </td>
                 <td style="vertical-align: middle; text-align: right;">
@@ -197,116 +208,32 @@
         </table>
     </div>
 @endif
-
-<div class="page-container" style="max-width: 900px; margin: 0 auto;">
+<div class="page-container">
+    <div class="page-sheet">
     <table class="page-table">
-        <tr>
+        <tr class="card-row">
+            <!-- Cetak satuan: 1 kartu di cell pertama, ukuran & desain identik dengan cetak massal -->
             <td class="page-cell">
-                <table class="card-container">
-                    <!-- 1. HEADER KARTU (Navy + Border Emas) -->
-                    <tr>
-                        <td colspan="3" style="background-color: #1e3a8a; border-bottom: 2px solid #f59e0b; padding: 4px 6px; color: #ffffff;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="width: 26px; vertical-align: middle;">
-                                        <img src="{{ $logoSrc }}" style="width: 24px; height: 24px; vertical-align: middle;" alt="Logo">
-                                    </td>
-                                    <td style="vertical-align: middle; padding-left: 5px;">
-                                        <div style="font-size: 8pt; font-weight: bold; text-transform: uppercase; color: #ffffff; line-height: 1;">
-                                            {{ strtoupper($schoolName) }}
-                                        </div>
-                                        <div style="font-size: 5pt; font-weight: bold; color: #fcd34d; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px;">
-                                            KARTU PRESENSI DIGITAL
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- 2. BODY KARTU (Foto 3x4 | Biodata Siswa | QR Code) -->
-                    <tr>
-                        <!-- Foto Siswa (3x4) -->
-                        <td style="width: 23mm; vertical-align: middle; text-align: center; padding: 4px 2px 4px 4px;">
-                            <div style="width: 20mm; height: 25mm; border: 1px dashed #94a3b8; background-color: #f8fafc; margin: 0 auto; text-align: center; overflow: hidden;">
-                                @if($photoSrc)
-                                    <img src="{{ $photoSrc }}" style="width: 100%; height: 100%; display: block;" alt="{{ $studentName }}">
-                                @else
-                                    <table style="width: 100%; height: 100%; border-collapse: collapse;">
-                                        <tr>
-                                            <td style="vertical-align: middle; text-align: center; font-size: 6pt; color: #64748b; font-weight: bold; line-height: 1.2;">
-                                                FOTO<br>3 x 4
-                                            </td>
-                                        </tr>
-                                    </table>
-                                @endif
-                            </div>
-                        </td>
-
-                        <!-- Biodata Siswa -->
-                        <td style="vertical-align: middle; padding: 3px 2px 3px 3px;">
-                            @php
-                                $nameLen = mb_strlen($studentName);
-                                $nameFontSize = $nameLen > 30 ? '6.5pt' : ($nameLen > 22 ? '7.2pt' : '8pt');
-                            @endphp
-                            <div style="font-size: {{ $nameFontSize }}; font-weight: bold; color: #0f172a; margin-bottom: 2px; line-height: 1.15; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; white-space: normal;">
-                                {{ $studentName }}
-                            </div>
-                            <table style="width: 100%; font-size: 6.5pt; color: #334155; border-collapse: collapse; line-height: 1.25;">
-                                <tr>
-                                    <td style="width: 26px; font-weight: bold; color: #64748b; padding: 1px 0;">NIS</td>
-                                    <td style="width: 6px; padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; color: #0f172a; padding: 1px 0;">{{ $studentNis }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="font-weight: bold; color: #64748b; padding: 1px 0;">NISN</td>
-                                    <td style="padding: 1px 0;">:</td>
-                                    <td style="padding: 1px 0;">{{ $studentNisn }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="font-weight: bold; color: #64748b; padding: 1px 0;">Kelas</td>
-                                    <td style="padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; color: #1d4ed8; padding: 1px 0;">{{ $studentClass }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="font-weight: bold; color: #64748b; padding: 1px 0;">JK</td>
-                                    <td style="padding: 1px 0;">:</td>
-                                    <td style="padding: 1px 0;">{{ $studentGender }}</td>
-                                </tr>
-                            </table>
-                        </td>
-
-                        <!-- QR Code Presensi -->
-                        <td style="width: 23mm; vertical-align: middle; text-align: center; padding: 4px 4px 4px 2px;">
-                            <div style="width: 20mm; height: 20mm; border: 1px solid #cbd5e1; background-color: #ffffff; margin: 0 auto; padding: 1px; text-align: center;">
-                                <img src="{{ $qrSrc }}" style="width: 100%; height: 100%; vertical-align: middle;" alt="QR">
-                            </div>
-                            <div style="font-size: 5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.3px;">
-                                SCAN PRESENSI
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 3. FOOTER KARTU -->
-                    <tr>
-                        <td colspan="3" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 2px 6px; font-size: 5.5pt;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="color: #64748b; font-style: italic;">
-                                        Tunjukkan kartu saat presensi masuk
-                                    </td>
-                                    <td style="color: #1d4ed8; font-weight: bold; text-align: right; text-transform: uppercase;">
-                                        TA {{ $activeYear->name ?? date('Y') }}
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
+                @include('admin.students.partials.card', [
+                    'studentItem' => $studentItem,
+                    'logoSrc' => $logoSrc,
+                    'qrSrc' => $qrSrc,
+                    'schoolName' => $schoolName,
+                    'activeYear' => $activeYear,
+                    'studentName' => $studentName,
+                    'studentNis' => $studentNis,
+                    'studentNisn' => $studentNisn,
+                    'studentClass' => $studentClass,
+                    'studentGender' => $studentGender,
+                ])
             </td>
+            <td class="page-cell"></td>
+            <td class="page-cell"></td>
+            <td class="page-cell"></td>
             <td class="page-cell"></td>
         </tr>
     </table>
+    </div>
 </div>
 
 </body>

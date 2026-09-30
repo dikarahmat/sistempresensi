@@ -197,7 +197,7 @@ class StudentController extends Controller
                 'setting',
                 'pengaturan',
                 'schoolClass'
-            ), ['isPdf' => true]))->setPaper('a4', 'portrait');
+            ), ['isPdf' => true]))->setPaper('a4', 'landscape');
 
             return $pdf->download('Kartu_Presensi_' . $student->nis . '_' . \Illuminate\Support\Str::slug($student->name) . '.pdf');
         }

@@ -195,7 +195,7 @@ class StudentController extends Controller
             'schoolAddress',
             'activeYear',
             'logoBase64'
-        ), ['isPdf' => true]))->setPaper('a4', 'portrait');
+        ), ['isPdf' => true]))->setPaper('a4', 'landscape');
 
         $fileName = 'Kartu_Presensi_Massal_' . date('Ymd_His') . '.pdf';
         return $pdf->download($fileName);
@@ -375,7 +375,7 @@ class StudentController extends Controller
             'logoBase64',
             'pengaturan',
             'setting'
-        ), ['isPdf' => true]))->setPaper('a4', 'portrait');
+        ), ['isPdf' => true]))->setPaper('a4', 'landscape');
 
         $fileName = 'Kartu_Presensi_' . $student->nis . '_' . Str::slug($student->name) . '.pdf';
         return $pdf->download($fileName);

@@ -521,7 +521,7 @@ class WaliKelasPortalController extends Controller
         $students = collect([$student]);
 
         $pdf = Pdf::loadView('shared.print-cards', array_merge(compact('students', 'schoolName', 'schoolAddress', 'activeYear', 'logoBase64'), ['isPdf' => true]))
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'landscape');
 
         $fileName = 'Kartu_Pelajar_' . $student->nis . '_' . Str::slug($student->name) . '.pdf';
         return $pdf->download($fileName);
