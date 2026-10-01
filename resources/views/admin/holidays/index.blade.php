@@ -255,7 +255,7 @@
                                 <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteHoliday('{{ $holiday->id }}', '{{ addslashes($holiday->description) }}')" title="Hapus">
                                     Hapus
                                 </button>
-                                <form id="deleteHolidayForm-{{ $holiday->id }}" action="{{ route('admin.holidays.destroy', $holiday->id) }}" method="POST" class="d-none">
+                                <form id="deleteHolidayForm-{{ $holiday->id }}" action="{{ panel_route('holidays.destroy', $holiday->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -271,7 +271,7 @@
                                     <h5 class="fw-bold mb-0">Edit Hari Libur</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form action="{{ route('admin.holidays.update', $holiday->id) }}" method="POST">
+                                <form action="{{ panel_route('holidays.update', $holiday->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <div class="modal-body py-3">
@@ -353,7 +353,7 @@
                 <h5 class="fw-bold mb-0">Tambah Agenda Hari Libur</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.holidays.store') }}" method="POST">
+            <form action="{{ panel_route('holidays.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
@@ -410,14 +410,14 @@
                 <h5 class="fw-bold mb-0">Import Data Hari Libur Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.holidays.import') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ panel_route('holidays.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             Format kolom file Excel: <strong>Tanggal, Keterangan</strong> (.xlsx atau .csv)
                         </div>
-                        <a href="{{ route('admin.holidays.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
+                        <a href="{{ panel_route('holidays.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
                             <i class='bx bx-download me-1'></i> Unduh Template Excel (.xlsx) Kosong
                         </a>
                     </div>

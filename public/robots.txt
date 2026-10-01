@@ -2,7 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /guru/
-Disallow: /kesiswaan/
+Disallow: /admin/
+Disallow: /guru/
+Disallow: /login
 Disallow: /login
 
 Sitemap: {{ url('/sitemap.xml') }}

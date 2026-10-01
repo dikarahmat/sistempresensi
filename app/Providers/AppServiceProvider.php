@@ -11,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Helper panel bersama (admin & guru) - dijaga require_once agar tetap
+        // tersedia walau autoload composer belum di-dump ulang di server.
+        require_once app_path('Support/helpers.php');
     }
 
     /**

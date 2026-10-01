@@ -1,14 +1,13 @@
 # 🏫 Sistem Presensi SMP PGRI Parung Panjang
 
-Sistem informasi presensi siswa berbasis web yang dirancang khusus untuk SMP PGRI Parung Panjang. Aplikasi ini dilengkapi dengan pemindai QR Code cerdas (anti-double scan), notifikasi WhatsApp otomatis, dan manajemen hak akses tiga lapis (Admin, Wali Kelas, Kesiswaan).
+Sistem informasi presensi siswa berbasis web yang dirancang khusus untuk SMP PGRI Parung Panjang. Aplikasi ini dilengkapi dengan pemindai QR Code cerdas (anti-double scan), notifikasi WhatsApp otomatis, dan manajemen hak akses dua role (Admin dan Guru).
 
 ## ✨ Fitur Unggulan
 
-- **🔐 Multi-Role Authentication:** 
+- **🔐 Multi-Role Authentication (2 role):** 
   - **Admin:** Akses penuh (CRUD Data, Setup Sistem, Rekap Global).
-  - **Wali Kelas:** Akses terisolasi khusus kelas yang diampu, pemindai kelas mandiri.
-  - **Kesiswaan:** Akses *read-only* untuk monitoring seluruh presensi sekolah.
-- **📷 QR Code Scanner (Anti-Double Scan):** Validasi ganda antara gerbang utama (Admin) dan gerbang kelas (Wali Kelas) untuk mencegah duplikasi absen.
+  - **Guru:** Dashboard Guru dengan tampilan identik Admin, dilengkapi scanner QR & mode gerbang, namun modul data (Siswa, Kelas, Kehadiran, Rekap) bersifat *read-only*.
+- **📷 QR Code Scanner (Anti-Double Scan):** Pemindaian QR di gerbang sekolah untuk mencegah duplikasi absen.
 - **💬 Notifikasi WhatsApp Asynchronous:** Pesan kehadiran dikirim ke orang tua via WhatsApp secara *background* menggunakan Laravel Queue Job sehingga tidak membuat web *lag* atau lemot.
 - **📊 Import & Export Excel:** Kemudahan memindahkan data Master (Siswa, Guru, Kelas) dan cetak laporan kehadiran.
 - **🎨 UI/UX Tersinkronisasi:** Tampilan responsif dan seragam di semua perangkat untuk semua *role*.
@@ -108,10 +107,9 @@ Setelah menjalankan perintah `migrate --seed`, gunakan akun berikut untuk masuk 
 | Role | Email / Username | Password |
 | :--- | :--- | :--- |
 | **Admin** | admin@smp.com | admin123 |
-| **Wali Kelas** | *(NIP Guru dari file Excel/Seeder)* | guru123 |
-| **Kesiswaan** | kesiswaan@smp.com | kesiswaan123 |
+| **Guru** | *(NIP Guru dari file Excel/Seeder)* | guru123 |
 
 *(Silakan cek file `database/seeders/UserSeeder.php` untuk melihat detail akun lainnya yang digenerate).*
 
 ---
-*Developed with ❤️ by Dika Rahmat.*
+*Developed with ❤️*

@@ -4,16 +4,7 @@
 @section('page_title', 'Detail Siswa')
 @section('page_subtitle', 'Informasi biodata, kelas, dan kode QR presensi siswa')
 
-@section('page_header_right')
-<div class="d-flex gap-2">
-    <a href="{{ route('admin.students.edit', $student->id) }}" class="btn-edit-yellow shadow-xs">
-        Edit
-    </a>
-    <a href="{{ route('admin.students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.88rem;">
-        Kembali
-    </a>
-</div>
-@endsection
+
 
 @push('styles')
 <style>
@@ -156,17 +147,17 @@
             <div class="card card-modern p-4">
                 <h5 class="fw-bold mb-3" style="color: #0f172a;">QR Code Siswa</h5>
 
-                <div class="qr-display-box">
-                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->generate($student->qr_token ?? $student->nis) !!}
+                <div class="qr-display-box d-flex justify-content-center align-items-center p-3 mb-3 bg-light rounded-3" style="border: 1px dashed #cbd5e1;">
+                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($student->qr_token ?? $student->nis) !!}
                 </div>
 
-                <!-- Tombol Download QR Saja -->
-                <a href="{{ route('admin.students.download-qr', $student->id) }}" class="btn-download-blue">
-                    Download
+                <!-- Tombol Download QR Saja (Tanpa Ikon) -->
+                <a href="{{ panel_route('students.download-qr', $student->id) }}" class="btn-download-blue" data-download>
+                    Download QR Code
                 </a>
 
-                <!-- Tombol Download Kartu Presensi PDF -->
-                <a href="{{ route('admin.students.download-card', $student->id) }}" class="btn-download-green" id="btnDownloadCard" style="text-decoration: none;">
+                <!-- Tombol Download Kartu Presensi PDF (Tanpa Ikon) -->
+                <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green" id="btnDownloadCard" style="text-decoration: none;" data-download>
                     Download Kartu Presensi
                 </a>
             </div>

@@ -48,11 +48,16 @@ class SchoolClass extends Model
             }
         });
 
+        static::saved(function () {
+            \App\Services\DownloadCacheService::clearCardsCache();
+        });
+
         static::deleting(function (SchoolClass $schoolClass) {
             // Gunakan each() agar event deleting pada model Student tetap terpanggil
             $schoolClass->students()->each(function (Student $student) {
                 $student->delete();
             });
+            \App\Services\DownloadCacheService::clearCardsCache();
         });
     }
 }

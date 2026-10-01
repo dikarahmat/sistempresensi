@@ -18,6 +18,17 @@ class Attendance extends Model
         'late_minutes' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \App\Services\DownloadCacheService::clearRekapCache();
+        });
+
+        static::deleted(function () {
+            \App\Services\DownloadCacheService::clearRekapCache();
+        });
+    }
+
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);

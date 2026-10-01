@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Data Guru & Wali Kelas')
-@section('page_title', 'Data Guru & Wali Kelas')
+@section('title', 'Data Guru')
+@section('page_title', 'Data Guru')
 @section('page_subtitle', 'Kelola data guru pendidik')
 
 @push('styles')
@@ -271,14 +271,14 @@
 
     @if(Auth::check() && Auth::user()->role === 'admin')
     {{-- Form Hapus Semua Guru (Hidden, dipanggil via confirmDeleteAllTeachers()) --}}
-    <form id="deleteAllTeachersForm" action="{{ route('admin.guru.destroy-all') }}" method="POST" class="d-none">
+    <form id="deleteAllTeachersForm" action="{{ panel_route('guru.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
     @endif
 
     <!-- ========================================================================= -->
-    <!-- KARTU UTAMA DATA GURU & WALI KELAS: CLEAN ACTION BAR & TABEL TERPADU      -->
+    <!-- KARTU UTAMA DATA GURU: CLEAN ACTION BAR & TABEL TERPADU      -->
     <!-- (Layout & container disamakan persis dengan Data Siswa)                  -->
     <!-- ========================================================================= -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
@@ -334,7 +334,7 @@
             </div>
         </div>
 
-        {{-- Tabel Data Guru & Wali Kelas (Alignment & style disamakan persis dengan Data Siswa) --}}
+        {{-- Tabel Data Guru (Alignment & style disamakan persis dengan Data Siswa) --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
@@ -343,7 +343,7 @@
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">NIP</th>
                         <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA LENGKAP GURU</th>
                         <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">JENIS KELAMIN</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">TUGAS / WALI KELAS</th>
+                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">TUGAS KELAS</th>
                         <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NO. TELEPON / WA</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
@@ -364,7 +364,7 @@
                         </td>
                         <td class="text-start text-nowrap px-3 text-secondary">
                             @if($assignedClass)
-                                Wali Kelas {{ $assignedClass->name }}
+                                Kelas {{ $assignedClass->name }}
                             @else
                                 Guru Pengajar
                             @endif
@@ -397,7 +397,7 @@
                                         onclick="confirmDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
                                     Hapus
                                 </button>
-                                <form id="deleteTeacherForm-{{ $teacher->id }}" action="{{ route('admin.guru.destroy', $teacher->id) }}" method="POST" class="d-none">
+                                <form id="deleteTeacherForm-{{ $teacher->id }}" action="{{ panel_route('guru.destroy', $teacher->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -409,7 +409,7 @@
                     <tr class="align-middle">
                         <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 7 : 6 }}" class="text-center py-5 text-muted text-nowrap">
                             <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
-                            BELUM ADA DATA GURU ATAU WALI KELAS YANG TERDAFTAR.
+                            BELUM ADA DATA GURU YANG TERDAFTAR.
                         </td>
                     </tr>
                     @endforelse
@@ -437,10 +437,10 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="fw-bold mb-0">Tambah Data Guru & Wali Kelas</h5>
+                    <h5 class="fw-bold mb-0">Tambah Data Guru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('admin.guru.store') }}" method="POST">
+                <form action="{{ panel_route('guru.store') }}" method="POST">
                     @csrf
                     <div class="modal-body py-3">
                         <div class="alert alert-primary border-0 rounded-3 py-2 px-3 small mb-3 d-flex align-items-center gap-2" style="background-color: #eff6ff; color: #1d4ed8;">
@@ -466,9 +466,9 @@
                                 </select>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold">Penugasan Wali Kelas</label>
+                                <label class="form-label small fw-semibold">Penugasan Kelas</label>
                                 <select name="school_class_id" class="form-select rounded-3">
-                                    <option value="">-- Bukan Wali Kelas (Guru Pengajar Saja) --</option>
+                                    <option value="">-- Tidak Ditugaskan (Guru Pengajar Saja) --</option>
                                     @foreach($classes as $c)
                                     <option value="{{ $c->id }}">Kelas {{ $c->name }} (Tingkat {{ $c->grade ?? $c->level }})</option>
                                     @endforeach
@@ -507,7 +507,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="fw-bold mb-0">Edit Data Guru & Wali Kelas</h5>
+                    <h5 class="fw-bold mb-0">Edit Data Guru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="editTeacherForm" method="POST">
@@ -532,9 +532,9 @@
                                 </select>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold">Penugasan Wali Kelas</label>
+                                <label class="form-label small fw-semibold">Penugasan Kelas</label>
                                 <select name="school_class_id" id="edit_class_id" class="form-select rounded-3">
-                                    <option value="none">-- Bukan Wali Kelas (Guru Pengajar Saja) --</option>
+                                    <option value="none">-- Tidak Ditugaskan (Guru Pengajar Saja) --</option>
                                     @foreach($classes as $c)
                                     <option value="{{ $c->id }}">Kelas {{ $c->name }} (Tingkat {{ $c->grade ?? $c->level }})</option>
                                     @endforeach
@@ -576,16 +576,16 @@
                     <h5 class="fw-bold mb-0">Import Data Guru dari Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('admin.guru.import') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ panel_route('guru.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body py-3">
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Unduh Template Format</label>
-                            <a href="{{ route('admin.guru.template') }}" class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border bg-light text-decoration-none hover:bg-slate-100 transition-all">
+                            <a href="{{ panel_route('guru.template') }}" class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border bg-light text-decoration-none hover:bg-slate-100 transition-all">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class='bx bx-download text-success fs-4'></i>
                                     <div>
-                                        <div class="fw-bold text-dark small">Template_Wali_Kelas.xlsx</div>
+                                        <div class="fw-bold text-dark small">Template_Guru.xlsx</div>
                                         <div class="text-muted" style="font-size: 0.72rem;">Gunakan format ini untuk import data massal</div>
                                     </div>
                                 </div>
@@ -632,7 +632,7 @@
     function confirmDeleteTeacher(id, name) {
         confirmUniversalDelete({
             title: 'Hapus Data Guru?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus data guru <b class="text-dark">${name}</b> dari sistem. Penugasan wali kelas yang bersangkutan akan otomatis dilepaskan.`,
+            html: `Tindakan ini bersifat permanen. Anda akan menghapus data guru <b class="text-dark">${name}</b> dari sistem. Penugasan kelas yang bersangkutan akan otomatis dilepaskan.`,
             confirmText: 'Hapus',
             cancelText: 'Tidak',
             onConfirm: function() {
@@ -645,7 +645,7 @@
     function confirmDeleteAllTeachers() {
         confirmUniversalDelete({
             title: 'Hapus Seluruh Data Guru?',
-            html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data guru</b> serta melepaskan penugasan wali kelas dari semua rombel.',
+            html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data guru</b> serta melepaskan penugasan kelas dari semua rombel.',
             confirmText: 'Hapus Semua',
             cancelText: 'Tidak',
             onConfirm: function() {

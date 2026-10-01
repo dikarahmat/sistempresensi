@@ -169,7 +169,7 @@ class MonthlyAttendanceExport implements FromArray, ShouldAutoSize, WithStyles
         $output[] = [];
         $output[] = ['Keterangan: H = Hadir, T = Terlambat, S = Sakit, I = Izin, A = Alpha, L = Libur'];
         $output[] = [];
-        $output[] = ['', '', '', '', 'Mengetahui,', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Wali Kelas ' . $className];
+        $output[] = ['', '', '', '', 'Mengetahui,', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Guru Kelas ' . $className];
         $output[] = ['', '', '', '', 'Kepala Sekolah', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ($selectedClass?->teacher?->name ?? '...........................')];
         $output[] = [];
         $output[] = [];

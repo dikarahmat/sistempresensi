@@ -14,8 +14,8 @@ use Tests\TestCase;
 /**
  * Smoke test kesiapan production.
  *
- * Memastikan seluruh route penting per role (admin, guru/walikelas,
- * kesiswaan) terdaftar dan dirender tanpa error 404/500, termasuk
+ * Memastikan seluruh route penting per role (admin, guru)
+ * terdaftar dan dirender tanpa error 404/500, termasuk
  * alur inti presensi (scanner) dan form CRUD siswa.
  */
 class ProductionReadinessSmokeTest extends TestCase
@@ -24,7 +24,6 @@ class ProductionReadinessSmokeTest extends TestCase
 
     protected User $admin;
     protected User $guru;
-    protected User $kesiswaan;
     protected AcademicYear $year;
     protected SchoolClass $schoolClass;
     protected Student $student;
@@ -49,14 +48,9 @@ class ProductionReadinessSmokeTest extends TestCase
             'email' => 'guru.smoke@presensi.test',
             'password' => Hash::make('password123'), 'role' => 'guru',
         ]);
-        $this->kesiswaan = User::create([
-            'name' => 'Kesiswaan Smoke', 'username' => 'kesiswaansmoke',
-            'email' => 'kesiswaan.smoke@presensi.test',
-            'password' => Hash::make('password123'), 'role' => 'kesiswaan',
-        ]);
 
         $this->teacher = Teacher::create([
-            'name' => 'Wali Kelas Smoke', 'nip' => '199001012020011001',
+            'name' => 'Guru Smoke', 'nip' => '199001012020011001',
             'gender' => 'Laki-laki', 'user_id' => $this->guru->id,
         ]);
 
@@ -94,7 +88,7 @@ class ProductionReadinessSmokeTest extends TestCase
             'admin.students.index', 'admin.siswa.index', 'admin.students.create',
             'admin.students.show', 'admin.students.edit', 'admin.students.trash',
             'admin.students.print-cards',
-            'admin.guru.index', 'admin.walikelas.index', 'admin.teachers.index', 'admin.teachers.trash',
+            'admin.guru.index', 'admin.teachers.index', 'admin.teachers.trash',
             'admin.kelas.index', 'admin.classes.index', 'admin.academic-years.index',
             'admin.holidays.index', 'admin.settings.index', 'admin.pengaturan.jadwal',
             'admin.roles.index',
@@ -110,26 +104,15 @@ class ProductionReadinessSmokeTest extends TestCase
     {
         $this->assertPagesRender($this->guru, [
             'guru.dashboard', 'guru.absensi.index', 'guru.absensi', 'guru.presensi.index',
-            'guru.absensi.show', 'guru.kehadiran', 'guru.students', 'guru.students.show',
+            'guru.absensi.show', 'guru.absensi.kiosk', 'guru.kiosk',
+            'guru.kehadiran', 'guru.kehadiran.detail', 'guru.kehadiran.student-history',
+            'guru.students.index', 'guru.students.show', 'guru.classes.index',
             'guru.rekap', 'guru.scanner',
         ], [
             'guru.absensi.show' => [$this->schoolClass->id],
+            'guru.kehadiran.detail' => [$this->schoolClass->id],
+            'guru.kehadiran.student-history' => [$this->student->id],
             'guru.students.show' => [$this->student->id],
-        ]);
-    }
-
-    public function test_kesiswaan_pages_render_without_errors(): void
-    {
-        $this->assertPagesRender($this->kesiswaan, [
-            'kesiswaan.dashboard', 'kesiswaan.absensi.index', 'kesiswaan.absensi.show',
-            'kesiswaan.kehadiran', 'kesiswaan.kehadiran.detail',
-            'kesiswaan.students.index', 'kesiswaan.students.show',
-            'kesiswaan.classes.index', 'kesiswaan.teachers.index',
-            'kesiswaan.rekap.index',
-        ], [
-            'kesiswaan.absensi.show' => [$this->schoolClass->id],
-            'kesiswaan.kehadiran.detail' => [$this->schoolClass->id],
-            'kesiswaan.students.show' => [$this->student->id],
         ]);
     }
 }

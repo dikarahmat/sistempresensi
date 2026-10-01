@@ -6,7 +6,7 @@
 
 @section('page_header_right')
 <div class="d-flex gap-2">
-    <a href="{{ route('admin.students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.85rem;">
+    <a href="{{ panel_route('students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.85rem;">
         Kembali
     </a>
 </div>
@@ -79,7 +79,7 @@
     @endif
 
     <div class="card-modern">
-        <form action="{{ route('admin.students.update', $student->id) }}" method="POST">
+        <form action="{{ panel_route('students.update', $student->id) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -161,7 +161,7 @@
             <!-- Tombol Simpan & Batal -->
             <div class="d-flex align-items-center gap-2">
                 <button type="submit" class="btn-submit-blue">Simpan Perubahan</button>
-                <a href="{{ route('admin.students.show', $student->id) }}" class="btn-cancel-gray">Batal</a>
+                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-cancel-gray">Batal</a>
             </div>
         </form>
     </div>

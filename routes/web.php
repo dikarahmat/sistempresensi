@@ -12,29 +12,16 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Admin\TeacherController;
 
-use App\Http\Controllers\WaliKelas\WaliKelasPortalController;
-use App\Http\Controllers\WaliKelas\AttendanceController as WaliKelasAttendanceController;
-use App\Http\Controllers\WaliKelas\ScannerController as WaliKelasScannerController;
-use App\Http\Controllers\WaliKelas\StudentController as WaliKelasStudentController;
-
-use App\Http\Controllers\Kesiswaan\KesiswaanDashboardController;
-use App\Http\Controllers\Kesiswaan\KesiswaanAttendanceController;
-use App\Http\Controllers\Kesiswaan\KesiswaanClassController;
-use App\Http\Controllers\Kesiswaan\KesiswaanTeacherController;
-use App\Http\Controllers\Kesiswaan\KesiswaanRekapController;
-use App\Http\Controllers\Kesiswaan\KesiswaanStudentController;
-
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Redirect root ke dashboard jika login admin/guru/kesiswaan, atau ke login
+// Redirect root ke dashboard sesuai role (admin/guru), atau ke login
 Route::get('/', function () {
     if (Auth::check()) {
         return match (Auth::user()->role) {
             'admin' => redirect()->route('admin.dashboard'),
             'guru' => redirect()->route('guru.dashboard'),
-            'kesiswaan' => redirect()->route('kesiswaan.dashboard'),
             default => redirect()->route('login'),
         };
     }
@@ -46,7 +33,6 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/login/guru', [AuthController::class, 'loginGuru'])->name('login.guru')->middleware('throttle:5,1');
 Route::post('/login/admin', [AuthController::class, 'loginAdmin'])->name('login.admin')->middleware('throttle:5,1');
-Route::post('/login/kesiswaan', [AuthController::class, 'loginKesiswaan'])->name('login.kesiswaan')->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('throttle:10,1');
 
 // ============================================================================
@@ -114,8 +100,8 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     
     Route::resource('students', AdminStudentController::class);
 
-    // Manajemen Data Guru & Wali Kelas (/admin/guru)
-    Route::get('/walikelas', [TeacherController::class, 'index'])->name('walikelas.index');
+    // Manajemen Data Guru (/admin/guru)
+
     Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAll'])->name('guru.destroy-all');
     Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
     Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import')->middleware('throttle:10,1');
@@ -143,69 +129,50 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 });
 
 // ============================================================================
-// 2. GROUP WALI KELAS (GURU)
+// 2. GROUP GURU (DASHBOARD GURU)
+// ============================================================================
+// Memakai controller, view, dan komponen yang SAMA PERSIS dengan admin
+// (single source of truth). Yang berbeda hanya hak akses: guru read-only,
+// kecuali modul Presensi (scanner & mode gerbang) yang tetap penuh fungsional.
+// Route khusus admin (tambah/edit/hapus/import/pengaturan) TIDAK didaftarkan
+// di sini, sehingga guru otomatis menerima HTTP 403 bila mencoba mengaksesnya.
 // ============================================================================
 Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function () {
-    Route::get('/dashboard', [WaliKelasPortalController::class, 'dashboard'])->name('dashboard');
+    // Dashboard (identik dashboard admin)
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Presensi & Absensi Kelas Binaan
-    Route::get('/absensi', [WaliKelasAttendanceController::class, 'index'])->name('absensi.index');
-    Route::get('/absensi-view', [WaliKelasAttendanceController::class, 'index'])->name('absensi');
-    Route::get('/presensi', [WaliKelasAttendanceController::class, 'index'])->name('presensi.index');
-    Route::get('/absensi/{schoolClass}', [WaliKelasAttendanceController::class, 'showClass'])->name('absensi.show');
-    Route::post('/absensi/override', [WaliKelasPortalController::class, 'overrideAttendance'])->name('absensi.override');
+    // PRESENSI - identik admin (absensi harian, detail kelas, scanner, mode gerbang)
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
+    // Route statis WAJIB didaftarkan sebelum route berparameter dinamis di bawahnya,
+    // supaya /guru/absensi/kiosk tidak ditangkap {schoolClass}.
+    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
+    Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
+    Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
+    Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
+    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
-    // Kehadiran & Override
-    Route::get('/kehadiran', [WaliKelasPortalController::class, 'dailyAttendance'])->name('kehadiran');
-    Route::post('/kehadiran/override', [WaliKelasPortalController::class, 'overrideAttendance'])->name('kehadiran.override');
+    // KEHADIRAN - identik admin tetapi READ-ONLY
+    // (route ubah status presensi / override sengaja tidak didaftarkan => 403)
+    Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 
-    // Siswa Binaan
-    Route::get('/students', [WaliKelasStudentController::class, 'index'])->name('students');
-    Route::get('/students/{student}', [WaliKelasStudentController::class, 'show'])->name('students.show');
-    Route::get('/students/{student}/card', [WaliKelasStudentController::class, 'downloadCard'])->name('students.card');
-    Route::get('/students/{student}/download-card', [WaliKelasStudentController::class, 'downloadCard'])->name('students.download-card');
-    Route::get('/students/{student}/download-qr', [WaliKelasStudentController::class, 'downloadQr'])->name('students.download-qr');
-    Route::match(['get', 'post'], '/students/print-cards', [WaliKelasStudentController::class, 'printCards'])->name('students.print-cards');
+    // REKAP - identik admin (filter + unduh Excel/PDF)
+    Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
+    Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
+    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
 
-    // Rekap
-    Route::get('/rekap', [AdminRekapController::class, 'guruIndex'])->name('rekap');
-    Route::get('/rekap/export-excel', [AdminRekapController::class, 'guruExportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
-    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'guruExportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+    // SISWA - identik admin, READ-ONLY (detail + cetak kartu & unduh QR)
+    Route::get('/siswa', [AdminStudentController::class, 'index'])->name('students.index');
+    // Route statis didaftarkan lebih dulu agar tidak tertangkap {student}.
+    Route::match(['get', 'post'], '/siswa/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
+    Route::get('/siswa/{student}/download-qr', [AdminStudentController::class, 'downloadQr'])->name('students.download-qr');
+    Route::get('/siswa/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
+    Route::get('/siswa/{student}/card', [AdminStudentController::class, 'downloadCard'])->name('students.card');
+    Route::get('/siswa/{student}', [AdminStudentController::class, 'show'])->name('students.show');
 
-    // Scanner QR (Mode Presensi)
-    Route::get('/scanner', [WaliKelasScannerController::class, 'index'])->name('scanner');
-    Route::post('/scanner/process', [WaliKelasScannerController::class, 'store'])->name('scanner.process')->middleware('throttle:30,1');
-});
-
-// ============================================================================
-// 3. GROUP KESISWAAN (Strict Read-Only)
-// ============================================================================
-Route::prefix('kesiswaan')->name('kesiswaan.')->middleware(['role:kesiswaan'])->group(function () {
-    Route::get('/dashboard', [KesiswaanDashboardController::class, 'index'])->name('dashboard');
-
-    // Presensi (Identik Admin Absensi Daily & Class)
-    Route::get('/absensi', [KesiswaanAttendanceController::class, 'index'])->name('absensi.index');
-    Route::get('/absensi/{schoolClass}', [KesiswaanAttendanceController::class, 'showClass'])->name('absensi.show');
-
-    // Kehadiran (Identik Admin Kehadiran & Detail)
-    Route::get('/kehadiran', [KesiswaanAttendanceController::class, 'kehadiran'])->name('kehadiran');
-    Route::get('/kehadiran/{schoolClass}', [KesiswaanAttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
-
-    // Siswa (Identik Admin Siswa, Strictly Read-Only + Cetak Kartu)
-    Route::get('/siswa', [KesiswaanStudentController::class, 'index'])->name('students.index');
-    Route::get('/siswa/{student}', [KesiswaanStudentController::class, 'show'])->name('students.show');
-    Route::get('/siswa/{student}/card', [KesiswaanStudentController::class, 'downloadCard'])->name('students.card');
-    Route::get('/siswa/{student}/download-card', [KesiswaanStudentController::class, 'downloadCard'])->name('students.download-card');
-    Route::get('/siswa/{student}/download-qr', [KesiswaanStudentController::class, 'downloadQr'])->name('students.download-qr');
-    Route::match(['get', 'post'], '/siswa/print-cards', [KesiswaanStudentController::class, 'printCards'])->name('students.print-cards');
-
-    // Kelas & Wali Kelas (Identik Admin, Strictly Read-Only)
-    Route::get('/kelas', [KesiswaanClassController::class, 'index'])->name('classes.index');
-    Route::get('/wali-kelas', [KesiswaanTeacherController::class, 'index'])->name('teachers.index');
-
-    // Rekap Presensi Multi-Periode (Identik Admin Rekap)
-    Route::get('/rekap', [KesiswaanRekapController::class, 'index'])->name('rekap.index');
-    Route::get('/rekap/export-excel', [KesiswaanRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
-    Route::get('/rekap/export-pdf', [KesiswaanRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
-    Route::get('/rekap/export-csv', [KesiswaanRekapController::class, 'exportCsv'])->name('rekap.export-csv')->middleware('throttle:10,1');
+    // KELAS - identik admin, READ-ONLY
+    Route::get('/kelas', [SchoolClassController::class, 'index'])->name('classes.index');
 });

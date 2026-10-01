@@ -1,45 +1,29 @@
 @php
+    // ========================================================================
+    // SIDEBAR BERSAMA ADMIN & GURU (single source of truth).
+    // Item menu ditentukan oleh role: admin melihat menu penuh, guru melihat
+    // DASHBOARD, PRESENSI, KEHADIRAN, REKAP, SISWA, KELAS.
+    // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
+    $isAdminPanel = ($userRole === 'admin');
 
-    $dashboardRoute = match($userRole) {
-        'admin' => route('admin.dashboard'),
-        'guru' => route('guru.dashboard'),
-        'kesiswaan' => route('kesiswaan.dashboard'),
-        default => url('/'),
-    };
-    $isDashboardActive = request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard') || request()->routeIs('kesiswaan.dashboard');
+    $dashboardRoute = panel_route('dashboard');
+    $isDashboardActive = request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard');
 
-    $absensiRoute = match($userRole) {
-        'admin' => route('admin.absensi.index'),
-        'guru' => route('guru.absensi.index'),
-        'kesiswaan' => route('kesiswaan.absensi.index'),
-        default => null,
-    };
-    $isAbsensiActive = request()->routeIs('admin.absensi*') || request()->routeIs('guru.absensi*') || request()->routeIs('guru.presensi*') || request()->routeIs('kesiswaan.absensi*');
+    $absensiRoute = panel_route('absensi.index');
+    $isAbsensiActive = panel_is('absensi*') || panel_is('presensi*');
 
-    $kehadiranRoute = match($userRole) {
-        'admin' => route('admin.kehadiran'),
-        'guru' => route('guru.kehadiran'),
-        'kesiswaan' => route('kesiswaan.kehadiran'),
-        default => null,
-    };
-    $isKehadiranActive = request()->routeIs('admin.kehadiran*') || request()->routeIs('guru.kehadiran*') || request()->routeIs('kesiswaan.kehadiran*');
+    $kehadiranRoute = panel_route('kehadiran');
+    $isKehadiranActive = panel_is('kehadiran*');
 
-    $rekapRoute = match($userRole) {
-        'admin' => route('admin.rekap'),
-        'guru' => route('guru.rekap'),
-        'kesiswaan' => route('kesiswaan.rekap.index'),
-        default => '#',
-    };
-    $isRekapActive = request()->routeIs('admin.rekap*') || request()->routeIs('guru.rekap*') || request()->routeIs('kesiswaan.rekap*');
+    $rekapRoute = panel_route('rekap');
+    $isRekapActive = panel_is('rekap*');
 
-    $siswaRoute = match($userRole) {
-        'admin' => route('admin.students.index'),
-        'guru' => route('guru.students'),
-        'kesiswaan' => route('kesiswaan.students.index'),
-        default => '#',
-    };
-    $isSiswaActive = request()->routeIs('admin.students.*') || request()->routeIs('guru.students*') || request()->routeIs('kesiswaan.students.*');
+    $siswaRoute = panel_route('students.index');
+    $isSiswaActive = panel_is('students*');
+
+    $kelasRoute = panel_route('classes.index');
+    $isKelasActive = panel_is('classes*') || panel_is('kelas*');
 @endphp
 
 <!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot
@@ -151,24 +135,24 @@
                     Siswa
                 </a>
 
-                @if($userRole === 'admin' || $userRole === 'kesiswaan')
-                <a href="{{ $userRole === 'kesiswaan' ? route('kesiswaan.teachers.index') : route('admin.guru.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                @if($isAdminPanel)
+                <a href="{{ route('admin.guru.index') }}" 
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-group fs-5 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || request()->routeIs('kesiswaan.teachers.*') ? 'text-primary' : 'text-white' }}'></i> 
+                    <i class='bx bx-group fs-5 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') ? 'text-primary' : 'text-white' }}'></i> 
                     Guru
                 </a>
-                
-                <a href="{{ $userRole === 'kesiswaan' ? route('kesiswaan.classes.index') : route('admin.classes.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.classes.*') || request()->routeIs('admin.kelas.*') || request()->routeIs('kesiswaan.classes.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
+                @endif
+
+                <a href="{{ $kelasRoute }}" 
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKelasActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-buildings fs-5 {{ request()->routeIs('admin.classes.*') || request()->routeIs('admin.kelas.*') || request()->routeIs('kesiswaan.classes.*') ? 'text-primary' : 'text-white' }}'></i> 
+                    <i class='bx bx-buildings fs-5 {{ $isKelasActive ? 'text-primary' : 'text-white' }}'></i> 
                     Kelas
                 </a>
-                @endif
             </li>
 
-            @if($userRole === 'admin')
+            @if($isAdminPanel)
             <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" 
                    class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.settings.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}" 
@@ -188,12 +172,12 @@
             <!-- LOGOUT: Tombol keluar ditempatkan di bawah garis pembatas, terpisah secara visual.
                  Container menggunakan margin yang sama persis dengan menu item di atasnya.
                  Form POST langsung (tanpa JS inline) supaya aman dari CSP. -->
-            <li class="nav-item" style="margin: 0 0.75rem;">
+            <li class="nav-item">
                 <form action="{{ route('logout') }}" method="POST" class="m-0 p-0">
                     @csrf
                     <button type="submit" 
-                            class="nav-link text-white d-flex align-items-center gap-3 w-100"
-                            style="padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em; background: transparent; border: none; text-align: left; cursor: pointer;">
+                            class="nav-link text-white d-flex align-items-center gap-3"
+                            style="margin: 0 0.75rem; width: calc(100% - 1.5rem); padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em; background: transparent; border: none; text-align: left; cursor: pointer;">
                         <i class='bx bx-log-out fs-5 text-white'></i> 
                         Log Out
                     </button>

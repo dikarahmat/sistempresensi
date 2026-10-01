@@ -187,7 +187,7 @@
                         </td>
                         <td class="text-center text-nowrap px-3">
                             <span class="col-status-aktif">
-                                <form action="{{ route('admin.academic-years.toggle-active', $year->id) }}" method="POST" id="toggleForm{{ $year->id }}" class="d-inline m-0">
+                                <form action="{{ panel_route('academic-years.toggle-active', $year->id) }}" method="POST" id="toggleForm{{ $year->id }}" class="d-inline m-0">
                                     @csrf
                                     <div class="form-check form-switch d-inline-flex align-items-center justify-content-center gap-2 m-0 p-0">
                                         <input class="form-check-input float-none m-0" type="checkbox" role="switch" id="switch{{ $year->id }}" {{ $year->is_active ? 'checked disabled' : '' }} onchange="confirmToggleActive('{{ $year->id }}', '{{ $year->name }}', '{{ $year->semester }}', this)" style="cursor: pointer; width: 38px; height: 20px;">
@@ -209,7 +209,7 @@
                                 <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteYear('{{ $year->id }}', '{{ $year->name }}')" {{ $year->is_active ? 'disabled title="Tidak dapat menghapus tahun ajaran aktif"' : 'title="Hapus"' }}>
                                     Hapus
                                 </button>
-                                <form id="deleteYearForm-{{ $year->id }}" action="{{ route('admin.academic-years.destroy', $year->id) }}" method="POST" class="d-none">
+                                <form id="deleteYearForm-{{ $year->id }}" action="{{ panel_route('academic-years.destroy', $year->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -225,7 +225,7 @@
                                     <h5 class="fw-bold mb-0">Edit Tahun Ajaran</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form action="{{ route('admin.academic-years.update', $year->id) }}" method="POST">
+                                <form action="{{ panel_route('academic-years.update', $year->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <div class="modal-body py-3">
@@ -296,7 +296,7 @@
                 <h5 class="fw-bold mb-0">Tambah Tahun Ajaran Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.academic-years.store') }}" method="POST">
+            <form action="{{ panel_route('academic-years.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">

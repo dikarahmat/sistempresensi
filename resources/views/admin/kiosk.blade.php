@@ -19,6 +19,9 @@
     <!-- HTML5 QR Code Scanner (lokal, 2.3.8) -->
     <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 
+    <!-- Presensi Unified Design Tokens -->
+    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}">
+
     <style>
         :root {
             /* Latar halaman = foto sekolah (public/images/bg.webp) + kabut putih tipis,
@@ -687,7 +690,7 @@
 <body>
 
     <!-- Tombol Keluar Mode Gerbang: ikon kecil di pojok kiri atas -->
-    <a href="{{ route('admin.absensi.index') }}" class="kiosk-corner-btn kiosk-exit-corner" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
+    <a href="{{ panel_route('absensi.index') }}" class="kiosk-corner-btn kiosk-exit-corner" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
         <i class='bx bx-log-out'></i>
     </a>
 
@@ -826,6 +829,6 @@
         })();
     </script>
 
-    <script src="{{ asset('js/scanner.js') }}" data-process-route="{{ route('admin.scanner.process') }}"></script>
+    <script src="{{ asset('js/scanner.js') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 </body>
 </html>

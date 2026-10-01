@@ -117,7 +117,7 @@
 
     <!-- 1. Statistik + Filter - 1 Container Kompak -->
     <div class="card border-0 shadow-sm rounded-4 p-2 mb-2 bg-white">
-        <form method="GET" action="{{ route('admin.kehadiran.student-history', $student->id) }}">
+        <form method="GET" action="{{ panel_route('kehadiran.student-history', $student->id) }}">
             <!-- Stats -->
             <div class="d-flex flex-wrap justify-content-between gap-1 mb-2 pb-2" style="border-bottom: 1px solid #f1f5f9;">
                 <div class="stat-item">
@@ -148,13 +148,13 @@
 
             <!-- Period Nav -->
             <div class="period-nav mb-2">
-                <a href="{{ route('admin.kehadiran.student-history', [$student->id, 'period' => 'harian']) }}" class="period-link {{ $period === 'harian' ? 'active' : '' }}">
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'harian']) }}" class="period-link {{ $period === 'harian' ? 'active' : '' }}">
                     Harian
                 </a>
-                <a href="{{ route('admin.kehadiran.student-history', [$student->id, 'period' => 'mingguan']) }}" class="period-link {{ $period === 'mingguan' ? 'active' : '' }}">
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'mingguan']) }}" class="period-link {{ $period === 'mingguan' ? 'active' : '' }}">
                     Mingguan
                 </a>
-                <a href="{{ route('admin.kehadiran.student-history', [$student->id, 'period' => 'bulanan']) }}" class="period-link {{ $period === 'bulanan' ? 'active' : '' }}">
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'bulanan']) }}" class="period-link {{ $period === 'bulanan' ? 'active' : '' }}">
                     Bulanan
                 </a>
             </div>

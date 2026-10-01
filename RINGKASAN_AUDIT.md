@@ -31,7 +31,7 @@ Audit dan perbaikan telah dilakukan terhadap seluruh project Sistem Presensi SMP
 4. `app/Http/Controllers/Admin/SchoolClassController.php` - error handling
 5. `app/Http/Controllers/Admin/HolidayController.php` - error handling
 6. `app/Http/Controllers/Admin/AttendanceController.php` - file upload validation
-7. `app/Http/Controllers/WaliKelas/WaliKelasPortalController.php` - N+1 query & file upload validation
+7. `app/Http/Controllers/Admin/AttendanceController.php` - N+1 query & file upload validation
 8. `app/Models/User.php` - mass assignment protection
 9. `routes/web.php` - rate limiting
 10. `bootstrap/app.php` - trust proxies

@@ -3,7 +3,7 @@
 @section('title', 'Histori Kehadiran Kelas ' . ($schoolClass->name ?? ''))
 @section('page_title', 'Histori Kehadiran: Kelas ' . ($schoolClass->name ?? '-'))
 @section('page_subtitle')
-    <span class="text-secondary fw-normal">Wali Kelas: {{ $schoolClass->teacher->name ?? 'Belum ditentukan' }}</span>
+    <span class="text-secondary fw-normal">Guru Kelas: {{ $schoolClass->teacher->name ?? 'Belum ditentukan' }}</span>
 @endsection
 
 @push('styles')

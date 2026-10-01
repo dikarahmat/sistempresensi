@@ -159,7 +159,7 @@ class TrashArchiveTest extends TestCase
     }
 
     // =========================================================================
-    // ARSIP GURU & WALI KELAS
+    // ARSIP GURU
     // =========================================================================
 
     public function test_halaman_arsip_guru_menampilkan_hanya_guru_yang_diarsipkan(): void

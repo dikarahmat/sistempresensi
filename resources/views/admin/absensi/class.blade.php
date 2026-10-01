@@ -540,7 +540,9 @@
                                 <th class="py-3" style="width: 30%; white-space: nowrap;">NAMA SISWA</th>
                                 <th class="text-center py-3" style="width: 15%; white-space: nowrap;">JAM MASUK</th>
                                 <th class="text-center py-3" style="width: 20%; white-space: nowrap;">STATUS</th>
+                                @if(is_admin())
                                 <th class="text-center py-3" style="width: 27%; white-space: nowrap;">AKSI</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -548,7 +550,10 @@
                             <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                                 <td class="text-center text-secondary fw-semibold">{{ $index + 1 }}</td>
                                 <td>
-                                    <div class="text-dark">{{ $student->name ?? '-' }}</div>
+                                    <div class="presensi-student-cell">
+                                        <div class="student-name">{{ $student->name ?? '-' }}</div>
+                                        <div class="student-class">{{ $selectedClass->name ?? ($student->schoolClass->name ?? '') }}</div>
+                                    </div>
                                 </td>
                                 <td class="text-center text-secondary font-monospace">
                                     {{ $student->jam_masuk ?? '—' }}
@@ -556,22 +561,22 @@
                                 <td class="text-center">
                                     @php
                                         $st = $student->current_status ?? 'Belum';
-                                        $stLower = strtolower($st);
-                                        $statusColor = match($stLower) {
-                                            'hadir' => 'text-success',
-                                            'terlambat' => 'text-warning',
-                                            'sakit' => 'text-primary',
-                                            'izin' => 'text-info',
-                                            'alfa', 'alpha' => 'text-danger',
-                                            default => 'text-secondary',
+                                        $stClass = match(strtolower($st)) {
+                                            'hadir' => 'hadir',
+                                            'terlambat' => 'terlambat',
+                                            'sakit' => 'sakit',
+                                            'izin' => 'izin',
+                                            'alfa', 'alpha' => 'alfa',
+                                            default => 'belum',
                                         };
                                     @endphp
-                                    <span class="{{ $statusColor }} fw-semibold">
+                                    <span class="presensi-badge {{ $stClass }}">
                                         {{ $st }}
                                     </span>
                                 </td>
+                                @if(is_admin())
                                 <td class="text-center">
-                                    <form action="{{ route('admin.absensi.override') }}" method="POST" class="d-inline-flex align-items-center justify-content-center gap-1 m-0">
+                                    <form action="{{ panel_route('absensi.override') }}" method="POST" class="d-inline-flex align-items-center justify-content-center gap-1 m-0">
                                         @csrf
                                         <input type="hidden" name="student_id" value="{{ $student->id }}">
                                         <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
@@ -594,15 +599,16 @@
                                     <!-- MODAL DETAIL OVERRIDE UNTUK SISWA INI -->
                                     <div class="modal fade text-start" id="modalOverrideSiswa{{ $student->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content border-0 shadow-lg rounded-xl overflow-hidden">
-                                                <div class="modal-header bg-light border-bottom px-4 py-3">
-                                                    <div>
-                                                        <h5 class="modal-title fw-bold text-dark mb-0">Ubah Presensi Siswa</h5>
-                                                        <div class="small text-muted">{{ $student->name }} (NIS: {{ $student->nis }})</div>
-                                                    </div>
+                                            <div class="modal-content presensi-modal-content">
+                                                <div class="presensi-modal-header d-flex justify-content-between align-items-center">
+                                                    <h5 class="modal-title">Ubah Presensi Siswa</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <form action="{{ route('admin.absensi.override') }}" method="POST" enctype="multipart/form-data">
+                                                <div class="presensi-modal-student-strip">
+                                                    <div class="student-name">{{ $student->name }}</div>
+                                                    <div class="student-class">{{ $selectedClass->name ?? ($student->schoolClass->name ?? '-') }} &bull; NIS: {{ $student->nis }}</div>
+                                                </div>
+                                                <form action="{{ panel_route('absensi.override') }}" method="POST" enctype="multipart/form-data">
                                                     @csrf
                                                     <input type="hidden" name="student_id" value="{{ $student->id }}">
                                                     <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
@@ -636,7 +642,7 @@
                                                     </div>
                                                     <div class="modal-footer bg-light px-4 py-3 border-top">
                                                         <button type="button" class="btn btn-light border px-3 rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-primary px-4 fw-semibold rounded-3">Simpan Status</button>
+                                                        <button type="submit" class="btn btn-presensi-primary px-4 fw-semibold rounded-3">Simpan Status</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -644,10 +650,11 @@
                                     </div>
 
                                 </td>
+                                @endif
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-secondary">
+                                <td colspan="{{ is_admin() ? 6 : 5 }}" class="text-center py-4 text-secondary">
                                     <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
                                     BELUM ADA DATA SISWA DI KELAS INI.
                                 </td>
@@ -792,7 +799,7 @@
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
 
-        fetch("{{ route('admin.scanner.process') }}", {
+        fetch("{{ panel_route('scanner.process') }}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -829,11 +836,14 @@
         if (!overlaySucc || !successText) return;
 
         const studentName = data.student ? data.student.name : 'Siswa';
+        const studentClass = data.student ? (data.student.class || data.student.kelas || '') : '';
         const statusLabel = data.type === 'check_out' ? 'Pulang' : (data.remark || 'Hadir');
         const now = new Date();
         const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 
-        successText.innerText = `${studentName} — ${statusLabel} jam ${timeStr}`;
+        successText.innerHTML = `<span class="d-block fw-bold text-uppercase" style="font-size: 1.05rem;">${studentName}</span>` +
+                                (studentClass ? `<span class="d-block fw-bold text-white opacity-90 small mt-0.5">${studentClass}</span>` : '') +
+                                `<div class="mt-2"><span class="badge bg-white text-dark fw-bold px-2.5 py-1" style="font-size: 0.75rem;">${statusLabel} · ${timeStr} WIB</span></div>`;
         overlaySucc.classList.remove('d-none');
 
         resetOverlayState(1200);

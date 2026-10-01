@@ -425,7 +425,7 @@ async function handleUsbScan() {
               <td class="py-3.5 px-4 text-center text-slate-400 font-semibold">{{ idx + 1 }}</td>
               <td class="py-3.5 px-4">
                 <div class="font-bold text-slate-800 text-base">Kelas {{ cls.nama_kelas }}</div>
-                <div class="text-xs text-slate-400">Wali: <span class="text-slate-600">{{ cls.wali_kelas }}</span></div>
+                <div class="text-xs text-slate-400">Wali: <span class="text-slate-600">{{ cls.guru_kelas }}</span></div>
               </td>
               <td class="py-3.5 px-4 text-center font-bold text-slate-800 text-base">
                 {{ cls.total_siswa ?? 0 }}

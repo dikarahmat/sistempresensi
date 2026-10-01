@@ -16,7 +16,7 @@
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">
     <!-- Tombol Mode Gerbang (Direct ke Kiosk / Scanner Gerbang) -->
-    <a href="{{ route('admin.absensi.kiosk') }}" 
+    <a href="{{ panel_route('absensi.kiosk') }}" 
        class="btn btn-action-header btn-outline-primary fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
        title="Mode Gerbang">
         <i class='bx bx-scan'></i>
@@ -575,7 +575,7 @@
 
                 <!-- 2. Mode Gerbang -->
                 <div class="w-100">
-                          <a href="{{ route('admin.absensi.kiosk') }}"
+                          <a href="{{ panel_route('absensi.kiosk') }}"
                               class="btn-portal-action btn-portal-gate shadow-2xs w-100"
                        title="Mode Gerbang">
                         <i class='bx bx-scan'></i>
@@ -679,7 +679,7 @@
                     <i class='bx bx-filter-alt fs-5'></i>
                     <span class="small fw-semibold">Menampilkan siswa dengan status: <strong class="badge bg-primary fs-7">{{ ucfirst(request('status')) }}</strong> pada tanggal {{ \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('d F Y') }} ({{ count($processedStudents ?? []) }} Siswa)</span>
                 </div>
-                <a href="{{ route('admin.presensi.index', ['tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-sm btn-light border text-dark fw-semibold py-1 px-2.5 rounded-2" style="font-size: 0.78rem;">
+                <a href="{{ panel_route('presensi.index', ['tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-sm btn-light border text-dark fw-semibold py-1 px-2.5 rounded-2" style="font-size: 0.78rem;">
                     <i class='bx bx-x'></i> Reset Filter
                 </a>
             </div>
@@ -816,7 +816,7 @@
                                 </td>
                                 <td class="text-center align-middle col-td-aksi text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
-                                        <a href="{{ route('admin.absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap">
+                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap">
                                             <i class='bx bx-door-open fs-6'></i>
                                             <span>Buka Kelas</span>
                                         </a>
@@ -949,7 +949,7 @@
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
 
-        fetch("{{ route('admin.scanner.process') }}", {
+        fetch("{{ panel_route('scanner.process') }}", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -986,12 +986,16 @@
         if (!overlaySucc || !successText) return;
 
         const studentName = data.student ? data.student.name : 'Siswa';
+        const studentClass = data.student ? (data.student.class || data.student.kelas || '') : '';
         const statusLabel = data.type === 'check_out' ? 'Pulang' : (data.remark || 'Hadir');
         const now = new Date();
         const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 
-        successText.innerText = `${studentName} — ${statusLabel} jam ${timeStr}`;
+        successText.innerHTML = `<span class="d-block fw-bold text-uppercase" style="font-size: 1.05rem;">${studentName}</span>` +
+                                (studentClass ? `<span class="d-block fw-bold text-white opacity-90 small mt-0.5">${studentClass}</span>` : '') +
+                                `<div class="mt-2"><span class="badge bg-white text-dark fw-bold px-2.5 py-1" style="font-size: 0.75rem;">${statusLabel} · ${timeStr} WIB</span></div>`;
         overlaySucc.classList.remove('d-none');
+        resetOverlayState(1500);
     }
 
     function showOverlayError(errorMsg) {

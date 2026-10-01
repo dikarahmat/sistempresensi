@@ -189,16 +189,7 @@ class StudentController extends Controller
             ));
         }
 
-        $pdf = Pdf::loadView('shared.print-cards', array_merge(compact(
-            'students',
-            'schoolName',
-            'schoolAddress',
-            'activeYear',
-            'logoBase64'
-        ), ['isPdf' => true]))->setPaper('a4', 'landscape');
-
-        $fileName = 'Kartu_Presensi_Massal_' . date('Ymd_His') . '.pdf';
-        return $pdf->download($fileName);
+        return \App\Services\DownloadCacheService::downloadMassCards($request);
     }
 
     public function printCard(Request $request, $id = null): View
@@ -276,17 +267,7 @@ class StudentController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        $token = $student->qr_token ?? $student->nis;
-        $fileName = 'QR_' . $student->nis . '_' . Str::slug($student->name) . '.svg';
-
-        $qrCode = QrCode::size(500)
-            ->format('svg')
-            ->margin(1)
-            ->generate($token);
-
-        return response($qrCode)
-            ->header('Content-Type', 'image/svg+xml')
-            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+        return \App\Services\DownloadCacheService::downloadQrSvg($student);
     }
 
     public function import(Request $request): RedirectResponse
@@ -323,7 +304,8 @@ class StudentController extends Controller
 
     public function downloadTemplate()
     {
-        return Excel::download(
+        return \App\Services\DownloadCacheService::downloadTemplate(
+            'students',
             new \App\Exports\StudentTemplateExport(),
             'Template_Siswa.xlsx'
         );
@@ -331,54 +313,7 @@ class StudentController extends Controller
 
     public function downloadCard(Student $student)
     {
-        $activeYear = AcademicYear::getActive();
-        $tahun_ajaran = $activeYear;
-        $schoolName = Setting::getSchoolName();
-        $schoolAddress = Setting::getSchoolAddress();
-        $pengaturan = Setting::first();
-        $setting = $pengaturan;
-        $student->load('schoolClass');
-        $siswa = $student;
-
-        $logoPath = public_path(Setting::getLogo());
-        $logoBase64 = null;
-        if (file_exists($logoPath)) {
-            $mime = mime_content_type($logoPath) ?: 'image/png';
-            $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
-        }
-
-        $token = $student->qr_token ?? $student->nis;
-        try {
-            $svg = QrCode::size(140)->margin(0)->generate($token);
-            $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
-        } catch (\Throwable $e) {
-            $student->qr_base64 = null;
-        }
-
-        $student->photo_base64 = null;
-        if ($student->photo && file_exists(public_path('storage/' . $student->photo))) {
-            $pPath = public_path('storage/' . $student->photo);
-            $pMime = mime_content_type($pPath) ?: 'image/jpeg';
-            $student->photo_base64 = 'data:' . $pMime . ';base64,' . base64_encode(file_get_contents($pPath));
-        }
-
-        $students = collect([$student]);
-
-        $pdf = Pdf::loadView('admin.students.print-card', array_merge(compact(
-            'student',
-            'siswa',
-            'students',
-            'schoolName',
-            'schoolAddress',
-            'activeYear',
-            'tahun_ajaran',
-            'logoBase64',
-            'pengaturan',
-            'setting'
-        ), ['isPdf' => true]))->setPaper('a4', 'landscape');
-
-        $fileName = 'Kartu_Presensi_' . $student->nis . '_' . Str::slug($student->name) . '.pdf';
-        return $pdf->download($fileName);
+        return \App\Services\DownloadCacheService::downloadSingleCard($student);
     }
 
     public function destroy(Student $student): RedirectResponse

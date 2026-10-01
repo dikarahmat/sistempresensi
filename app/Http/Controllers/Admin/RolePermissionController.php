@@ -86,8 +86,8 @@ class RolePermissionController extends Controller
                         'desc' => 'Tambah, ubah, hapus biodata siswa, dan cetak kartu presensi berbasis QR code.',
                     ],
                     'master.teachers' => [
-                        'label' => 'Kelola Guru & Penugasan Wali Kelas',
-                        'desc' => 'Pencatatan data pengajar dan penentuan wali kelas masing-masing rombel.',
+                        'label' => 'Kelola Guru & Penugasan Kelas',
+                        'desc' => 'Pencatatan data pengajar dan penentuan guru kelas masing-masing rombel.',
                     ],
                     'master.classes' => [
                         'label' => 'Kelola Kelas & Kenaikan Tingkat',
@@ -135,20 +135,6 @@ class RolePermissionController extends Controller
 
         return match ($role) {
             'admin' => $allPermissions, // Full akses ke semua modul
-            'kesiswaan' => [
-                'dashboard.view',
-                'dashboard.realtime',
-                'dashboard.calendar',
-                'absensi.scan',
-                'absensi.manual',
-                'rekap.view',
-                'rekap.export_excel',
-                'rekap.export_pdf',
-                'master.students',
-                'master.teachers',
-                'master.classes',
-                'settings.documentation',
-            ],
             'guru' => [
                 'dashboard.view',
                 'dashboard.calendar',
@@ -190,18 +176,16 @@ class RolePermissionController extends Controller
         
         $roleCounts = [
             'admin' => User::where('role', 'admin')->count(),
-            'kesiswaan' => User::where('role', 'kesiswaan')->count(),
             'guru' => User::where('role', 'guru')->count(),
         ];
 
         $rolePermissions = [
             'admin' => self::getRolePermissions('admin'),
-            'kesiswaan' => self::getRolePermissions('kesiswaan'),
             'guru' => self::getRolePermissions('guru'),
         ];
 
         $activeRole = $request->query('role', 'admin');
-        if (!in_array($activeRole, ['admin', 'kesiswaan', 'guru'], true)) {
+        if (!in_array($activeRole, ['admin', 'guru'], true)) {
             $activeRole = 'admin';
         }
 
@@ -221,7 +205,7 @@ class RolePermissionController extends Controller
     public function update(Request $request)
     {
         $role = $request->input('role');
-        if (!in_array($role, ['admin', 'kesiswaan', 'guru'], true)) {
+        if (!in_array($role, ['admin', 'guru'], true)) {
             return back()->with('error', 'Role pengguna tidak valid.');
         }
 
@@ -239,8 +223,7 @@ class RolePermissionController extends Controller
 
         $roleLabel = match ($role) {
             'admin' => 'Administrator',
-            'kesiswaan' => 'Kesiswaan',
-            'guru' => 'Walikelas / Guru',
+            'guru' => 'Guru',
             default => $role,
         };
 

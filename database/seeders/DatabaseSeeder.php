@@ -23,12 +23,6 @@ class DatabaseSeeder extends Seeder
                 'role' => 'guru',
                 'email' => 'guru@presensi.com',
             ],
-            [
-                'username' => 'kesiswaan',
-                'name' => 'Staff Kesiswaan',
-                'role' => 'kesiswaan',
-                'email' => 'kesiswaan@presensi.com',
-            ],
         ];
 
         foreach ($accounts as $account) {
@@ -42,7 +36,6 @@ class DatabaseSeeder extends Seeder
                     'password' => Hash::make(match($account['role']) {
                         'admin' => 'admin123',
                         'guru' => 'guru123',
-                        'kesiswaan' => 'kesiswaan123',
                     }),
                 ]
             );

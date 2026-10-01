@@ -69,10 +69,15 @@
     <!-- Local Assets via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Presensi Unified Design Tokens -->
+    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}">
+
     @stack('styles')
 
     <style>
         :root {
+            --sidebar-width: 238px;
+            --sidebar-gap: 10px;
             --primary-blue: #3b62f6;
             --primary-blue-hover: #2563eb;
             --text-dark: #1e293b;
@@ -314,9 +319,9 @@
         /* A. SIDEBAR MOBILE DRAWER (Z-INDEX 9999999 - PALING TINGGI DI ATAS SEMUA ELEMEN) */
         aside,
         .app-sidebar-drawer {
-            width: 16rem !important;
-            min-width: 16rem !important;
-            max-width: 16rem !important;
+            width: var(--sidebar-width) !important;
+            min-width: var(--sidebar-width) !important;
+            max-width: var(--sidebar-width) !important;
             height: 100vh !important;
             min-height: 100vh !important;
             flex-shrink: 0 !important;
@@ -348,7 +353,7 @@
                 max-height: calc(100vh - env(safe-area-inset-top, 0px)) !important;
                 max-height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
                 overflow: hidden !important;
-                width: 14rem !important;
+                width: var(--sidebar-width) !important;
                 min-width: 0 !important;
                 max-width: 78vw !important;
                 z-index: 1045 !important;
@@ -406,7 +411,7 @@
                 transform: none !important;
                 transition: none !important;
                 z-index: 40 !important;
-                margin-right: 24px !important;
+                margin-right: 0 !important;
             }
         }
 
@@ -780,15 +785,15 @@
 
         @media (min-width: 768px) {
             .content-scroll-wrapper {
-                padding: 0.35rem !important;
+                padding: var(--sidebar-gap, 10px) !important;
                 background-color: #3b62f6 !important;
             }
 
             main,
             .content-scroll-wrapper > main,
             main.w-full {
-                min-height: calc(100vh - 0.7rem) !important;
-                min-height: calc(100dvh - 0.7rem) !important;
+                min-height: calc(100vh - (var(--sidebar-gap, 10px) * 2)) !important;
+                min-height: calc(100dvh - (var(--sidebar-gap, 10px) * 2)) !important;
                 width: 100% !important;
                 background-color: #ffffff !important;
                 border-radius: 1rem !important;
@@ -1153,11 +1158,11 @@
            (`style="margin: 0 0.75rem"` pada partial sidebar.blade.php).
            -------------------------------------------------------------------------- */
         .app-sidebar-drawer .nav-link {
-            margin-bottom: 16px !important;
+            margin: 0 0.75rem 16px 0.75rem !important;
         }
 
         .sidebar-brand {
-            padding: 1.5rem 1rem 1rem 1.25rem !important;
+            padding: 1.25rem 1rem 0.75rem 1rem !important;
             flex-shrink: 0 !important;
         }
 
@@ -1175,7 +1180,7 @@
         @media (max-width: 1023.98px) {
             /* Ramping sedikit di layar kecil agar konten tetap punya ruang napas */
             .sidebar-brand {
-                padding: 1rem 0.9rem 0.75rem 1rem !important;
+                padding: 1rem 1rem 0.75rem 1rem !important;
             }
         }
 
@@ -1323,7 +1328,7 @@
             padding: 2.25rem 2rem 1.75rem !important;
             max-width: 440px !important;
             width: 90% !important;
-            background: #ffffff !important;
+            background: #F8F3F0 !important;
             border: 0 !important;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
         }
@@ -1449,106 +1454,9 @@
             color: #ffffff !important;
         }
 
-        /* --------------------------------------------------------------------------
-           INDIKATOR PROGRESS UNDUH / EKSPOR
-           Dipasang otomatis oleh delegated listener di bawah pada semua tautan &
-           tombol yang menuju endpoint export/download/template/print-card.
-           -------------------------------------------------------------------------- */
-        .dl-spinner {
-            display: inline-block;
-            width: 0.9em;
-            height: 0.9em;
-            flex: 0 0 auto;
-            border: 2px solid currentColor;
-            border-right-color: transparent;
-            border-radius: 50%;
-            opacity: 0.85;
-            animation: dl-spin 0.7s linear infinite;
-            vertical-align: -0.12em;
-        }
-
-        @keyframes dl-spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .dl-spinner {
-                animation-duration: 2.4s;
-            }
-        }
-
-        /* Status aktif: tombol terkunci agar tidak terkirim dua kali */
-        .is-downloading {
-            position: relative !important;
-            pointer-events: none !important;
-            opacity: 0.72 !important;
-            cursor: progress !important;
-        }
-
-        /* ============================================================
-           PROGRESS BAR INTERAKTIF UNTUK TOMBOL DOWNLOAD
-           ============================================================ */
-        .btn-download-progress {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-download-progress .progress-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.45) 100%);
-            transition: width 0.15s ease-out;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .btn-download-progress .btn-content {
-            position: relative;
-            z-index: 2;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-download-progress .progress-text {
-            font-size: 0.85em;
-            font-weight: 600;
-            margin-left: 0.25rem;
-        }
-
-        /* Animasi shimmer pada progress bar */
-        .btn-download-progress .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Tombol saat proses download selesai */
-        .btn-download-progress.download-complete {
-            background-color: #10b981 !important;
-            border-color: #10b981 !important;
-        }
-
-        .btn-download-progress.download-complete .progress-fill {
-            width: 100% !important;
-            background: linear-gradient(90deg, #059669 0%, #10b981 100%);
-        }
     </style>
 </head>
-<body class="overflow-hidden bg-[#3b62f6] m-0 p-0" x-data="{ sidebarOpen: false }">
+<body class="overflow-hidden bg-[#044ABA] m-0 p-0" x-data="{ sidebarOpen: false }">
 
 {{-- Global Smart Loader Component --}}
 @include('components.loading-overlay')
@@ -1556,7 +1464,7 @@
 <!-- ========================================================================= -->
 <!-- 1. ROOT APPLICATION CANVAS                                                -->
 <!-- ========================================================================= -->
-<div class="flex h-screen w-screen overflow-hidden bg-[#3b62f6] m-0 p-0">
+<div class="flex h-screen w-screen overflow-hidden bg-[#044ABA] m-0 p-0">
 
     <!-- SIDEBAR DRAWER (Z-INDEX 9999999 - PALING DEPAN KETIKA DIBUKA) -->
     <aside :class="sidebarOpen ? 'mobile-sidebar-active' : ''"
@@ -1565,9 +1473,9 @@
         @include('partials.sidebar')
     </aside>
 
-    <!-- KONTEN UTAMA: Kotak Putih dengan Bezel Simetris -->
+    <!-- KONTEN UTAMA: Kotak Light Cream dengan Bezel Simetris -->
     <div class="flex-1 min-w-0 h-screen overflow-y-auto overflow-x-hidden content-scroll-wrapper box-border">
-        <main class="w-full bg-white rounded-none md:rounded-2xl shadow-none md:shadow-md p-4 sm:p-5 md:p-6 box-border flex flex-col relative">
+        <main class="w-full bg-[#F8F3F0] rounded-none md:rounded-2xl shadow-none md:shadow-md p-4 sm:p-5 md:p-6 box-border flex flex-col relative">
 
             <!-- HEADER UTAMA DENGAN TOMBOL GARIS TIGA DI POJOK KIRI ATAS UNTUK MOBILE/TABLET/IPAD -->
             <div class="app-header-bar d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2.5 sm:gap-3 mb-3 sm:mb-4 w-100">
@@ -1616,51 +1524,29 @@
 <!-- ========================================================================= -->
 @php
     $navUserRole = Auth::user()->role ?? 'admin';
+    $isNavAdmin = ($navUserRole === 'admin');
 
     // 1. Dashboard
-    $navDashboardUrl = match($navUserRole) {
-        'admin' => route('admin.dashboard'),
-        'guru' => route('guru.dashboard'),
-        'kesiswaan' => route('kesiswaan.dashboard'),
-        default => url('/'),
-    };
+    $navDashboardUrl = panel_route('dashboard');
     $isNavDashboardActive = request()->routeIs('*dashboard*');
 
     // 2. Kehadiran
-    $navKehadiranUrl = match($navUserRole) {
-        'admin' => route('admin.kehadiran'),
-        'guru' => route('guru.kehadiran'),
-        'kesiswaan' => route('kesiswaan.kehadiran'),
-        default => '#',
-    };
+    $navKehadiranUrl = panel_route('kehadiran');
     $isNavKehadiranActive = request()->routeIs('*kehadiran*');
 
     // 3. Presensi (Ikon QR Code: bx-qr-scan)
-    $navAbsensiUrl = match($navUserRole) {
-        'admin' => route('admin.absensi.index'),
-        'guru' => route('guru.absensi.index'),
-        'kesiswaan' => route('kesiswaan.absensi.index'),
-        default => '#',
-    };
+    $navAbsensiUrl = panel_route('absensi.index');
     $isNavAbsensiActive = (request()->routeIs('*absensi*') || request()->routeIs('*presensi*') || request()->routeIs('*scanner*') || request()->routeIs('*kiosk*')) && !$isNavKehadiranActive;
 
     // 4. Rekap
-    $navRekapUrl = match($navUserRole) {
-        'admin' => route('admin.rekap'),
-        'guru' => route('guru.rekap'),
-        'kesiswaan' => route('kesiswaan.rekap.index'),
-        default => '#',
-    };
+    $navRekapUrl = panel_route('rekap');
     $isNavRekapActive = request()->routeIs('*rekap*');
 
-    // 5. Pengaturan / Menu Tambahan
-    $navPengaturanUrl = match($navUserRole) {
-        'admin' => route('admin.settings.index'),
-        'guru' => route('guru.students'),
-        'kesiswaan' => route('kesiswaan.classes.index'),
-        default => '#',
-    };
-    $isNavPengaturanActive = request()->routeIs('*settings*') || request()->routeIs('*pengaturan*') || ($navUserRole === 'guru' && request()->routeIs('guru.students*')) || ($navUserRole === 'kesiswaan' && request()->routeIs('kesiswaan.classes*'));
+    // 5. Menu tambahan: Pengaturan (admin) / Kelas (guru)
+    $navPengaturanUrl = $isNavAdmin ? route('admin.settings.index') : panel_route('classes.index');
+    $isNavPengaturanActive = $isNavAdmin
+        ? (request()->routeIs('*settings*') || request()->routeIs('*pengaturan*'))
+        : (request()->routeIs('*classes*') || request()->routeIs('*kelas*'));
 @endphp
 
 <nav class="mobile-bottom-nav lg:hidden" aria-label="Menu Navigasi Bawah">
@@ -1714,10 +1600,10 @@
             <span class="mobile-nav-label">Rekap</span>
         </a>
 
-        <!-- 5. Pengaturan / Menu Tambahan -->
+        <!-- 5. Pengaturan (admin) / Kelas (guru) -->
         @php
-            $nav5Title = ($navUserRole === 'guru') ? 'Siswa' : (($navUserRole === 'kesiswaan') ? 'Kelas' : 'Pengaturan');
-            $nav5Icon = ($navUserRole === 'guru') ? 'bx bx-user' : (($navUserRole === 'kesiswaan') ? 'bx bx-buildings' : 'bx bx-cog');
+            $nav5Title = $isNavAdmin ? 'Pengaturan' : 'Kelas';
+            $nav5Icon = $isNavAdmin ? 'bx bx-cog' : 'bx bx-buildings';
         @endphp
         <a href="{{ $navPengaturanUrl }}" 
            class="mobile-nav-item {{ $isNavPengaturanActive ? 'active' : '' }}"
@@ -1751,241 +1637,7 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    /**
-     * Indikator proses pada Tombol Unduh / Ekspor
-     * --------------------------------------------
-     * Delegated listener (satu listener untuk seluruh halaman) sehingga tidak perlu
-     * menyisipkan markup baru di tiap view. Tombol yang dikenali:
-     *   - export-excel / export-pdf / export-csv
-     *   - download-qr / download-card
-     *   - print-card / print-cards / generate-qr
-     *   - template  (template Excel)
-     *
-     * Perbaikan: Menggunakan fetch-blob pattern agar spinner berhenti TEPAT
-     * saat file selesai ter-download, bukan sekadar timeout.
-     */
-    (function () {
-        'use strict';
-
-        var DOWNLOAD_RE = /(export-(excel|pdf|csv)|download-(qr|card)|print-?cards?|generate-qr|(^|\/)template($|[/?#]|\.))/i;
-        var FETCH_TIMEOUT = 120000; // 2 menit max untuk export besar
-        var timers = new WeakMap();
-
-        function endpointOf(element) {
-            if (!element) return '';
-
-            var candidates = [];
-
-            if (element.tagName === 'A') {
-                candidates.push(element.getAttribute('href'));
-            } else if (element.tagName === 'FORM') {
-                candidates.push(element.getAttribute('action'));
-            } else if (element.tagName === 'BUTTON') {
-                candidates.push(element.getAttribute('formaction'));
-                if (element.form) candidates.push(element.form.getAttribute('action'));
-            }
-
-            for (var i = 0; i < candidates.length; i++) {
-                var value = candidates[i];
-                if (value && value.trim() && value.charAt(0) !== '#' && value.indexOf('javascript:') !== 0) {
-                    return value.trim();
-                }
-            }
-
-            return '';
-        }
-
-        function isDownloadAction(element, event) {
-            if (!element || element.hasAttribute('data-no-spinner')) return false;
-            if (element.getAttribute('target') === '_blank') return false;
-            if (event && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)) return false;
-
-            var endpoint = endpointOf(element);
-            if (!endpoint) return false;
-
-            return DOWNLOAD_RE.test(endpoint);
-        }
-
-        function spinnerFor(element) {
-            var spinner = document.createElement('span');
-            spinner.className = 'dl-spinner';
-            spinner.setAttribute('aria-hidden', 'true');
-            spinner.style.display = 'inline-block';
-            return spinner;
-        }
-
-        function startLoading(element) {
-            if (element.classList.contains('is-downloading')) return;
-
-            element.classList.add('is-downloading');
-            element.setAttribute('aria-busy', 'true');
-
-            var icon = element.querySelector(':scope > i, :scope > svg');
-            var spinner = spinnerFor(element);
-            if (icon && icon.parentNode === element) {
-                icon.parentNode.insertBefore(spinner, icon.nextSibling);
-            } else {
-                element.insertBefore(spinner, element.firstChild);
-            }
-
-            // Safety timeout — stop spinner setelah 2 menit jika sesuatu gagal
-            var timer = setTimeout(function () {
-                stopLoading(element);
-            }, FETCH_TIMEOUT);
-
-            timers.set(element, timer);
-        }
-
-        function stopLoading(element) {
-            if (!element || !element.classList.contains('is-downloading')) return;
-
-            var timer = timers.get(element);
-            if (timer) {
-                clearTimeout(timer);
-                timers.delete(element);
-            }
-
-            element.classList.remove('is-downloading');
-            element.removeAttribute('aria-busy');
-
-            var spinner = element.querySelector('.dl-spinner');
-            if (spinner && spinner.parentNode) {
-                spinner.parentNode.removeChild(spinner);
-            }
-        }
-
-        function triggerDownload(blob, filename) {
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = filename || 'download';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            // Bersihkan object URL setelah delay untuk memastikan download sudah mulai
-            setTimeout(function () {
-                URL.revokeObjectURL(url);
-            }, 5000);
-        }
-
-        function getFilenameFromDisposition(disposition) {
-            if (!disposition) return null;
-            var match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (match && match[1]) {
-                return match[1].replace(/['"]/g, '');
-            }
-            return null;
-        }
-
-        function fetchAndDownload(url, method, formData, element) {
-            startLoading(element);
-
-            var options = {
-                method: method || 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            };
-
-            if (method === 'POST' && formData) {
-                options.body = formData;
-            }
-
-            fetch(url, options)
-                .then(function(response) {
-                    if (!response.ok) throw new Error('Download gagal: HTTP ' + response.status);
-                    var disposition = response.headers.get('Content-Disposition');
-                    var filename = getFilenameFromDisposition(disposition) || 'download';
-                    return response.blob().then(function(blob) {
-                        return { blob: blob, filename: filename };
-                    });
-                })
-                .then(function(result) {
-                    triggerDownload(result.blob, result.filename);
-                    stopLoading(element);
-                })
-                .catch(function(error) {
-                    console.error('Download error:', error);
-                    stopLoading(element);
-                    // Fallback: navigasi normal jika fetch gagal
-                    if (method === 'GET') {
-                        window.location.href = url;
-                    }
-                });
-        }
-
-        // Tangkap klik pada link download
-        document.addEventListener('click', function (event) {
-            if (event.defaultPrevented) return;
-
-            var target = event.target;
-            if (!target || typeof target.closest !== 'function') return;
-
-            var link = target.closest('a');
-            if (link && isDownloadAction(link, event)) {
-                event.preventDefault();
-                var url = endpointOf(link);
-                if (url) {
-                    fetchAndDownload(url, 'GET', null, link);
-                }
-                return;
-            }
-
-            var button = target.closest('button[type="submit"], input[type="submit"]');
-            if (button && isDownloadAction(button, event)) {
-                event.preventDefault();
-                var form = button.form;
-                if (form) {
-                    var formUrl = form.getAttribute('action');
-                    if (formUrl) {
-                        fetchAndDownload(formUrl, 'POST', new FormData(form), button);
-                    }
-                }
-            }
-        }, true);
-
-        // Tangkap submit form (mis. tombol "Cetak Kartu" berformulir POST)
-        document.addEventListener('submit', function (event) {
-            if (event.defaultPrevented) return;
-
-            var form = event.target;
-            if (!form || form.tagName !== 'FORM' || !isDownloadAction(form, event)) return;
-
-            var submitter = event.submitter;
-            if (!submitter || !isDownloadAction(submitter, event)) return;
-
-            event.preventDefault();
-            var formUrl = form.getAttribute('action');
-            if (formUrl) {
-                fetchAndDownload(formUrl, 'POST', new FormData(form), submitter);
-            }
-        }, true);
-
-        // Pemulihan state saat halaman kembali dari cache navigasi (bfcache)
-        window.addEventListener('pageshow', function (event) {
-            if (event.persisted) {
-                document.querySelectorAll('.is-downloading').forEach(stopLoading);
-            }
-        });
-
-        document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'visible') {
-                document.querySelectorAll('.is-downloading').forEach(stopLoading);
-            }
-        });
-
-        // API publik untuk dipakai view bila butuh spinner manual
-        window.PresensiDownload = {
-            start: startLoading,
-            stop: stopLoading,
-            matches: function (url) {
-                return !!url && DOWNLOAD_RE.test(url);
-            }
-        };
-    })();
-</script>
+<script src="{{ asset('js/instant-download.js') }}"></script>
 <script>
     /**
      * Universal Soft UI Delete Confirmation Modal
@@ -2032,6 +1684,5 @@
 </script>
 @yield('scripts')
 @stack('scripts')
-@endstack
 </body>
 </html>

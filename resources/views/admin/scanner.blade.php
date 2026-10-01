@@ -19,6 +19,9 @@
     <!-- HTML5 QR Code Scanner (lokal, 2.3.8) -->
     <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 
+    <!-- Presensi Unified Design Tokens -->
+    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}">
+
     <style>
         :root {
             /* Latar halaman = foto sekolah (public/images/bg.webp) + kabut putih tipis,
@@ -700,7 +703,7 @@
 
     <!-- 3. BAR BAWAH: Mentok Kiri & Mentok Kanan -->
     <div class="kiosk-bottom-bar">
-        <a href="{{ route('admin.absensi.index') }}" class="btn-kiosk-action kiosk-exit-btn" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
+        <a href="{{ panel_route('absensi.index') }}" class="btn-kiosk-action kiosk-exit-btn" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
             <i class='bx bx-log-out'></i>
             <span class="kiosk-action-text">Keluar Mode Gerbang</span>
         </a>
@@ -714,7 +717,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="{{ asset('js/scanner.js') }}" data-process-route="{{ route('admin.scanner.process') }}"></script>
+    <script src="{{ asset('js/scanner.js') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 
 </body>
 </html>

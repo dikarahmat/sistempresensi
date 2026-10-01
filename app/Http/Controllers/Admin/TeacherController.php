@@ -96,11 +96,11 @@ class TeacherController extends Controller
             SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
         }
 
-        return redirect()->route('admin.guru.index')->with('success', "Data Guru & Wali Kelas '{$teacher->name}' berhasil ditambahkan!");
+        return redirect()->route('admin.guru.index')->with('success', "Data Guru '{$teacher->name}' berhasil ditambahkan!");
     }
 
     /**
-     * Update Guru & Penugasan Wali Kelas.
+     * Update Guru & Penugasan Kelas.
      */
     public function update(Request $request, Teacher $teacher): RedirectResponse
     {
@@ -168,7 +168,7 @@ class TeacherController extends Controller
         try {
             $name = $teacher->name;
 
-            // Lepaskan penugasan wali kelas
+            // Lepaskan penugasan kelas
             SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
 
             // Soft delete: data masih bisa dipulihkan dari halaman Arsip
@@ -203,7 +203,7 @@ class TeacherController extends Controller
             Teacher::withTrashed()->forceDelete();
 
             DB::commit();
-            return redirect()->route('admin.guru.index')->with('success', 'Seluruh data guru dan penugasan wali kelas berhasil dibersihkan!');
+            return redirect()->route('admin.guru.index')->with('success', 'Seluruh data guru beserta penugasan kelasnya berhasil dibersihkan!');
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -216,9 +216,10 @@ class TeacherController extends Controller
      */
     public function downloadTemplate()
     {
-        return Excel::download(
+        return \App\Services\DownloadCacheService::downloadTemplate(
+            'teachers',
             new TeacherTemplateExport(),
-            'Template_Wali_Kelas.xlsx'
+            'Template_Guru.xlsx'
         );
     }
 
@@ -292,7 +293,7 @@ class TeacherController extends Controller
         try {
             $teacherName = $teacher->name;
 
-            // Lepaskan penugasan wali kelas
+            // Lepaskan penugasan kelas
             SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
 
             // Hapus permanen data guru dari database

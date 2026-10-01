@@ -5,7 +5,7 @@
 @section('page_subtitle', 'Formulir pendaftaran dan registrasi siswa baru')
 
 @section('page_header_right')
-<a href="{{ route('admin.students.index') }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;">
+<a href="{{ panel_route('students.index') }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;">
     <i class='bx bx-chevron-left'></i> Kembali ke Data Siswa
 </a>
 @endsection
@@ -29,7 +29,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.students.store') }}" method="POST">
+    <form action="{{ panel_route('students.store') }}" method="POST">
         @csrf
         <div class="mb-3">
             <label class="form-label small fw-semibold">Nama Lengkap Siswa</label>
@@ -83,7 +83,7 @@
         </div>
 
         <div class="d-flex justify-content-end gap-2">
-            <a href="{{ route('admin.students.index') }}" class="btn btn-light border px-4 fw-semibold">Batal</a>
+            <a href="{{ panel_route('students.index') }}" class="btn btn-light border px-4 fw-semibold">Batal</a>
             <button type="submit" class="btn btn-primary px-4 fw-semibold">Simpan Siswa</button>
         </div>
     </form>

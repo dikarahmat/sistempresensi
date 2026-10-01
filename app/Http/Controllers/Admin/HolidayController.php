@@ -25,7 +25,8 @@ class HolidayController extends Controller
      */
     public function template()
     {
-        return Excel::download(
+        return \App\Services\DownloadCacheService::downloadTemplate(
+            'holidays',
             new HolidayTemplateExport(),
             'Template_Hari_Libur.xlsx'
         );

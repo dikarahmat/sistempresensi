@@ -146,7 +146,7 @@ function resetFilter() {
       </div>
     </div>
 
-    <!-- 4. Tabel Histori Kehadiran (Kolom: Kelas, Tahun Ajaran, Wali Kelas, Total Hari, Aksi) -->
+    <!-- 4. Tabel Histori Kehadiran (Kolom: Kelas, Tahun Ajaran, Guru Kelas, Total Hari, Aksi) -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
@@ -155,7 +155,7 @@ function resetFilter() {
               <th class="py-3.5 px-4 text-center w-12">No.</th>
               <th class="py-3.5 px-4">Kelas</th>
               <th class="py-3.5 px-4">Tahun Ajaran</th>
-              <th class="py-3.5 px-4">Wali Kelas</th>
+              <th class="py-3.5 px-4">Guru Kelas</th>
               <th class="py-3.5 px-4 text-center">Total Hari</th>
               <th class="py-3.5 px-4 text-center">Aksi</th>
             </tr>
@@ -179,7 +179,7 @@ function resetFilter() {
               </td>
               <td class="py-3.5 px-4">
                 <div class="font-semibold text-slate-800">{{ item.teacher }}</div>
-                <div class="text-xs text-slate-400">Wali Kelas</div>
+                <div class="text-xs text-slate-400">Guru Kelas</div>
               </td>
               <td class="py-3.5 px-4 text-center">
                 <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full font-bold text-sm">

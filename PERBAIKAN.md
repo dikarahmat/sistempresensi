@@ -43,7 +43,6 @@ Audit telah dilakukan terhadap seluruh project Sistem Presensi SMP. Berikut adal
 - Menambahkan validasi ekstensi file
 - File yang diperbaiki:
   - `app/Http/Controllers/Admin/AttendanceController.php`
-  - `app/Http/Controllers/WaliKelas/WaliKelasPortalController.php`
 
 ### 1.5 Rate Limiting - DITAMBAHKAN
 **Masalah:** Rate limiting tidak konsisten pada endpoint sensitif.
@@ -61,11 +60,11 @@ Audit telah dilakukan terhadap seluruh project Sistem Presensi SMP. Berikut adal
 ## 2. PERFORMANCE FIXES
 
 ### 2.1 N+1 Query - DIPERBAIKI
-**Masalah:** Query dalam loop di `WaliKelasPortalController::getTeacherAndClass()`.
+**Masalah:** Query dalam loop saat mengambil data rombel.
 
 **Perbaikan:**
 - Mengganti query dalam loop dengan `withCount` untuk menghindari N+1
-- File: `app/Http/Controllers/WaliKelas/WaliKelasPortalController.php`
+- File: `app/Http/Controllers/Admin/AttendanceController.php`
 
 ### 2.2 Database Indexes - DITAMBAHKAN
 **Masalah:** Beberapa kolom yang sering digunakan untuk query tidak memiliki index.

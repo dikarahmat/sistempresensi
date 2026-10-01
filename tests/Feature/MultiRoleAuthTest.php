@@ -46,15 +46,7 @@ class MultiRoleAuthTest extends TestCase
             ]
         );
 
-        // Siapkan akun Kesiswaan jika belum ada
-        User::updateOrCreate(
-            ['email' => 'kesiswaan@smppresensipgri.sch.id'],
-            [
-                'name' => 'Staf Bagian Kesiswaan',
-                'password' => Hash::make('password123'),
-                'role' => 'kesiswaan',
-            ]
-        );
+        // Catatan: sistem hanya memiliki dua role, yaitu admin dan guru.
     }
 
     public function test_login_page_renders_universal_form(): void
@@ -92,35 +84,29 @@ class MultiRoleAuthTest extends TestCase
         $this->assertEquals('guru', auth()->user()->role);
     }
 
-    public function test_kesiswaan_can_login_and_is_redirected_to_kesiswaan_dashboard(): void
+    public function test_only_admin_and_guru_roles_are_supported(): void
     {
-        $response = $this->post('/login/kesiswaan', [
-            'login' => 'kesiswaan@smppresensipgri.sch.id',
-            'password' => 'password123',
-        ]);
+        // Role di luar admin & guru sudah tidak dikenali sistem (dibersihkan total).
+        $this->assertEquals(0, User::whereNotIn('role', ['admin', 'guru'])->count());
 
-        $response->assertRedirect(route('kesiswaan.dashboard'));
-        $this->assertAuthenticated();
-        $this->assertEquals('kesiswaan', auth()->user()->role);
+        // Root route mengarahkan admin ke /admin/dashboard dan guru ke /guru/dashboard.
+        $admin = User::where('role', 'admin')->first();
+        $this->actingAs($admin)->get('/')->assertRedirect(route('admin.dashboard'));
+
+        $guru = User::where('role', 'guru')->first();
+        $this->actingAs($guru)->get('/')->assertRedirect(route('guru.dashboard'));
     }
 
     public function test_role_security_middleware_aborts_403_for_unauthorized_panels(): void
     {
         $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
         $guru = User::where('role', 'guru')->first();
-        $kesiswaan = User::where('email', 'kesiswaan@smppresensipgri.sch.id')->first();
 
-        // 1. Admin tidak boleh masuk ke panel guru & panel kesiswaan -> 403
+        // 1. Admin tidak boleh masuk ke panel guru -> 403
         $this->actingAs($admin)->get('/guru/dashboard')->assertStatus(403);
-        $this->actingAs($admin)->get('/kesiswaan/dashboard')->assertStatus(403);
 
-        // 2. Guru tidak boleh masuk ke panel admin & panel kesiswaan -> 403
+        // 2. Guru tidak boleh masuk ke panel admin -> 403
         $this->actingAs($guru)->get('/admin/dashboard')->assertStatus(403);
-        $this->actingAs($guru)->get('/kesiswaan/dashboard')->assertStatus(403);
-
-        // 3. Kesiswaan tidak boleh masuk ke panel admin & panel guru -> 403
-        $this->actingAs($kesiswaan)->get('/admin/dashboard')->assertStatus(403);
-        $this->actingAs($kesiswaan)->get('/guru/dashboard')->assertStatus(403);
     }
 
     public function test_smart_login_endpoint_auto_routes_based_on_credentials(): void
@@ -134,16 +120,7 @@ class MultiRoleAuthTest extends TestCase
 
         $this->post('/logout');
 
-        // 2. Universal login kesiswaan via email
-        $responseKesiswaan = $this->post('/login', [
-            'login' => 'kesiswaan@smppresensipgri.sch.id',
-            'password' => 'password123',
-        ]);
-        $responseKesiswaan->assertRedirect(route('kesiswaan.dashboard'));
-
-        $this->post('/logout');
-
-        // 3. Universal login admin via email
+        // 2. Universal login admin via email
         $responseAdmin = $this->post('/login', [
             'login' => 'admin@smppresensipgri.sch.id',
             'password' => 'password123',

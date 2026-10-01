@@ -181,7 +181,11 @@ class SchoolClassController extends Controller
 
     public function template()
     {
-        return $this->downloadTemplate();
+        return \App\Services\DownloadCacheService::downloadTemplate(
+            'classes',
+            new SchoolClassTemplateExport(),
+            'Template_Kelas.xlsx'
+        );
     }
 
     public function import(Request $request): RedirectResponse

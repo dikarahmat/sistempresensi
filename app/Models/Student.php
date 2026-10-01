@@ -15,6 +15,9 @@ class Student extends Model
     use HasFactory;
     use SoftDeletes; // <-- 2. AKTIFKAN TRAIT SOFTDELETES DI SINI!
 
+    public ?string $qr_base64 = null;
+    public ?string $photo_base64 = null;
+
     protected $fillable = [
         'nis',
         'nisn',
@@ -56,6 +59,14 @@ class Student extends Model
             }
         });
 
+        static::saved(function () {
+            \App\Services\DownloadCacheService::clearCardsCache();
+        });
+
+        static::restored(function () {
+            \App\Services\DownloadCacheService::clearCardsCache();
+        });
+
         static::deleting(function (Student $student) {
             // Hapus file foto dari storage jika ada
             if ($student->photo && Storage::disk('public')->exists($student->photo)) {
@@ -66,6 +77,8 @@ class Student extends Model
             $student->attendances()->each(function (Attendance $attendance) {
                 $attendance->delete();
             });
+
+            \App\Services\DownloadCacheService::clearCardsCache();
         });
     }
 

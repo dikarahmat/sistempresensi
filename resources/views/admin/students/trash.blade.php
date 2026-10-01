@@ -119,7 +119,7 @@
                         <td class="text-center text-nowrap px-3">
                             <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                 <!-- Tombol Restore -->
-                                <form action="{{ route('admin.students.restore', $student->id) }}" method="POST" class="d-inline">
+                                <form action="{{ panel_route('students.restore', $student->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn-restore" title="Pulihkan">
                                         Pulihkan
@@ -130,7 +130,7 @@
                                 <button type="button" class="btn-force-delete" title="Hapus Permanen" onclick="confirmForceDelete('{{ $student->id }}', '{{ addslashes($student->name) }}')">
                                     Hapus Permanen
                                 </button>
-                                <form id="forceDeleteForm-{{ $student->id }}" action="{{ route('admin.students.force-delete', $student->id) }}" method="POST" class="d-none">
+                                <form id="forceDeleteForm-{{ $student->id }}" action="{{ panel_route('students.force-delete', $student->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -172,7 +172,7 @@
     </div>
     @endif
 
-    <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all') }}" method="POST" class="d-none">
+    <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>

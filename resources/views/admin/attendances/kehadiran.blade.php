@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Catatan Kehadiran')
 @section('page_title', 'Catatan Kehadiran')
@@ -69,7 +69,7 @@
     }
 
     /* --------------------------------------------------------------------
-       KOLOM WALI KELAS — solusi final:
+       KOLOM GURU KELAS — solusi final:
        - <td> : text-align CENTER -> memposisikan BLOK sebagai satu
                 kesatuan tetap di tengah kolom, di bawah header.
        - .wali-kelas-inner : lebar TETAP & SAMA untuk semua baris, dengan
@@ -77,7 +77,7 @@
                 untuk setiap baris, titik mulai huruf (mis. huruf "B" pada
                 Bianca) akan identik untuk semua baris — tidak lagi geser
                 sendiri-sendiri kayak sebelumnya, tapi tetap terlihat
-                center sebagai grup di bawah "WALI KELAS".
+                center sebagai grup di bawah "GURU KELAS".
        - overflow: visible + white-space: nowrap -> nama yang lebih
                 panjang dari lebar acuan tetap tampil utuh (tidak terpotong),
                 cuma "meluber" sedikit ke kanan, bukan ke luar dari titik
@@ -195,7 +195,7 @@
 @section('content')
     <!-- Filter Search & Kelas (tanpa label, dropdown full-width di mobile) -->
     <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-white">
-        <form method="GET" action="{{ route('admin.kehadiran') }}" class="d-flex flex-column flex-md-row gap-2">
+        <form method="GET" action="{{ panel_route('kehadiran') }}" class="d-flex flex-column flex-md-row gap-2">
             <div class="input-group">
                 <input type="text" name="search" class="form-control form-control-sm filter-input" placeholder="Cari nama atau NIS..." value="{{ $search }}" aria-label="Cari siswa">
                 <button type="submit" class="btn btn-sm btn-light border" title="Cari" aria-label="Cari">
@@ -214,7 +214,7 @@
             </div>
             @if(request('search') || request('class_filter'))
             <div class="flex-md-shrink-0 align-self-start">
-                <a href="{{ route('admin.kehadiran') }}" class="btn btn-sm btn-light border rounded-3">Reset</a>
+                <a href="{{ panel_route('kehadiran') }}" class="btn btn-sm btn-light border rounded-3">Reset</a>
             </div>
             @endif
         </form>
@@ -258,7 +258,7 @@
                         <td class="text-center fw-normal" style="color: #7e22ce;">{{ $item->izin }}</td>
                         <td class="text-center fw-normal" style="color: #ef4444;">{{ $item->alfa }}</td>
                         <td class="text-center text-nowrap">
-                            <a href="{{ route('admin.kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="Lihat Riwayat {{ $item->name }}">
+                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="Lihat Riwayat {{ $item->name }}">
                                 Lihat
                             </a>
                         </td>

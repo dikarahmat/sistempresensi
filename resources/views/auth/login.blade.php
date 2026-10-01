@@ -19,9 +19,9 @@
 
     <style>
         :root {
-            --royal-blue: #3b62f6;
-            --royal-blue-hover: #254fd9;
-            --royal-blue-light: #eff4ff;
+            --primary-blue: #3b62f6;
+            --primary-blue-hover: #254fd9;
+            --primary-blue-light: #eff4ff;
             --text-main: #0f172a;
             --text-muted: #64748b;
         }
@@ -230,7 +230,7 @@
             font-weight: 800;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: var(--royal-blue);
+            color: var(--primary-blue);
             margin-bottom: 0.25rem;
             display: block;
         }
@@ -277,7 +277,7 @@
         }
 
         .input-box-wrapper:focus-within {
-            border-color: var(--royal-blue);
+            border-color: var(--primary-blue);
             background: #ffffff;
             box-shadow: 0 0 0 3px rgba(59, 98, 246, 0.12);
         }
@@ -297,7 +297,7 @@
         }
 
         .input-box-wrapper:focus-within .input-icon-box {
-            color: var(--royal-blue);
+            color: var(--primary-blue);
         }
 
         .input-box-wrapper.is-invalid-field .input-icon-box {
@@ -410,7 +410,7 @@
             border-radius: 4px;
             border: 1.5px solid #cbd5e1;
             cursor: pointer;
-            accent-color: var(--royal-blue);
+            accent-color: var(--primary-blue);
             margin: 0;
         }
 
@@ -426,7 +426,7 @@
         /* Tombol Login */
 
         .btn-submit-action {
-            background-color: var(--royal-blue);
+            background-color: var(--primary-blue);
             color: #ffffff;
             border: none;
             border-radius: 12px;
@@ -444,7 +444,7 @@
         }
 
         .btn-submit-action:hover {
-            background-color: var(--royal-blue-hover);
+            background-color: var(--primary-blue-hover);
             box-shadow: 0 6px 16px rgba(59, 98, 246, 0.38);
             color: #ffffff;
             transform: translateY(-1px);

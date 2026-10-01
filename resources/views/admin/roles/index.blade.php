@@ -43,10 +43,6 @@
         border-top: 3.5px solid #3b62f6;
     }
 
-    .role-card-clean.highlight-kesiswaan {
-        border-top: 3.5px solid #10b981;
-    }
-
     .role-card-clean.highlight-guru {
         border-top: 3.5px solid #8b5cf6;
     }
@@ -173,12 +169,12 @@
 @section('content')
 
 <!-- ============================================================ -->
-<!-- 1. TIGA ROLE UTAMA (CARD LIST MINIMALIS & RINGKAS)          -->
+<!-- 1. DUA ROLE UTAMA (ADMIN & GURU)                            -->
 <!-- ============================================================ -->
 <div class="row g-3 mb-4">
 
     <!-- Card 1: Administrator -->
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="role-card-clean highlight-admin">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="d-flex align-items-center gap-2.5">
@@ -226,59 +222,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Card 2: Bagian Kesiswaan -->
-    <div class="col-lg-4">
-        <div class="role-card-clean highlight-kesiswaan">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div class="d-flex align-items-center gap-2.5">
-                    <div class="role-icon-box bg-emerald-50 text-emerald-600">
-                        <i class='bx bx-user-check'></i>
-                    </div>
-                    <div>
-                        <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">Kesiswaan</h5>
-                        <span class="text-slate-400" style="font-size: 0.74rem;">{{ $roleCounts['kesiswaan'] ?? 1 }} Akun Aktif</span>
-                    </div>
-                </div>
-                <span class="status-badge-clean status-operational">
-                    Operasional & Rekap
-                </span>
-            </div>
-
-            <p class="text-slate-500 mb-3" style="font-size: 0.8rem; line-height: 1.45;">
-                Fokus pada pemantauan kedisiplinan harian, rekapitulasi kehadiran sekolah, dan pelaporan berkala.
-            </p>
-
-            <div class="border-top border-slate-100 pt-3 flex-grow-1">
-                <span class="text-slate-400 fw-bold d-block text-uppercase mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">Cakupan Izin Akses:</span>
-                <ul class="permission-simple-list">
-                    <li>
-                        <i class='bx bx-check-circle text-emerald-600'></i>
-                        <span>Dashboard monitoring kehadiran siswa real-time</span>
-                    </li>
-                    <li>
-                        <i class='bx bx-check-circle text-emerald-600'></i>
-                        <span>Input dan verifikasi data presensi harian siswa</span>
-                    </li>
-                    <li>
-                        <i class='bx bx-check-circle text-emerald-600'></i>
-                        <span>Melihat data pokok siswa, rombel kelas, & wali kelas</span>
-                    </li>
-                    <li>
-                        <i class='bx bx-check-circle text-emerald-600'></i>
-                        <span>Rekapitulasi presensi lengkap tingkat sekolah</span>
-                    </li>
-                    <li>
-                        <i class='bx bx-check-circle text-emerald-600'></i>
-                        <span>Ekspor laporan format Excel, CSV, dan dokumen PDF</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card 3: Walikelas / Guru -->
-    <div class="col-lg-4">
+    <!-- Card 2: Guru -->
+    <div class="col-lg-6">
         <div class="role-card-clean highlight-guru">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="d-flex align-items-center gap-2.5">
@@ -286,17 +231,17 @@
                         <i class='bx bx-id-card'></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">Walikelas / Guru</h5>
+                        <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">Guru</h5>
                         <span class="text-slate-400" style="font-size: 0.74rem;">{{ $roleCounts['guru'] ?? 0 }} Akun Aktif</span>
                     </div>
                 </div>
                 <span class="status-badge-clean status-rombel">
-                    Rombel Binaan
+                    Read-Only
                 </span>
             </div>
 
             <p class="text-slate-500 mb-3" style="font-size: 0.8rem; line-height: 1.45;">
-                Pengelolaan kehadiran siswa khusus pada rombongan belajar (kelas) yang dibina masing-masing guru.
+                Portal Dashboard Guru dengan tampilan identik admin: pemantauan seluruh data sekolah dengan hak akses terbatas (read-only).
             </p>
 
             <div class="border-top border-slate-100 pt-3 flex-grow-1">
@@ -304,23 +249,23 @@
                 <ul class="permission-simple-list">
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Portal dashboard walikelas sesuai kelas binaan</span>
+                        <span>Portal Dashboard Guru dengan tampilan identik admin</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Scanner QR presensi kamera/webcam di ruang kelas</span>
+                        <span>Scanner QR presensi & mode gerbang (kiosk) penuh fungsional</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Catat keterangan siswa sakit, izin, dan alpa harian</span>
+                        <span>Melihat seluruh data siswa, kelas, kehadiran, & rekap sekolah</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Rekap kehadiran & ekspor laporan rombel binaan</span>
+                        <span>Rekap kehadiran & unduh laporan Excel/PDF seluruh kelas</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Unduh & cetak kartu QR presensi siswa kelas binaan</span>
+                        <span>Detail siswa, unduh QR, & cetak kartu presensi massal</span>
                     </li>
                 </ul>
             </div>
@@ -345,11 +290,10 @@
         <table class="matrix-table">
             <thead>
                 <tr>
-                    <th style="width: 24%;">Modul Sistem</th>
-                    <th style="width: 34%;">Cakupan Fungsi Fitur</th>
-                    <th style="width: 14%; text-align: center;">Admin</th>
-                    <th style="width: 14%; text-align: center;">Kesiswaan</th>
-                    <th style="width: 14%; text-align: center;">Walikelas / Guru</th>
+                    <th style="width: 26%;">Modul Sistem</th>
+                    <th style="width: 44%;">Cakupan Fungsi Fitur</th>
+                    <th style="width: 15%; text-align: center;">Admin</th>
+                    <th style="width: 15%; text-align: center;">Guru</th>
                 </tr>
             </thead>
             <tbody>
@@ -368,10 +312,7 @@
                         <span class="status-badge-clean status-full-access">Full Akses</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-operational">Monitoring</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="status-badge-clean status-rombel">Rombel Binaan</span>
+                        <span class="status-badge-clean status-rombel">Full Read-Only</span>
                     </td>
                 </tr>
 
@@ -390,10 +331,7 @@
                         <span class="status-badge-clean status-full-access">Full Akses</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-operational">Input & Pantau</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="status-badge-clean status-rombel">Scan & Catat Kelas</span>
+                        <span class="status-badge-clean status-rombel">Scan &amp; Kiosk</span>
                     </td>
                 </tr>
 
@@ -412,10 +350,7 @@
                         <span class="status-badge-clean status-full-access">Semua Kelas</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-operational">Semua Kelas</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="status-badge-clean status-rombel">Kelas Binaan</span>
+                        <span class="status-badge-clean status-rombel">Semua Kelas</span>
                     </td>
                 </tr>
 
@@ -428,16 +363,13 @@
                         </div>
                     </td>
                     <td class="text-slate-600">
-                        Tahun ajaran, kalender libur, data siswa, mutasi kelas, kenaikan kelas, dan penugasan wali kelas.
+                        Tahun ajaran, kalender libur, data siswa, mutasi kelas, kenaikan kelas, dan penugasan kelas.
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-full-access">Kelola Penuh</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-operational">Data Siswa & Kelas</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="status-badge-clean status-rombel">Data Rombel Binaan</span>
+                        <span class="status-badge-clean status-rombel">Lihat Data</span>
                     </td>
                 </tr>
 
@@ -454,9 +386,6 @@
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-full-access">Otoritas Penuh</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="status-badge-clean status-no-access">Tidak Ada</span>
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-no-access">Tidak Ada</span>
@@ -501,7 +430,7 @@
             timeZone: 'Asia/Jakarta'
         });
 
-        clockEl.textContent = `${dateFormatted} • ${timeFormatted} WIB`;
+        clockEl.textContent = `${dateFormatted} Ã¢â‚¬Â¢ ${timeFormatted} WIB`;
     }
 
     setInterval(updateClockWidget, 1000);

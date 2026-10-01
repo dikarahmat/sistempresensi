@@ -196,7 +196,7 @@ class AttendanceController extends Controller
                 'id' => $item['id'],
                 'name' => $item['nama_kelas'],
                 'grade' => $item['tingkat'],
-                'teacher' => (object) ['name' => $item['wali_kelas']],
+                'teacher' => (object) ['name' => $item['guru_kelas']],
                 'total_students' => $item['total_siswa'],
                 'sudah_absen' => $item['sudah_absen'],
                 'belum_absen' => $item['belum'],

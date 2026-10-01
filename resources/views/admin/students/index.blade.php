@@ -239,10 +239,12 @@
     </div>
     @endif
 
-    <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all') }}" method="POST" class="d-none">
+    @if(is_admin())
+    <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
+    @endif
 
     <!-- KARTU UTAMA DATA SISWA -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
@@ -252,7 +254,7 @@
             <div class="action-bar-section">
                 
                 <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas -->
-                <form method="GET" action="{{ route('admin.students.index') }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
+                <form method="GET" action="{{ panel_route('students.index') }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
                     <!-- Search Bar -->
                     <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
                         <input type="text" 
@@ -281,7 +283,7 @@
 
                     @if(request('search') || request('class_id'))
                     <div class="w-100 w-md-auto">
-                        <a href="{{ route('admin.students.index') }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
+                        <a href="{{ panel_route('students.index') }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
                             Reset
                         </a>
                     </div>
@@ -303,7 +305,7 @@
                         <span>Tambah Siswa</span>
                     </button>
 
-                    <a href="{{ route('admin.students.trash') }}" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Arsip Siswa">
+                    <a href="{{ panel_route('students.trash') }}" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Arsip Siswa">
                         <span>Arsip</span>
                     </a>
                     @endif
@@ -341,17 +343,17 @@
                         <td class="text-start text-secondary d-none d-md-table-cell">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
                         <td class="text-center">
                             <div class="crud-center-wrapper">
-                                <a href="{{ route('admin.students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail">
+                                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail">
                                     Detail
                                 </a>
                                 @if(Auth::check() && Auth::user()->role === 'admin')
-                                <a href="{{ route('admin.students.edit', $student->id) }}" class="btn-row-action action-edit" title="Edit">
+                                <a href="{{ panel_route('students.edit', $student->id) }}" class="btn-row-action action-edit" title="Edit">
                                     Edit
                                 </a>
                                 <button type="button" class="btn-row-action action-delete" title="Hapus" onclick="confirmDeleteStudent('{{ $student->id }}', '{{ addslashes($student->nama ?? $student->name) }}')">
                                     Hapus
                                 </button>
-                                <form id="deleteStudentForm-{{ $student->id }}" action="{{ route('admin.students.destroy', $student->id) }}" method="POST" class="d-none">
+                                <form id="deleteStudentForm-{{ $student->id }}" action="{{ panel_route('students.destroy', $student->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -391,7 +393,7 @@
                 <h5 class="fw-bold mb-0">Cetak Kartu Presensi Massal</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.students.print-cards') }}" method="POST">
+            <form action="{{ panel_route('students.print-cards') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <p class="text-secondary small mb-3">
@@ -429,7 +431,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" data-download>
                         <i class='bx bx-download me-1'></i> Generate &amp; Unduh PDF Kartu
                     </button>
                 </div>
@@ -438,6 +440,7 @@
     </div>
 </div>
 
+@if(is_admin())
 <!-- MODAL TAMBAH SISWA -->
 <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -446,7 +449,7 @@
                 <h5 class="fw-bold mb-0">Tambah Siswa Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.students.store') }}" method="POST">
+            <form action="{{ panel_route('students.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
@@ -523,14 +526,14 @@
                 <h5 class="fw-bold mb-0">Import Data Siswa Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.students.import') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ panel_route('students.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             Format kolom file Excel: <strong>NIS, NISN, Nama Lengkap, Kelas, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, Alamat, Nama Wali, No WhatsApp</strong> (.xlsx atau .csv)
                         </div>
-                        <a href="{{ route('admin.students.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
+                        <a href="{{ panel_route('students.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100" data-download>
                             <i class='bx bx-download me-1'></i> Unduh Template Excel (.xlsx) Kosong
                         </a>
                     </div>
@@ -545,6 +548,7 @@
         </div>
     </div>
 </div>
+@endif
 
 @endsection
 

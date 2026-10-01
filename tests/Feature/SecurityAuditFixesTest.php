@@ -24,15 +24,19 @@ class SecurityAuditFixesTest extends TestCase
 
     protected User $adminUser;
     protected User $guruUser;
-    protected User $kesiswaanUser;
     protected Teacher $teacher;
     protected SchoolClass $classA;
     protected SchoolClass $classB;
     protected AcademicYear $academicYear;
+    protected int $studentId = 0;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Nonaktifkan proteksi CSRF agar request POST/PUT/DELETE pada test
+        // benar-benar sampai ke middleware role (diharapkan 403, bukan 419).
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
 
         $this->academicYear = AcademicYear::create([
             'name' => '2025/2026',
@@ -50,14 +54,14 @@ class SecurityAuditFixesTest extends TestCase
         ]);
 
         $this->guruUser = User::create([
-            'name' => 'Guru Wali Kelas A',
+            'name' => 'Guru Pengajar A',
             'email' => '198501012010011001@guru.smppresensipgri.sch.id',
             'password' => Hash::make('password_rahasia_guru'),
             'role' => 'guru',
         ]);
 
         $this->teacher = Teacher::create([
-            'name' => 'Guru Wali Kelas A',
+            'name' => 'Guru Pengajar A',
             'nip' => '198501012010011001',
             'user_id' => $this->guruUser->id,
             'gender' => 'Laki-laki',
@@ -77,40 +81,90 @@ class SecurityAuditFixesTest extends TestCase
             'academic_year_id' => $this->academicYear->id,
         ]);
 
-        $this->kesiswaanUser = User::create([
-            'name' => 'Staf Kesiswaan',
-            'email' => 'kesiswaan@smppresensipgri.sch.id',
-            'password' => Hash::make('password123'),
-            'role' => 'kesiswaan',
+        // Siswa pada kedua kelas (dipakai untuk uji akses lintas kelas).
+        Student::create([
+            'school_class_id' => $this->classA->id,
+            'name' => 'Siswa Kelas A',
+            'nis' => '770001',
+            'gender' => 'Laki-laki',
+            'status' => 'Aktif',
         ]);
+
+        $this->studentId = (int) Student::create([
+            'school_class_id' => $this->classB->id,
+            'name' => 'Siswa Kelas B',
+            'nis' => '770002',
+            'gender' => 'Perempuan',
+            'status' => 'Aktif',
+        ])->id;
     }
 
     /**
-     * 1. CRITICAL IDOR TEST: Guru HANYA boleh mengakses kelas binaannya sendiri.
-     * Mengakses class_id milik kelas lain harus memicu abort(403).
+     * 1. DASHBOARD GURU (READ-ONLY): guru boleh melihat SEMUA data seperti admin
+     *    (tanpa batasan kelas binaan), namun seluruh endpoint admin-only tetap
+     *    diblokir di sisi server dengan HTTP 403.
      */
-    public function test_guru_cannot_access_unauthorized_class_via_idor(): void
+    public function test_guru_sees_all_data_but_is_blocked_from_admin_endpoints(): void
     {
-        // Akses kelas miliknya sendiri: Berhasil (200 OK)
-        $this->actingAs($this->guruUser)
-            ->get(route('guru.dashboard', ['school_class_id' => $this->classA->id]))
-            ->assertStatus(200);
-
-        $this->actingAs($this->guruUser)
-            ->get(route('guru.students', ['school_class_id' => $this->classA->id]))
-            ->assertStatus(200);
-
-        // IDOR Attack: Memaksa mengakses kelas 7B yang bukan kelas binaannya
+        // Guru dapat melihat seluruh data tanpa batasan kelas binaan.
         $this->actingAs($this->guruUser)
             ->get(route('guru.dashboard', ['school_class_id' => $this->classB->id]))
-            ->assertStatus(403);
+            ->assertStatus(200);
 
         $this->actingAs($this->guruUser)
-            ->get(route('guru.students', ['school_class_id' => $this->classB->id]))
-            ->assertStatus(403);
+            ->get(route('guru.students.index', ['class_id' => $this->classB->id]))
+            ->assertStatus(200);
+
+        $this->actingAs($this->guruUser)
+            ->get(route('guru.classes.index'))
+            ->assertStatus(200);
 
         $this->actingAs($this->guruUser)
             ->get(route('guru.rekap', ['class_id' => $this->classB->id]))
+            ->assertStatus(200);
+
+        // Server-side enforcement: halaman admin-only -> 403
+        $adminOnlyPages = [
+            '/admin/dashboard',
+            '/admin/students',
+            '/admin/students/create',
+            '/admin/students/trash',
+            '/admin/guru',
+            '/admin/teachers',
+            '/admin/teachers/trash',
+            '/admin/classes',
+            '/admin/academic-years',
+            '/admin/holidays',
+            '/admin/settings',
+            '/admin/roles-permissions',
+            '/admin/pengaturan/jadwal',
+        ];
+
+        foreach ($adminOnlyPages as $url) {
+            $this->actingAs($this->guruUser)
+                ->get($url)
+                ->assertStatus(403, "GET {$url} harus diblokir (403) untuk role guru.");
+        }
+
+        // Server-side enforcement: request mutasi (POST/PUT/DELETE) -> 403
+        $this->actingAs($this->guruUser)
+            ->post('/admin/students', ['name' => 'Hacker', 'nis' => '123456', 'school_class_id' => $this->classA->id, 'gender' => 'Laki-laki'])
+            ->assertStatus(403);
+
+        $this->actingAs($this->guruUser)
+            ->put('/admin/students/' . $this->studentId, ['name' => 'Hacked', 'nis' => '770002', 'school_class_id' => $this->classB->id, 'gender' => 'Perempuan'])
+            ->assertStatus(403);
+
+        $this->actingAs($this->guruUser)
+            ->delete('/admin/students/' . $this->studentId)
+            ->assertStatus(403);
+
+        $this->actingAs($this->guruUser)
+            ->post('/admin/absensi/override', ['student_id' => 1, 'status' => 'Hadir'])
+            ->assertStatus(403);
+
+        $this->actingAs($this->guruUser)
+            ->post('/admin/classes', ['name' => '9Z'])
             ->assertStatus(403);
     }
 
@@ -147,7 +201,7 @@ class SecurityAuditFixesTest extends TestCase
         $import = new TeachersImport();
         $import->collection(collect([
             [
-                'nama' => 'Guru Wali Kelas A (Updated Name)',
+                'nama' => 'Guru Pengajar A (Updated Name)',
                 'nip' => '198501012010011001',
                 'jenis_kelamin' => 'Laki-laki',
                 'tempat_lahir' => 'Bogor',
@@ -168,7 +222,7 @@ class SecurityAuditFixesTest extends TestCase
         $this->guruUser->refresh();
 
         // Nama terupdate
-        $this->assertEquals('Guru Wali Kelas A (Updated Name)', $this->guruUser->name);
+        $this->assertEquals('Guru Pengajar A (Updated Name)', $this->guruUser->name);
         // Password TIDAK BOLEH berubah/tertimpa
         $this->assertEquals($existingPasswordHash, $this->guruUser->password);
         $this->assertTrue(Hash::check('password_rahasia_guru', $this->guruUser->password));
@@ -180,26 +234,41 @@ class SecurityAuditFixesTest extends TestCase
     }
 
     /**
-     * 4. HIGH UI LEAK TEST: Role Kesiswaan tidak boleh melihat tombol Tambah, Import, Hapus Semua, dan Aksi CRUD pada daftar guru.
+     * 4. HIGH UI LEAK TEST: Panel guru (read-only) tidak boleh menampilkan tombol
+     *    Tambah, Import, Arsip, Edit, maupun Hapus. Hanya CETAK KARTU & DETAIL.
+     *    Sebaliknya admin tetap melihat tombol CRUD-nya seperti biasa.
      */
-    public function test_kesiswaan_teacher_view_does_not_leak_mutation_crud_buttons(): void
+    public function test_guru_readonly_view_does_not_leak_mutation_crud_buttons(): void
     {
-        $response = $this->actingAs($this->kesiswaanUser)
-            ->get(route('kesiswaan.teachers.index'));
+        // --- Data Siswa: hanya CETAK KARTU + kolom DETAIL ---
+        $siswa = $this->actingAs($this->guruUser)->get(route('guru.students.index'));
+        $siswa->assertStatus(200);
+        $siswa->assertSee('Cetak Kartu');
+        $siswa->assertDontSee('Import Excel');
+        $siswa->assertDontSee('Tambah Siswa');
+        $siswa->assertDontSee('data-bs-target="#importModal"', false);
+        $siswa->assertDontSee('data-bs-target="#addStudentModal"', false);
+        $siswa->assertDontSee('students.edit', false);
+        $siswa->assertDontSee('students.destroy', false);
 
-        $response->assertStatus(200);
+        // --- Data Kelas: READ-ONLY ---
+        $kelas = $this->actingAs($this->guruUser)->get(route('guru.classes.index'));
+        $kelas->assertStatus(200);
+        $kelas->assertDontSee('Tambah Kelas');
+        $kelas->assertDontSee('data-bs-target="#addClassModal"', false);
+        $kelas->assertDontSee('data-bs-target="#importClassModal"', false);
+        $kelas->assertDontSee('classes.update', false);
+        $kelas->assertDontSee('classes.destroy', false);
 
-        // Tombol-tombol mutasi admin tidak boleh ada di halaman kesiswaan
-        $response->assertDontSee('Import Excel');
-        $response->assertDontSee('Hapus Semua Data Guru');
-        $response->assertDontSee('Tambah Guru');
-        $response->assertDontSee('data-bs-target="#addTeacherModal"', false);
-        $response->assertDontSee('data-bs-target="#importTeacherModal"', false);
-        $response->assertDontSee('id="deleteAllTeachersForm"', false);
+        // --- Detail Presensi Kelas: tidak ada tombol/modal ubah status ---
+        $presensi = $this->actingAs($this->guruUser)->get(route('guru.absensi.show', $this->classA->id));
+        $presensi->assertStatus(200);
+        $presensi->assertDontSee('Ubah Presensi Siswa');
+        $presensi->assertDontSee('absensi/override', false);
 
-        // Jika Admin mengakses, tombol mutasi harus tampil
+        // --- Sisi admin: tombol CRUD tetap tampil & berfungsi seperti biasa ---
         $adminResponse = $this->actingAs($this->adminUser)
-            ->get(route('admin.walikelas.index'));
+            ->get(route('admin.guru.index'));
 
         $adminResponse->assertStatus(200);
         $adminResponse->assertSee('Tambah Guru');

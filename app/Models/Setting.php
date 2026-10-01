@@ -18,10 +18,12 @@ class Setting extends Model
     {
         static::saved(function () {
             self::clearCache();
+            \App\Services\DownloadCacheService::clearAllCache();
         });
 
         static::deleted(function () {
             self::clearCache();
+            \App\Services\DownloadCacheService::clearAllCache();
         });
     }
 

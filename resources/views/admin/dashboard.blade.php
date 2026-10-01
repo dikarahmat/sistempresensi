@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Admin')
-@section('page_title', 'Dashboard Administrator')
-@section('page_subtitle', 'Sistem Presensi Terintegrasi')
+@section('title', is_admin() ? 'Dashboard Admin' : 'Dashboard Guru')
+@section('page_title', is_admin() ? 'Dashboard Administrator' : 'DASHBOARD GURU')
+@section('page_subtitle', is_admin() ? 'Sistem Presensi Terintegrasi' : 'Selamat Datang, ' . (Auth::user()->name ?? 'Guru'))
 
 @section('page_header_right')
 <!-- Tanggal di Sisi Kanan Modern -->
@@ -170,7 +170,7 @@
         
         <!-- Card 1: Total Siswa Aktif -->
         <div class="col-6 col-md-4">
-            <a href="{{ route('admin.siswa.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data siswa aktif">
+            <a href="{{ panel_route('students.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data siswa aktif">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Total Siswa Aktif
@@ -188,7 +188,7 @@
 
         <!-- Card 2: Total Rombongan Belajar -->
         <div class="col-6 col-md-4">
-            <a href="{{ route('admin.kelas.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data rombongan belajar">
+            <a href="{{ panel_route('classes.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data rombongan belajar">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Total Rombongan Belajar
@@ -204,12 +204,16 @@
             </a>
         </div>
 
-        <!-- Card 3: Total Guru & Wali Kelas -->
+        <!-- Card 3: Total Guru Aktif -->
         <div class="col-6 col-md-4">
-            <a href="{{ route('admin.walikelas.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data guru dan wali kelas">
+            @if(is_admin())
+            <a href="{{ route('admin.guru.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data guru">
+            @else
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Data guru">
+            @endif
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
-                        Guru &amp; Wali Kelas Aktif
+                        Guru Aktif
                     </span>
                     <h3 class="fw-bolder mb-1 text-dark" style="font-size: 2rem; letter-spacing: -0.02em;">
                         {{ number_format($totalTeachers ?? 0, 0, ',', '.') }}
@@ -219,11 +223,15 @@
                     </span>
                 </div>
                 <i class='bx bxs-id-card text-success' style="font-size: 2.5rem;"></i>
+            @if(is_admin())
             </a>
+            @else
+            </div>
+            @endif
         </div>
 
         <div class="col-6 d-md-none">
-            <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Lihat ketidakhadiran hari ini">
+            <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Lihat ketidakhadiran hari ini">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Tidak Hadir Hari Ini
@@ -257,10 +265,10 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2.5">
-                    <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
+                    <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
                         <span>Presensi Hari Ini</span>
                     </a>
-                    <a href="{{ route('admin.rekap') }}" class="btn btn-primary rounded-3 shadow-sm px-4 py-2 fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
+                    <a href="{{ panel_route('rekap') }}" class="btn btn-primary rounded-3 shadow-sm px-4 py-2 fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
                         <span>Rekap Lengkap</span>
                     </a>
                 </div>
@@ -331,7 +339,7 @@
                     <div class="d-flex flex-column gap-2.5">
                         
                         <!-- 1. Sakit -->
-                        <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString, 'status' => 'Sakit']) }}" 
+                        <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString, 'status' => 'Sakit']) }}" 
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between"
                            title="Lihat detail siswa sakit hari ini">
                             <div class="d-flex align-items-center gap-3">
@@ -347,7 +355,7 @@
                         </a>
 
                         <!-- 2. Izin -->
-                        <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString, 'status' => 'Izin']) }}" 
+                        <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString, 'status' => 'Izin']) }}" 
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between"
                            title="Lihat detail siswa izin hari ini">
                             <div class="d-flex align-items-center gap-3">
@@ -364,7 +372,7 @@
                         </a>
 
                         <!-- 3. Alpha -->
-                        <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString, 'status' => 'Alfa']) }}" 
+                        <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString, 'status' => 'Alfa']) }}" 
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between"
                            title="Lihat detail siswa alpha hari ini">
                             <div class="d-flex align-items-center gap-3">
@@ -384,7 +392,7 @@
 
                 <!-- Tombol Menuju Tabel Presensi Harian -->
                 <div class="pt-3 mt-3 border-top border-light-subtle">
-                    <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" 
+                    <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" 
                        class="btn btn-primary rounded-3 shadow-sm w-100 fw-bold py-2.5 d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth" 
                        style="font-size: 0.85rem;">
                         <span>Buka Tabel Presensi Hari Ini</span>
@@ -416,32 +424,50 @@
 
                     <div class="row g-2.5">
                         <div class="col-6">
+                            @if(is_admin())
                             <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Ubah jam masuk">
+                            @else
+                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Jam masuk sekolah">
+                            @endif
                                 <span class="text-uppercase fw-semibold text-secondary d-block" style="font-size: 0.7rem; letter-spacing: 0.04em;">Jam Masuk</span>
                                 <strong class="text-dark mt-1.5 d-block font-monospace" style="font-size: 1.3rem; font-weight: 700;">
                                     {{ $checkInTime ?? '06:45' }}
                                 </strong>
                                 <span class="badge bg-white text-secondary rounded-2 px-2 py-0.5 shadow-2xs mt-1" style="font-size: 0.68rem;">WIB</span>
+                            @if(is_admin())
                             </a>
+                            @else
+                            </div>
+                            @endif
                         </div>
                         <div class="col-6">
+                            @if(is_admin())
                             <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Ubah batas terlambat">
+                            @else
+                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Batas keterlambatan sekolah">
+                            @endif
                                 <span class="text-uppercase fw-semibold text-secondary d-block" style="font-size: 0.7rem; letter-spacing: 0.04em;">Batas Terlambat</span>
                                 <strong class="text-amber-600 mt-1.5 d-block font-monospace" style="font-size: 1.3rem; font-weight: 700;">
                                     {{ $lateLimitTime ?? '07:15' }}
                                 </strong>
                                 <span class="badge bg-white text-secondary rounded-2 px-2 py-0.5 shadow-2xs mt-1" style="font-size: 0.68rem;">WIB</span>
+                            @if(is_admin())
                             </a>
+                            @else
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
 
-                <!-- Tombol Ubah Pengaturan Jadwal -->
+                @if(is_admin())
+                <!-- Tombol Ubah Pengaturan Jadwal (khusus admin) -->
                 <a href="{{ route('admin.pengaturan.jadwal') }}" 
                    class="btn btn-primary rounded-3 shadow-sm w-100 mt-3 py-2.5 px-3 fw-semibold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth"
                    style="font-size: 0.85rem;">
                     <span>Ubah Pengaturan Jadwal</span>
                 </a>
+                @endif
             </div>
         </div>
 
@@ -464,7 +490,7 @@
                         
                         <!-- 1. Presensi Hari Ini (ikon QR/Kamera) -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.scanner') }}" 
+                            <a href="{{ panel_route('scanner') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Buka Kamera Scanner QR Presensi">
                                 <i class='bx bx-qr-scan text-primary fs-2 mb-2'></i>
@@ -475,7 +501,7 @@
 
                         <!-- 2. Catatan Kehadiran (ikon List/Ceklis) -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.presensi.index', ['tanggal' => $dateString]) }}" 
+                            <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Lihat Log Kehadiran & Presensi Harian">
                                 <i class='bx bx-list-check text-success fs-2 mb-2'></i>
@@ -486,7 +512,7 @@
 
                         <!-- 3. Rekapitulasi Presensi (ikon Laporan/PDF) -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.rekap') }}" 
+                            <a href="{{ panel_route('rekap') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Laporan Rekapitulasi & Ekspor Dokumen">
                                 <i class='bx bxs-file-pdf text-danger fs-2 mb-2'></i>
@@ -497,7 +523,7 @@
 
                         <!-- 4. Master Data Siswa (ikon User/Siswa) -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.students.index') }}" 
+                            <a href="{{ panel_route('students.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Master Data Siswa & Generate QR">
                                 <i class='bx bx-user text-info fs-2 mb-2'></i>
@@ -506,20 +532,22 @@
                             </a>
                         </div>
 
-                        <!-- 5. Master Data Guru (ikon Guru/User Tie) -->
+                        <!-- 5. Master Data Guru (ikon Guru/User Tie) - khusus admin -->
+                        @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.teachers.index') }}" 
+                            <a href="{{ panel_route('teachers.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
-                               title="Kelola Data Guru & Wali Kelas">
+                               title="Kelola Data Guru">
                                 <i class='bx bx-user-pin text-purple fs-2 mb-2' style="color: #9333ea;"></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Data Guru</span>
-                                <span class="text-secondary small d-block mt-0.5 text-truncate w-100" style="font-size: 0.7rem;">Guru &amp; Wali Kelas</span>
+                                <span class="text-secondary small d-block mt-0.5 text-truncate w-100" style="font-size: 0.7rem;">Guru Pengajar</span>
                             </a>
                         </div>
+                        @endif
 
                         <!-- 6. Master Data Kelas (ikon Gedung/Kelas) -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.classes.index') }}" 
+                            <a href="{{ panel_route('classes.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Master Rombongan Belajar & Kelas">
                                 <i class='bx bx-buildings text-warning fs-2 mb-2'></i>
@@ -528,9 +556,10 @@
                             </a>
                         </div>
 
-                        <!-- 7. Master Hari Libur (ikon Kalender/Libur) -->
+                        <!-- 7. Master Hari Libur (ikon Kalender/Libur) - khusus admin -->
+                        @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.holidays.index') }}" 
+                            <a href="{{ panel_route('holidays.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Kalender Hari Libur Nasional & Sekolah">
                                 <i class='bx bx-calendar-x text-danger fs-2 mb-2'></i>
@@ -538,10 +567,12 @@
                                 <span class="text-secondary small d-block mt-0.5 text-truncate w-100" style="font-size: 0.7rem;">Kalender &amp; Libur</span>
                             </a>
                         </div>
+                        @endif
 
-                        <!-- 8. Pengaturan Sistem (ikon Gear) -->
+                        <!-- 8. Pengaturan Sistem (ikon Gear) - khusus admin -->
+                        @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ route('admin.settings.index') }}" 
+                            <a href="{{ panel_route('settings.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Konfigurasi Profil Sekolah, Jam Masuk, & Sistem">
                                 <i class='bx bx-cog text-secondary fs-2 mb-2'></i>
@@ -549,6 +580,7 @@
                                 <span class="text-secondary small d-block mt-0.5 text-truncate w-100" style="font-size: 0.7rem;">Profil &amp; Konfigurasi</span>
                             </a>
                         </div>
+                        @endif
 
                     </div>
                 </div>

@@ -51,7 +51,7 @@ return new class extends Migration {
             // Reset kelas agar relasi teacher_id menjadi null
             DB::table('school_classes')->update(['teacher_id' => null]);
 
-            // Kosongkan tabel siswa dan wali kelas
+            // Kosongkan tabel siswa dan guru
             DB::table('students')->truncate();
             DB::table('teachers')->truncate();
 

@@ -341,7 +341,7 @@
             </td>
             <td>
                 Parung Panjang, {{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y') }}<br>
-                {{ $rightSignatoryTitle ?? (!empty($teacherName) ? 'Wali Kelas' : 'Petugas Presensi') }}
+                {{ $rightSignatoryTitle ?? (!empty($teacherName) ? 'Guru Kelas' : 'Petugas Presensi') }}
                 <div style="height: 50px;"></div>
                 <strong><u>{{ $teacherName ?? '( .................................................. )' }}</u></strong><br>
                 NIP. {{ $teacherNip ?? '-' }}

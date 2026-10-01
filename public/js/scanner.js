@@ -174,14 +174,25 @@ function refocusHardwareInput() {
     }
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 /* ================= OVERLAY HASIL SCAN (ANIMASI) ================= */
 function showOverlaySuccess(data) {
     const overlay = document.getElementById('overlaySuccess');
     const textEl = document.getElementById('successText');
     const metaEl = document.getElementById('successMeta');
-    if (!overlay || !textEl || !metaEl) return;
+    if (!overlay) return;
 
     const nama = (data.student && data.student.name) || '-';
+    const kelas = (data.student && (data.student.class || data.student.kelas)) || '';
     const waktu = data.time_short ? data.time_short + ' WIB' : '';
 
     let status = 'Hadir';
@@ -193,8 +204,14 @@ function showOverlaySuccess(data) {
         status = data.display_remark;
     }
 
-    textEl.innerText = nama;
-    metaEl.innerText = status + (waktu ? ' · ' + waktu : '');
+    // Susunan Identik Kartu: Nama di Atas (Kapital Bold), Kelas Tepat di Bawahnya (Bold, tanpa label), lalu Status Presensi
+    if (textEl) {
+        textEl.innerHTML = `<span class="d-block text-uppercase fw-bold text-truncate" style="letter-spacing: -0.01em;">${escapeHtml(nama)}</span>` +
+                           (kelas ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelas)}</span>` : '');
+    }
+    if (metaEl) {
+        metaEl.innerText = status + (waktu ? ' · ' + waktu : '');
+    }
 
     overlay.classList.remove('d-none', 'error');
     void overlay.offsetWidth;
@@ -212,8 +229,16 @@ function showOverlayError(message, student) {
     if (!overlay || !titleEl || !textEl) return;
 
     const adaSiswa = student && student.name;
-    titleEl.innerText = adaSiswa ? 'Presensi Gagal' : 'Kartu Tidak Dikenali';
-    textEl.innerText = message || 'Scan gagal, coba lagi';
+    const kelasSiswa = student && (student.class || student.kelas);
+
+    if (adaSiswa) {
+        titleEl.innerHTML = `<span class="d-block text-uppercase fw-bold text-truncate">${escapeHtml(student.name)}</span>` +
+                            (kelasSiswa ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelasSiswa)}</span>` : '');
+        textEl.innerText = message || 'Presensi Gagal / Sudah Tercatat';
+    } else {
+        titleEl.innerText = 'Kartu Tidak Dikenali';
+        textEl.innerText = message || 'Scan gagal, coba lagi';
+    }
 
     overlay.classList.remove('d-none', 'error');
     void overlay.offsetWidth;

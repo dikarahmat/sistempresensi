@@ -72,7 +72,7 @@
             <h4 class="fw-bold mb-1">Arsip Guru</h4>
             <p class="text-secondary small mb-0">Pulihkan atau hapus permanen data guru yang telah dihapus</p>
         </div>
-        <a href="{{ route('admin.guru.index') }}" class="btn btn-primary rounded-3 px-4 py-2 fw-semibold">
+        <a href="{{ panel_route('guru.index') }}" class="btn btn-primary rounded-3 px-4 py-2 fw-semibold">
             Kembali ke Data Guru
         </a>
     </div>
@@ -100,7 +100,7 @@
                         <td class="text-center px-3">{{ $teacher->deleted_at->format('d M Y H:i') }}</td>
                         <td class="text-center px-3">
                             <div class="d-flex justify-content-center gap-2">
-                                <form action="{{ route('admin.teachers.restore', $teacher->id) }}" method="POST" class="d-inline">
+                                <form action="{{ panel_route('teachers.restore', $teacher->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn-restore" title="Pulihkan">Pulihkan</button>
                                 </form>

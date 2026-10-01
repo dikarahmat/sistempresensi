@@ -145,7 +145,6 @@
                 $destRoute = match(auth()->user()->role) {
                     'admin' => route('admin.dashboard'),
                     'guru' => route('guru.dashboard'),
-                    'kesiswaan' => route('kesiswaan.dashboard'),
                     default => route('login'),
                 };
             @endphp

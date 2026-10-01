@@ -25,7 +25,7 @@ class TeachersImport implements ToCollection, WithHeadingRow
             $rowIndex++;
 
             $nip = trim((string) ($row['nip'] ?? $row['nomor_induk_pegawai'] ?? $row['id_guru'] ?? ''));
-            $name = trim((string) ($row['nama'] ?? $row['nama_lengkap'] ?? $row['nama_guru'] ?? $row['nama_wali_kelas'] ?? $row['name'] ?? ''));
+            $name = trim((string) ($row['nama'] ?? $row['nama_lengkap'] ?? $row['nama_guru'] ?? $row['name'] ?? ''));
 
             if (empty($nip)) {
                 $this->skippedCount++;
@@ -35,7 +35,7 @@ class TeachersImport implements ToCollection, WithHeadingRow
 
             if (empty($name)) {
                 $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama Wali Kelas wajib diisi (kosong).";
+                $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama Guru wajib diisi (kosong).";
                 continue;
             }
 

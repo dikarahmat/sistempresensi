@@ -285,7 +285,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
         $response->assertStatus(200);
         $response->assertViewIs('admin.dashboard');
-        $response->assertViewHas(['classesList', 'waliKelasList', 'classesAttendance']);
+        $response->assertViewHas(['classesList', 'guruKelasList', 'classesAttendance']);
     }
 
     public function test_daily_attendance_summary_aggregates_in_database_without_double_counting_late_students(): void

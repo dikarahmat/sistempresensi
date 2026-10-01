@@ -30,7 +30,7 @@ class AdminDashboardController extends Controller
         // 1. Data Statistik Header & Master Kelas (Single Query Eager Loading)
         $totalStudents = Student::where('status', 'Aktif')->count();
         
-        // Ambil data rombel lengkap beserta wali kelas dan jumlah siswa aktif dalam 1 query
+        // Ambil data rombel lengkap beserta guru kelasnya dan jumlah siswa aktif dalam 1 query
         $classesList = SchoolClass::with('teacher')
             ->withCount(['students as total_students' => fn($q) => $q->where('status', 'Aktif')])
             ->orderBy('grade')
@@ -38,8 +38,8 @@ class AdminDashboardController extends Controller
             ->get();
         $totalClasses = $classesList->count();
 
-        // Mapping Wali Kelas dari koleksi yang sudah dieager-load
-        $waliKelasList = $classesList->map(function ($cls) {
+        // Mapping guru kelas dari koleksi yang sudah dieager-load
+        $guruKelasList = $classesList->map(function ($cls) {
             return (object) [
                 'class_id' => $cls->id,
                 'class_name' => $cls->name,
@@ -49,7 +49,7 @@ class AdminDashboardController extends Controller
             ];
         });
 
-        $totalWaliKelas = $classesList->whereNotNull('teacher_id')->unique('teacher_id')->count();
+        $totalGuruKelas = $classesList->whereNotNull('teacher_id')->unique('teacher_id')->count();
         $totalTeachers = Teacher::count();
 
         // 2. Data Ketidakhadiran Hari Ini (Sakit, Izin, Alpha)
@@ -97,8 +97,8 @@ class AdminDashboardController extends Controller
         return view('admin.dashboard', compact(
             'today', 'todayFormatted', 'dateString', 'startOfWeek', 'endOfWeek',
             'checkInTime', 'lateLimitTime', 'checkOutTime',
-            'totalStudents', 'totalClasses', 'totalWaliKelas', 'totalTeachers',
-            'classesList', 'waliKelasList',
+            'totalStudents', 'totalClasses', 'totalGuruKelas', 'totalTeachers',
+            'classesList', 'guruKelasList',
             'countSakit', 'countIzin', 'countAlfa', 'totalKetidakhadiran',
             'classesAttendance'
         ));

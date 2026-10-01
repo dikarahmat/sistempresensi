@@ -106,7 +106,7 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" class="settings-mobile-form">
+    <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data" class="settings-mobile-form">
         @csrf
 
         <!-- Card 1: Identitas Sekolah -->

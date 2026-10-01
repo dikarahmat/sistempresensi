@@ -17,7 +17,15 @@ class AuthController extends Controller
     public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
-            return $this->redirectBasedOnRole(Auth::user());
+            // Role yang dikenal: langsung arahkan ke dashboard panelnya.
+            // Role tak dikenal: logout agar tidak terjadi loop redirect ke /login.
+            if (in_array(Auth::user()->role, ['admin', 'guru'], true)) {
+                return $this->redirectBasedOnRole(Auth::user());
+            }
+
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
 
         return view('auth.login');
@@ -26,7 +34,7 @@ class AuthController extends Controller
     /**
      * Router login universal & cerdas:
      * - Menerima satu input Email, Username, atau NIP
-     * - Mendeteksi hak akses secara otomatis (Admin, Guru / Wali Kelas, Kesiswaan)
+     * - Mendeteksi hak akses secara otomatis (ADMIN atau GURU)
      * - Mengarahkan ke dashboard masing-masing secara instan tanpa perlu memilih role manual
      */
     public function login(Request $request)
@@ -73,7 +81,7 @@ class AuthController extends Controller
             }
         }
 
-        // 3. Cek apakah login menggunakan Username pendek atau prefix alias email (misal: 'admin', 'kesiswaan')
+        // 3. Cek apakah login menggunakan Username pendek atau prefix alias email (misal: 'admin', 'guru')
         //    Gunakan grouping where agar orWhere tidak "bocor" ke kondisi lain.
         //    Hanya query username jika kolom sudah ada di database.
         $userQuery = User::query();
@@ -176,7 +184,6 @@ class AuthController extends Controller
         return match ($user->role) {
             'admin' => redirect()->intended(route('admin.dashboard')),
             'guru' => redirect()->intended(route('guru.dashboard')),
-            'kesiswaan' => redirect()->intended(route('kesiswaan.dashboard')),
             default => redirect()->route('login')->withErrors([
                 'login' => 'Role pengguna tidak dikenali atau tidak memiliki hak akses.',
             ]),
@@ -195,14 +202,6 @@ class AuthController extends Controller
      * Kompatibilitas untuk legacy route /login/admin
      */
     public function loginAdmin(Request $request)
-    {
-        return $this->login($request);
-    }
-
-    /**
-     * Kompatibilitas untuk legacy route /login/kesiswaan
-     */
-    public function loginKesiswaan(Request $request)
     {
         return $this->login($request);
     }

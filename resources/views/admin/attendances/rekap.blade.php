@@ -159,7 +159,7 @@
     <!-- 1. MOBILE VIEW -->
     <div class="d-block d-md-none mb-3">
         <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white recap-mobile-card">
-            <form method="GET" action="{{ route('admin.rekap') }}" class="recap-mobile-period mb-2">
+            <form method="GET" action="{{ panel_route('rekap') }}" class="recap-mobile-period mb-2">
                 @foreach(request()->except('type') as $key => $value)
                     @if(is_scalar($value))
                     <input type="hidden" name="{{ $key }}" value="{{ $value }}">
@@ -174,19 +174,19 @@
             </form>
 
             <div class="d-flex flex-column gap-2 recap-mobile-actions">
-                <a href="{{ route('admin.rekap.export-excel', $exportParams) }}"
-                   class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold">
+                <a href="{{ panel_route('rekap.export-excel', $exportParams) }}"
+                   class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-download>
                     <span class="text-nowrap" style="font-size: 0.8rem;">Ekspor Excel</span>
                 </a>
-                <a href="{{ route('admin.rekap.export-pdf', $exportParams) }}"
-                   class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold">
+                <a href="{{ panel_route('rekap.export-pdf', $exportParams) }}"
+                   class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-download>
                     <span class="text-nowrap" style="font-size: 0.8rem;">PDF Report</span>
                 </a>
             </div>
 
             <hr class="border-secondary-subtle my-3 recap-mobile-divider">
 
-            <form method="GET" action="{{ route('admin.rekap') }}" class="m-0 recap-mobile-filters">
+            <form method="GET" action="{{ panel_route('rekap') }}" class="m-0 recap-mobile-filters">
                 <input type="hidden" name="type" value="{{ $type }}">
                 @if($type === 'harian')
                     <div class="mb-2">
@@ -268,20 +268,20 @@
     <div class="d-none d-md-block">
         <div class="period-container">
             <div class="period-nav">
-                <a href="{{ route('admin.rekap', array_merge(request()->except('type'), ['type' => 'harian'])) }}" class="period-link {{ $type === 'harian' ? 'active' : '' }}">
+                <a href="{{ panel_route('rekap', array_merge(request()->except('type'), ['type' => 'harian'])) }}" class="period-link {{ $type === 'harian' ? 'active' : '' }}">
                     <i class='bx bx-calendar-event'></i> <span>Harian</span>
                 </a>
-                <a href="{{ route('admin.rekap', array_merge(request()->except('type'), ['type' => 'mingguan'])) }}" class="period-link {{ $type === 'mingguan' ? 'active' : '' }}">
+                <a href="{{ panel_route('rekap', array_merge(request()->except('type'), ['type' => 'mingguan'])) }}" class="period-link {{ $type === 'mingguan' ? 'active' : '' }}">
                     <i class='bx bx-calendar-week'></i> <span>Mingguan</span>
                 </a>
-                <a href="{{ route('admin.rekap', array_merge(request()->except('type'), ['type' => 'bulanan'])) }}" class="period-link {{ $type === 'bulanan' ? 'active' : '' }}">
+                <a href="{{ panel_route('rekap', array_merge(request()->except('type'), ['type' => 'bulanan'])) }}" class="period-link {{ $type === 'bulanan' ? 'active' : '' }}">
                     <i class='bx bx-calendar'></i> <span>Bulanan</span>
                 </a>
             </div>
         </div>
 
         <div class="filter-card">
-            <form method="GET" action="{{ route('admin.rekap') }}" class="d-flex flex-wrap align-items-center gap-2">
+            <form method="GET" action="{{ panel_route('rekap') }}" class="d-flex flex-wrap align-items-center gap-2">
                 <input type="hidden" name="type" value="{{ $type }}">
                 @if($type === 'harian')
                     <div class="d-flex flex-column" style="width: 180px;">
@@ -328,10 +328,10 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto" style="margin-top: 22px;">
-                    <a href="{{ route('admin.rekap.export-excel', $exportParams) }}" class="btn-green-excel" title="Export Excel (.xlsx)" aria-label="Export Excel (.xlsx)">
+                    <a href="{{ panel_route('rekap.export-excel', $exportParams) }}" class="btn-green-excel" title="Export Excel (.xlsx)" aria-label="Export Excel (.xlsx)" data-download>
                         <span>Ekspor Excel</span>
                     </a>
-                    <a href="{{ route('admin.rekap.export-pdf', $exportParams) }}" class="btn-red-pdf" title="Cetak PDF Report" aria-label="Cetak PDF Report">
+                    <a href="{{ panel_route('rekap.export-pdf', $exportParams) }}" class="btn-red-pdf" title="Cetak PDF Report" aria-label="Cetak PDF Report" data-download>
                         <span>PDF Report</span>
                     </a>
                 </div>
@@ -395,7 +395,7 @@
                             <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
                             <td>{{ $st->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
-                                <a href="{{ route('admin.students.show', $st->id) }}" class="text-decoration-none text-dark">{{ $st->name }}</a>
+                                <a href="{{ panel_route('students.show', $st->id) }}" class="text-decoration-none text-dark">{{ $st->name }}</a>
                             </td>
                             <td>{{ $st->schoolClass ? $st->schoolClass->name : '-' }}</td>
                             <td class="text-center">{{ $checkIn }}</td>
@@ -465,7 +465,7 @@
                             <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
                             <td>{{ $student->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
-                                <a href="{{ route('admin.students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
+                                <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
                             </td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             @foreach($dateColumns as $col)
@@ -528,7 +528,7 @@
                             <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
                             <td>{{ $student->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
-                                <a href="{{ route('admin.students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
+                                <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
                             </td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             <td>

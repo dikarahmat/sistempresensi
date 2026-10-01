@@ -235,7 +235,7 @@
 
     @if(Auth::check() && Auth::user()->role === 'admin')
     {{-- Form Hapus Semua Kelas (Hidden, dipanggil via confirmDeleteAllClasses()) --}}
-    <form id="deleteAllClassesForm" action="{{ route('admin.classes.destroy-all') }}" method="POST" class="d-none">
+    <form id="deleteAllClassesForm" action="{{ panel_route('classes.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
@@ -354,7 +354,7 @@
                                 <button type="button" class="btn-row-action action-delete" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="Hapus">
                                     Hapus
                                 </button>
-                                <form id="deleteClassForm-{{ $class->id }}" action="{{ route('admin.classes.destroy', $class->id) }}" method="POST" class="d-none">
+                                <form id="deleteClassForm-{{ $class->id }}" action="{{ panel_route('classes.destroy', $class->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -396,7 +396,7 @@
                 <h5 class="fw-bold mb-0">Edit Data Kelas {{ $class->name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.classes.update', $class->id) }}" method="POST">
+            <form action="{{ panel_route('classes.update', $class->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="modal-body py-3">
@@ -443,7 +443,7 @@
                 <h5 class="fw-bold mb-0">Tambah Kelas Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.classes.store') }}" method="POST">
+            <form action="{{ panel_route('classes.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
@@ -489,7 +489,7 @@
                 <h5 class="fw-bold mb-0">Import Data Kelas Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.classes.import') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ panel_route('classes.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
@@ -497,7 +497,7 @@
                             Format kolom file Excel: <strong>Nama Kelas, Tingkat (7/8/9)</strong> (.xlsx atau .csv)
                         </div>
                         @if(Route::has('admin.classes.template'))
-                        <a href="{{ route('admin.classes.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
+                        <a href="{{ panel_route('classes.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
                             <i class='bx bx-download me-1'></i> Unduh Template Excel (.xlsx) Kosong
                         </a>
                         @endif

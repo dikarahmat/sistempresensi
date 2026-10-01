@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 class UserSeeder extends Seeder
 {
     /**
-     * Jalankan seeder akun Admin dan Guru/Wali Kelas default.
+     * Jalankan seeder akun Admin dan Guru default.
      */
     public function run(): void
     {
@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 2. Akun Guru / Wali Kelas (Budi Santoso, S.Pd.)
+        // 2. Akun Guru (Budi Santoso, S.Pd.)
         $guruUser = User::updateOrCreate(
             ['email' => 'guru@smppresensipgri.sch.id'],
             [
@@ -57,7 +57,7 @@ class UserSeeder extends Seeder
             $teacher->update(['user_id' => $guruUser->id]);
         }
 
-        // Hubungkan ke kelas 7A (atau VII A) sebagai Wali Kelas
+        // Hubungkan ke kelas 7A (atau VII A) sebagai Guru Kelas
         $activeYear = AcademicYear::getActive();
         if ($activeYear) {
             $kelas7A = SchoolClass::where('academic_year_id', $activeYear->id)
@@ -70,16 +70,7 @@ class UserSeeder extends Seeder
             }
         }
 
-        // 3. Akun Bagian Kesiswaan (Kemahasiswaan)
-        User::updateOrCreate(
-            ['email' => 'kesiswaan@smppresensipgri.sch.id'],
-            [
-                'name' => 'Staf Bagian Kesiswaan',
-                'username' => 'kesiswaan',
-                'password' => Hash::make('kesiswaan123'),
-                'role' => 'kesiswaan',
-                'email_verified_at' => now(),
-            ]
-        );
+        // 3. Sistem hanya memiliki dua role: admin dan guru,
+        //    sehingga tidak ada akun tambahan lain yang di-seed di sini.
     }
 }

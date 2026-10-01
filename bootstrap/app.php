@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Middleware\EnsureUserRole;
-use App\Http\Middleware\RoleKesiswaanMiddleware;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,10 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Daftarkan alias role middleware
+        // Daftarkan alias role middleware (hanya ADMIN & GURU)
         $middleware->alias([
             'role' => EnsureUserRole::class,
-            'role.kesiswaan' => RoleKesiswaanMiddleware::class,
         ]);
 
         // Security headers global

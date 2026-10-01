@@ -54,7 +54,7 @@ class DailyAttendanceSummary
                 'id' => $class->id,
                 'nama_kelas' => $class->name ?? '-',
                 'tingkat' => $class->grade ?? $class->level ?? '-',
-                'wali_kelas' => $class->teacher?->name ?? 'Belum ditentukan',
+                'guru_kelas' => $class->teacher?->name ?? 'Belum ditentukan',
                 'total_siswa' => $totalStudents,
                 'sudah_absen' => $sudahAbsen,
                 'belum' => max(0, $totalStudents - $sudahAbsen),
