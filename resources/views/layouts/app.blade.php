@@ -258,6 +258,75 @@
             letter-spacing: 0.03em;
         }
 
+        .pagination-arrow-container {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding-top: 1.25rem !important;
+            padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+            margin: 0 auto !important;
+        }
+
+        .pagination-arrow-bar {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.85rem !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 9999px !important;
+            padding: 5px 8px !important;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+        }
+
+        .pagination-arrow-btn {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 9999px !important;
+            background-color: #f8fafc !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+            font-size: 1.45rem !important;
+            line-height: 1 !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease-in-out !important;
+            cursor: pointer !important;
+            user-select: none !important;
+        }
+
+        .pagination-arrow-btn:hover:not(.is-disabled) {
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .pagination-arrow-btn.is-disabled {
+            background-color: #f1f5f9 !important;
+            color: #94a3b8 !important;
+            border-color: #e2e8f0 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+            pointer-events: none !important;
+        }
+
+        .pagination-arrow-info {
+            font-size: 0.85rem !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            padding: 0 0.85rem !important;
+            white-space: nowrap !important;
+            user-select: none !important;
+            font-family: 'Poppins', 'Roboto', sans-serif !important;
+        }
+
         /* --- Modal --- */
         .modal-content {
             font-family: 'Poppins', 'Roboto', sans-serif;
@@ -645,8 +714,10 @@
                 box-shadow: none !important;
                 margin: 0 !important;
                 /* padding-top sengaja 0: header sticky yang memegang area notch/status bar,
-                   supaya tidak ada celah putih yang bisa "bocor" di atas header. */
-                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-height) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
+                   supaya tidak ada celah putih yang bisa "bocor" di atas header.
+                   padding-bottom: tinggi bottom nav (56px) + ruang napas 2.5rem (40px) + safe area inset
+                   supaya tombol paling bawah (Detail Siswa, Pengaturan, dll.) tidak terpotong saat di-scroll mentok. */
+                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-height) + 2.5rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
             }
 
             body {
@@ -840,7 +911,7 @@
                 main,
                 .content-scroll-wrapper > main,
                 main.w-full {
-                    padding-bottom: calc(var(--bottom-nav-height) + 2rem + env(safe-area-inset-bottom, 0px)) !important;
+                    padding-bottom: calc(var(--bottom-nav-height) + 2.5rem + env(safe-area-inset-bottom, 0px)) !important;
                 }
             }
         }

@@ -84,20 +84,17 @@ class AuthController extends Controller
         // 3. Cek apakah login menggunakan Username pendek atau prefix alias email (misal: 'admin', 'guru')
         //    Gunakan grouping where agar orWhere tidak "bocor" ke kondisi lain.
         //    Hanya query username jika kolom sudah ada di database.
-        $userQuery = User::query();
+        // Prioritaskan pencocokan username persis, lalu email persis, lalu prefix email
+        $user = null;
         if (Schema::hasColumn('users', 'username')) {
-            $userQuery->where(function ($query) use ($loginInput) {
-                $query->where('username', $loginInput)
-                      ->orWhere('email', $loginInput)
-                      ->orWhere('email', 'like', $loginInput . '@%');
-            });
-        } else {
-            $userQuery->where(function ($query) use ($loginInput) {
-                $query->where('email', $loginInput)
-                      ->orWhere('email', 'like', $loginInput . '@%');
-            });
+            $user = User::where('username', $loginInput)->first();
         }
-        $user = $userQuery->first();
+        if (!$user) {
+            $user = User::where('email', $loginInput)->first();
+        }
+        if (!$user) {
+            $user = User::where('email', 'like', $loginInput . '@%')->first();
+        }
 
         if ($user && $this->verifyUserCredentials($user, $password)) {
             Auth::login($user, $remember);

@@ -85,7 +85,7 @@
             if (!href) return false;
             const url = new URL(href, window.location.href);
             const path = url.pathname.toLowerCase();
-            const downloadRoute = /(?:^|\/)(?:export|download|template|print-?cards?|generate-qr)(?:[-/._]|$)/i.test(path);
+            const downloadRoute = /(?:^|\/)(?:export|download|template|print-?cards?|generate-qr|import)(?:[-/._]|$)/i.test(path);
             const fileExtension = /\.(?:pdf|xlsx?|csv|zip|docx?|png|jpe?g|webp|svg)(?:$|\/)/i.test(path);
             const downloadParameter = ['download', 'attachment', 'export', 'pdf'].some(function(key) {
                 return url.searchParams.has(key);
@@ -117,7 +117,7 @@
             return;
         }
 
-        if (anchor.hasAttribute('download') || anchor.hasAttribute('data-no-loader') || anchor.hasAttribute('data-download') || anchor.closest('[data-download]') || isDownloadDestination(href) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        if (anchor.hasAttribute('download') || anchor.hasAttribute('data-no-loader') || anchor.hasAttribute('data-download') || anchor.hasAttribute('data-import') || anchor.closest('[data-download]') || anchor.closest('[data-import]') || isDownloadDestination(href) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
             return;
         }
 
@@ -143,10 +143,10 @@
         const submitter = event.submitter;
         const action = form instanceof HTMLFormElement ? (form.getAttribute('action') || window.location.href) : '';
         if (form instanceof HTMLFormElement) {
-            if (form.hasAttribute('download') || form.hasAttribute('data-no-loader') || form.hasAttribute('data-download') || isDownloadDestination(action)) {
+            if (form.hasAttribute('download') || form.hasAttribute('data-no-loader') || form.hasAttribute('data-download') || form.hasAttribute('data-import-form') || form.hasAttribute('data-import') || isDownloadDestination(action)) {
                 return;
             }
-            if (submitter && (submitter.hasAttribute('download') || submitter.hasAttribute('data-no-loader') || submitter.hasAttribute('data-download') || submitter.closest('[data-download]') || isDownloadDestination(submitter.getAttribute('formaction')))) {
+            if (submitter && (submitter.hasAttribute('download') || submitter.hasAttribute('data-no-loader') || submitter.hasAttribute('data-download') || submitter.hasAttribute('data-import') || submitter.closest('[data-download]') || submitter.closest('[data-import]') || isDownloadDestination(submitter.getAttribute('formaction')))) {
                 return;
             }
         }

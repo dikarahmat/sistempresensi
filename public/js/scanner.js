@@ -9,8 +9,25 @@
         BUKAN { video: {...} }. Instance dibuat ulang bila start gagal.
    ========================================================================== */
 
+/* KONTRAK SKOP: seluruh isi file ini berada di dalam IIFE — TIDAK ada deklarasi
+   let/const/var/function yang bocor ke global. Yang diekspor ke window hanya
+   fungsi bersama (handleScanResult, renderScanResult, resetOverlayState, playBeep,
+   dll) sehingga tidak pernah bentrok dengan script inline halaman
+   Presensi Hari Ini (admin/attendances/daily) atau Detail Kelas (admin/absensi/class). */
+
+(function () {
+    'use strict';
+
 // Rasio sisi qrbox terhadap sisi viewfinder (harus sama dgn --gerbang-scan-ratio)
 const GERBANG_SCAN_RATIO = 0.7;
+
+// Durasi total tampilan animasi hasil scan: 1.5 detik (masuk cepat, tahan, keluar halus)
+const SCAN_OVERLAY_DURATION_MS = 1500;
+
+// Debounce proteksi untuk token QR yang sama persis (2.5 detik)
+const SAME_CODE_DEBOUNCE_MS = 2500;
+let lastScannedToken = '';
+let lastScannedTimestamp = 0;
 
 // Instance scanner disimpan di window agar tidak ter-proxy oleh Livewire/Alpine
 if (!window.__kioskScanner) {
@@ -48,8 +65,29 @@ function playBeep() {
     const beep = document.getElementById('beepSound');
     if (beep) {
         beep.currentTime = 0;
-        beep.play().catch(() => {});
+        beep.play().catch(() => playSyntheticBeep());
+        return;
     }
+    playSyntheticBeep();
+}
+
+function playSyntheticBeep() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.16);
+    } catch (e) {}
 }
 
 function playBeepSound() { playBeep(); }
@@ -124,10 +162,23 @@ function getCsrfToken() {
     return (meta && meta.getAttribute('content')) || '';
 }
 
+function isUnrecognizedQrMessage(msg) {
+    const m = (msg || '').toLowerCase();
+    return m.includes('tidak dikenali') || m.includes('tidak ditemukan') || m.includes('tidak valid');
+}
+
 function processCode(token) {
     const cleanToken = (token || '').trim();
     if (!cleanToken || scanner.isProcessingScan) return;
+
+    const now = Date.now();
+    if (cleanToken === lastScannedToken && (now - lastScannedTimestamp < SAME_CODE_DEBOUNCE_MS)) {
+        return; // Abaikan jika QR token sama persis dalam masa debounce
+    }
+
     scanner.isProcessingScan = true;
+    lastScannedToken = cleanToken;
+    lastScannedTimestamp = now;
 
     const csrfToken = getCsrfToken();
     const scannerScript = document.querySelector('script[src*="scanner.js"]');
@@ -150,17 +201,17 @@ function processCode(token) {
     })
     .then(res => res.json().then(data => ({ status: res.status, body: data })))
     .then(({ status, body }) => {
-        if (status === 200 && body.success) {
-            playBeep();
-            showOverlaySuccess(body);
-        } else {
-            playBeep();
-            showOverlayError(body.message || 'QR Code tidak valid!', body.student);
-        }
-    })
-    .catch(() => {
         playBeep();
-        showOverlayError('Terjadi kendala koneksi ke server.');
+        handleScanResult(status, body);
+    })
+    .catch((err) => {
+        console.error('[kiosk-scanner] Fetch error:', err);
+        playBeep();
+        // HASIL 5: Error server/jaringan -> Lingkaran MERAH + TANDA SERU (!) putih
+        handleScanResult(500, {
+            success: false,
+            message: 'Terjadi kendala koneksi ke server, coba lagi'
+        });
     });
 }
 
@@ -184,83 +235,169 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-/* ================= OVERLAY HASIL SCAN (ANIMASI) ================= */
-function showOverlaySuccess(data) {
-    const overlay = document.getElementById('overlaySuccess');
-    const textEl = document.getElementById('successText');
-    const metaEl = document.getElementById('successMeta');
+/* ==========================================================================
+   PENENTUAN HASIL SCAN (5 KOMBINASI WARNA LINGKARAN & IKON)
+   Single Source of Truth: presensi-tokens.css & scanner.js
+   ========================================================================== */
+function handleScanResult(status, body) {
+    body = body || {};
+
+    // 1 & 2: SCAN BERHASIL (status 200 && body.success)
+    if (status === 200 && body.success) {
+        const student = body.student || {};
+        const nama = student.name || 'Siswa';
+        const kelas = student.class || student.kelas || '';
+        const waktu = body.time_short ? body.time_short + ' WIB' : '';
+
+        const titleHtml = `<span class="d-block text-uppercase fw-bold text-truncate" style="letter-spacing: -0.01em;">${escapeHtml(nama)}</span>` +
+                          (kelas ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelas)}</span>` : '');
+
+        if (body.is_late) {
+            // HASIL 2: Berhasil tapi TERLAMBAT -> Lingkaran HIJAU + X putih
+            const subtitleText = 'Terlambat' + (waktu ? ' · ' + waktu : '');
+            renderScanResult('green', 'cross', titleHtml, subtitleText, false);
+        } else if (body.type === 'check_out') {
+            // Presensi Pulang -> Lingkaran HIJAU + CENTANG putih
+            const subtitleText = 'Presensi Pulang' + (waktu ? ' · ' + waktu : '');
+            renderScanResult('green', 'check', titleHtml, subtitleText, false);
+        } else {
+            // HASIL 1: Berhasil, tepat waktu (HADIR) -> Lingkaran HIJAU + CENTANG putih
+            const subtitleText = 'Hadir' + (waktu ? ' · ' + waktu : '');
+            renderScanResult('green', 'check', titleHtml, subtitleText, false);
+        }
+        return;
+    }
+
+    // 3: SISWA SUDAH PRESENSI HARI INI (ada data student)
+    if (body.student && body.student.name) {
+        const student = body.student;
+        const nama = student.name;
+        const kelas = student.class || student.kelas || '';
+
+        const titleHtml = `<span class="d-block text-uppercase fw-bold text-truncate">${escapeHtml(nama)}</span>` +
+                          (kelas ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelas)}</span>` : '');
+
+        // Pesan teks: "Siswa atas nama X sudah melakukan presensi hari ini"
+        const subtitleText = body.message || `Siswa atas nama ${nama} sudah melakukan presensi hari ini`;
+
+        // HASIL 3: Sudah presensi hari ini -> Lingkaran MERAH + X putih
+        renderScanResult('red', 'cross', titleHtml, subtitleText, true);
+        return;
+    }
+
+    // 4: QR/KARTU TIDAK DIKENALI ATAU SISWA TIDAK DITEMUKAN (status 404 / pesan kartu tidak dikenali)
+    if (status === 404 || isUnrecognizedQrMessage(body.message)) {
+        // HASIL 4: QR tidak dikenali -> Lingkaran ORANYE + TANDA SERU (!) putih
+        // Pesan teks: "Kartu tidak dikenali atau data siswa tidak ditemukan"
+        const subtitleText = 'Kartu tidak dikenali atau data siswa tidak ditemukan';
+        renderScanResult('orange', 'exclamation', '', subtitleText, true);
+        return;
+    }
+
+    // 5: ERROR SERVER / JARINGAN
+    // HASIL 5: Error server/jaringan -> Lingkaran MERAH + TANDA SERU (!) putih
+    const titleHtml = `<span class="d-block text-uppercase fw-bold">Gagal</span>`;
+    const subtitleText = body.message || 'Terjadi kendala koneksi ke server, coba lagi';
+    renderScanResult('red', 'exclamation', titleHtml, subtitleText, true);
+}
+
+/**
+ * Satu fungsi terpusat untuk menampilkan hasil scan dengan kombinasi warna lingkaran dan ikon
+ * @param {'green'|'orange'|'red'} circleColor - Warna lingkaran luar
+ * @param {'check'|'cross'|'exclamation'} iconType - Ikon putih di dalam lingkaran
+ * @param {string} titleHtml - HTML judul (Nama Siswa Kapital Bold & Kelas)
+ * @param {string} subtitleText - Teks status / pesan di bawahnya
+ * @param {boolean} shake - Animasi getar halus jika error / warning
+ */
+function renderScanResult(circleColor, iconType, titleHtml, subtitleText, shake = false) {
+    const overlay = document.getElementById('scanResultOverlay');
     if (!overlay) return;
 
-    const nama = (data.student && data.student.name) || '-';
-    const kelas = (data.student && (data.student.class || data.student.kelas)) || '';
-    const waktu = data.time_short ? data.time_short + ' WIB' : '';
-
-    let status = 'Hadir';
-    if (data.type === 'check_out') {
-        status = 'Presensi Pulang';
-    } else if (data.is_late) {
-        status = 'Terlambat +' + data.late_minutes + ' mnt';
-    } else if (data.display_remark) {
-        status = data.display_remark;
+    // Set kelas styling lingkaran dan ikon sesuai kombinasi
+    overlay.className = 'scan-result-overlay';
+    overlay.classList.add('circle-' + circleColor);
+    overlay.classList.add('icon-' + iconType);
+    if (shake) {
+        overlay.classList.add('shake');
     }
 
-    // Susunan Identik Kartu: Nama di Atas (Kapital Bold), Kelas Tepat di Bawahnya (Bold, tanpa label), lalu Status Presensi
-    if (textEl) {
-        textEl.innerHTML = `<span class="d-block text-uppercase fw-bold text-truncate" style="letter-spacing: -0.01em;">${escapeHtml(nama)}</span>` +
-                           (kelas ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelas)}</span>` : '');
+    const titleEl = document.getElementById('scanResultTitle');
+    const subtitleEl = document.getElementById('scanResultSubtitle');
+
+    if (titleEl) {
+        titleEl.innerHTML = titleHtml || '';
+        titleEl.style.display = titleHtml ? '' : 'none';
     }
-    if (metaEl) {
-        metaEl.innerText = status + (waktu ? ' · ' + waktu : '');
+    if (subtitleEl) {
+        subtitleEl.innerText = subtitleText || '';
     }
 
-    overlay.classList.remove('d-none', 'error');
-    void overlay.offsetWidth;
-    overlay.classList.add('d-none');
-    void overlay.offsetWidth;
-    overlay.classList.remove('d-none');
-
-    resetOverlayState(2200);
+    triggerOverlayDisplay(overlay);
 }
 
-function showOverlayError(message, student) {
-    const overlay = document.getElementById('overlayError');
-    const titleEl = document.getElementById('errorTitle');
-    const textEl = document.getElementById('errorText');
-    if (!overlay || !titleEl || !textEl) return;
+function triggerOverlayDisplay(overlay) {
+    if (!overlay) return;
 
-    const adaSiswa = student && student.name;
-    const kelasSiswa = student && (student.class || student.kelas);
+    // 1) TAMPILKAN overlay dulu. Jika masih display:none, browser TIDAK
+    //    menjalankan animasi sama sekali (gejala: animasi tidak muncul di
+    //    panel Scanner QR). d-none & fade-out dibersihkan di sini.
+    overlay.classList.remove('d-none', 'fade-out');
+    overlay.style.display = '';
+    overlay.style.opacity = '';
 
-    if (adaSiswa) {
-        titleEl.innerHTML = `<span class="d-block text-uppercase fw-bold text-truncate">${escapeHtml(student.name)}</span>` +
-                            (kelasSiswa ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelasSiswa)}</span>` : '');
-        textEl.innerText = message || 'Presensi Gagal / Sudah Tercatat';
-    } else {
-        titleEl.innerText = 'Kartu Tidak Dikenali';
-        textEl.innerText = message || 'Scan gagal, coba lagi';
+    // 2) Paksa reflow supaya state "tampil" ter-commit ke layout sebelum
+    //    node animasi diganti (langkah 3).
+    void overlay.offsetWidth;
+
+    // 3) RESTART SEMUA animasi hasil scan (gambar lingkaran, ikon centang/
+    //    X/tanda seru, teks) dengan menukar node .scan-result-content
+    //    -> node baru. Elemen baru = animasi CSS mulai dari frame 0.
+    //    Berlaku PERSIS SAMA untuk Mode Gerbang & panel Scanner QR
+    //    karena markup & CSS-nya identik (sumber tunggal).
+    const content = overlay.querySelector('.scan-result-content');
+    if (content && content.parentNode) {
+        const clone = content.cloneNode(true);
+        content.parentNode.replaceChild(clone, content);
     }
 
-    overlay.classList.remove('d-none', 'error');
-    void overlay.offsetWidth;
-    overlay.classList.add('d-none');
-    void overlay.offsetWidth;
-    overlay.classList.remove('d-none');
-    overlay.classList.add('error');
+    if (scanner.resetTimer) clearTimeout(scanner.resetTimer);
 
-    resetOverlayState(2200);
+    // Animasi keluar halus (fade-out) 150ms sebelum durasi total 1.5 detik selesai
+    const fadeOutDelay = Math.max(0, SCAN_OVERLAY_DURATION_MS - 150);
+    setTimeout(() => {
+        if (!overlay.classList.contains('d-none')) {
+            overlay.classList.add('fade-out');
+        }
+    }, fadeOutDelay);
+
+    // Reset overlay & izinkan scan berikutnya setelah durasi selesai (kamera tetap standby)
+    scanner.resetTimer = setTimeout(() => {
+        overlay.classList.add('d-none');
+        overlay.classList.remove('fade-out');
+        scanner.isProcessingScan = false;
+        try {
+            window.dispatchEvent(new CustomEvent('scan-result-finished'));
+        } catch (e) {}
+        refocusHardwareInput();
+    }, SCAN_OVERLAY_DURATION_MS);
 }
 
-function resetOverlayState(delay = 2200) {
+// Backward-compatibility delegators
+function showOverlaySuccess(data) { handleScanResult(200, data); }
+function showOverlayWarning(message) { handleScanResult(404, { success: false, message: message }); }
+function showOverlayError(message, student) { handleScanResult(400, { success: false, message: message, student: student }); }
+function resetOverlayState(delay = SCAN_OVERLAY_DURATION_MS) {
     if (scanner.resetTimer) clearTimeout(scanner.resetTimer);
     scanner.resetTimer = setTimeout(() => {
-        const ok = document.getElementById('overlaySuccess');
-        const err = document.getElementById('overlayError');
-        if (ok) ok.classList.add('d-none');
-        if (err) {
-            err.classList.add('d-none');
-            err.classList.remove('error');
+        const overlay = document.getElementById('scanResultOverlay');
+        if (overlay) {
+            overlay.classList.add('d-none');
+            overlay.classList.remove('fade-out');
         }
         scanner.isProcessingScan = false;
+        try {
+            window.dispatchEvent(new CustomEvent('scan-result-finished'));
+        } catch (e) {}
         refocusHardwareInput();
     }, delay);
 }
@@ -375,8 +512,13 @@ async function startCameraKiosk() {
     }
 
     function mirrorIfFront(isFront) {
-        const video = document.querySelector('#reader video');
-        if (video) video.style.transform = isFront ? 'scaleX(-1)' : '';
+        // REVISI 1 (kiblat: Scanner QR = tidak mirror): SATU aturan arah untuk
+        // kiosk + panel — video TIDAK di-mirror pada kamera depan maupun
+        // belakang. Hanya tampilan; pemilihan kamera/decode/request tidak berubah.
+        const v = document.querySelector('#reader video');
+        if (!v) return;
+        try { v.style.scale = ''; } catch (e) {}
+        v.classList.remove('mirror-front');
     }
 
     // cameraIdOrConfig: { facingMode: '...' } ATAU string deviceId. JANGAN pakai { video: ... }
@@ -538,6 +680,11 @@ function toggleFullscreen() {
 
 /* ================= INITIALIZATION ================= */
 document.addEventListener('DOMContentLoaded', function() {
+    // Hanya auto-start kamera gerbang jika berada di halaman kiosk/scanner mandiri (memiliki .kiosk-main)
+    if (!document.querySelector('.kiosk-main')) {
+        return;
+    }
+
     if (scanner.initialized) {
         console.log('[kiosk-camera] Already initialized, skipping');
         return;
@@ -571,12 +718,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    window.addEventListener('pagehide', function() {
+        runCamera(async () => {
+            await safeStop();
+        });
+    });
+
     console.log('[kiosk-camera] Starting camera...');
     runCamera(async () => {
         await startCameraKiosk();
     });
 });
 
-// Initialize clock
-setInterval(updateClock, 1000);
-updateClock();
+// Initialize clock (hanya jika ada elemen liveClock di halaman)
+if (document.getElementById('liveClock')) {
+    setInterval(updateClock, 1000);
+    updateClock();
+}
+
+// ================= EXPORTS KE WINDOW =================
+// 1. Fungsi hasil scan dipakai bersama oleh Mode Gerbang dan Scanner Inline
+window.handleScanResult = handleScanResult;
+window.renderScanResult = renderScanResult;
+window.triggerOverlayDisplay = triggerOverlayDisplay;
+window.isUnrecognizedQrMessage = isUnrecognizedQrMessage;
+window.escapeHtml = escapeHtml;
+window.showOverlaySuccess = showOverlaySuccess;
+window.showOverlayWarning = showOverlayWarning;
+window.showOverlayError = showOverlayError;
+window.resetOverlayState = resetOverlayState;
+window.playBeep = playBeep;
+window.playBeepSound = playBeepSound;
+
+// 2. Fungsi tombol interaktif khusus halaman Mode Gerbang & Presensi Gerbang (.kiosk-main)
+if (document.querySelector('.kiosk-main') || document.body.classList.contains('kiosk-body')) {
+    window.switchMode = switchMode;
+    window.retryCamera = retryCamera;
+    window.toggleFullscreen = toggleFullscreen;
+    window.processCode = processCode;
+    window.processScanCode = processScanCode;
+}
+
+})();

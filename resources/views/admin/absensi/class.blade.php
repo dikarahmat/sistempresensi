@@ -188,7 +188,12 @@
         box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
     }
 
-    /* Viewport / Area Scanner */
+    /* Viewport / Area Scanner — SATU SUMBER GAYA: presensi-tokens.css
+       (#scannerColumn #scannerBox/#reader + .panel-scan-frame, SAMA PERSIS
+       dengan kiosk: radius 16px, shadow, aspect 1/1, tanpa mirror,
+       bracket 28px/5px/70%). Di view ini hanya state idle (belum kamera
+       aktif); saat kamera aktif seluruh gaya diambil dari tokens agar tidak
+       ada duplikat/border biru. */
     .scanner-viewport-container {
         border: 2px dashed #cbd5e1;
         border-radius: 16px;
@@ -202,77 +207,6 @@
         position: relative;
         overflow: hidden;
         transition: all 0.2s ease;
-    }
-
-    .scanner-viewport-container.camera-active {
-        border: 2px solid #2563eb;
-        background: #000000;
-        padding: 0;
-        aspect-ratio: 1 / 1 !important;
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow: hidden !important;
-    }
-
-    #reader {
-        width: 100% !important;
-        height: 100% !important;
-        border: none !important;
-        aspect-ratio: 1 / 1 !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow: hidden !important;
-    }
-
-    #reader video {
-        position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-        transform: translate(-50%, -50%) !important;
-        border-radius: 14px;
-    }
-
-    /* Overlay Notifikasi Langsung di Dalam Scanner Box */
-    .overlay-status {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 50;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 1.2rem;
-        text-align: center;
-        backdrop-filter: blur(6px);
-        animation: fadeInScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    /* Sukses: Gradient Emerald */
-    .overlay-success {
-        background: linear-gradient(135deg, rgba(13, 148, 136, 0.96) 0%, rgba(16, 185, 129, 0.96) 100%);
-        color: #ffffff;
-        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
-        border-radius: 14px;
-    }
-
-    /* Gagal/Error: Danger Red */
-    .overlay-error {
-        background: #dc2626 !important;
-        color: #ffffff !important;
-        box-shadow: 0 0 25px rgba(220, 38, 38, 0.5);
-        border-radius: 14px;
-    }
-
-    @keyframes fadeInScale {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
     }
 
     /* ==========================================================================
@@ -395,32 +329,15 @@
             font-size: 0.78rem;
         }
 
-        /* Kotak utama dipaksa rasio 1:1 sehingga selalu jadi bujur sangkar */
+        /* Kotak utama (idle) tetap rapi di HP; saat kamera aktif gaya diambil
+           dari presensi-tokens.css (#scannerColumn, SAMA PERSIS dengan kiosk). */
         .scanner-viewport-container {
             width: 100%;
             max-width: 380px;
             margin-left: auto;
             margin-right: auto;
-            aspect-ratio: 1 / 1;
             min-height: 0;
             padding: 12px;
-            border-radius: 14px;
-        }
-
-        .scanner-viewport-container.camera-active {
-            padding: 0;
-        }
-
-        #reader {
-            width: 100% !important;
-            height: 100% !important;
-            min-height: 0 !important;
-        }
-
-        #reader video {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover;
             border-radius: 14px;
         }
 
@@ -486,7 +403,15 @@
                     
                     <!-- Mode Kamera -->
                     <div id="cameraView" class="w-100 h-100 position-relative">
-                        <div id="reader" style="width: 100%; min-height: 220px; border-radius: 12px; overflow: hidden;"></div>
+                        <div id="reader"></div>
+                        <div class="panel-scan-frame" aria-hidden="true">
+                            <div class="panel-scan-box">
+                                <span class="panel-corner panel-corner--tl"></span>
+                                <span class="panel-corner panel-corner--tr"></span>
+                                <span class="panel-corner panel-corner--bl"></span>
+                                <span class="panel-corner panel-corner--br"></span>
+                            </div>
+                        </div>
                         <div id="cameraPlaceholder" class="py-4 position-absolute top-50 start-50 translate-middle w-100" style="background: #fafbfd; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
                             <i class='bx bx-qr-scan text-secondary' style="font-size: 3rem;"></i>
                             <p class="text-secondary small mt-2 mb-0 fw-semibold">Tempelkan kartu QR ke kamera</p>
@@ -502,21 +427,29 @@
                         </div>
                     </div>
 
-                    <!-- Overlay Sukses (Emerald Gradient) -->
-                    <div id="overlaySuccess" class="overlay-status overlay-success d-none">
-                        <div class="rounded-circle bg-white bg-opacity-25 p-2 mb-2 d-inline-flex">
-                            <i class='bx bx-check fs-2 text-white'></i>
+                    <!-- Overlay Hasil Scan Terpadu (SAMA PERSIS DENGAN KIOSK) -->
+                    <div id="scanResultOverlay" class="scan-result-overlay d-none">
+                        <div class="scan-result-content">
+                            <svg class="scan-result-svg" viewBox="0 0 100 100" width="110" height="110">
+                                <circle class="scan-result-circle" cx="50" cy="50" r="45" fill="none" stroke-width="6"/>
+                                <!-- 1. Centang Putih -->
+                                <path class="scan-result-icon scan-result-check" d="M30 52 L45 67 L72 35" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <!-- 2. Silang X Putih -->
+                                <g class="scan-result-icon scan-result-cross">
+                                    <path class="scan-result-cross-1" d="M35 35 L65 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                    <path class="scan-result-cross-2" d="M65 35 L35 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                </g>
+                                <!-- 3. Tanda Seru (!) Putih -->
+                                <g class="scan-result-icon scan-result-exclamation">
+                                    <path class="scan-result-exclamation-line" d="M50 28 L50 56" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                    <circle class="scan-result-exclamation-dot" cx="50" cy="71" r="4.5" fill="#ffffff"/>
+                                </g>
+                            </svg>
+                            <div class="scan-result-text">
+                                <div class="scan-result-name" id="scanResultTitle">Nama Siswa</div>
+                                <div class="scan-result-status" id="scanResultSubtitle">Status Presensi</div>
+                            </div>
                         </div>
-                        <h6 class="fw-bold text-white mb-0 px-2" id="successText" style="font-size: 1.05rem; letter-spacing: -0.01em;">Nama Siswa — Hadir jam 07:00</h6>
-                    </div>
-
-                    <!-- Overlay Gagal (Danger Red) -->
-                    <div id="overlayError" class="overlay-status overlay-error d-none">
-                        <div class="rounded-circle bg-white bg-opacity-25 p-2 mb-2 d-inline-flex">
-                            <i class='bx bx-error-circle fs-2 text-white'></i>
-                        </div>
-                        <h6 class="fw-bold text-white mb-1" style="font-size: 1.05rem;">Peringatan Presensi</h6>
-                        <p class="text-white small mb-0 fw-medium px-2" id="errorText" style="font-size: 0.82rem;">Siswa sudah presensi hari ini.</p>
                     </div>
 
                 </div>
@@ -674,7 +607,8 @@
 
 @push('scripts')
 <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
-<script src="{{ asset('js/camera-select.js') }}"></script>
+<script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
+<script src="{{ asset('js/camera-select.js') }}?v={{ file_exists(public_path('js/camera-select.js')) ? filemtime(public_path('js/camera-select.js')) : config('app.version', '1') }}"></script>
 <script>
     let isScannerOpen = false;
     let html5QrKiosk = null;
@@ -684,7 +618,7 @@
     let activeMode = 'camera';
 
     // Suara Beep dari file audio/beep.mp3
-    function playBeepSound(success = true) {
+    function playClassBeep(success = true) {
         const beep = document.getElementById('beepSound');
         if (beep) {
             beep.currentTime = 0;
@@ -792,9 +726,25 @@
         }
     }
 
+    // Ekspos ke window agar handler onclick inline (tombol Buka/Tutup Scanner & tab
+    // Kamera/Alat Scanner) selalu bisa memanggilnya.
+    window.toggleInlineScanner = toggleInlineScanner;
+    window.switchMode = switchMode;
+
+    let lastClassScannedToken = '';
+    let lastClassScannedTimestamp = 0;
+
     function processCode(token) {
         const cleanToken = (token || '').trim();
         if (!cleanToken || isProcessing) return;
+
+        const now = Date.now();
+        if (cleanToken === lastClassScannedToken && (now - lastClassScannedTimestamp < 2500)) {
+            return;
+        }
+        lastClassScannedToken = cleanToken;
+        lastClassScannedTimestamp = now;
+
         isProcessing = true;
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
@@ -810,72 +760,35 @@
         })
         .then(res => res.json().then(data => ({ status: res.status, body: data })))
         .then(({ status, body }) => {
-            if (status === 200 && body.success) {
-                playBeepSound(true);
-                showOverlaySuccess(body);
-
-                // Reload otomatis setelah notifikasi tampil agar data tabel diperbarui
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1200);
-            } else {
-                playBeepSound(false);
-                showOverlayError(body.message || 'QR Code tidak valid.');
+            playClassBeep(status === 200 && body.success);
+            if (typeof handleScanResult === 'function') {
+                handleScanResult(status, body);
             }
         })
         .catch(err => {
-            console.error(err);
-            playBeepSound(false);
-            showOverlayError('Terjadi kendala koneksi ke server.');
+            console.error('[class-scanner] Fetch error:', err);
+            playClassBeep(false);
+            if (typeof handleScanResult === 'function') {
+                handleScanResult(500, {
+                    success: false,
+                    message: 'Terjadi kendala koneksi ke server, coba lagi'
+                });
+            }
         });
     }
 
-    function showOverlaySuccess(data) {
-        const overlaySucc = document.getElementById('overlaySuccess');
-        const successText = document.getElementById('successText');
-        if (!overlaySucc || !successText) return;
+    // Listener saat overlay hasil scan selesai (1.5 detik): reset flag & fokus input (kamera standby tanpa reload)
+    window.addEventListener('scan-result-finished', function() {
+        isProcessing = false;
+        if (activeMode === 'hardware') {
+            const inputEl = document.getElementById('hardwareInput');
+            if (inputEl) inputEl.focus();
+        }
+    });
 
-        const studentName = data.student ? data.student.name : 'Siswa';
-        const studentClass = data.student ? (data.student.class || data.student.kelas || '') : '';
-        const statusLabel = data.type === 'check_out' ? 'Pulang' : (data.remark || 'Hadir');
-        const now = new Date();
-        const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-
-        successText.innerHTML = `<span class="d-block fw-bold text-uppercase" style="font-size: 1.05rem;">${studentName}</span>` +
-                                (studentClass ? `<span class="d-block fw-bold text-white opacity-90 small mt-0.5">${studentClass}</span>` : '') +
-                                `<div class="mt-2"><span class="badge bg-white text-dark fw-bold px-2.5 py-1" style="font-size: 0.75rem;">${statusLabel} · ${timeStr} WIB</span></div>`;
-        overlaySucc.classList.remove('d-none');
-
-        resetOverlayState(1200);
-    }
-
-    function showOverlayError(errorMsg) {
-        const overlayErr = document.getElementById('overlayError');
-        const errorText = document.getElementById('errorText');
-        if (!overlayErr || !errorText) return;
-
-        errorText.innerText = errorMsg;
-        overlayErr.classList.remove('d-none');
-
-        resetOverlayState(1200);
-    }
-
-    function resetOverlayState(delay = 1000) {
-        if (resetTimer) clearTimeout(resetTimer);
-        resetTimer = setTimeout(() => {
-            const overlaySucc = document.getElementById('overlaySuccess');
-            const overlayErr = document.getElementById('overlayError');
-            if (overlaySucc) overlaySucc.classList.add('d-none');
-            if (overlayErr) overlayErr.classList.add('d-none');
-
-            isProcessing = false;
-
-            if (activeMode === 'hardware') {
-                const inputEl = document.getElementById('hardwareInput');
-                if (inputEl) inputEl.focus();
-            }
-        }, delay);
-    }
+    // Catatan: reset overlay 1.5 detik (resetOverlayState) TIDAK dideklarasikan ulang di sini.
+    // Satu sumber kebenarannya ada di public/js/scanner.js (diekspor ke window), sehingga
+    // tidak ada nama global bentrok dengan script inline halaman ini.
 
     function startCamera() {
         if (isCamRunning) return;
@@ -898,6 +811,8 @@
 
             // Pemilihan kamera SAMA PERSIS dengan mode gerbang
             // (public/js/scanner.js): HP -> kamera belakang, laptop -> depan.
+            // qrbox proporsional 70% SAMA PERSIS dengan kiosk (GERBANG_SCAN_RATIO),
+            // hanya tampilan jendela terang; logika decode/request tidak berubah.
             const result = await CameraSelect.startSmartCamera({
                 containerId: 'reader',
                 getInstance: () => html5QrKiosk,
@@ -908,7 +823,7 @@
                     const el = document.getElementById('reader');
                     if (el) el.innerHTML = '';
                 },
-                config: { fps: 10, qrbox: { width: 180, height: 180 } },
+                config: { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.7); return { width: s, height: s }; } },
                 onSuccess: (decodedText) => {
                     processCode(decodedText);
                 },
@@ -917,6 +832,12 @@
 
             if (result && result.success) {
                 isCamRunning = true;
+                // REVISI 1 (kiblat: Scanner QR = tidak mirror): netralkan sisa
+                // mirror panel. Hanya tampilan; pilih kamera/decode tidak berubah.
+                try {
+                    const v = document.querySelector('#scannerColumn #reader video');
+                    if (v) { v.style.scale = ''; v.classList.remove('mirror-front'); }
+                } catch (e) {}
             } else {
                 const msg = CameraSelect.errorMessageFor(result && result.error);
                 console.error(msg, result && result.error);

@@ -140,6 +140,24 @@
     .rekap-legend-label { font-weight: 700; color: #475569; text-transform: uppercase; font-size: 0.64rem; }
     .rekap-legend-items { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.55rem; }
     .rekap-legend-item { display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; }
+
+    /* Gaya Pagination Disamakan Persis dengan Data Siswa */
+    .pagination-compact .pagination {
+        margin-bottom: 0;
+        font-size: 0.82rem;
+    }
+    .pagination-compact .page-link {
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px !important;
+        font-family: 'Poppins', 'Roboto', sans-serif;
+    }
+    @media (max-width: 767.98px) {
+        .pagination-compact .pagination {
+            justify-content: center !important;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+    }
 </style>
 @endpush
 
@@ -364,7 +382,7 @@
     @endif
 
     <!-- TABEL UTAMA -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
@@ -389,10 +407,13 @@
                             $lateText = is_array($item) ? ($item['late_text'] ?? '-') : '-';
                             $proofDoc = is_array($item) ? ($item['proof_document'] ?? null) : null;
                             $notes = is_array($item) ? ($item['notes'] ?? '-') : '-';
+                            $rowNum = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                ? ($dataRows->firstItem() + $loop->index)
+                                : ($loop->iteration);
                         @endphp
                         @if($st)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                            <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
+                            <td class="text-center text-secondary">{{ $rowNum }}</td>
                             <td>{{ $st->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ panel_route('students.show', $st->id) }}" class="text-decoration-none text-dark">{{ $st->name }}</a>
@@ -459,10 +480,13 @@
                         @php
                             $student = is_array($item) ? ($item['student'] ?? null) : $item;
                             $days = is_array($item) ? ($item['days'] ?? []) : [];
+                            $rowNum = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                ? ($dataRows->firstItem() + $loop->index)
+                                : ($loop->iteration);
                         @endphp
                         @if($student)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                            <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
+                            <td class="text-center text-secondary">{{ $rowNum }}</td>
                             <td>{{ $student->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
@@ -522,10 +546,13 @@
                         @php
                             $student = is_array($item) ? ($item['student'] ?? null) : $item;
                             $days = is_array($item) ? ($item['days'] ?? []) : [];
+                            $rowNum = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                ? ($dataRows->firstItem() + $loop->index)
+                                : ($loop->iteration);
                         @endphp
                         @if($student)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                            <td class="text-center text-secondary">{{ $dataRows->firstItem() + $loop->index }}</td>
+                            <td class="text-center text-secondary">{{ $rowNum }}</td>
                             <td>{{ $student->nis }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
@@ -566,15 +593,20 @@
             @endif
         </div>
 
-        @if($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator && $dataRows->hasPages())
-        <div class="px-3 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white">
-            <div class="text-muted small">
-                Menampilkan {{ $dataRows->firstItem() }}–{{ $dataRows->lastItem() }} dari {{ $dataRows->total() }} siswa
-            </div>
-            <div class="d-flex justify-content-center">
-                {{ $dataRows->onEachSide(1)->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
-        @endif
+        {!! render_compact_pagination($dataRows, 'daftar-rekap') !!}
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('page')) {
+                const el = document.getElementById('daftar-rekap');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    </script>
+    @endpush
 @endsection

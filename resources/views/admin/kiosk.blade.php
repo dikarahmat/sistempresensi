@@ -20,7 +20,7 @@
     <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 
     <!-- Presensi Unified Design Tokens -->
-    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}?v={{ file_exists(public_path('css/presensi-tokens.css')) ? filemtime(public_path('css/presensi-tokens.css')) : config('app.version', '1') }}">
 
     <style>
         :root {
@@ -348,133 +348,6 @@
         .kiosk-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
         .kiosk-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
 
-        /* ===== OVERLAY HASIL SCAN: Animasi SVG ===== */
-        .scan-result-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: var(--gerbang-camera-radius);
-            animation: fadeInScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .scan-result-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .scan-result-svg {
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
-        }
-
-        .scan-result-circle {
-            stroke-dasharray: 283;
-            stroke-dashoffset: 283;
-            animation: drawCircle 0.4s ease-out forwards;
-        }
-
-        .scan-result-check {
-            stroke-dasharray: 60;
-            stroke-dashoffset: 60;
-            animation: drawCheck 0.3s ease-out 0.35s forwards;
-        }
-
-        .scan-result-cross-1 {
-            stroke-dasharray: 45;
-            stroke-dashoffset: 45;
-            animation: drawCross1 0.25s ease-out 0.35s forwards;
-        }
-
-        .scan-result-cross-2 {
-            stroke-dasharray: 45;
-            stroke-dashoffset: 45;
-            animation: drawCross2 0.25s ease-out 0.55s forwards;
-        }
-
-        .scan-result-text {
-            animation: fadeInScale 0.2s ease-out 0.5s both;
-        }
-
-        .scan-result-name {
-            font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #ffffff;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-            overflow-wrap: anywhere;
-        }
-
-        .scan-result-status {
-            font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-            font-size: 0.85rem;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-            overflow-wrap: anywhere;
-        }
-
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes drawCircle {
-            to { stroke-dashoffset: 0; }
-        }
-
-        @keyframes drawCheck {
-            to { stroke-dashoffset: 0; }
-        }
-
-        @keyframes drawCross1 {
-            to { stroke-dashoffset: 0; }
-        }
-
-        @keyframes drawCross2 {
-            to { stroke-dashoffset: 0; }
-        }
-
-        /* Shake animation untuk gagal */
-        .scan-result-overlay.error .scan-result-svg {
-            animation: shake 0.4s ease-in-out 0.7s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-6px); }
-            80% { transform: translateX(6px); }
-        }
-
-        /* Hormati prefers-reduced-motion */
-        @media (prefers-reduced-motion: reduce) {
-            .scan-result-circle,
-            .scan-result-check,
-            .scan-result-cross-1,
-            .scan-result-cross-2 {
-                animation: none;
-                stroke-dashoffset: 0;
-            }
-            .scan-result-text {
-                animation: none;
-            }
-            .scan-result-overlay.error .scan-result-svg {
-                animation: none;
-            }
-        }
-
         /* ===== PLACEHOLDER KAMERA (pesan izin + tombol Coba Lagi) ===== */
         .kiosk-placeholder {
             position: absolute;
@@ -641,13 +514,9 @@
                 font-size: 1.35rem;
             }
 
-            /* 7. Overlay hasil scan & placeholder error: center di dalam kotak,
-                  teks/ikon tidak keluar dari kotak kamera */
-            .scan-result-overlay { padding: 0.6rem; }
-            .scan-result-content { gap: 0.5rem; }
-            .scan-result-svg { width: min(120px, 55%); height: auto; }
-            .scan-result-name { font-size: 1rem; }
-            .scan-result-status { font-size: 0.8rem; }
+            /* 7. Overlay hasil scan (5 kombinasi): TIDAK ADA aturan .scan-result-*
+                  di view ini. SATU SUMBER di presensi-tokens.css (REVISI 2) —
+                  nilai tetap px, sama untuk Gerbang & panel Scanner QR. */
         }
 
         /* ==========================================================================
@@ -681,8 +550,9 @@
             .kiosk-placeholder { padding: 0.5rem; }
             .kiosk-placeholder i { font-size: 1.7rem !important; }
             .kiosk-placeholder-text { font-size: 0.7rem; }
-            .scan-result-content { gap: 0.35rem; }
-            .scan-result-svg { width: min(120px, 46%); height: auto; }
+            /* Overlay hasil scan: SATU SUMBER di presensi-tokens.css (REVISI 2).
+               Aturan @media layar pendek (max-height 639px) TIDAK diulang
+               di sini — sudah ada di file token dengan nilai tetap px. */
         }
     </style>
 </head>
@@ -757,31 +627,27 @@
                     </div>
                 </div>
 
-                <!-- Overlay Sukses: Centang Hijau Beranimasi -->
-                <div id="overlaySuccess" class="scan-result-overlay d-none">
+                <!-- Overlay Hasil Scan Terpadu (5 Kombinasi: Lingkaran Hijau/Oranye/Merah + Ikon Centang/X/Tanda Seru) -->
+                <div id="scanResultOverlay" class="scan-result-overlay d-none">
                     <div class="scan-result-content">
-                        <svg class="scan-result-svg" viewBox="0 0 100 100" width="120" height="120">
-                            <circle class="scan-result-circle" cx="50" cy="50" r="45" fill="none" stroke="#22c55e" stroke-width="6"/>
-                            <path class="scan-result-check" d="M30 52 L45 67 L72 35" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg class="scan-result-svg" viewBox="0 0 100 100" width="110" height="110">
+                            <circle class="scan-result-circle" cx="50" cy="50" r="45" fill="none" stroke-width="6"/>
+                            <!-- 1. Centang Putih -->
+                            <path class="scan-result-icon scan-result-check" d="M30 52 L45 67 L72 35" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <!-- 2. Silang X Putih -->
+                            <g class="scan-result-icon scan-result-cross">
+                                <path class="scan-result-cross-1" d="M35 35 L65 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                <path class="scan-result-cross-2" d="M65 35 L35 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                            </g>
+                            <!-- 3. Tanda Seru (!) Putih -->
+                            <g class="scan-result-icon scan-result-exclamation">
+                                <path class="scan-result-exclamation-line" d="M50 28 L50 56" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                <circle class="scan-result-exclamation-dot" cx="50" cy="71" r="4.5" fill="#ffffff"/>
+                            </g>
                         </svg>
                         <div class="scan-result-text">
-                            <div class="scan-result-name" id="successText">Nama Siswa</div>
-                            <div class="scan-result-status" id="successMeta">Tepat Waktu</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Overlay Gagal: Silang Merah Beranimasi -->
-                <div id="overlayError" class="scan-result-overlay d-none">
-                    <div class="scan-result-content">
-                        <svg class="scan-result-svg" viewBox="0 0 100 100" width="120" height="120">
-                            <circle class="scan-result-circle" cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="6"/>
-                            <path class="scan-result-cross-1" d="M35 35 L65 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
-                            <path class="scan-result-cross-2" d="M65 35 L35 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
-                        </svg>
-                        <div class="scan-result-text">
-                            <div class="scan-result-name" id="errorTitle">Gagal</div>
-                            <div class="scan-result-status" id="errorText">Scan gagal, coba lagi</div>
+                            <div class="scan-result-name" id="scanResultTitle">Nama Siswa</div>
+                            <div class="scan-result-status" id="scanResultSubtitle">Status Presensi</div>
                         </div>
                     </div>
                 </div>
@@ -829,6 +695,6 @@
         })();
     </script>
 
-    <script src="{{ asset('js/scanner.js') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
+    <script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 </body>
 </html>

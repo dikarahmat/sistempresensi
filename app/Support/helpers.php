@@ -85,3 +85,106 @@ if (!function_exists('panel_is')) {
         return false;
     }
 }
+
+if (!function_exists('is_mobile_request')) {
+    /**
+     * Deteksi apakah request berasal dari perangkat mobile (HP).
+     */
+    function is_mobile_request(?\Illuminate\Http\Request $request = null): bool
+    {
+        $req = $request ?: request();
+
+        if ($req->has('mobile')) {
+            return $req->boolean('mobile');
+        }
+        if ($req->has('is_mobile')) {
+            return $req->boolean('is_mobile');
+        }
+
+        if ($req->header('Sec-CH-UA-Mobile') === '?1' || $req->header('X-Mobile') === '1' || strtolower((string)$req->header('X-Mobile')) === 'true') {
+            return true;
+        }
+
+        $userAgent = (string) $req->userAgent();
+        if ($userAgent === '') {
+            return false;
+        }
+
+        return (bool) preg_match('/(android|iphone|ipad|ipod|blackberry|windows phone|iemobile|mobile|tablet|opera mini)/i', $userAgent);
+    }
+}
+
+if (!function_exists('render_compact_pagination')) {
+    /**
+     * Komponen Pagination Bersama (Single Source of Truth)
+     * Desain: Panah Kiri (‹) di kiri, "Halaman X dari Y" di tengah, Panah Kanan (›) di kanan.
+     * Area tap minimal 44x44 px, panah dinonaktifkan di halaman pertama/terakhir.
+     * Sembunyi otomatis jika total data <= 50 atau tidak memiliki banyak halaman.
+     */
+    function render_compact_pagination(mixed $paginator, string $scrollTarget = ''): string
+    {
+        if (!$paginator) {
+            return '';
+        }
+
+        // Cek apakah paginator memiliki lebih dari 1 halaman
+        if (method_exists($paginator, 'hasPages') && !$paginator->hasPages()) {
+            return '';
+        }
+
+        if (!method_exists($paginator, 'currentPage')) {
+            return '';
+        }
+
+        $currentPage = $paginator->currentPage();
+        $lastPage = method_exists($paginator, 'lastPage') ? $paginator->lastPage() : 1;
+
+        if ($lastPage <= 1) {
+            return '';
+        }
+
+        $hash = $scrollTarget ? ('#' . ltrim($scrollTarget, '#')) : '';
+
+        $prevUrl = $paginator->previousPageUrl() ? ($paginator->previousPageUrl() . $hash) : null;
+        $nextUrl = $paginator->nextPageUrl() ? ($paginator->nextPageUrl() . $hash) : null;
+
+        $isFirst = method_exists($paginator, 'onFirstPage') ? $paginator->onFirstPage() : ($currentPage <= 1);
+        $isLast = method_exists($paginator, 'hasMorePages') ? !$paginator->hasMorePages() : ($currentPage >= $lastPage);
+
+        $html = '<div class="pagination-arrow-container w-100 d-flex justify-content-center align-items-center py-3">';
+        $html .= '<div class="pagination-arrow-bar d-flex align-items-center justify-content-between">';
+
+        // Tombol Panah Kiri (‹)
+        if ($isFirst || !$prevUrl) {
+            $html .= '<span class="pagination-arrow-btn is-disabled" aria-disabled="true" aria-label="Sebelumnya" title="Halaman Pertama">';
+            $html .= '<i class="bx bx-chevron-left"></i>';
+            $html .= '</span>';
+        } else {
+            $html .= '<a href="' . e($prevUrl) . '" class="pagination-arrow-btn" aria-label="Sebelumnya" title="Halaman Sebelumnya">';
+            $html .= '<i class="bx bx-chevron-left"></i>';
+            $html .= '</a>';
+        }
+
+        // Teks Tengah: Halaman X dari Y
+        $html .= '<div class="pagination-arrow-info">';
+        $html .= 'Halaman <span class="fw-bold text-dark">' . $currentPage . '</span> dari <span class="fw-bold text-dark">' . $lastPage . '</span>';
+        $html .= '</div>';
+
+        // Tombol Panah Kanan (›)
+        if ($isLast || !$nextUrl) {
+            $html .= '<span class="pagination-arrow-btn is-disabled" aria-disabled="true" aria-label="Berikutnya" title="Halaman Terakhir">';
+            $html .= '<i class="bx bx-chevron-right"></i>';
+            $html .= '</span>';
+        } else {
+            $html .= '<a href="' . e($nextUrl) . '" class="pagination-arrow-btn" aria-label="Berikutnya" title="Halaman Berikutnya">';
+            $html .= '<i class="bx bx-chevron-right"></i>';
+            $html .= '</a>';
+        }
+
+        $html .= '</div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+}
+

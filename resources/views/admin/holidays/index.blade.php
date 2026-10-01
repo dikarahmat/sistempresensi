@@ -333,16 +333,7 @@
             </table>
         </div>
 
-        @if($holidays->hasPages())
-        <div class="px-4 py-2 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-white small">
-            <div class="text-muted small">
-                Menampilkan <span>{{ $holidays->firstItem() ?? 0 }}</span> - <span>{{ $holidays->lastItem() ?? 0 }}</span> dari <span>{{ $holidays->total() }}</span> hari libur
-            </div>
-            <div class="pagination-compact">
-                {{ $holidays->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
-        @endif
+        {!! render_compact_pagination($holidays, 'daftar-libur') !!}
     </div>
 
 <!-- MODAL TAMBAH HARI LIBUR -->
@@ -417,16 +408,14 @@
                         <div class="mb-2">
                             Format kolom file Excel: <strong>Tanggal, Keterangan</strong> (.xlsx atau .csv)
                         </div>
-                        <a href="{{ panel_route('holidays.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
-                            <i class='bx bx-download me-1'></i> Unduh Template Excel (.xlsx) Kosong
-                        </a>
+                        <a href="{{ panel_route('holidays.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
                     </div>
                     <label class="form-label small fw-semibold">Pilih File Excel</label>
                     <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-green-excel rounded-3 px-4">Unggah & Import</button>
+                    <button type="submit" class="btn-download-green px-4" data-import>Unggah & Import</button>
                 </div>
             </form>
         </div>

@@ -351,8 +351,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('admin.absensi.class');
         $response->assertSee('Presensi Kelas 8B');
-        $response->assertSee('id="overlaySuccess"', false);
-        $response->assertSee('id="overlayError"', false);
+        $response->assertSee('id="scanResultOverlay"', false);
         $response->assertSee('playBrowserBeep', false);
         $response->assertSee('class_scanner_open', false);
     }

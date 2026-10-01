@@ -359,6 +359,7 @@ class RekapController extends Controller
         $classes = SchoolClass::orderBy('name')->get();
         $activeYear = AcademicYear::getActive();
 
+        // Pagination 50 siswa per halaman di desktop dan mobile (disamakan dengan Data Siswa)
         $recap = $this->getRecapData($type, $classId, $request->all(), true);
         $recap = $this->paginateRecapRows($recap);
 

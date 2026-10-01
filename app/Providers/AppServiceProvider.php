@@ -21,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Http\Request::macro('isMobile', function () {
+            return is_mobile_request($this);
+        });
     }
 }

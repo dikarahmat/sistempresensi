@@ -31,8 +31,8 @@ class DailyAttendanceSummary
             ->whereIn('school_classes.id', $classIds)
             ->select('school_classes.id as class_id')
             ->selectRaw('COUNT(students.id) AS total_students')
-            ->selectRaw("COUNT(CASE WHEN attendances.status = 'Hadir' THEN 1 END) AS hadir")
-            ->selectRaw("COUNT(CASE WHEN attendances.status = 'Hadir' AND attendances.time_remark = 'Terlambat' THEN 1 END) AS terlambat")
+            ->selectRaw("COUNT(CASE WHEN attendances.status = 'Hadir' AND (attendances.time_remark IS NULL OR attendances.time_remark != 'Terlambat') AND (attendances.is_late IS NULL OR attendances.is_late = 0) THEN 1 END) AS hadir")
+            ->selectRaw("COUNT(CASE WHEN attendances.status = 'Terlambat' OR (attendances.status = 'Hadir' AND (attendances.time_remark = 'Terlambat' OR attendances.is_late = 1)) THEN 1 END) AS terlambat")
             ->selectRaw("COUNT(CASE WHEN attendances.status = 'Sakit' THEN 1 END) AS sakit")
             ->selectRaw("COUNT(CASE WHEN attendances.status = 'Izin' THEN 1 END) AS izin")
             ->selectRaw("COUNT(CASE WHEN attendances.status IN ('Alfa', 'Alpha') THEN 1 END) AS alpha")
@@ -48,7 +48,8 @@ class DailyAttendanceSummary
             $sakit = (int) ($summary->sakit ?? 0);
             $izin = (int) ($summary->izin ?? 0);
             $alpha = (int) ($summary->alpha ?? 0);
-            $sudahAbsen = $hadir + $sakit + $izin + $alpha;
+            $totalHadir = $hadir + $terlambat;
+            $sudahAbsen = $totalHadir + $sakit + $izin + $alpha;
 
             return [
                 'id' => $class->id,
@@ -60,10 +61,11 @@ class DailyAttendanceSummary
                 'belum' => max(0, $totalStudents - $sudahAbsen),
                 'hadir' => $hadir,
                 'terlambat' => $terlambat,
+                'total_hadir' => $totalHadir,
                 'sakit' => $sakit,
                 'izin' => $izin,
                 'alpha' => $alpha,
-                'persentase' => $totalStudents > 0 ? round(($hadir / $totalStudents) * 100) : 0,
+                'persentase' => $totalStudents > 0 ? round(($totalHadir / $totalStudents) * 100) : 0,
             ];
         });
     }

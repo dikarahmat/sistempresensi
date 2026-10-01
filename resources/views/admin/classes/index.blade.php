@@ -374,16 +374,7 @@
             </table>
         </div>
 
-        @if($classes->hasPages())
-        <div class="px-4 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white small">
-            <div class="text-muted small d-none d-md-block">
-                Menampilkan <span>{{ $classes->firstItem() ?? 0 }}</span> - <span>{{ $classes->lastItem() ?? 0 }}</span> dari <span>{{ $classes->total() }}</span> kelas
-            </div>
-            <div class="pagination-compact w-100 w-md-auto d-flex justify-content-center justify-content-md-end">
-                {{ $classes->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
-        @endif
+        {!! render_compact_pagination($classes, 'daftar-kelas') !!}
     </div>
 
 @if(Auth::check() && Auth::user()->role === 'admin')
@@ -497,9 +488,7 @@
                             Format kolom file Excel: <strong>Nama Kelas, Tingkat (7/8/9)</strong> (.xlsx atau .csv)
                         </div>
                         @if(Route::has('admin.classes.template'))
-                        <a href="{{ panel_route('classes.template') }}" class="btn btn-sm btn-outline-success rounded-3 fw-semibold w-100">
-                            <i class='bx bx-download me-1'></i> Unduh Template Excel (.xlsx) Kosong
-                        </a>
+                        <a href="{{ panel_route('classes.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
                         @endif
                     </div>
                     <label class="form-label small fw-semibold">Pilih File Excel</label>
@@ -507,7 +496,7 @@
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success text-white rounded-3 px-4 fw-semibold">Unggah &amp; Import</button>
+                    <button type="submit" class="btn-download-green px-4" data-import>Unggah &amp; Import</button>
                 </div>
             </form>
         </div>

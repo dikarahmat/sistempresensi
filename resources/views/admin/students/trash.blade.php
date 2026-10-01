@@ -149,16 +149,7 @@
             </table>
         </div>
 
-        @if($students->hasPages())
-        <div class="px-4 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white small">
-            <div class="text-muted small d-none d-md-block">
-                Menampilkan <span>{{ $students->firstItem() ?? 0 }}</span> - <span>{{ $students->lastItem() ?? 0 }}</span> dari <span>{{ $students->total() }}</span> siswa
-            </div>
-            <div class="pagination-compact w-100 w-md-auto d-flex justify-content-center justify-content-md-end">
-                {{ $students->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
-        @endif
+        {!! render_compact_pagination($students, 'daftar-arsip-siswa') !!}
     </div>
 
     <!-- Zona Berbahaya -->

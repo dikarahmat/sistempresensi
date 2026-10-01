@@ -10,6 +10,7 @@ use App\Models\Student;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -77,97 +78,278 @@ class DownloadCacheService
     /**
      * Download / Stream Single Student Card PNG (Pure Kartu, 4 Sudut Lengkung, Latar Transparan, CR80 1086x1725 px)
      */
-    public static function downloadSingleCard(Student $student): BinaryFileResponse
+    public static function downloadSingleCard(Student $student)
     {
         self::initDirs();
 
-        $student = clone $student;
-        $student->loadMissing('schoolClass');
-        $settingStamp = self::getSettingStamp();
-        $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-        $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.png";
-        $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
+        try {
+            $student = clone $student;
+            $student->loadMissing('schoolClass');
+            $settingStamp = self::getSettingStamp();
+            $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
+            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.png";
+            $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-        $downloadFileName = 'Kartu_Presensi_' . $student->nis . '_' . Str::slug($student->name) . '.png';
+            $downloadFileName = 'Kartu_Presensi_' . $student->nis . '_' . Str::slug($student->name) . '.png';
 
-        if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-            $schoolName = Setting::getSchoolName();
-            $logoPath = public_path(Setting::getLogo());
-            $logoBase64 = null;
-            if (file_exists($logoPath)) {
-                $mime = mime_content_type($logoPath) ?: 'image/png';
-                $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
+            // Bersihkan file cache jika ada file 0-byte atau rusak
+            if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
+                @unlink($cacheFilePath);
             }
 
-            $token = $student->qr_token ?? $student->nis;
-            try {
-                $svg = QrCode::size(140)->margin(0)->generate($token);
-                $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
-            } catch (\Throwable $e) {
-                $student->qr_base64 = null;
+            if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
+                self::renderCardPngWithGd($student, $cacheFilePath);
+
+                // Pastikan file 0 byte tidak pernah disimpan atau disajikan
+                if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
+                    if (File::exists($cacheFilePath)) {
+                        @unlink($cacheFilePath);
+                    }
+                    throw new \RuntimeException("Berkas kartu presensi siswa ID {$student->id} gagal dibuat atau berukuran 0 byte.");
+                }
             }
 
-            // Render komponen bersama card.blade.php (Single Source of Truth)
-            $cardHtml = view('admin.students.partials.card', [
-                'studentItem' => $student,
-                'logoSrc' => $logoBase64,
-                'schoolName' => $schoolName,
-                'studentName' => $student->name,
-                'studentClass' => $student->schoolClass->name ?? '-',
-            ])->render();
+            return response()->download($cacheFilePath, $downloadFileName, [
+                'Content-Type' => 'image/png',
+                'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
+                'Cache-Control' => 'no-cache, must-revalidate'
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengunduh kartu presensi siswa: ' . $e->getMessage(), [
+                'student_id' => $student->id ?? null,
+                'exception' => $e
+            ]);
 
-            $fullHtml = '<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-  }
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 53.98mm;
-    height: 85.6mm;
-    background: transparent !important;
-    overflow: hidden;
-  }
-  .presensi-card-table {
-    box-shadow: none !important;
-  }
-</style>
-</head>
-<body>
-' . $cardHtml . '
-</body>
-</html>';
-
-            $tempHtmlPath = self::$baseDir . "/cards/temp_{$student->id}_" . uniqid() . '.html';
-            File::put($tempHtmlPath, $fullHtml);
-
-            $browser = self::getBrowserBinary();
-            if ($browser) {
-                // Window size 204,324 dengan scale factor 5.3235 menghasilkan 1086 x 1725 px (CR80 ~500 DPI)
-                $cmd = sprintf(
-                    '"%s" --headless=new --disable-gpu --no-sandbox --default-background-color=00000000 --hide-scrollbars --window-size=204,324 --force-device-scale-factor=5.3235 --screenshot="%s" "file:///%s"',
-                    $browser,
-                    $cacheFilePath,
-                    str_replace('\\', '/', $tempHtmlPath)
-                );
-                exec($cmd);
+            if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'message' => 'Kartu belum bisa diunduh, coba lagi'
+                ], 500);
             }
 
-            @unlink($tempHtmlPath);
+            return redirect()->back()->with('error', 'Kartu belum bisa diunduh, coba lagi');
+        }
+    }
+
+    /**
+     * Render Single Student Card PNG menggunakan PHP GD murni.
+     * Standar CR80 Portrait: 1086 x 1725 px (~500 DPI), sudut lengkung 64 px (~3.18mm),
+     * latar transparan di luar sudut, desain identik dengan card.blade.php.
+     */
+    public static function renderCardPngWithGd(Student $student, string $outputPath): void
+    {
+        $w = 1086;
+        $h = 1725;
+        $radius = 64;
+
+        $img = imagecreatetruecolor($w, $h);
+        imagesavealpha($img, true);
+        imagealphablending($img, true);
+
+        // Latar belakang transparan di luar sudut lengkung kartu
+        $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
+        imagefill($img, 0, 0, $transparent);
+
+        // Palet warna resmi sesuai card.blade.php
+        $navy = imagecolorallocate($img, 30, 58, 138);         // #1e3a8a (Header)
+        $amber = imagecolorallocate($img, 245, 158, 11);       // #f59e0b (Garis aksen 0.8mm)
+        $gold = imagecolorallocate($img, 252, 211, 77);        // #fcd34d (KARTU PRESENSI DIGITAL)
+        $white = imagecolorallocate($img, 255, 255, 255);      // #ffffff (Badan kartu & quiet zone QR)
+        $dark = imagecolorallocate($img, 15, 23, 42);          // #0f172a (Nama, Kelas, SCAN PRESENSI)
+        $grayLight = imagecolorallocate($img, 248, 250, 252);  // #f8fafc (Footer bg)
+        $grayBorder = imagecolorallocate($img, 226, 232, 240); // #e2e8f0 (Garis atas footer)
+        $grayText = imagecolorallocate($img, 100, 116, 139);   // #64748b (Teks footer)
+
+        // Proporsi tinggi elemen (total 1725 px)
+        $headerH = 226; // 11.2mm
+        $accentH = 16;  // 0.8mm
+        $footerH = 134; // 6.6mm
+        $footerY = $h - $footerH; // 1591
+
+        // 1. Gambar badan kartu putih
+        imagefilledrectangle($img, 0, $headerH + $accentH, $w - 1, $footerY - 1, $white);
+
+        // 2. Garis aksen oranye
+        imagefilledrectangle($img, 0, $headerH, $w - 1, $headerH + $accentH - 1, $amber);
+
+        // 3. Header Navy dengan sudut atas melengkung
+        imagefilledrectangle($img, 0, $radius, $w - 1, $headerH - 1, $navy);
+        imagefilledrectangle($img, $radius, 0, $w - 1 - $radius, $radius, $navy);
+        imagefilledellipse($img, $radius, $radius, $radius * 2, $radius * 2, $navy);
+        imagefilledellipse($img, $w - 1 - $radius, $radius, $radius * 2, $radius * 2, $navy);
+
+        // 4. Footer Abu-abu dengan sudut bawah melengkung
+        imagefilledrectangle($img, 0, $footerY, $w - 1, $h - 1 - $radius, $grayLight);
+        imagefilledrectangle($img, $radius, $h - 1 - $radius, $w - 1 - $radius, $h - 1, $grayLight);
+        imagefilledellipse($img, $radius, $h - 1 - $radius, $radius * 2, $radius * 2, $grayLight);
+        imagefilledellipse($img, $w - 1 - $radius, $h - 1 - $radius, $radius * 2, $radius * 2, $grayLight);
+        imageline($img, 0, $footerY, $w - 1, $footerY, $grayBorder);
+
+        // 5. Potong sudut luar kartu agar transparan sempurna
+        for ($y = 0; $y < $radius; $y++) {
+            for ($x = 0; $x < $radius; $x++) {
+                $dx = $radius - $x;
+                $dy = $radius - $y;
+                if (($dx * $dx + $dy * $dy) > ($radius * $radius)) {
+                    imagesetpixel($img, $x, $y, $transparent);
+                    imagesetpixel($img, $w - 1 - $x, $y, $transparent);
+                }
+            }
+        }
+        for ($y = 0; $y < $radius; $y++) {
+            for ($x = 0; $x < $radius; $x++) {
+                $dx = $radius - $x;
+                $dy = $y;
+                if (($dx * $dx + $dy * $dy) > ($radius * $radius)) {
+                    imagesetpixel($img, $x, $h - 1 - $radius + $y, $transparent);
+                    imagesetpixel($img, $w - 1 - $x, $h - 1 - $radius + $y, $transparent);
+                }
+            }
         }
 
-        return response()->download($cacheFilePath, $downloadFileName, [
-            'Content-Type' => 'image/png',
-            'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
-            'Cache-Control' => 'no-cache, must-revalidate'
-        ]);
+        // 6. Muat font TTF bawaan vendor/dompdf (tersedia di lokal dan production)
+        $fontBold = base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ttf');
+        $fontOblique = base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Oblique.ttf');
+
+        // 7. Render Header: Logo Sekolah + Nama Sekolah + KARTU PRESENSI DIGITAL
+        $logoPath = public_path(Setting::getLogo());
+        $logoSize = 160;
+        $logoX = 45;
+        $logoY = (int) round(($headerH - $logoSize) / 2);
+        $textStartX = $logoX;
+
+        if (file_exists($logoPath)) {
+            $logoInfo = @getimagesize($logoPath);
+            if ($logoInfo) {
+                $logoSrcImg = match ($logoInfo[2]) {
+                    IMAGETYPE_PNG => @imagecreatefrompng($logoPath),
+                    IMAGETYPE_JPEG => @imagecreatefromjpeg($logoPath),
+                    IMAGETYPE_WEBP => @imagecreatefromwebp($logoPath),
+                    default => null
+                };
+                if ($logoSrcImg) {
+                    imagecopyresampled($img, $logoSrcImg, $logoX, $logoY, 0, 0, $logoSize, $logoSize, imagesx($logoSrcImg), imagesy($logoSrcImg));
+                    imagedestroy($logoSrcImg);
+                    $textStartX = $logoX + $logoSize + 30;
+                }
+            }
+        }
+
+        $schoolName = mb_strtoupper(Setting::getSchoolName() ?: 'SMP PGRI PARUNGPANJANG');
+        $schoolFontSize = 32;
+        while ($schoolFontSize > 20) {
+            $bbox = imagettfbbox($schoolFontSize, 0, $fontBold, $schoolName);
+            $textW = abs($bbox[4] - $bbox[0]);
+            if ($textStartX + $textW < ($w - 30)) {
+                break;
+            }
+            $schoolFontSize -= 2;
+        }
+        imagettftext($img, $schoolFontSize, 0, $textStartX, 105, $white, $fontBold, $schoolName);
+        imagettftext($img, 24, 0, $textStartX, 160, $gold, $fontBold, 'KARTU PRESENSI DIGITAL');
+
+        // 8. Render Nama Siswa (Wrap adaptif, Center, Bold)
+        $studentName = mb_strtoupper(trim($student->name));
+        $maxNameWidth = $w - 120; // Margin kiri-kanan 60 px
+
+        $wrapLines = function(string $text, int $size, string $font, int $maxWidth): array {
+            $words = explode(' ', $text);
+            $lines = [];
+            $curLine = '';
+            foreach ($words as $word) {
+                $testLine = $curLine === '' ? $word : $curLine . ' ' . $word;
+                $bbox = imagettfbbox($size, 0, $font, $testLine);
+                $lineW = abs($bbox[4] - $bbox[0]);
+                if ($lineW > $maxWidth && $curLine !== '') {
+                    $lines[] = $curLine;
+                    $curLine = $word;
+                } else {
+                    $curLine = $testLine;
+                }
+            }
+            if ($curLine !== '') {
+                $lines[] = $curLine;
+            }
+            return $lines;
+        };
+
+        $nameFontSize = 42;
+        if (mb_strlen($studentName) > 28) {
+            $nameFontSize = 34;
+        } elseif (mb_strlen($studentName) > 20) {
+            $nameFontSize = 38;
+        }
+
+        $lines = $wrapLines($studentName, $nameFontSize, $fontBold, $maxNameWidth);
+        while (count($lines) > 2 && $nameFontSize > 24) {
+            $nameFontSize -= 2;
+            $lines = $wrapLines($studentName, $nameFontSize, $fontBold, $maxNameWidth);
+        }
+
+        $nameYStart = count($lines) > 1 ? 335 : 365;
+        $lineStep = (int) round($nameFontSize * 1.35);
+        foreach ($lines as $i => $lineText) {
+            $bbox = imagettfbbox($nameFontSize, 0, $fontBold, $lineText);
+            $lineW = abs($bbox[4] - $bbox[0]);
+            $lx = (int) round(($w - $lineW) / 2);
+            $ly = $nameYStart + ($i * $lineStep);
+            imagettftext($img, $nameFontSize, 0, $lx, $ly, $dark, $fontBold, $lineText);
+        }
+
+        // 9. Render Kelas Siswa
+        $className = mb_strtoupper($student->schoolClass->name ?? ($student->kelas ?? '-'));
+        $classFontSize = 34;
+        $classBbox = imagettfbbox($classFontSize, 0, $fontBold, $className);
+        $classW = abs($classBbox[4] - $classBbox[0]);
+        $classX = (int) round(($w - $classW) / 2);
+        $classY = $nameYStart + (count($lines) * $lineStep) + 25;
+        imagettftext($img, $classFontSize, 0, $classX, $classY, $dark, $fontBold, $className);
+
+        // 10. Render QR Code (Matrix BaconQrCode, Tajam & Presisi)
+        $token = $student->qr_token ?: $student->nis;
+        $qrMatrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::M())->getMatrix();
+        $mW = $qrMatrix->getWidth();
+        $mH = $qrMatrix->getHeight();
+
+        $qrTargetSize = 680;
+        $moduleSize = (int) floor($qrTargetSize / $mW);
+        $qrActualSize = $moduleSize * $mW;
+        $qrStartX = (int) round(($w - $qrActualSize) / 2);
+        $qrStartY = 640;
+
+        // Background putih quiet zone
+        imagefilledrectangle($img, $qrStartX - 15, $qrStartY - 15, $qrStartX + $qrActualSize + 14, $qrStartY + $qrActualSize + 14, $white);
+
+        $black = imagecolorallocate($img, 0, 0, 0);
+        for ($my = 0; $my < $mH; $my++) {
+            for ($mx = 0; $mx < $mW; $mx++) {
+                if ($qrMatrix->get($mx, $my) === 1) {
+                    $x1 = $qrStartX + ($mx * $moduleSize);
+                    $y1 = $qrStartY + ($my * $moduleSize);
+                    $x2 = $x1 + $moduleSize - 1;
+                    $y2 = $y1 + $moduleSize - 1;
+                    imagefilledrectangle($img, $x1, $y1, $x2, $y2, $black);
+                }
+            }
+        }
+
+        // 11. Render Teks "SCAN PRESENSI"
+        $scanBbox = imagettfbbox(28, 0, $fontBold, 'SCAN PRESENSI');
+        $scanW = abs($scanBbox[4] - $scanBbox[0]);
+        $scanX = (int) round(($w - $scanW) / 2);
+        $scanY = $qrStartY + $qrActualSize + 65;
+        imagettftext($img, 28, 0, $scanX, $scanY, $dark, $fontBold, 'SCAN PRESENSI');
+
+        // 12. Render Footer Text
+        $footerText = 'Tunjukkan kartu saat presensi masuk';
+        $footBbox = imagettfbbox(24, 0, $fontOblique, $footerText);
+        $footW = abs($footBbox[4] - $footBbox[0]);
+        $footX = (int) round(($w - $footW) / 2);
+        $footY = $footerY + 78;
+        imagettftext($img, 24, 0, $footX, $footY, $grayText, $fontOblique, $footerText);
+
+        // 13. Tulis file PNG dengan kompresi maksimal (9)
+        imagepng($img, $outputPath, 9);
+        imagedestroy($img);
     }
 
     /**

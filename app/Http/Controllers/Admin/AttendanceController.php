@@ -511,49 +511,56 @@ class AttendanceController extends Controller
         });
 
         // Data per siswa untuk tabel histori kehadiran
-        // Ambil SEMUA siswa aktif (tidak tergantung filter kelas pada $classes)
-        // agar "Semua Kelas" selalu menampilkan data
-        $allActiveStudents = Student::with('schoolClass')
+        $classFilter = $request->input('class_filter', '');
+        $studentsQuery = Student::with('schoolClass')
             ->where('status', 'Aktif')
             ->select(['id', 'school_class_id', 'name', 'nis']);
 
         if ($selectedYearId && $request->has('academic_year_id')) {
-            $allActiveStudents->whereHas('schoolClass', function ($q) use ($selectedYearId) {
+            $studentsQuery->whereHas('schoolClass', function ($q) use ($selectedYearId) {
                 $q->where(function ($q2) use ($selectedYearId) {
                     $q2->where('academic_year_id', $selectedYearId)->orWhereNull('academic_year_id');
                 });
             });
         }
 
-        $allActiveStudents = $allActiveStudents->get();
+        if ($classFilter !== '') {
+            $studentsQuery->whereHas('schoolClass', function ($q) use ($classFilter) {
+                $q->where('name', $classFilter);
+            });
+        }
+
+        if ($search !== '') {
+            $studentsQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%");
+            });
+        }
+
+        $studentsQuery->orderBy('name', 'asc');
+
+        // Paginasi server 50 siswa per halaman (desktop & mobile) dengan membawa seluruh query string.
+        $studentPaginator = $studentsQuery->paginate(50)->withQueryString();
+        $activeStudentsList = $studentPaginator->getCollection();
 
         $studentHistories = collect();
-        foreach ($allActiveStudents as $student) {
+        foreach ($activeStudentsList as $student) {
             $studentAtts = $attendancesByStudent->get($student->id, collect());
             $studentHistories->push((object) [
                 'id' => $student->id,
                 'nis' => $student->nis,
                 'name' => $student->name ?? '-',
                 'class_name' => $student->schoolClass?->name ?? '-',
-                'hadir' => $studentAtts->where('status', 'Hadir')->count(),
-                'terlambat' => $studentAtts->where('status', 'Terlambat')->count(),
+                'hadir' => $studentAtts->where('status', 'Hadir')->filter(fn($a) => $a->time_remark !== 'Terlambat' && empty($a->is_late))->count(),
+                'terlambat' => $studentAtts->filter(fn($a) => $a->status === 'Terlambat' || $a->time_remark === 'Terlambat' || !empty($a->is_late))->count(),
                 'sakit' => $studentAtts->where('status', 'Sakit')->count(),
                 'izin' => $studentAtts->where('status', 'Izin')->count(),
                 'alfa' => $studentAtts->where('status', 'Alfa')->count(),
             ]);
         }
 
-        // Filter search dan kelas untuk tabel siswa
-        $classFilter = $request->input('class_filter', '');
-        if ($classFilter !== '') {
-            $studentHistories = $studentHistories->filter(fn($s) => $s->class_name === $classFilter);
-        }
-        if ($search !== '') {
-            $studentHistories = $studentHistories->filter(function ($s) use ($search) {
-                return str_contains(strtolower($s->name), strtolower($search)) 
-                    || str_contains(strtolower($s->nis), strtolower($search));
-            });
-        }
+        $studentPaginator->setCollection($studentHistories);
+        $studentHistories = $studentPaginator;
 
         // Metrik Ringkasan Atas
         $totalKelas = $classHistories->count();

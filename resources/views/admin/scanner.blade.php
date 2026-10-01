@@ -20,7 +20,9 @@
     <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 
     <!-- Presensi Unified Design Tokens -->
-    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}">
+    <!-- Presensi Unified Design Tokens (satu sumber gaya; ?v= agar browser
+         selalu mengambil versi terbaru — sama seperti kiosk & panel) -->
+    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}?v={{ file_exists(public_path('css/presensi-tokens.css')) ? filemtime(public_path('css/presensi-tokens.css')) : config('app.version', '1') }}">
 
     <style>
         :root {
@@ -400,71 +402,6 @@
         .kiosk-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
         .kiosk-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
 
-        /* ===== OVERLAY SUKSES / GAGAL ===== */
-        .overlay-status {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            text-align: center;
-            backdrop-filter: blur(6px);
-            animation: fadeInScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .overlay-success {
-            background: linear-gradient(135deg, rgba(13, 148, 136, 0.96) 0%, rgba(16, 185, 129, 0.96) 100%);
-            color: #ffffff;
-            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
-            border-radius: 14px;
-        }
-
-        .overlay-error {
-            background: #dc2626;
-            color: #ffffff;
-            box-shadow: 0 0 25px rgba(220, 38, 38, 0.5);
-            border-radius: 14px;
-        }
-
-        .overlay-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.4rem;
-            margin-bottom: 0.4rem;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.25);
-        }
-
-        .overlay-title {
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            line-height: 1.25;
-            color: #ffffff;
-            overflow-wrap: anywhere;
-        }
-
-        .overlay-sub {
-            margin-top: 0.25rem;
-            font-size: 0.78rem;
-            font-weight: 500;
-            line-height: 1.35;
-            color: #ffffff;
-            overflow-wrap: anywhere;
-        }
-
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
         /* ===== PLACEHOLDER KAMERA (pesan izin + tombol Coba Lagi) ===== */
         .kiosk-placeholder {
             position: absolute;
@@ -676,18 +613,29 @@
                     </div>
                 </div>
 
-                <!-- Overlay Sukses -->
-                <div id="overlaySuccess" class="overlay-status overlay-success d-none">
-                    <span class="overlay-icon"><i class='bx bx-check fs-4'></i></span>
-                    <h6 class="overlay-title" id="successText">Nama Siswa</h6>
-                    <p class="overlay-sub" id="successMeta">Kelas · Hadir Tepat Waktu</p>
-                </div>
-
-                <!-- Overlay Gagal -->
-                <div id="overlayError" class="overlay-status overlay-error d-none">
-                    <span class="overlay-icon"><i class='bx bx-error-circle fs-4'></i></span>
-                    <h6 class="overlay-title" id="errorTitle">Peringatan Presensi</h6>
-                    <p class="overlay-sub" id="errorText">Siswa sudah presensi hari ini.</p>
+                <!-- Overlay Hasil Scan Terpadu (5 Kombinasi Sesuai Acuan Mode Gerbang) -->
+                <div id="scanResultOverlay" class="scan-result-overlay d-none">
+                    <div class="scan-result-content">
+                        <svg class="scan-result-svg" viewBox="0 0 100 100" width="110" height="110">
+                            <circle class="scan-result-circle" cx="50" cy="50" r="45" fill="none" stroke-width="6"/>
+                            <!-- 1. Centang Putih -->
+                            <path class="scan-result-icon scan-result-check" d="M30 52 L45 67 L72 35" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <!-- 2. Silang X Putih -->
+                            <g class="scan-result-icon scan-result-cross">
+                                <path class="scan-result-cross-1" d="M35 35 L65 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                <path class="scan-result-cross-2" d="M65 35 L35 65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                            </g>
+                            <!-- 3. Tanda Seru (!) Putih -->
+                            <g class="scan-result-icon scan-result-exclamation">
+                                <path class="scan-result-exclamation-line" d="M50 28 L50 56" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+                                <circle class="scan-result-exclamation-dot" cx="50" cy="71" r="4.5" fill="#ffffff"/>
+                            </g>
+                        </svg>
+                        <div class="scan-result-text">
+                            <div class="scan-result-name" id="scanResultTitle">Nama Siswa</div>
+                            <div class="scan-result-status" id="scanResultSubtitle">Status Presensi</div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -717,7 +665,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="{{ asset('js/scanner.js') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
+    <script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 
 </body>
 </html>

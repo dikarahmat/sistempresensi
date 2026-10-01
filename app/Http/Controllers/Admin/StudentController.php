@@ -262,8 +262,8 @@ class StudentController extends Controller
 
     public function downloadQr(Student $student)
     {
-        // Validasi: hanya admin yang bisa download QR (route sudah dilindungi middleware)
-        if (!Auth::user() || Auth::user()->role !== 'admin') {
+        // Validasi: hanya admin dan guru yang bisa download QR
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'guru'])) {
             abort(403, 'Akses ditolak.');
         }
 

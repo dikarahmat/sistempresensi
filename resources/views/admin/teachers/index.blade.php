@@ -417,16 +417,7 @@
             </table>
         </div>
 
-        @if($teachers->hasPages())
-        <div class="px-4 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white small">
-            <div class="text-muted small d-none d-md-block">
-                Menampilkan <span>{{ $teachers->firstItem() ?? 0 }}</span> - <span>{{ $teachers->lastItem() ?? 0 }}</span> dari <span>{{ $teachers->total() }}</span> guru
-            </div>
-            <div class="pagination-compact w-100 w-md-auto d-flex justify-content-center justify-content-md-end">
-                {{ $teachers->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
-        @endif
+        {!! render_compact_pagination($teachers, 'daftar-guru') !!}
     </div>
 
     @if(Auth::check() && Auth::user()->role === 'admin')
@@ -580,17 +571,7 @@
                     @csrf
                     <div class="modal-body py-3">
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Unduh Template Format</label>
-                            <a href="{{ panel_route('guru.template') }}" class="d-flex align-items-center justify-content-between p-2.5 rounded-3 border bg-light text-decoration-none hover:bg-slate-100 transition-all">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class='bx bx-download text-success fs-4'></i>
-                                    <div>
-                                        <div class="fw-bold text-dark small">Template_Guru.xlsx</div>
-                                        <div class="text-muted" style="font-size: 0.72rem;">Gunakan format ini untuk import data massal</div>
-                                    </div>
-                                </div>
-                                <span class="badge bg-success small">Unduh</span>
-                            </a>
+                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
                         </div>
 
                         <div class="mb-3">
@@ -601,7 +582,7 @@
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success text-white rounded-3 px-4 fw-semibold">Mulai Import</button>
+                        <button type="submit" class="btn-download-green px-4" data-import>Mulai Import</button>
                     </div>
                 </form>
             </div>

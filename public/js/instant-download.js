@@ -125,15 +125,36 @@
     }
 
     /**
-     * Jalankan download dengan efek sapuan putih penuh dual-layer (KIRI ke KANAN)
+     * Cek apakah URL/Form/Tombol merupakan tujuan import file
      */
-    async function executeDownload(btn, requestUrl, options) {
+    function isImportTarget(action, form, btn) {
+        if (btn && btn.hasAttribute('data-import')) return true;
+        if (form && (form.hasAttribute('data-import') || form.hasAttribute('data-import-form'))) return true;
+        if (!action) return false;
+        try {
+            const url = new URL(action, window.location.href);
+            const path = url.pathname.toLowerCase();
+            return /(?:^|\/)import(?:[-/._]|$)/i.test(path);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Siapkan dan inisialisasi track sapuan putih dual-layer (KIRI ke KANAN) pada tombol
+     */
+    function setupSwipeTrack(btn) {
         if (!btn || btn.dataset.isDownloading === 'true') {
-            return; // Cegah double-click
+            return null; // Cegah double-click / double-submit
         }
 
         btn.dataset.isDownloading = 'true';
         btn.classList.add('dl-btn-relative');
+
+        // Pastikan tidak ada border, outline, atau box-shadow berwarna selama animasi sapuan berjalan
+        btn.style.setProperty('border', 'none', 'important');
+        btn.style.setProperty('outline', 'none', 'important');
+        btn.style.setProperty('box-shadow', 'none', 'important');
 
         // Pastikan konten dasar tombol terbungkus rapi di layer bawah (z-index: 1)
         Array.from(btn.childNodes).forEach(function(node) {
@@ -228,6 +249,47 @@
         });
 
         const startTime = Date.now();
+
+        function cleanup() {
+            if (track) {
+                track.classList.remove('active');
+                setTimeout(function() {
+                    if (track && track.parentNode) {
+                        track.parentNode.removeChild(track);
+                    }
+                    btn.dataset.isDownloading = 'false';
+                    btn.style.removeProperty('--dl-btn-color');
+                    btn.style.removeProperty('--dl-swipe-bg');
+                    btn.style.removeProperty('border');
+                    btn.style.removeProperty('outline');
+                    btn.style.removeProperty('box-shadow');
+                }, 220);
+            } else {
+                btn.dataset.isDownloading = 'false';
+                btn.style.removeProperty('border');
+                btn.style.removeProperty('outline');
+                btn.style.removeProperty('box-shadow');
+            }
+        }
+
+        return {
+            track: track,
+            swipeFill: swipeFill,
+            startTime: startTime,
+            cleanup: cleanup
+        };
+    }
+
+    /**
+     * Jalankan download dengan efek sapuan putih penuh dual-layer (KIRI ke KANAN)
+     */
+    async function executeDownload(btn, requestUrl, options) {
+        const session = setupSwipeTrack(btn);
+        if (!session) return;
+
+        const swipeFill = session.swipeFill;
+        const startTime = session.startTime;
+
         let currentProgress = 5;
         swipeFill.style.width = currentProgress + '%';
 
@@ -257,7 +319,20 @@
             const response = await fetch(requestUrl, fetchOpts);
 
             if (!response.ok) {
-                throw new Error('Gagal mengunduh berkas (Status: ' + response.status + ')');
+                let errorMsg = 'Kartu belum bisa diunduh, coba lagi';
+                try {
+                    const data = await response.json();
+                    if (data && data.message) {
+                        errorMsg = data.message;
+                    }
+                } catch (e) {
+                    if (requestUrl.includes('card') || requestUrl.includes('kartu')) {
+                        errorMsg = 'Kartu belum bisa diunduh, coba lagi';
+                    } else {
+                        errorMsg = 'Gagal mengunduh berkas (Status: ' + response.status + ')';
+                    }
+                }
+                throw new Error(errorMsg);
             }
 
             const contentLength = response.headers.get('Content-Length');
@@ -305,9 +380,13 @@
             setTimeout(function() {
                 triggerBlobDownload(blob, filename);
 
-                // Jika tombol berada di dalam modal Bootstrap, tutup modal secara halus
+                // Jika tombol berada di dalam modal (misal Cetak Kartu), tutup modal setelah unduhan dipicu.
+                // KECUALI tombol Unduh Template di dalam modal import (jangan tutup modal import agar user bisa lanjut import berkas).
+                const isTemplateDownload = requestUrl.includes('template') || 
+                                           btn.classList.contains('btn-download-template') || 
+                                           (btn.textContent && btn.textContent.toLowerCase().includes('template'));
                 const modalEl = btn.closest('.modal');
-                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                if (modalEl && !isTemplateDownload && window.bootstrap && window.bootstrap.Modal) {
                     try {
                         const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
                         if (modalInstance) {
@@ -318,15 +397,7 @@
 
                 // Fade out halus lapisan sapuan kembali ke warna tombol asli
                 setTimeout(function() {
-                    track.classList.remove('active');
-                    setTimeout(function() {
-                        if (track && track.parentNode) {
-                            track.parentNode.removeChild(track);
-                        }
-                        btn.dataset.isDownloading = 'false';
-                        btn.style.removeProperty('--dl-btn-color');
-                        btn.style.removeProperty('--dl-swipe-bg');
-                    }, 220);
+                    session.cleanup();
                 }, 150);
             }, 150);
 
@@ -350,17 +421,152 @@
             }
 
             setTimeout(function() {
-                track.classList.remove('active');
-                setTimeout(function() {
-                    if (track && track.parentNode) {
-                        track.parentNode.removeChild(track);
-                    }
-                    btn.dataset.isDownloading = 'false';
-                    btn.style.removeProperty('--dl-btn-color');
-                    btn.style.removeProperty('--dl-swipe-bg');
-                }, 250);
+                session.cleanup();
             }, 800);
         }
+    }
+
+    /**
+     * Jalankan proses upload & import data dengan animasi sapuan putih dari KIRI ke KANAN
+     */
+    function executeImport(btn, form) {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const session = setupSwipeTrack(btn);
+        if (!session) return;
+
+        const swipeFill = session.swipeFill;
+        const startTime = session.startTime;
+
+        let currentProgress = 5;
+        swipeFill.style.width = currentProgress + '%';
+
+        // Simulasi progres pemrosesan server dari 5% hingga 92%
+        let progressTimer = setInterval(function() {
+            if (currentProgress < 50) {
+                currentProgress += 8;
+            } else if (currentProgress < 75) {
+                currentProgress += 4;
+            } else if (currentProgress < 90) {
+                currentProgress += 1.5;
+            } else if (currentProgress < 92) {
+                currentProgress += 0.3;
+            }
+            swipeFill.style.width = Math.min(92, currentProgress) + '%';
+        }, 45);
+
+        const xhr = new XMLHttpRequest();
+        const action = form.getAttribute('action') || window.location.href;
+        const method = (form.getAttribute('method') || 'POST').toUpperCase();
+
+        xhr.open(method, action, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        if (xhr.upload) {
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable && e.total > 0) {
+                    const uploadPct = Math.min(85, Math.max(5, Math.round((e.loaded / e.total) * 85)));
+                    if (uploadPct > currentProgress) {
+                        currentProgress = uploadPct;
+                        swipeFill.style.width = currentProgress + '%';
+                    }
+                }
+            };
+        }
+
+        xhr.onload = function() {
+            clearInterval(progressTimer);
+            const elapsed = Date.now() - startTime;
+            const waitTime = Math.max(0, MIN_ANIMATION_MS - elapsed);
+
+            setTimeout(function() {
+                if (xhr.status >= 200 && xhr.status < 400) {
+                    // Sapuan 100% putih penuh
+                    swipeFill.style.width = '100%';
+
+                    setTimeout(function() {
+                        const modalEl = btn.closest('.modal');
+                        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                            try {
+                                const modalInstance = window.bootstrap.Modal.getInstance(modalEl);
+                                if (modalInstance) {
+                                    modalInstance.hide();
+                                }
+                            } catch (e) {}
+                        }
+
+                        const responseText = xhr.responseText || '';
+                        if (responseText.includes('<!DOCTYPE') || responseText.includes('<html') || responseText.includes('<body')) {
+                            if (xhr.responseURL && window.location.href !== xhr.responseURL) {
+                                try {
+                                    window.history.replaceState(null, '', xhr.responseURL);
+                                } catch (e) {}
+                            }
+                            document.open();
+                            document.write(responseText);
+                            document.close();
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 180);
+                } else {
+                    swipeFill.classList.add('dl-error');
+                    swipeFill.style.width = '100%';
+
+                    let errorMsg = 'Gagal memproses berkas import (Status ' + xhr.status + ')';
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if (res.errors) {
+                            errorMsg = Object.values(res.errors).flat().join('<br>');
+                        } else if (res.message) {
+                            errorMsg = res.message;
+                        }
+                    } catch (e) {}
+
+                    if (window.Swal) {
+                        window.Swal.fire({
+                            icon: 'error',
+                            title: 'Import Gagal',
+                            html: errorMsg,
+                            confirmButtonText: 'Tutup',
+                            customClass: { popup: 'swal2-modal-soft shadow-lg border-0' }
+                        });
+                    } else {
+                        alert(errorMsg.replace(/<br>/g, '\n'));
+                    }
+
+                    setTimeout(function() {
+                        session.cleanup();
+                    }, 800);
+                }
+            }, waitTime);
+        };
+
+        xhr.onerror = function() {
+            clearInterval(progressTimer);
+            swipeFill.classList.add('dl-error');
+            swipeFill.style.width = '100%';
+
+            if (window.Swal) {
+                window.Swal.fire({
+                    icon: 'error',
+                    title: 'Import Gagal',
+                    text: 'Koneksi terputus saat mengunggah berkas.',
+                    timer: 3500,
+                    showConfirmButton: false
+                });
+            }
+
+            setTimeout(function() {
+                session.cleanup();
+            }, 800);
+        };
+
+        const formData = new FormData(form);
+        xhr.send(formData);
     }
 
     /**
@@ -372,7 +578,7 @@
         if (!btn) return;
 
         // Cek pengecualian
-        if (btn.hasAttribute('data-no-download')) {
+        if (btn.hasAttribute('data-no-download') || btn.hasAttribute('data-no-import')) {
             return;
         }
 
@@ -402,22 +608,36 @@
     }, true);
 
     /**
-     * Global Listener untuk Form Submission (misal Modal Cetak Massal POST)
+     * Global Listener untuk Form Submission (Modal Cetak Massal POST & Modal Import File)
      */
     document.addEventListener('submit', function(event) {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) return;
 
-        if (form.hasAttribute('data-no-download')) {
+        if (form.hasAttribute('data-no-download') || form.hasAttribute('data-no-import')) {
             return;
         }
 
         const action = form.getAttribute('action') || window.location.href;
-        const hasExplicitData = form.hasAttribute('data-download');
+        const submitBtn = event.submitter || form.querySelector('button[type="submit"]') || form.querySelector('input[type="submit"]');
+
+        // 1. Cek apakah ini form import Excel / data
+        if (isImportTarget(action, form, submitBtn)) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (submitBtn && submitBtn.dataset.isDownloading === 'true') {
+                return; // Cegah double-submit
+            }
+
+            executeImport(submitBtn || form, form);
+            return;
+        }
+
+        // 2. Cek apakah ini form download file (misal modal generate & cetak kartu massal)
+        const hasExplicitData = form.hasAttribute('data-download') || (submitBtn && submitBtn.hasAttribute('data-download'));
 
         if (hasExplicitData || isDownloadTarget(action)) {
-            const submitBtn = event.submitter || form.querySelector('button[type="submit"]') || form.querySelector('input[type="submit"]');
-
             // Cegah submit bawaan browser
             event.preventDefault();
             event.stopPropagation();

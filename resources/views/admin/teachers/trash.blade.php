@@ -122,11 +122,7 @@
             </table>
         </div>
 
-        @if($teachers->hasPages())
-        <div class="card-footer bg-white border-top-0 px-4 py-3">
-            {{ $teachers->links() }}
-        </div>
-        @endif
+        {!! render_compact_pagination($teachers, 'daftar-arsip-guru') !!}
     </div>
 </div>
 

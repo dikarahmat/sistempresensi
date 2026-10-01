@@ -228,7 +228,7 @@
     </script>
 
     <!-- Tabel Histori Kehadiran per Siswa -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" id="daftar-kehadiran">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
                 <thead class="bg-light">
@@ -247,8 +247,13 @@
                 </thead>
                 <tbody>
                     @forelse($studentHistories ?? [] as $idx => $item)
+                    @php
+                        $rowNumber = ($studentHistories instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            ? ($studentHistories->firstItem() + $idx)
+                            : ($idx + 1);
+                    @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td class="text-center text-muted fw-normal">{{ $idx + 1 }}</td>
+                        <td class="text-center text-muted fw-normal">{{ $rowNumber }}</td>
                         <td class="text-center text-nowrap fw-normal">{{ $item->nis }}</td>
                         <td class="text-start text-nowrap fw-normal">{{ $item->name }}</td>
                         <td class="text-center text-nowrap fw-normal">{{ $item->class_name }}</td>
@@ -274,5 +279,21 @@
                 </tbody>
             </table>
         </div>
+
+        {!! render_compact_pagination($studentHistories, 'daftar-kehadiran') !!}
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('page')) {
+                const el = document.getElementById('daftar-kehadiran');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    </script>
+    @endpush
 @endsection

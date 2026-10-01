@@ -66,6 +66,11 @@
     --sidebar-width: 238px;
     --sidebar-gap: 10px;
 
+    /* Token dimensi & gaya kamera gerbang (SAMA PERSIS dipakai kiosk & panel Scanner QR) */
+    --gerbang-camera-size: 380px;
+    --gerbang-camera-radius: 16px;
+    --gerbang-scan-ratio: 70%;
+
     /* Animasi Download Tokens */
     --dl-swipe-direction: to right;  /* Arah sapuan: KIRI ke KANAN */
     --dl-swipe-duration: 400ms;      /* Durasi minimal sapuan (0.4s) */
@@ -389,13 +394,104 @@
     color: #ffffff !important;
 }
 
-/* Indikator singkat jika terjadi kegagalan unduhan */
-.dl-swipe-fill.dl-error {
-    background-color: #ef4444 !important;
+/* ==========================================================================
+   TOMBOL DOWNLOAD & EXPORT SOLID TANPA BORDER (IDENTIK DENGAN DOWNLOAD QR CODE)
+   ========================================================================== */
+.btn-download-blue,
+.btn-download-primary {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0.65rem 1.25rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, opacity 0.2s ease !important;
+}
+.btn-download-blue:hover,
+.btn-download-primary:hover {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
-.dl-swipe-fill.dl-error .dl-swipe-content {
+.btn-download-green,
+.btn-download-success {
+    background-color: #059669 !important;
     color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0.65rem 1.25rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, opacity 0.2s ease !important;
+}
+.btn-download-green:hover,
+.btn-download-success:hover {
+    background-color: #047857 !important;
+    color: #ffffff !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Universal Reset: Hapus seluruh border, outline, dan box-shadow pada semua tombol unduh & import */
+[data-download],
+[data-import],
+.btn-download-blue,
+.btn-download-green,
+.btn-download-primary,
+.btn-download-success,
+.btn-green-excel,
+.btn-red-pdf,
+.dl-btn-relative {
+    border: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+[data-download]:hover,
+[data-download]:focus,
+[data-download]:active,
+[data-download]:focus-visible,
+[data-import]:hover,
+[data-import]:focus,
+[data-import]:active,
+[data-import]:focus-visible,
+.btn-download-blue:hover,
+.btn-download-blue:focus,
+.btn-download-blue:active,
+.btn-download-green:hover,
+.btn-download-green:focus,
+.btn-download-green:active,
+.dl-btn-relative:hover,
+.dl-btn-relative:focus,
+.dl-btn-relative:active,
+.dl-btn-relative:focus-visible,
+.dl-btn-relative:disabled {
+    border: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* Strict Exception: Area QR Code WAJIB Tetap Putih Murni (#ffffff) */
@@ -404,3 +500,433 @@
 .qr-display-box {
     background-color: #ffffff !important;
 }
+
+/* ==========================================================================
+   PAGINATION PANAH KIRI / KANAN (SATU KOMPONEN BERSAMA)
+   ========================================================================== */
+.pagination-arrow-container {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    margin: 0 auto !important;
+}
+
+.pagination-arrow-bar {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.85rem !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 9999px !important;
+    padding: 5px 8px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+}
+
+.pagination-arrow-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 9999px !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 1.45rem !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease-in-out !important;
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.pagination-arrow-btn:hover:not(.is-disabled) {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28) !important;
+    transform: translateY(-1px) !important;
+}
+
+.pagination-arrow-btn.is-disabled {
+    background-color: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+}
+
+.pagination-arrow-info {
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    padding: 0 0.85rem !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    font-family: 'Poppins', 'Roboto', sans-serif !important;
+}
+
+/* ==========================================================================
+   ANIMASI HASIL SCAN — SATU SUMBER TUNGGAL (REVISI 2, kiblat: Mode Gerbang)
+   Seluruh aturan .scan-result-* + @keyframes scan* HANYA ada di file ini.
+   View kiosk/scanner/daily/class TIDAK BOLEH punya aturan .scan-result-*
+   sendiri (tidak ada <style> duplikat). Markup overlay di semua view identik
+   dan JS yang dipakai adalah fungsi yang sama di scanner.js:
+   handleScanResult -> renderScanResult -> triggerOverlayDisplay (1500ms).
+   Ukuran overlay memakai nilai TETAP (px/rem, bukan %/vw) agar sama di kotak
+   kiosk yang sempit maupun kotak panel yang lebih lebar.
+   ========================================================================== */
+.scan-result-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    border-radius: var(--gerbang-camera-radius, 16px);
+    animation: scanFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.scan-result-overlay.fade-out {
+    animation: scanFadeOut 0.15s ease-out forwards;
+}
+
+.scan-result-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.scan-result-svg {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+}
+
+/* Lingkaran Luar SVG: Warna Berdasarkan Token presensi-tokens.css */
+.scan-result-circle {
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    animation: scanDrawCircle 0.35s ease-out forwards;
+}
+
+/* 1. Warna Lingkaran: Hijau, Oranye, Merah (Memakai Token Sistem) */
+.scan-result-overlay.circle-green .scan-result-circle,
+.scan-result-overlay.success .scan-result-circle {
+    stroke: var(--presensi-hadir, #10b981) !important;
+}
+
+.scan-result-overlay.circle-orange .scan-result-circle,
+.scan-result-overlay.warning .scan-result-circle {
+    stroke: var(--presensi-terlambat, #f59e0b) !important;
+}
+
+.scan-result-overlay.circle-red .scan-result-circle,
+.scan-result-overlay.error .scan-result-circle {
+    stroke: var(--presensi-alfa, #ef4444) !important;
+}
+
+/* 2. Ikon di dalam Lingkaran: Putih Murni, Default Sembunyi */
+.scan-result-icon {
+    display: none;
+}
+
+/* A. Centang Putih (Hadir Tepat Waktu) */
+.scan-result-overlay.icon-check .scan-result-check {
+    display: block !important;
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: scanDrawCheck 0.25s ease-out 0.28s forwards;
+}
+
+/* B. Silang X Putih (Terlambat & Sudah Presensi) */
+.scan-result-overlay.icon-cross .scan-result-cross {
+    display: block !important;
+}
+.scan-result-cross-1 {
+    stroke-dasharray: 45;
+    stroke-dashoffset: 45;
+    animation: scanDrawCross1 0.2s ease-out 0.28s forwards;
+}
+.scan-result-cross-2 {
+    stroke-dasharray: 45;
+    stroke-dashoffset: 45;
+    animation: scanDrawCross2 0.2s ease-out 0.42s forwards;
+}
+
+/* C. Tanda Seru (!) Putih (QR Tidak Dikenali & Error Server) */
+.scan-result-overlay.icon-exclamation .scan-result-exclamation {
+    display: block !important;
+}
+.scan-result-exclamation-line {
+    stroke-dasharray: 35;
+    stroke-dashoffset: 35;
+    animation: scanDrawExclamationLine 0.22s ease-out 0.28s forwards;
+}
+.scan-result-exclamation-dot {
+    opacity: 0;
+    animation: scanFadeInDot 0.15s ease-out 0.42s forwards;
+}
+
+/* Efek Getar / Shake saat Terjadi Peringatan atau Error */
+.scan-result-overlay.shake .scan-result-svg,
+.scan-result-overlay.error .scan-result-svg,
+.scan-result-overlay.warning .scan-result-svg {
+    animation: scanShake 0.35s ease-in-out 0.5s;
+}
+
+/* Tipografi & Animasi Masuk Teks — ukuran TETAP agar jumlah baris sama */
+.scan-result-text {
+    animation: scanFadeInText 0.2s ease-out 0.38s both;
+    width: 100%;
+    max-width: 260px;
+    margin: 0 auto;
+}
+
+.scan-result-name {
+    font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 600;
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.scan-result-status {
+    font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    margin-top: 4px;
+}
+
+/* Override ukuran layar kecil/pendek — SUMBER TUNGGAL.
+   Dulu 3 blok spread (kiosk.blade.php max-width 767px + max-height 639px +
+   blok 480px di sini) sehingga DI HP NILAI BERBEDA antara Gerbang & panel.
+   Sekarang SATU aturan untuk keduanya, memakai nilai TETAP (px) yang
+   equivalent dengan nilai efektif kiosk:
+     - kiosk lama:  svg min(120px, 55%) -> 120px   | padding 1rem  -> 16px
+                    svg min(120px, 46%) -> 120px   | padding 0.6rem-> 10px
+                    gap 0.5rem -> 8px               | gap 0.35rem   -> 6px
+                    name 1rem  -> 16px              | status 0.8rem -> 13px
+   Semua px tetap, tanpa %/vw/min(), jadi lebar kotak kiosk (320px) maupun
+   panel (lebih lebar) menghasilkan ukuran & jumlah baris teks yang sama. */
+@media (max-width: 767.98px) {
+    .scan-result-overlay { padding: 10px; }
+    .scan-result-content { gap: 8px; max-width: 300px; }
+    .scan-result-svg { width: 120px; height: 120px; }
+    .scan-result-name { font-size: 16px; line-height: 21px; }
+    .scan-result-status { font-size: 13px; line-height: 18px; }
+}
+
+@media (max-width: 767px) and (max-height: 639px) {
+    .scan-result-content { gap: 6px; }
+    .scan-result-svg { width: 120px; height: 120px; }
+}
+
+/* Keyframe Animations */
+@keyframes scanFadeIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scanFadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.97); }
+}
+
+@keyframes scanDrawCircle {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes scanDrawCheck {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes scanDrawExclamationLine {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes scanFadeInDot {
+    to { opacity: 1; }
+}
+
+@keyframes scanDrawCross1 {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes scanDrawCross2 {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes scanFadeInText {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scanShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+/* Aksesibilitas: Hormati prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .scan-result-overlay { animation: none !important; }
+    .scan-result-circle,
+    .scan-result-check,
+    .scan-result-exclamation-line,
+    .scan-result-cross-1,
+    .scan-result-cross-2 {
+        animation: none !important;
+        stroke-dashoffset: 0 !important;
+    }
+    .scan-result-exclamation-dot,
+    .scan-result-text {
+        animation: none !important;
+        opacity: 1 !important;
+    }
+    .scan-result-overlay.error .scan-result-svg,
+    .scan-result-overlay.warning .scan-result-svg {
+        animation: none !important;
+    }
+}
+
+/* ==========================================================================
+   ARAH VIDEO TUNGGAL (REVISI 1, kiblat: Scanner QR = tidak mirror).
+   Berlaku untuk Mode Gerbang (kiosk/scanner) + panel Scanner QR
+   (daily/class, admin & guru): video TIDAK di-mirror pada kamera depan
+   maupun belakang. Aturan ini menetralkan semua sumber mirror lama:
+   inline transform maupun property `scale` tidak valid dari
+   camera-select.js (file itu TIDAK diubah), serta class .mirror-front lama.
+   Hanya menyentuh <video> kamera; bracket/teks/overlay tidak terpengaruh,
+   QR tetap terbaca normal (decode memakai frame asli, bukan CSS).
+   CATATAN: selector sengaja TIDAK menyertakan .mirror-front — tidak ada lagi
+   aturan/kode yang memasang class itu; bila pernah terpasang, selector ini
+   tetap menetralkan mirror-nya (satu aturan untuk kiosk & panel).
+   ========================================================================== */
+#reader video {
+    transform: none !important;
+    scale: none !important;
+}
+/* ==========================================================================
+   PARITY GERBANG — PANEL SCANNER QR (khusus #scannerColumn di daily/class,
+   dipakai admin maupun guru karena view yang sama).
+   Single Source of Truth: file ini (presensi-tokens.css).
+   - Radius 16px + shadow + aspect 1/1 + bg SAMA PERSIS dengan kiosk
+     (.scanner-viewport-container & #reader di kiosk.blade.php).
+     (Kotak kamera/bracket/layout lain SUDAH BENAR — tidak diubah.)
+   - Selector panel di bawah HANYA untuk viewport/bracket; arah video memakai
+     aturan tunggal di atas agar kiosk + panel selalu sama.
+   ========================================================================== */
+#scannerColumn #scannerBox {
+    /* position: relative = containing block untuk #scanResultOverlay
+       (position:absolute; inset:0) supaya overlay hasil scan mengisi penuh
+       kotak kamera panel, sama persis seperti .scanner-viewport-container
+       di Mode Gerbang. */
+    position: relative !important;
+    border: 0 !important;
+    background: #000000 !important;
+    padding: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.45) !important;
+    overflow: hidden !important;
+}
+#scannerColumn #reader {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: #000000 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+#scannerColumn #reader video,
+#scannerColumn #reader img {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 0 !important;
+}
+/* Arah video memakai aturan tunggal "#reader video" di atas (tidak mirror);
+   tidak ada aturan arah video tambahan khusus panel di sini. */
+/* iOS/Safari: sembunyikan kontrol media bawaan agar tidak "ngeframe" (sama dgn kiosk) */
+#scannerColumn #reader video::-webkit-media-controls,
+#scannerColumn #reader video::-webkit-media-controls-enclosure,
+#scannerColumn #reader video::-webkit-media-controls-panel {
+    display: none !important;
+}
+/* Canvas internal html5-qrcode tidak boleh tampil (sama dgn kiosk) */
+#scannerColumn #reader canvas { display: none !important; }
+/* Area luar qrbox digelapkan library; shader putih bawaan disembunyikan
+   supaya tidak ada kotak putih menggantung di luar video (sama dgn kiosk). */
+#scannerColumn #qr-shaded-region { pointer-events: none !important; }
+#scannerColumn #qr-shaded-region > div { display: none !important; }
+/* ===== BRACKET 4 SUDUT panel — nilai SAMA PERSIS dengan kiosk
+   (.kiosk-scan-frame/.kiosk-scan-box/.kiosk-corner), hanya nama class
+   dibedakan agar tidak bentrok. Ukuran mengikuti --gerbang-scan-ratio (70%). */
+#scannerColumn .panel-scan-frame {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 6;
+}
+#scannerColumn .panel-scan-box {
+    position: relative;
+    width: var(--gerbang-scan-ratio, 70%);
+    height: var(--gerbang-scan-ratio, 70%);
+}
+#scannerColumn .panel-corner {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border: 5px solid #ffffff;
+}
+#scannerColumn .panel-corner--tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+#scannerColumn .panel-corner--tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+#scannerColumn .panel-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+#scannerColumn .panel-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+
+
