@@ -29,7 +29,12 @@
 <!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot
      Layout dikendalikan CSS (app-sidebar-drawer), bukan inline style, agar
      aturan !important di layout selalu menang di mobile & desktop. -->
-<aside class="d-flex flex-column flex-shrink-0 text-white rounded-end app-sidebar-panel main-sidebar sidebar-container">
+<!-- CATATAN DESKTOP: utility pembulatan sudut sisi kanan SENGAJA dihapus dari
+     <aside> ini. Wrapper <aside> di app.blade.php memakai `border-radius: 0`
+     pada breakpoint >= 1024px supaya sidebar desktop benar-benar PERSGI dan
+     menempel penuh dari atas sampai bawah. Sudut melengkung hanya untuk
+     drawer mobile (diatur di dalam @media max-width: 1023.98px). -->
+<aside class="d-flex flex-column flex-shrink-0 text-white app-sidebar-panel main-sidebar sidebar-container">
     
 <!-- ATAS: Header Logo & Nama Sekolah (Ukuran Pas & Proporsional) -->
     <div class="sidebar-brand flex-shrink-0">

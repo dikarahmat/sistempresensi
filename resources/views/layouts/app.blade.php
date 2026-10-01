@@ -70,7 +70,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Presensi Unified Design Tokens -->
-    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}">
+    {{-- Query `?v=filemtime(...)` = cache busting. Tanpa ini browser/CDN bisa
+         menyimpan CSS lama setelah deploy sehingga tampilan production tidak
+         sama dengan lokal. --}}
+    <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}?v={{ file_exists(public_path('css/presensi-tokens.css')) ? filemtime(public_path('css/presensi-tokens.css')) : config('app.version', '1') }}">
 
     @stack('styles')
 
@@ -93,12 +96,26 @@
             padding: 0 !important;
             height: 100%;
             min-height: 100vh;
+            /* WARNA SAMA PERSIS dengan sidebar (#3b62f6). Sebelumnya warna
+               kanvas memakai utility arbitrary-value Tailwind (hex 044ABA)
+               yang HANYA aktif bila utility-nya ter-generate oleh build Vite.
+               Build lokal tidak menghasilkannya (no-op), tapi build
+               production menghasilkannya -> muncul garis/belah biru yang
+               lebih gelap di tepi sidebar. Sekarang warna kanvas di-hardcode
+               di sini supaya identik di semua environment. */
             background-color: #3b62f6 !important;
             color: var(--text-dark);
             overflow: hidden !important;
             overflow-x: hidden !important;
             font-family: 'Poppins', 'Roboto', sans-serif;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* Wrapper kanvas aplikasi: satu-satunya sumber "celah" di belakang
+           sidebar, jadi WAJIB warna identik dengan sidebar. */
+        body > .app-canvas,
+        .app-canvas {
+            background-color: #3b62f6 !important;
         }
 
         /* ==========================================================================
@@ -327,8 +344,11 @@
             flex-shrink: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
-            border-top-right-radius: 1.25rem !important;
-            border-bottom-right-radius: 1.25rem !important;
+            /* Sudut melengkung HANYA untuk drawer mobile, diaktifkan di media
+               query max-width: 1023.98px di bawah. Di desktop sidebar wajib
+               PERSGI (lihat blok Desktop), karena sebelumnya radius ini
+               berada di rule global sehingga ikut merusak tampilan desktop. */
+            border-radius: 0 !important;
             border: none !important;
             box-sizing: border-box !important;
             background-color: #3b62f6 !important;
@@ -356,6 +376,9 @@
                 width: var(--sidebar-width) !important;
                 min-width: 0 !important;
                 max-width: 78vw !important;
+                /* Sudut melengkung khusus drawer mobile (tidak diubah dari sebelumnya). */
+                border-top-right-radius: 1.25rem !important;
+                border-bottom-right-radius: 1.25rem !important;
                 z-index: 1045 !important;
                 box-shadow: 20px 0 50px -10px rgba(15, 23, 42, 0.45), 8px 0 25px -5px rgba(15, 23, 42, 0.25) !important;
                 transform: translate3d(-100%, 0, 0) !important;
@@ -412,6 +435,18 @@
                 transition: none !important;
                 z-index: 40 !important;
                 margin-right: 0 !important;
+                /* SIDEBAR DESKTOP HARUS PERSGI: menempel penuh dari atas sampai
+                   bawah tanpa sudut melengkung & tanpa garis tepi.
+                   Penting: production (Railway) memakai build Vite yang berbeda
+                   dari lokal, sehingga utility pembulatan sisi kanan ikut
+                   ter-generate di sana tapi tidak di lokal. Rule ini
+                   menetralkan keduanya. */
+                border-radius: 0 !important;
+                border-top-right-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
             }
         }
 
@@ -1456,7 +1491,13 @@
 
     </style>
 </head>
-<body class="overflow-hidden bg-[#044ABA] m-0 p-0" x-data="{ sidebarOpen: false }">
+<!-- Catatan: utility arbitrary-value Tailwind untuk warna kanvas (hex 044ABA)
+     SENGAJA DIHAPUS dari class body & wrapper. Utility seperti ini hanya aktif
+     bila ter-generate build Vite, dan hasilnya berbeda antara build lokal vs
+     production (Railway) sehingga memunculkan garis/belah biru gelap di tepi
+     sidebar. Warna kanvas kini di-hardcode #3b62f6 (sama persis dengan
+     sidebar) lewat CSS di dalam <head>, jadi identik di semua environment. -->
+<body class="app-canvas overflow-hidden m-0 p-0" x-data="{ sidebarOpen: false }">
 
 {{-- Global Smart Loader Component --}}
 @include('components.loading-overlay')
@@ -1464,7 +1505,7 @@
 <!-- ========================================================================= -->
 <!-- 1. ROOT APPLICATION CANVAS                                                -->
 <!-- ========================================================================= -->
-<div class="flex h-screen w-screen overflow-hidden bg-[#044ABA] m-0 p-0">
+<div class="app-canvas flex h-screen w-screen overflow-hidden m-0 p-0">
 
     <!-- SIDEBAR DRAWER (Z-INDEX 9999999 - PALING DEPAN KETIKA DIBUKA) -->
     <aside :class="sidebarOpen ? 'mobile-sidebar-active' : ''"
@@ -1637,7 +1678,7 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('js/instant-download.js') }}"></script>
+<script src="{{ asset('js/instant-download.js') }}?v={{ file_exists(public_path('js/instant-download.js')) ? filemtime(public_path('js/instant-download.js')) : config('app.version', '1') }}"></script>
 <script>
     /**
      * Universal Soft UI Delete Confirmation Modal
