@@ -36,6 +36,11 @@
 
     .table-zebra-custom {
         width: 100%;
+        /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
+           kolom-kolomnya dipipihkan. Semua kolom (NO, NIP, NAMA LENGKAP GURU,
+           JENIS KELAMIN, TUGAS KELAS, NO. TELEPON / WA, AKSI) ikut dihitung;
+           nilai desktop tidak berubah karena tabel selalu lebih lebar dari ini. */
+        min-width: 760px;
         margin-bottom: 0;
     }
 
@@ -169,16 +174,8 @@
         }
     }
 
-    /* Notifikasi import: ikon/teks/X sejajar rapi, catatan error bisa discroll */
-    .guru-import-alert {
-        padding-right: 0.9rem !important;
-    }
-    .guru-import-alert .btn-close {
-        position: static;
-        padding: 0.1rem;
-        margin: 0;
-        flex: 0 0 auto;
-    }
+    /* Notifikasi import: tombol X + posisi diatur CSS notifikasi global di layout.
+       Yang khas halaman ini hanya daftar alasan error yang boleh discroll. */
     .guru-import-notes {
         max-height: 200px;
         overflow-y: auto;
@@ -204,6 +201,21 @@
         text-transform: uppercase;
         letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
+        /* === UKURAN 3 TOMBOL ACTION BAR DISAMAkan (SAMA NILAI DENGAN DATA SISWA) ===
+           Tanpa min-width, tiap tombol lebarnya mengikuti panjang teksnya
+           sendiri, sehingga "IMPORT EXCEL" (12 karakter) jauh lebih lebar dari
+           "HAPUS" (5 karakter).
+           min-width 150px — nilai yang PERSIS sama dengan acuan Data Siswa,
+           yang di sana sudah cukup untuk "IMPORT EXCEL" (12 karakter) dan
+           "TAMBAH SISWA" (12 karakter). Di halaman ini teks terpanjang juga
+           12 karakter ("IMPORT EXCEL"), jadi 150px sudah cukup dan ketiga
+           tombol benar-benar sama lebar, teksnya rata tengah.
+           Tinggi sudah sama sejak awal (height: 38px di atas), dan jarak antar
+           tombol juga sudah sama (gap 0.5rem pada .action-buttons-wrap).
+           Di bawah 1024px, aturan layout bersama sudah memaksa tiap tombol
+           full width satu per satu, jadi tampilan mobile tidak berubah. */
+        min-width: 150px;
+        text-align: center;
     }
     .btn-solid-pill:hover {
         filter: brightness(0.94);
@@ -261,61 +273,73 @@
 
 @section('content')
 
-    {{-- Alert Notifikasi --}}
+    {{-- Alert Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
+         Tombol X center vertikal oleh CSS notifikasi global di layout. --}}
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
-            <span>{{ session('success') }}</span>
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
-            <span>{{ session('error') }}</span>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
+    {{-- Notifikasi import Excel. Warna mengikuti session('import_status'):
+         success = hijau, warning = kuning, danger = merah (0 baris terimpor).
+         Tombol X adalah anak LANGSUNG dari kotak alert supaya center vertikal. --}}
     @if(session('import_status'))
     @php
         $importStatus = in_array(session('import_status'), ['success', 'warning', 'danger'], true) ? session('import_status') : 'info';
         $importIcons = ['success' => 'bx-check-circle', 'warning' => 'bx-error-circle', 'danger' => 'bx-x-circle', 'info' => 'bx-info-circle'];
     @endphp
-    <div class="alert alert-{{ $importStatus }} alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 guru-import-alert" role="alert">
-        <div class="d-flex align-items-start justify-content-between gap-3">
-            <div class="d-flex align-items-start flex-grow-1">
+    <div class="alert alert-{{ $importStatus }} alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 guru-import-alert" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
                 <i class='bx {{ $importIcons[$importStatus] }} fs-5 me-2 flex-shrink-0'></i>
                 <span>{{ session('import_message') }}</span>
             </div>
-            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+            @if(session('import_errors') && count(session('import_errors')) > 0)
+            <div class="guru-import-notes mt-2">
+                <ul class="mb-0 ps-3 small">
+                    @foreach(session('import_errors') as $err)
+                    <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
         </div>
-        @if(session('import_errors') && count(session('import_errors')) > 0)
-        <div class="guru-import-notes mt-2">
-            <ul class="mb-0 ps-3 small">
-                @foreach(session('import_errors') as $err)
-                <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
+    {{-- Error validasi form: TETAP tampil (tidak hilang otomatis) sampai user
+         memperbaikinya atau menekan tombol X. --}}
     @if($errors->any() && !session('open_modal'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Periksa data input:</div>
-        <ul class="mb-0 ps-3 small">
-            @foreach($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
+        <div class="flash-notice-body">
+            <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Periksa data input:</div>
+            <ul class="mb-0 ps-3 small">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
@@ -401,24 +425,24 @@
                         $assignedClass = $teacher->schoolClass ?? null;
                     @endphp
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td class="text-center text-nowrap px-3">{{ $teachers->firstItem() + $index }}</td>
-                        <td class="text-center text-nowrap font-monospace px-3">{{ $teacher->nip ?? '-' }}</td>
-                        <td class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $teacher->name }}</td>
-                        <td class="text-start text-nowrap px-3">
+                        <td data-label="No" class="text-center text-nowrap px-3">{{ $teachers->firstItem() + $index }}</td>
+                        <td data-label="NIP" class="text-center text-nowrap font-monospace px-3">{{ $teacher->nip ?? '-' }}</td>
+                        <td data-label="Nama Guru" class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $teacher->name }}</td>
+                        <td data-label="Jenis Kelamin" class="text-start text-nowrap px-3">
                             {{ ($teacher->gender == 'Perempuan' || $teacher->gender == 'P') ? 'Perempuan' : 'Laki-laki' }}
                         </td>
-                        <td class="text-start text-nowrap px-3 text-secondary">
+                        <td data-label="Tugas Kelas" class="text-start text-nowrap px-3 text-secondary">
                             @if($assignedClass)
                                 Kelas {{ $assignedClass->name }}
                             @else
                                 Guru Pengajar
                             @endif
                         </td>
-                        <td class="text-start text-nowrap px-3 text-secondary">
+                        <td data-label="No. Telepon / WA" class="text-start text-nowrap px-3 text-secondary">
                             {{ $teacher->phone_number ?? $teacher->phone ?? '-' }}
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="Aksi" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
                                 <!-- 1. Tombol Edit Guru -->
                                 <button type="button" class="btn-row-action action-edit"
@@ -821,7 +845,7 @@
     function confirmDeleteTeacher(id, name) {
         confirmUniversalDelete({
             title: 'Hapus Data Guru?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus data guru <b class="text-dark">${name}</b> dari sistem. Penugasan kelas yang bersangkutan akan otomatis dilepaskan.`,
+            html: `Data guru <strong>${name}</strong> akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.`,
             confirmText: 'Hapus',
             cancelText: 'Tidak',
             onConfirm: function() {
@@ -830,44 +854,22 @@
         });
     }
 
-    // 3. Konfirmasi Hapus Semua Guru Massal (dua pernyataan wajib centang)
+    // 3. Konfirmasi Hapus Semua Guru Massal.
+    // Memakai confirmUniversalDelete() dari layout bersama supaya tema,
+    // ukuran, animasi, dan tombol nonaktif-hingga-checkbox-nya SAMA PERSIS
+    // dengan dialog hapus di halaman lain.
     function confirmDeleteAllTeachers() {
-        Swal.fire({
+        confirmUniversalDelete({
             title: 'Hapus Seluruh Data Guru?',
-            html: `
-                <div style="color: #64748b; line-height: 1.625; font-size: 0.9rem; text-transform: uppercase; text-align: center; margin-bottom: 1rem;">Tindakan ini <b class="text-dark">permanen</b>. Seluruh data guru akan dihapus dan penugasan kelas akan dilepas.</div>
-                <div style="text-align: left; font-size: 0.85rem; color: #374151;">
-                    <div class="mb-2" style="display: flex; align-items: flex-start; gap: 8px;">
-                        <input type="checkbox" id="delChk1" class="form-check-input mt-1">
-                        <label for="delChk1">Saya memahami bahwa seluruh data guru <b>akan dihapus permanen</b> dan tidak dapat dikembalikan.</label>
-                    </div>
-                    <div style="display: flex; align-items: flex-start; gap: 8px;">
-                        <input type="checkbox" id="delChk2" class="form-check-input mt-1">
-                        <label for="delChk2">Saya memahami bahwa penugasan kelas untuk <b>semua guru</b> akan otomatis dilepas.</label>
-                    </div>
-                </div>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Hapus Semua',
-            cancelButtonText: 'Tidak',
-            reverseButtons: true,
-            buttonsStyling: false,
-            customClass: {
-                popup: 'swal2-modal-soft shadow-lg border-0',
-                actions: 'd-flex justify-content-center gap-3 w-100 m-0 p-0',
-                confirmButton: 'btn btn-danger fw-medium px-4 py-2',
-                cancelButton: 'btn btn-light text-secondary fw-medium px-4 py-2 border'
-            },
-            preConfirm: function () {
-                var c1 = document.getElementById('delChk1');
-                var c2 = document.getElementById('delChk2');
-                if (!c1.checked || !c2.checked) {
-                    Swal.showValidationMessage('Centang kedua pernyataan di atas untuk melanjutkan.');
-                    return false;
-                }
-            }
-        }).then(function (result) {
-            if (result.isConfirmed) {
+            icon: 'bx-error-circle',
+            html: 'Seluruh data guru aktif akan dihapus dan dipindahkan ke <strong>Tempat Sampah</strong> di Pengaturan.',
+            confirmText: 'Hapus Semua',
+            cancelText: 'Tidak',
+            checks: [
+                'Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.',
+                'Saya yakin ingin menghapus semua data guru aktif.'
+            ],
+            onConfirm: function () {
                 document.getElementById('deleteAllTeachersForm').submit();
             }
         });

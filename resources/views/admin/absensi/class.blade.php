@@ -451,7 +451,7 @@
 @endpush
 
 @section('content')
-<div class="pt-1 pb-4 space-y-3">
+<div class="pt-1 space-y-3">
     
     <!-- RINGKASAN STATUS + SCANNER: satu container -->
     <div class="status-summary-grid mb-3">

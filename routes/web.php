@@ -62,26 +62,56 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
     Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
-    // Master Tahun Ajaran
-    Route::post('academic-years/{academic_year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
-    Route::resource('academic-years', AcademicYearController::class)->except(['show', 'create', 'edit']);
+    // URL LAMA modul Tahun Ajaran & Hari Libur. Modul ini kini hidup di bawah
+    // Pengaturan (admin/settings/...), tapi URL lama tidak boleh mati diam-diam:
+    // tetap-answer 301 (permanen) ke URL baru. Nama route, controller, method,
+    // middleware, dan HTTP method modul TIDAK diubah.
+    Route::get('academic-years', fn () => redirect()->route('admin.academic-years.index', [], 301));
+    Route::get('holidays', fn () => redirect()->route('admin.holidays.index', [], 301));
+    Route::get('holidays/template', fn () => redirect()->route('admin.holidays.template', [], 301));
 
-    // Master Hari Libur & Import
-    Route::get('holidays/template', [HolidayController::class, 'template'])->name('holidays.template');
-    Route::post('holidays/import', [HolidayController::class, 'import'])->name('holidays.import')->middleware('throttle:10,1');
-    Route::resource('holidays', HolidayController::class)->except(['show', 'create', 'edit']);
+    // Pengaturan Sistem + modul yang dikelola dari halaman Pengaturan.
+    // Route statis (toggle-active, template) didaftarkan lebih dulu supaya tidak
+    // tertangkap route resource yang berparameter.
+    Route::prefix('settings')->group(function () {
+        // Master Tahun Ajaran
+        Route::post('academic-years/{academic_year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
+        Route::resource('academic-years', AcademicYearController::class)->except(['show', 'create', 'edit']);
+
+        // Master Hari Libur & Import
+        // ->names('holidays') dipakai AGAR nama route tetap admin.holidays.*
+        // Hanya URL (path) yang berubah, nama route tidak.
+        Route::get('hari-libur/template', [HolidayController::class, 'template'])->name('holidays.template');
+        Route::post('hari-libur/import', [HolidayController::class, 'import'])->name('holidays.import')->middleware('throttle:10,1');
+        Route::resource('hari-libur', HolidayController::class)->names('holidays')->except(['show', 'create', 'edit']);
+    });
 
     // Master Kelas, Import, & Hapus Semua
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
     Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAll'])->name('classes.destroy-all');
     Route::get('classes/template', [SchoolClassController::class, 'template'])->name('classes.template');
     Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import')->middleware('throttle:10,1');
+
+    // Soft Delete Routes untuk Kelas (Tempat Sampah).
+    // Route statis WAJIB didaftarkan SEBELUM Route::resource('classes') di bawah
+    // supaya tidak tertangkap parameter {class}.classes.destroy-all di atas
+    // tetap utuh untuk aksi "Hapus Semua" di halaman Data Kelas.
+    Route::delete('classes/trash-destroy-all', [SchoolClassController::class, 'destroyAllTrashed'])->name('classes.trash-destroy-all');
+    Route::get('classes/trash', [SchoolClassController::class, 'trash'])->name('classes.trash');
+    Route::post('classes/{id}/restore', [SchoolClassController::class, 'restore'])->name('classes.restore');
+    Route::delete('classes/{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('classes.force-delete');
+
     Route::resource('classes', SchoolClassController::class)->except(['show', 'create', 'edit']);
 
     // Master Siswa, Import, Upload Foto ZIP, & Hapus Semua
     Route::get('/siswa', [AdminStudentController::class, 'index'])->name('siswa.index');
     Route::match(['get', 'post'], '/siswa/generate-qr', [AdminStudentController::class, 'printCards'])->name('siswa.generate-qr');
     Route::delete('students/destroy-all', [AdminStudentController::class, 'destroyAll'])->name('students.destroy-all');
+    // Hapus massal siswa AKTIF dari toolbar Data Siswa (soft delete -> Tempat Sampah).
+    // Route statis WAJIB didaftarkan sebelum Route::resource('students') di bawah
+    // supaya tidak tertangkap parameter {student}. Route students.destroy-all
+    // di atas tetap utuh untuk aksi kosongkan Tempat Sampah.
+    Route::delete('students/destroy-all-active', [AdminStudentController::class, 'destroyAllActive'])->name('students.destroy-all-active');
     Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
     Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
     Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import')->middleware('throttle:10,1');
@@ -111,6 +141,11 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::delete('teachers/destroy-all', [TeacherController::class, 'destroyAll'])->name('teachers.destroy-all');
     Route::get('teachers/template', [TeacherController::class, 'downloadTemplate'])->name('teachers.template');
     Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import')->middleware('throttle:10,1');
+
+    //WAJIB didaftarkan sebelum Route::resource('teachers') di bawah supaya tidak
+    // tertangkap parameter {teacher} pada route DELETE teachers/{teacher}.
+    Route::delete('teachers/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('teachers.trash-destroy-all');
+
     Route::resource('teachers', TeacherController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Soft Delete Routes untuk Teachers

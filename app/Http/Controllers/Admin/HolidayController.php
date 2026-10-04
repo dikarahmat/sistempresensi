@@ -151,6 +151,8 @@ class HolidayController extends Controller
     public function destroy(Holiday $holiday): RedirectResponse
     {
         $holiday->delete();
-        return redirect()->route('admin.holidays.index')->with('success', 'Hari libur berhasil dihapus!');
+        // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
+        // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
+        return redirect()->route('admin.holidays.index')->with('error', 'Hari libur berhasil dihapus!');
     }
 }

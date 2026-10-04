@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Presensi Gerbang | {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
-    <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <title>Presensi Gerbang - {{ \App\Models\Setting::getTitleAppName() }}</title>
+    <link rel="icon" type="image/webp" href="{{ \App\Models\Setting::getLogoUrl() }}">
 
     <!-- Google Fonts: Poppins & Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -572,7 +572,7 @@
     <!-- Header khusus MOBILE (<=767px): logo + nama sekolah, rata tengah.
          Default display:none sehingga tampilan desktop tidak berubah sama sekali. -->
     <div class="kiosk-mobile-header">
-        <img class="kiosk-mobile-logo" src="{{ asset(\App\Models\Setting::getLogo()) }}" alt="Logo Sekolah">
+        <img class="kiosk-mobile-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo Sekolah">
         <div class="kiosk-mobile-name">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</div>
         <div class="kiosk-mobile-sub">Presensi Gerbang</div>
     </div>

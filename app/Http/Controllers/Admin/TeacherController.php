@@ -175,8 +175,11 @@ class TeacherController extends Controller
             $teacher->delete();
 
             DB::commit();
-            $message = 'Data guru ' . $name . ' berhasil diarsipkan! Anda dapat memulihkannya dari halaman Arsip.';
-            return redirect()->route('admin.guru.index')->with('success', $message);
+            // Notifikasi hapus sengaja memakai flash 'error' supaya tampil
+            // MERAH (alert-danger), sama seperti notifikasi hapus di Data
+            // Siswa. Flash 'success' (hijau) dipakai untuk tambah/ubah.
+            $message = 'Data guru ' . $name . ' berhasil dihapus! Penugasan kelasnya otomatis dilepaskan.';
+            return redirect()->route('admin.guru.index')->with('error', $message);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -186,28 +189,47 @@ class TeacherController extends Controller
 
     /**
      * Hapus Seluruh Data Guru Secara Massal dengan proteksi transaksi.
+     *
+     * PERUBAHAN: ini dulu HAPUS PERMANEN (forceDelete). Sekarang menjadi soft
+     * delete supaya sama seperti Data Siswa: seluruh data guru aktif dipindahkan
+     * ke Tempat Sampah dan masih bisa dipulihkan.
+     *
+     * Foto guru SENGAJA tidak dihapus dari storage supaya saat guru dipulihkan
+     * fotonya masih utuh. Penugasan kelas dilepas (wali kelas jadi kosong) dan
+     * TIDAK dikembalikan otomatis saat dipulihkan - admin perlu menugaskan
+     * ulang lewat halaman Ubah.
      */
     public function destroyAll(): RedirectResponse
     {
         DB::beginTransaction();
         try {
-            Teacher::withTrashed()->whereNotNull('photo')->chunkById(200, function ($teachers) {
-                foreach ($teachers as $teacher) {
-                    if ($teacher->photo && Storage::disk('public')->exists($teacher->photo)) {
-                        Storage::disk('public')->delete($teacher->photo);
-                    }
-                }
-            });
+            $total = Teacher::count();
 
+            if ($total === 0) {
+                DB::rollBack();
+                return redirect()->route('admin.guru.index')
+                    ->with('error', 'Tidak ada data guru aktif yang bisa dihapus.');
+            }
+
+            // Lepaskan seluruh penugasan kelas lebih dulu supaya tidak ada
+            // kelas yang menunjuk guru yang sudah masuk Tempat Sampah.
             SchoolClass::whereNotNull('teacher_id')->update(['teacher_id' => null]);
-            Teacher::withTrashed()->forceDelete();
+
+            // Soft delete (bukan permanen) - data bisa dipulihkan dari
+            // Tempat Sampah di Pengaturan.
+            Teacher::query()->delete();
 
             DB::commit();
-            return redirect()->route('admin.guru.index')->with('success', 'Seluruh data guru beserta penugasan kelasnya berhasil dibersihkan!');
+
+            // Flash 'error' supaya notifikasi tampil MERAH (alert-danger),
+            // sama seperti notifikasi hapus di Data Siswa.
+            return redirect()->route('admin.guru.index')
+                ->with('error', "Seluruh data guru ({$total}) berhasil dihapus dan dipindahkan ke Tempat Sampah di Pengaturan.");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.guru.index')->with('error', 'Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.');
+            return redirect()->route('admin.guru.index')
+                ->with('error', 'Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.');
         }
     }
 
@@ -363,17 +385,39 @@ class TeacherController extends Controller
         $teachers = $query->orderBy('deleted_at', 'desc')->paginate(50);
         $classes = SchoolClass::orderBy('name')->get();
 
-        return view('admin.teachers.trash', compact('teachers', 'classes'));
+        // Jumlah data di Tempat Sampah, dipakai dialog konfirmasi
+        // "Hapus Semua dari Tempat Sampah" (tombolnya nonaktif kalau 0).
+        $trashedCount = Teacher::onlyTrashed()->count();
+
+        return view('admin.teachers.trash', compact('teachers', 'classes', 'trashedCount'));
     }
 
     /**
      * Pulihkan guru dari arsip.
+     *
+     * Penugasan kelas SENGAJA tidak dikembalikan otomatis: saat guru dihapus,
+     * kolom school_classes.teacher_id sudah di-set NULL sehingga informasi
+     * "guru ini dulunya wali kelas mana" tidak tersimpan. Admin perlu
+     * menugaskan ulang lewat halaman Ubah.
      */
     public function restore($id): RedirectResponse
     {
         // onlyTrashed() wajib dipakai agar global scope SoftDeletes tidak membuat
         // query mustahil (penyebab 404 sebelumnya).
         $teacher = Teacher::onlyTrashed()->findOrFail($id);
+
+        // teachers.nip punya UNIQUE index di database yang TIDAK mengabaikan
+        // deleted_at. Tetap dijaga di sini supaya konflik tampil sebagai pesan
+        // yang jelas, bukan error 500.
+        $duplikat = Teacher::where('nip', $teacher->nip)
+            ->where('id', '!=', $teacher->id)
+            ->exists();
+
+        if ($duplikat) {
+            return redirect()->route('admin.teachers.trash')
+                ->with('error', "Gagal dipulihkan: NIP {$teacher->nip} sudah dipakai data guru yang aktif. Perbaiki NIP lebih dulu.");
+        }
+
         $teacher->restore();
 
         return redirect()->route('admin.teachers.trash')
@@ -399,13 +443,57 @@ class TeacherController extends Controller
             $teacher->forceDelete();
 
             DB::commit();
+            // Flash 'error' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
-                ->with('success', "Data guru {$teacherName} berhasil dihapus permanen!");
+                ->with('error', "Data guru {$teacherName} berhasil dihapus permanen!");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.teachers.trash')
                 ->with('error', 'Gagal menghapus permanen guru. Silakan coba lagi atau hubungi admin.');
+        }
+    }
+
+    /**
+     * Hapus PERMANEN seluruh isi Tempat Sampah Guru sekaligus.
+     *
+     * Dipakai oleh tombol "Hapus Semua dari Tempat Sampah" di halaman
+     * teachers/trash. Dialog konfirmasinya (dengan dua checkbox) dibuat di
+     * sisi tampilan memakai confirmUniversalDelete() dari layout bersama.
+     */
+    public function destroyAllTrashed(): RedirectResponse
+    {
+        DB::beginTransaction();
+        try {
+            $total = Teacher::onlyTrashed()->count();
+
+            if ($total === 0) {
+                DB::rollBack();
+                return redirect()->route('admin.teachers.trash')
+                    ->with('error', 'Tempat Sampah Guru sudah kosong, tidak ada yang bisa dihapus.');
+            }
+
+            // Foto dihapus hanya untuk data yang memang dihapus permanen.
+            Teacher::onlyTrashed()->whereNotNull('photo')->chunkById(200, function ($teachers) {
+                foreach ($teachers as $teacher) {
+                    if ($teacher->photo && Storage::disk('public')->exists($teacher->photo)) {
+                        Storage::disk('public')->delete($teacher->photo);
+                    }
+                }
+            });
+
+            SchoolClass::whereNotNull('teacher_id')->update(['teacher_id' => null]);
+            Teacher::onlyTrashed()->forceDelete();
+
+            DB::commit();
+            // Flash 'error' supaya notifikasi hapus tampil MERAH.
+            return redirect()->route('admin.teachers.trash')
+                ->with('error', "Seluruh data guru di Tempat Sampah ({$total}) berhasil dihapus permanen!");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return redirect()->route('admin.teachers.trash')
+                ->with('error', 'Gagal menghapus permanen data guru dari Tempat Sampah. Silakan coba lagi atau hubungi admin.');
         }
     }
 }

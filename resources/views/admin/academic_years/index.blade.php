@@ -115,24 +115,29 @@
 @endpush
 
 @section('content')
-    <!-- Alert Notifikasi -->
+    <!-- Alert Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
+         Tombol X center vertikal oleh CSS notifikasi global di layout. -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
-            <span>{{ session('success') }}</span>
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
-            <span>{{ session('error') }}</span>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
@@ -177,21 +182,21 @@
                 <tbody class="text-uppercase">
                     @forelse($academicYears as $index => $year)
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle text-nowrap">
-                        <td class="text-center text-nowrap px-3">{{ $academicYears->firstItem() + $index }}</td>
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="No" class="text-center text-nowrap px-3">{{ $academicYears->firstItem() + $index }}</td>
+                        <td data-label="Tahun Ajaran" class="text-center text-nowrap px-3">
                             {{-- Kolom ini hanya berisi nama tahun ajaran (mis. "2026/2027").
                                  Status "AKTIF" hanya tampil di kolom Status Aktif. --}}
                             <span>{{ $year->name }}</span>
                         </td>
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="Semester" class="text-center text-nowrap px-3">
                             Semester {{ $year->semester }}
                         </td>
-                        <td class="text-center text-nowrap px-3 d-none d-md-table-cell">
+                        <td data-label="Periode Tanggal" class="text-center text-nowrap px-3 d-none d-md-table-cell">
                             @php \Carbon\Carbon::setLocale('id'); @endphp
                             {{ \Carbon\Carbon::parse($year->start_date)->translatedFormat('d M Y') }} &mdash; 
                             {{ \Carbon\Carbon::parse($year->end_date)->translatedFormat('d M Y') }}
                         </td>
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="Status Aktif" class="text-center text-nowrap px-3">
                             <span class="col-status-aktif">
                                 @if($year->is_active)
                                     <span class="d-inline-flex align-items-center gap-1 fw-bold text-success" style="font-size: 0.78rem;" title="Tahun ajaran ini sedang aktif di sistem">
@@ -202,6 +207,7 @@
                                          tombol type="submit" tetap mengirim form walau JS gagal
                                          dimuat; lihat confirmToggleActive() di bawah. --}}
                                     <form action="{{ panel_route('academic-years.toggle-active', $year->id) }}" method="POST" id="activateYearForm-{{ $year->id }}" class="d-inline m-0"
+                                          data-no-loader
                                           onsubmit="return confirmToggleActive(this, '{{ $year->id }}', '{{ $year->name }}', '{{ $year->semester }}')">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success" title="Jadikan tahun ajaran ini sebagai tahun ajaran aktif">
@@ -211,7 +217,7 @@
                                 @endif
                             </span>
                         </td>
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="Aksi" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editYearModal{{ $year->id }}" title="Edit">
@@ -387,62 +393,65 @@
         });
     }
 
+    /* Jaga klik ganda: form hanya boleh dikirim SATU KALI. Tanpa ini, klik
+       ganda pada tombol "Ya, Aktifkan" (atau pada tombol AKTIFKAN itu
+       sendiri) bisa mengirim POST berkali-kali. */
+    let sudahDikirim = false;
+
     /**
      * Konfirmasi pengaktifan tahun ajaran.
      * Dipanggil dari onsubmit form AKTIFKAN (bukan onclick tombol):
-     *  - Swal tersedia  -> tahan submit asli (return false), tampilkan dialog,
-     *                      kirim form hanya setelah dikonfirmasi.
-     *  - Swal tidak ada  -> fallback window.confirm() bawaan browser.
-     *  - JS sama sekali mati -> tombol type="submit" tetap mengirim form,
-     *                      jadi tombol AKTIFKAN tidak pernah "mati total".
+     *  - confirmUniversalDelete tersedia -> tahan submit asli (return false),
+     *      tampilkan dialog bertema SAMA PERSIS dengan dialog hapus (kartu,
+     *      overlay blur, ikon lingkaran, judul & deskripsi rata tengah, dua
+     *      tombol 50/50) dengan tone: 'primary' sehingga hanya warna aksennya
+     *      yang biru, bukan merah. Kirim form hanya setelah dikonfirmasi.
+     *  - helper tidak tersedia -> fallback window.confirm() bawaan browser,
+     *      supaya tombol AKTIFKAN tidak pernah "mati total".
+     *  - JS sama sekali mati -> tombol type="submit" tetap mengirim form.
      * Penyebab kegagalan dicatat ke console browser (tab Console) untuk diagnosis.
      */
     function confirmToggleActive(form, id, name, semester) {
-        const message = `Aktifkan tahun ajaran ${name} - ${semester}? Tahun ajaran aktif saat ini akan dinonaktifkan.`;
+        const message = `Tahun ajaran ${name} - ${semester} akan diaktifkan. Tahun ajaran aktif saat ini akan dinonaktifkan.`;
 
         const submitForm = () => {
+            if (sudahDikirim) return; // cegah submit kedua
+            sudahDikirim = true;
+
             const target = document.getElementById(`activateYearForm-${id}`) || form;
             if (!target) {
+                sudahDikirim = false;
                 console.error(`AKTIFKAN: form activateYearForm-${id} tidak ditemukan di halaman. Muat ulang halaman.`);
                 return;
             }
+
+            // Indikator singkat di tombol aslinya supaya tidak ada overlay
+            // dan pengguna langsung tahu permintaannya sedang dikirim.
+            const btn = target.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Memproses...';
+            }
+
             target.submit();
         };
 
-        if (typeof Swal === 'undefined' || typeof Swal.fire !== 'function') {
-            console.warn('AKTIFKAN: SweetAlert2 tidak termuat (CDN gagal/blokir?), memakai konfirmasi browser.');
+        if (typeof window.confirmUniversalDelete !== 'function') {
+            console.warn('AKTIFKAN: dialog bersama tidak termuat, memakai konfirmasi browser.');
             return window.confirm(message);
         }
 
         try {
-            Swal.fire({
+            window.confirmUniversalDelete({
                 title: 'Aktifkan Tahun Ajaran?',
                 text: message,
-                icon: 'question',
-                iconColor: '#3b82f6',
-                showCancelButton: true,
-                confirmButtonColor: '#3b82f6',
-                cancelButtonColor: '#f1f5f9',
-                confirmButtonText: 'Ya, Aktifkan',
-                cancelButtonText: 'Batal',
-                reverseButtons: true,
-                focusCancel: true,
-                buttonsStyling: false,
-                customClass: {
-                    popup: 'shadow-lg border-0 rounded-4 p-4',
-                    title: 'fw-bold fs-4 text-dark mb-2',
-                    htmlContainer: 'text-secondary fs-6 mb-4',
-                    actions: 'gap-2 w-100 justify-content-center m-0',
-                    confirmButton: 'btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-xs',
-                    cancelButton: 'btn btn-light text-secondary px-4 py-2 rounded-3 fw-semibold border'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    submitForm();
-                }
-            }).catch((err) => {
-                console.error('AKTIFKAN: dialog konfirmasi gagal, memakai konfirmasi browser.', err);
-                if (window.confirm(message)) {
+                // Ikon info (bukan tanda tanya raksasa) di dalam lingkaran biru muda.
+                icon: 'bx-info-circle',
+                // Aksen biru; kartu/overlay/tombol tetap sama dengan dialog hapus.
+                tone: 'primary',
+                confirmText: 'Ya, Aktifkan',
+                cancelText: 'Batal',
+                onConfirm: function () {
                     submitForm();
                 }
             });

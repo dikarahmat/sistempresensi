@@ -146,33 +146,16 @@
 
     /* --------------------------------------------------------------------------
        NOTIFIKASI HALAMAN HARI LIBUR (.alert-libur)
-       Tombol X dibuat statis (bukan absolut) sehingga sejajar vertikal di tengah
-       dengan teks notifikasi, dengan jarak kanan yang konsisten.
+       Struktur notifikasi: [ .alert-libur-body (ikon + teks) ] [ tombol X ].
+       Perataan tombol X (center vertikal, selalu di dalam kotak) dikerjakan
+       oleh CSS notifikasi global di layout/app.blade.php supaya identik di
+       semua halaman. Di sini hanya sisanya.
        Berlaku untuk semua jenis notifikasi di halaman ini: hijau (berhasil),
        kuning (peringatan), dan merah (gagal).
        Scoped hanya ke halaman ini -> halaman lain (Siswa/Guru/Kelas) TIDAK ikut.
        -------------------------------------------------------------------------- */
-    .alert-libur.alert-dismissible {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding-right: 0.75rem;
-    }
-
     .alert-libur-body {
-        flex: 1 1 auto;
-        min-width: 0;
-    }
-
-    .alert-libur.alert-dismissible .btn-close {
-        position: static;
-        top: auto;
-        right: auto;
-        z-index: auto;
-        align-self: center;
-        flex: 0 0 auto;
-        margin: 0;
-        padding: 0.35rem 0.4rem;
+        display: block;
     }
 </style>
 @endpush
@@ -180,7 +163,7 @@
 @section('content')
     <!-- Alert Notifikasi -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2 alert-libur" role="alert">
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-libur" role="alert">
         <div class="alert-libur-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
@@ -192,7 +175,7 @@
     @endif
 
     @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2 alert-libur" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-libur" role="alert">
         <div class="alert-libur-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
@@ -214,7 +197,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2 alert-libur" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-libur" role="alert">
         <div class="alert-libur-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
@@ -294,24 +277,24 @@
                         $isRange = $daysDiff > 1;
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} text-nowrap">
-                        <td class="text-center px-3 text-nowrap">{{ $holidays->firstItem() + $index }}</td>
-                        <td class="text-center px-3 text-nowrap">
+                        <td data-label="No" class="text-center px-3 text-nowrap">{{ $holidays->firstItem() + $index }}</td>
+                        <td data-label="Tipe" class="text-center px-3 text-nowrap">
                             {{ $isRange ? 'Rentang' : 'Tunggal' }}
                         </td>
-                        <td class="text-start indent-tanggal px-3 text-nowrap">
+                        <td data-label="Tanggal" class="text-start indent-tanggal px-3 text-nowrap">
                             @if($isRange)
                                 {{ $start->translatedFormat('d M Y') }} &mdash; {{ $end->translatedFormat('d M Y') }}
                             @else
                                 {{ $start->translatedFormat('l, d F Y') }}
                             @endif
                         </td>
-                        <td class="text-center px-3 text-nowrap">
+                        <td data-label="Durasi" class="text-center px-3 text-nowrap">
                             {{ $daysDiff }} Hari
                         </td>
-                        <td class="text-start indent-keterangan px-3 text-nowrap">
+                        <td data-label="Keterangan" class="text-start indent-keterangan px-3 text-nowrap">
                             {{ $holiday->description }}
                         </td>
-                        <td class="text-center px-3 text-nowrap">
+                        <td data-label="Aksi" class="text-center px-3 text-nowrap">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editHolidayModal{{ $holiday->id }}" title="Edit">

@@ -213,10 +213,11 @@ class MultiRoleAuthTest extends TestCase
         $this->assertStringContainsString('display: flex !important;', $html);
         $this->assertStringContainsString('justify-content: center;', $html);
 
-        // 4. Modal punya lebar wajar (max 400px) dan margin samping di layar kecil.
-        $this->assertStringContainsString('max-width: 400px;', $html);
-        $this->assertStringContainsString('width: calc(100% - 2rem);', $html);
-        $this->assertStringContainsString('margin: 0 auto;', $html);
+        // 4. Modal punya lebar wajar (max 380px sesuai spesifikasi terbaru) dan
+        //    margin samping minimal 16px di layar kecil.
+        $this->assertStringContainsString('max-width: 380px', $html);
+        $this->assertStringContainsString('width: calc(100% - 32px)', $html);
+        $this->assertStringContainsString('margin: 16px auto', $html);
 
         // 5. Overlay menutupi viewport penuh dan TIDAK memakai trik offset.
         $this->assertStringContainsString('#logoutConfirmModal {', $html);
@@ -235,10 +236,14 @@ class MultiRoleAuthTest extends TestCase
         // Teks pertanyaan rata tengah.
         $this->assertStringContainsString('#logoutConfirmModal .modal-body {', $html);
 
-        // Dua tombol sejajar, jarak sama, ukuran konsisten.
+        // Dua tombol sejajar, jarak sama, ukuran konsisten: lebar sama (50%),
+        // tinggi sama (46px), radius sama (12px).
         $this->assertStringContainsString('#logoutConfirmModal .modal-footer {', $html);
         $this->assertStringContainsString('#logoutConfirmModal .modal-footer .btn {', $html);
-        $this->assertStringContainsString('min-width: 8.5rem;', $html);
+        $this->assertStringContainsString('flex: 1 1 50% !important;', $html);
+        $this->assertStringContainsString('height: 42px !important;', $html);
+        $this->assertStringContainsString('border-radius: 10px !important;', $html);
+        $this->assertStringContainsString('gap: 10px !important;', $html);
 
         // Tombol BATAL & YA, LOG OUT tetap ada; YA, LOG OUT tetap merah (btn-danger).
         $this->assertStringContainsString('data-bs-dismiss="modal"', $html);

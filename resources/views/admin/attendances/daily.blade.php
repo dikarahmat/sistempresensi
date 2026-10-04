@@ -544,7 +544,7 @@
 @endpush
 
 @section('content')
-<div class="pt-0.5 sm:pt-1 pb-4 space-y-2 sm:space-y-3">
+<div class="pt-0.5 sm:pt-1 space-y-2 sm:space-y-3">
 
     <!-- AMBIL DATA DARI CONTROLLER & HITUNG TOTAL OTOMATIS JIKA KOSONG -->
     @php

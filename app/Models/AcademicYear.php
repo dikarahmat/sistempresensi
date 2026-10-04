@@ -32,10 +32,14 @@ class AcademicYear extends Model
     public function makeActive(): void
     {
         // Satu transaksi: hanya boleh ada SATU tahun ajaran aktif, dan tidak
-        // pernah berakhir nol (atau dua) yang aktif — bila ada langkah yang
+        // pernah berakhir nol (atau dua) yang aktif - bila ada langkah yang
         // gagal, seluruh perubahan dibatalkan dan status lama tetap utuh.
         DB::transaction(function () {
-            self::query()->update(['is_active' => false]);
+            // Hanya baris yang SEDANG aktif yang dinonaktifkan. Hasilnya sama
+            // persis dengan menutup semua baris (semua is_active=false), tapi
+            // hanya satu baris yang benar-benar ditulis sehingga lebih cepat
+            // dan lock tabel lebih singkat.
+            self::query()->where('is_active', true)->update(['is_active' => false]);
 
             // refresh() wajib: atribut di memori masih bisa bernilai "true",
             // sehingga update() berikutnya dianggap tidak ada perubahan dan

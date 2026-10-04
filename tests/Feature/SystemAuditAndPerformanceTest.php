@@ -67,7 +67,9 @@ class SystemAuditAndPerformanceTest extends TestCase
             'late_limit_time' => '07:00',
             'check_out_time' => '14:00',
             'school_address' => 'Jl. Pendidikan No. 99',
-            'school_phone' => '021-99999',
+            // Aturan FASE 1: telepon hanya angka, 10-15 digit (tanpa tanda hubung).
+            'school_phone' => '0219999999',
+            'headmaster_nip' => '197508122000031002',
         ]);
 
         $response->assertRedirect(route('admin.settings.index'));
