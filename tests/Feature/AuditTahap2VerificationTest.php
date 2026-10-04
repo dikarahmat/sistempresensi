@@ -126,6 +126,33 @@ class AuditTahap2VerificationTest extends TestCase
         $this->assertStringContainsString('T = Terlambat', $legend[1]);
     }
 
+    public function test_sabtu_dan_minggu_dihitung_libur_di_rekap(): void
+    {
+        // Keputusan pemilik 2026-10-04: Sabtu + Minggu libur.
+        // 2025-08-02 = Sabtu, 2025-08-03 = Minggu.
+        $this->assertTrue(\Carbon\Carbon::parse('2025-08-02')->isWeekend());
+        $rekap = app(\App\Http\Controllers\Admin\RekapController::class);
+        $ref = new \ReflectionMethod($rekap, 'getRecapData');
+        $ref->setAccessible(true);
+        $k = $this->kelas();
+        \App\Models\Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Sabtu',
+            'nis' => '555002', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        $mingguan = $ref->invoke($rekap, 'mingguan', null, [
+            'start_date' => '2025-07-28', 'end_date' => '2025-08-03',
+        ]);
+        $foundL = false;
+        foreach ($mingguan['dataRows'] as $row) {
+            foreach (['2025-08-02', '2025-08-03'] as $tgl) {
+                if (($row['days'][$tgl] ?? null) === 'L') {
+                    $foundL = true;
+                }
+            }
+        }
+        $this->assertTrue($foundL, 'Sabtu dan Minggu harus berkode L di rekap mingguan.');
+    }
+
     public function test_login_salah_dan_rate_limit(): void
     {
         $this->from(route('login'))->post(route('login'), [

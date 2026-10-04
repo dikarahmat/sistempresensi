@@ -292,7 +292,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $dates = $this->periodDates();
             $totalEffective = count(array_filter(
                 $dates,
-                fn (Carbon $d) => !($d->isSunday() || Holiday::isHoliday($d->toDateString()))
+                fn (Carbon $d) => !($d->isWeekend() || Holiday::isHoliday($d->toDateString()))
             ));
 
             $headerRow = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'JK'];
@@ -335,7 +335,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $holidayCount = 0;
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dDate = Carbon::createFromDate($year, $month, $d);
-                if ($dDate->isSunday() || Holiday::isHoliday($dDate->toDateString())) {
+                if ($dDate->isWeekend() || Holiday::isHoliday($dDate->toDateString())) {
                     $holidayCount++;
                 }
             }
@@ -537,8 +537,8 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 ->get()
                 ->keyBy('student_id');
 
-            $isSunday = Carbon::parse($date)->isSunday();
-            $isHoliday = Holiday::isHoliday($date) || $isSunday;
+            $isWeekend = Carbon::parse($date)->isWeekend();
+            $isHoliday = Holiday::isHoliday($date) || $isWeekend;
 
             foreach ($students as $student) {
                 $att = $attendances->get($student->id);
@@ -625,7 +625,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         }
                     } else {
                         $dObj = Carbon::parse($dStr);
-                        if ($dObj->isSunday() || Holiday::isHoliday($dStr)) {
+                        if ($dObj->isWeekend() || Holiday::isHoliday($dStr)) {
                             $code = 'L';
                         } elseif ($dStr <= $now->toDateString()) {
                             $code = 'A';
@@ -702,7 +702,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     }
                 } else {
                     $dObj = Carbon::createFromDate($year, $month, $d);
-                    if ($dObj->isSunday() || Holiday::isHoliday($cDate)) {
+                    if ($dObj->isWeekend() || Holiday::isHoliday($cDate)) {
                         $code = 'L';
                     } elseif ($cDate <= $nowDateStr) {
                         $code = 'A';

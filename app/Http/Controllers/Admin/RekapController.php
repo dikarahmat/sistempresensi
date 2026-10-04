@@ -58,9 +58,9 @@ class RekapController extends Controller
         if ($type === 'harian') {
             $date = $inputs['date'] ?? $now->toDateString();
             $dateObj = Carbon::parse($date);
-            $isSunday = $dateObj->isSunday();
-            $isHoliday = Holiday::isHoliday($date) || $isSunday;
-            $holidayDesc = Holiday::getHolidayDescription($date) ?? ($isSunday ? 'Hari Minggu' : null);
+            $isWeekend = $dateObj->isWeekend();
+            $isHoliday = Holiday::isHoliday($date) || $isWeekend;
+            $holidayDesc = Holiday::getHolidayDescription($date) ?? ($isWeekend ? 'Akhir Pekan' : null);
 
             $attendances = Attendance::where('date', $date)
                 ->whereIn('student_id', $students->pluck('id'))
@@ -144,13 +144,13 @@ class RekapController extends Controller
             $cur = $startObj->copy();
             while ($cur->lte($endObj)) {
                 $curDateStr = $cur->toDateString();
-                $isSun = $cur->isSunday();
+                $isWeekend = $cur->isWeekend();
                 $isHol = Holiday::isHoliday($curDateStr);
                 $dateColumns[] = [
                     'date' => $curDateStr,
                     'carbon' => $cur->copy(),
                     'label' => $cur->translatedFormat('D, d/m'),
-                    'is_holiday' => $isSun || $isHol,
+                    'is_holiday' => $isWeekend || $isHol,
                 ];
                 $cur->addDay();
             }
@@ -240,9 +240,9 @@ class RekapController extends Controller
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $cDate = sprintf('%04d-%02d-%02d', $year, $month, $d);
                 $dayDateStrings[$d] = $cDate;
-                $isSun = Carbon::createFromDate($year, $month, $d)->isSunday();
+                $isWeekend = Carbon::createFromDate($year, $month, $d)->isWeekend();
                 $isHol = Holiday::isHoliday($cDate);
-                if ($isSun || $isHol) {
+                if ($isWeekend || $isHol) {
                     $holidayMap[$d] = Holiday::getHolidayDescription($cDate) ?? 'Akhir Pekan';
                 }
             }
