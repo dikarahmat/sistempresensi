@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() ?? 'SMP PGRI' }}</title>
+    <title>@yield('title', 'Sistem Presensi') - {{ \App\Models\Setting::getTitleAppName() }}</title>
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code untuk sekolah. Monitoring presensi realtime, akurat, dan terintegrasi.">
@@ -16,20 +16,20 @@
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() }}">
+    <meta property="og:title" content="@yield('title', 'Sistem Presensi') - {{ \App\Models\Setting::getTitleAppName() }}">
     <meta property="og:description" content="Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code untuk sekolah.">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ asset(\App\Models\Setting::getLogo()) }}">
-    <meta property="og:site_name" content="{{ \App\Models\Setting::getAppTitle() }}">
+    <meta property="og:image" content="{{ \App\Models\Setting::getLogoUrl() }}">
+    <meta property="og:site_name" content="{{ \App\Models\Setting::getTitleAppName() }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="@yield('title', 'Sistem Presensi') | {{ \App\Models\Setting::getAppTitle() }}">
+    <meta name="twitter:title" content="@yield('title', 'Sistem Presensi') - {{ \App\Models\Setting::getTitleAppName() }}">
     <meta name="twitter:description" content="Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code.">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
-    <link rel="apple-touch-icon" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <link rel="icon" type="image/webp" href="{{ \App\Models\Setting::getLogoUrl() }}">
+    <link rel="apple-touch-icon" href="{{ \App\Models\Setting::getLogoUrl() }}">
 
     <!-- JSON-LD Organization Schema -->
     <script type="application/ld+json">
@@ -40,7 +40,7 @@
             'name' => \App\Models\Setting::getSchoolName(),
             'description' => 'Sistem Presensi Sekolah - Platform manajemen kehadiran digital berbasis QR Code',
             'url' => url('/'),
-            'logo' => asset(\App\Models\Setting::getLogo()),
+            'logo' => \App\Models\Setting::getLogoUrl(),
             'address' => [
                 '@type' => 'PostalAddress',
                 'streetAddress' => \App\Models\Setting::getSchoolAddress(),
@@ -269,6 +269,152 @@
         /* --- Alert --- */
         .alert {
             font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        /* ===========================================================================
+           NOTIFIKASI GLOBAL (SEMUA HALAMAN)
+           ---------------------------------------------------------------------------
+           ATURAN YANG DIPAKAI DI SELURUH PROJECT:
+             1. Notifikasi (alert) yang bisa ditutup = satu BARIS flex:
+                   [ ikon + teks .................] [ X ]
+             2. Tombol X WAJIB center vertikal - satu baris maupun banyak baris.
+             3. Isi notifikasi (body) merebut ruang sisa (flex:1) supaya teks
+                membungkus rapi dan tidak pernah ketimpa / tertimpa tombol X.
+             4. Padding vertikal simetris (12px atas = 12px bawah).
+
+           KENAPA SEBELUMNYA TOMBOL X "TURUN KE BAWAH":
+           Aturan lama menjadikan .alert-dismissible sebagai GRID 2 kolom.
+           Tombol X bawaan Bootstrap itu position:absolute (top:0; right:0),
+           jadi ia BUKAN grid item - penempatan grid (grid-column/grid-row)
+           tidak berlaku padanya dan align-self:center ikut diabaikan karena
+           top/right-nya bukan auto. Akibatnya tombol ikut "melayang" jauh dari
+           pusat kotak notifikasi.
+
+           SEKARANG positioning absolut Bootstrap DIBONGKAR TOTAL:
+             position:static + top/right/bottom/left/transform/margin/padding
+             semuanya direset, lalu tombol dijadikan flex item biasa dengan
+             align-self:center. Hasilnya center vertikal dijamin, tidak
+           bergantung pada konteks apa pun (grid/flex/position) di sekitarnya.
+
+           CATATAN PENTING SOAL .btn-close::before
+           Bootstrap menambah ::before berukuran 1.5em yang warnanya transparan
+           (khusus memperbesar area klik) dan diposisikan absolute terhadap
+           .btn-close. Karena tombol kini position:static, ::before itu akan
+           terkunci ke kotak alert dan bisa MENYEBLOK klik di isi notifikasi.
+           Karena itu ::before di-matikan (content:none) - area klik tombol X
+           tetap 28x28px, jauh lebih besar dari aslinya (18px).
+
+           Semua aturan di sini memakai !important dan ditulis DI SETELAH
+           blok "push styles" milik layout, jadi aturan per halaman tidak
+           bisa menimpanya.
+           CATATAN PENTING: nama direktif Blade sengaja ditulis TANPA tanda
+           "@" pada komentar ini, dan blok style tidak lagi disebut memakai
+           tag aslinya. Blade memindai SELURUH teks file, termasuk isi blok
+           style dan komentar CSS di dalamnya. Kalau direktif push-styles
+           ditulis apa adanya di sini, Blade mengompilasinya menjadi PHP
+           yang MENCETAK isi push halaman ke dalam blok style ini. Browser
+           lalu menemukan tag penutup style milik halaman, menutup blok ini
+           lebih awal, dan seluruh CSS di bawahnya tampil sebagai TEKS.
+           ======================================================================== */
+        .alert-dismissible {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+            /* padding vertikal simetris; tinggi kotak menyesuaikan isi */
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+            padding-left: 16px !important;
+            padding-right: 12px !important;
+            height: auto !important;
+            min-height: 0 !important;
+            /* fade-out 0.3s dipakai script notifikasi global */
+            transition: opacity .3s linear !important;
+        }
+
+        /* Anak notifikasi tidak boleh memaksa kotak melebar (biarkan teks wrap) */
+        .alert-dismissible > * {
+            min-width: 0 !important;
+        }
+
+        /* Bodi notifikasi = anak tepat SEBELUM tombol X. Dipakai selector
+           posisi (bukan nama class) supaya notifikasi ini tetap benar walau
+           markup-nya belum diberi class .flash-notice-body. */
+        .alert-dismissible > .flash-notice-body,
+        .alert-dismissible > *:nth-last-child(2):not(.btn-close) {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+
+        /* Badge jumlah/baris tambahan di dalam notifikasi tidak ikut melebar */
+        .alert-dismissible > ul,
+        .alert-dismissible > .flash-notice-body > ul {
+            margin-bottom: 0 !important;
+        }
+
+        /* TOMBOL X - center vertikal, tidak pernah keluar dari kotak */
+        .alert-dismissible > .btn-close,
+        .alert-dismissible .btn-close {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            transform: none !important;
+            z-index: auto !important;
+            float: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            align-self: center !important;
+            flex: 0 0 auto !important;
+            box-sizing: border-box !important;
+            width: 28px !important;
+            min-width: 28px !important;
+            height: 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            border-radius: 6px !important;
+            background-size: 12px 12px !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            opacity: .55 !important;
+        }
+
+        /* ::before bawaan Bootstrap dimatikan (lihat catatan di atas) */
+        .alert-dismissible > .btn-close::before,
+        .alert-dismissible .btn-close::before {
+            content: none !important;
+        }
+
+        .alert-dismissible > .btn-close:hover,
+        .alert-dismissible > .btn-close:focus-visible,
+        .alert-dismissible .btn-close:hover,
+        .alert-dismissible .btn-close:focus-visible {
+            opacity: 1 !important;
+            background-color: rgba(15, 23, 42, .10) !important;
+        }
+
+        /* Ikon di kiri tidak ikut melebar, teks di sampingnya yang tumbuh */
+        .flash-notice-body {
+            display: block;
+        }
+        .flash-notice-body > i,
+        .flash-notice-body > .bx {
+            flex: 0 0 auto;
+        }
+
+        /* Mobile: notifikasi tetap rapi, X tetap center vertikal */
+        @media (max-width: 575.98px) {
+            .alert-dismissible {
+                gap: 10px !important;
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+                padding-left: 12px !important;
+                padding-right: 10px !important;
+            }
         }
 
         /* --- Pagination --- */
@@ -939,6 +1085,125 @@
             }
         }
 
+        /* ==========================================================================
+           3.C KANVAS SATU LAYAR + SCROLL DI DALAM KANVAS  (class .page-canvas-fixed)
+
+           ACUAN (tidak diubah): halaman Presensi, Data Guru, Data Kelas. Di sana
+           kanvas putih = <main> dengan tinggi PAS satu layar (tinggi layar
+           dikurangi margin atas & bawah wrapper, masing-masing 10px), ujung
+           bawahnya terlihat dengan rounded corner, dan isi panjang hanya
+           menggulir DI DALAM kanvas - bukan seluruh halaman.
+
+           Pada 5 halaman yang memakai class .page-canvas-fixed (Dashboard,
+           Catatan Kehadiran, Rekap Presensi, Data Siswa, Pengaturan) kanvas
+           sebelumnya ikut memanjang melebihi layar, sehingga halaman ikut
+           ter-scroll dan ujung bawah + rounded corner-nya tidak pernah terlihat.
+
+           Blok ini menyamakan GEOMETRI-nya saja. Margin, radius, warna, padding,
+           tabel, route, dan fitur lain tidak disentuh - semuanya tetap memakai
+           aturan kanvas di atas (bagian 3).
+
+           Cara kerja:
+             1. <main> dikunci setinggi layar: calc(100dvh - 2 x --sidebar-gap).
+                Nilainya sama dengan min-height yang sudah dipakai layout, jadi
+                tinggi kanvas tidak berubah, hanya terkunci; margin (10px) dan
+                border radius (1rem) tetap dari aturan yang sama.
+             2. <main> overflow:hidden -> tidak ada isi yang keluar atau menimpa
+                kanvas. Area scroll dipindah ke .flex-1 (di dalam kanvas) supaya
+                header halaman tetap diam dan tidak ikut bergulir.
+             3. Halaman tanpa tabel (Dashboard, Pengaturan) memakai .flex-1 itu
+                sendiri sebagai area scroll. Halaman tabel (Siswa, Kehadiran,
+                Rekap) memakai .flex-1 sebagai kolom flex: kartu tabel mengisi
+                sisa tinggi kanvas, jadi tabelnya yang menggulir di dalam
+                .table-responsive dan header tabel tetap sticky.
+             4. .row Bootstrap punya margin atas negatif dari gutter. Di dalam area
+                scroll margin negatif di tepi atas tidak bisa digulir, jadi
+                dinetralkan pada baris pertama saja (jarak antar baris tetap).
+
+           Class .page-canvas-fixed dipasang lewat yield "canvas_class" pada
+           markup <main> di bawah, jadi hanya halaman yang memilihnya yang
+           terpengaruh; halaman lain tidak berubah sama sekali.
+           (Sengaja ditulis tanpa "@" supaya Blade tidak mengompilasinya.)
+        ========================================================================== */
+        @media (min-width: 768px) {
+
+            /* 1. Kanvas putih setinggi satu layar (margin & radius tetap dari
+                  aturan layout bersama di atas). */
+            .content-scroll-wrapper > main.page-canvas-fixed {
+                height: calc(100dvh - (var(--sidebar-gap, 10px) * 2)) !important;
+                overflow: hidden !important;
+            }
+
+            /* 2. Area scroll berada DI DALAM kanvas. */
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1 {
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                overscroll-behavior-y: contain;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: #94a3b8 #f1f5f9;
+            }
+
+            /* Scrollbar isi kanvas: rampai dan memakai warna yang sama dengan
+               scrollbar tabel (lihat blok .table-responsive di bawah). */
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1::-webkit-scrollbar {
+                width: 10px !important;
+                height: 10px !important;
+                display: block !important;
+                background-color: #f1f5f9;
+                border-radius: 8px;
+            }
+
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1::-webkit-scrollbar-track {
+                background-color: #f1f5f9;
+                border-radius: 8px;
+            }
+
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1::-webkit-scrollbar-thumb {
+                background-color: #94a3b8;
+                border-radius: 8px;
+                border: 2px solid #f1f5f9;
+            }
+
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1::-webkit-scrollbar-thumb:hover {
+                background-color: #64748b;
+            }
+
+            /* 3. Margin atas negatif baris pertama (gutter Bootstrap) dinetralkan
+                  supaya tidak terpotong tepi atas area scroll. */
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1 > .row:first-child {
+                margin-top: 0 !important;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            /* 4. Halaman tabel: .flex-1 menjadi kolom flex dan kartu tabel
+                  mengisi sisa tinggi kanvas.
+                  Di bawah 1024px tabel ditampilkan sebagai kartu (aturan layout
+                  bersama), jadi isinya dialirkan oleh .flex-1. */
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1:has(> #daftar-siswa),
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1:has(> #daftar-kehadiran),
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1:has(> #daftar-rekap) {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            /* Kartu di atas kartu tabel (filter, alert, kartu sistem) tetap
+               setinggi aslinya; kartu tabel yang boleh mengisi sisa tinggi. */
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1 > * {
+                flex-shrink: 0;
+            }
+
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1 > #daftar-siswa,
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1 > #daftar-kehadiran,
+            .content-scroll-wrapper > main.page-canvas-fixed > .flex-1 > #daftar-rekap {
+                flex: 1 1 auto !important;
+                height: auto !important;
+                min-height: 0 !important;
+            }
+        }
+
         /* --------------------------------------------------------------------------
            4. TOMBOL GARIS TIGA & UNIVERSAL HEADER (SEJAJAR VERTIKAL PRESISI)
            -------------------------------------------------------------------------- */
@@ -1378,6 +1643,184 @@
             /* Pengaman box model: padding TIDAK menambah lebar di luar margin,
                sehingga tidak ada elemen yang bisa melewati batas sidebar. */
             box-sizing: border-box !important;
+            /* Transisi lokal (warna/background) kurz dari 0.18s menjadi 0s:
+               hover terasa langsung, tanpa penundaan. */
+            transition: none !important;
+        }
+
+        /* Label menu: selalu satu baris. Saat sidebar melebar, teks mengikuti
+           lebar (tidak membungkus) dan tidak pernah membuat ikon melompat. */
+        .app-sidebar-drawer .sidebar-nav-label {
+            white-space: nowrap !important;
+            /* Teks muncul/hilang bersama sidebar secara instan (0s). */
+            transition: none !important;
+        }
+
+        /* --------------------------------------------------------------------------
+           HOVER MENU TIDAK AKTIF - TANPA GESER
+
+           Aturan khusus `:not(.active)` sehingga menu yang sedang aktif TIDAK
+           bereaksi saat di-hover (highlight putihnya tidak berubah).
+           Ikon & teks TIDAK digeser, tidak diskalakan, tidakBERGESER sama
+           sekali - yang berubah hanya warna latar kotak menjadi abu-abu
+           transparan tipis. Dibatasi di @media (hover: hover) supaya perangkat
+           sentuh (HP/tablet) tidak pernah mendapat state hover yang "nempel".
+           Warna dipakai dari palet yang sudah ada (putih transparan), tidak ada
+           warna baru.
+        -------------------------------------------------------------------------- */
+        @media (hover: hover) {
+            .app-sidebar-drawer .nav-link:not(.active):hover {
+                background-color: rgba(255, 255, 255, 0.16) !important;
+                color: #ffffff !important;
+                box-shadow: none !important;
+            }
+
+            .app-sidebar-drawer .nav-link:not(.active):hover i {
+                color: #ffffff !important;
+            }
+        }
+
+        /* Fokus keyboard mendapat perlakuan yang sama dengan hover, tapi tetap
+           memerlukan indikator fokus yang jelas (outline putih). */
+        .app-sidebar-drawer .nav-link:not(.active):focus-visible {
+            background-color: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            outline: 2px solid #ffffff !important;
+            outline-offset: -2px !important;
+            box-shadow: none !important;
+        }
+
+        .app-sidebar-drawer .nav-link:not(.active):focus-visible i {
+            color: #ffffff !important;
+            outline: none !important;
+        }
+
+        /* Menu AKTIF tidak boleh berubah karena hover/fokus - dikunci ulang.
+           Warna teks & ikon memakai BIRU TEMA yang sudah ada
+           (--primary-blue = #3b62f6, sama dengan latar sidebar), bukan biru
+           default Bootstrap, supaya menu aktif unmistakably milik tema ini.
+           Rasio kontras #3b62f6 di atas putih = 4.9:1 (melewati ambang 4.5:1). */
+        .app-sidebar-drawer .nav-link.active,
+        .app-sidebar-drawer .nav-link.active i {
+            color: var(--primary-blue, #3b62f6) !important;
+        }
+
+        .app-sidebar-drawer .nav-link.active {
+            font-weight: 600 !important;
+        }
+
+        @media (hover: hover) {
+            .app-sidebar-drawer .nav-link.active:hover {
+                background-color: #ffffff !important;
+                color: var(--primary-blue, #3b62f6) !important;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.15) !important;
+            }
+            .app-sidebar-drawer .nav-link.active:hover i {
+                color: var(--primary-blue, #3b62f6) !important;
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           LOG OUT - NORMAL & HOVER/FOKUS (mode expanded)
+
+           Lebar, tinggi, margin, sudut, dan padding TOMBOL Log Out sengaja
+           TIDAK diberi width manual: ia memakai mekanismeLebar block-level
+           yang PERSIS sama dengan item menu lain (margin 0 0.75rem,16px),
+           plus box-sizing: border-box sebagai pengaman. Warna merah memakai
+           merah tombol HAPUS yang sudah dipakai di aplikasi (#dc2626).
+        -------------------------------------------------------------------------- */
+        .app-sidebar-drawer .sidebar-logout-link {
+            background: transparent !important;
+            color: #ffffff !important;
+            /* UKURAN DISAMAKAN PERSIS DENGAN ITEM MENU DI ATASNYA.
+               Item menu (<a class="nav-link">) memakai margin kiri/kanan
+               0.75rem dan otomatis selebar container (<li>). Tombol Log Out
+              _results <button> yang punya perilaku lebar berbeda, jadi
+               lebarnya ditulis EKSPLISIT di sini:
+                 margin kiri + margin kanan (1.5rem) + lebar (100% - 1.5rem)
+                 = 100% dari <li>  -> TEPAT sama dengan <a> menu di atas,
+                 tanpa overflow dan tanpa tombol yang lebih kecil.
+               Nilai lain (padding, radius, font, ikon, gap) sengaja
+               menyalin aturan global .app-sidebar-drawer .nav-link. */
+            width: calc(100% - 1.5rem) !important;
+            margin-left: 0.75rem !important;
+            margin-right: 0.75rem !important;
+            margin-top: 0 !important;
+            margin-bottom: 16px !important;
+            padding: 0.6rem 0.75rem !important;
+            border-radius: 12px !important;
+            min-height: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 0.75rem !important;
+            box-sizing: border-box !important;
+            text-align: left !important;
+            /* Transisi hover CEPAT (maks 0.1s) sesuai permintaan. */
+            transition: background-color 0.1s ease, color 0.1s ease !important;
+        }
+
+        /* Ikon & teks Log Out rata kiri dengan ikon & teks menu lain. */
+        .app-sidebar-drawer .sidebar-logout-link i {
+            font-size: 1.25rem !important;
+            line-height: 1 !important;
+            flex: 0 0 auto !important;
+        }
+
+        .app-sidebar-drawer .sidebar-logout-link .sidebar-nav-label {
+            text-align: left !important;
+        }
+
+        .app-sidebar-drawer .sidebar-logout-link i {
+            color: #ffffff !important;
+        }
+
+        /* Hover / :active -> MERAH PENUH. Perilaku :active TIDAK memakai
+           @media (hover:hover) supaya juga berlaku di perangkat sentuh
+           (mobile), ketika tidak ada hover sama sekali. Bentuk & ukuran
+           container tidak berubah karena yang berubah hanya warnanya. */
+        @media (hover: hover) {
+            .app-sidebar-drawer .sidebar-logout-link:hover {
+                background-color: #dc2626 !important;
+                color: #ffffff !important;
+            }
+
+            .app-sidebar-drawer .sidebar-logout-link:hover i {
+                color: #ffffff !important;
+            }
+        }
+
+        .app-sidebar-drawer .sidebar-logout-link:active {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+        }
+
+        .app-sidebar-drawer .sidebar-logout-link:active i {
+            color: #ffffff !important;
+        }
+
+        .app-sidebar-drawer .sidebar-logout-link:focus-visible {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+            outline: none !important;
+        }
+
+        .app-sidebar-drawer .sidebar-logout-link:focus-visible i {
+            color: #ffffff !important;
+        }
+
+        /* Pengguna yang memilih "kurangi animasi" di OS: seluruh transisi
+           sidebar dimatikan (FASE 2 aturan 2 & 6). Animasi tidak hilang -
+           hanya durasinya jadi 0, sehingga state akhir tetap sama persis. */
+        @media (prefers-reduced-motion: reduce) {
+            .app-sidebar-drawer,
+            .app-sidebar-drawer .nav-link,
+            .app-sidebar-drawer .sidebar-nav-label,
+            .app-sidebar-drawer .sidebar-logout-link,
+            .app-sidebar-drawer .nav-link[data-label]::after {
+                transition: none !important;
+                animation: none !important;
+            }
         }
 
         /* ==========================================================================
@@ -1399,19 +1842,24 @@
                 max-width: var(--sidebar-width-collapsed) !important;
             }
 
-            /* Transisi halus pada lebar sidebar (200-300ms). Hanya width yang
-               beranimasi supaya konten utama ikut melebar/mempempit tanpa
-               layout melompat. */
+            /* Transisi halus pada lebar sidebar. FASE 2: satu durasi (0.28s, berada di
+               rentang 260-300ms) dan satu easing (cubic-bezier(0.4,0,0.2,1))
+               dipakai untuk SEMUA yang bergerak, supaya buka/tutup tidak
+               terasa seperti dua animasi berbeda. Hanya width yang beranimasi
+               agar konten utama ikut melebar tanpa layout melompat. */
             html .app-sidebar-drawer {
-                transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease !important;
+                /* ANIMASI INSTAN: durasi 0s. Permintaan pemilik: buka/tutup
+                   sidebar harus terasa langsung, tanpa penundaan sama
+                   sekali. State akhir (lebarnya) tetap sama persis
+                   seperti sebelumnya. */
+                transition: none !important;
                 overflow-x: hidden !important;
             }
 
-            /* --- 2. ATAS SIDEBAR: HANYA LOGO, DIPUSATKAN ----------------------- */
-            /* Padding SAMA PERSIS dengan mode expanded (lihat blok "BLOK ATAS
-               SIDEBAR" di bawah). Expanded & collapsed harus memakai nilai
-               yang sama supaya posisi vertikal logo TIDAK lompat ketika
-               sidebar di-collapse / di-expand. */
+            /* Garis pemisah di bawah logo & nama sekolah DITURUNKAN 10px (rentang
+               8-12px) supaya tidak menempel pada logo. Nilai ini sama untuk
+               mode expanded & collapsed supaya garis tidak "melompat" saat
+               sidebar dibuka-tutup. Batas atas sidebar tetap sama. */
             html.sidebar-collapsed .sidebar-brand {
                 padding: 1rem 0.75rem 1rem 0.75rem !important;
             }
@@ -1420,8 +1868,9 @@
                 justify-content: center !important;
                 align-items: center !important;
                 min-height: 46px !important;
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
+                /* Garis pemisah TETAP terlihat saat collapsed (hanya dikecilkan
+                   & tetap terpusat), tidak dihilang seperti sebelumnya. */
+                padding-bottom: 10px !important;
                 width: 100% !important;
             }
 
@@ -1454,9 +1903,28 @@
                 overflow: hidden !important;
             }
 
-            /* Label teks disembunyikan; ikon tetap dengan ukuran & warna sama. */
+            /* Label teks disembunyikan saat collapsed, TANPA mengambil ruang layout:
+               memakai pola "visually hidden" (absolute + clip) supaya ikon
+               tetap persis di sumbu tengah sidebar dan TIDAK melompat.
+              opacity-nya yang dianimasikan, sehingga teks terungkap
+               bersamaan dengan melebar sidebar (delay 40ms, jauh di bawah
+               batas 60ms). */
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link {
+                /* Anchor untuk label yang absolute (position: fixed tooltip
+                   ::after tetap tidak terpengaruh). */
+                position: relative !important;
+            }
+
             html.sidebar-collapsed .sidebar-nav-label {
-                display: none !important;
+                position: absolute !important;
+                width: 1px !important;
+                height: 1px !important;
+                overflow: hidden !important;
+                clip-path: inset(50%) !important;
+                white-space: nowrap !important;
+                opacity: 0 !important;
+                /* Instan: tanpa transisi (sesuai permintaan buka/tutup cepat). */
+                transition: none !important;
             }
 
             /* Garis pembatas ikut memendek & tetap terpusat. */
@@ -1512,7 +1980,7 @@
                 pointer-events: none;
                 opacity: 0;
                 visibility: hidden;
-                transition: opacity 0.15s ease, visibility 0.15s ease;
+                transition: none !important;
                 box-shadow: 0 6px 18px -6px rgba(15, 23, 42, 0.55);
             }
 
@@ -1546,12 +2014,19 @@
                 gap: 0 !important;
                 border-radius: 12px !important;
                 box-sizing: border-box !important;
-                color: #fecaca !important;
+                /* WARNA: PUTIH PENUH (#ffffff), sama persis dengan ikon menu lain
+                   (Dashboard, Presensi, dst.) saat tidak aktif.
+                   Nilai lama #fecaca (pink pucat) membuat ikon Log Out terlihat
+                   pudar/muram dibanding menu lain - terutama karena di mode
+                   collapsed label teksnya disembunyikan, jadi ikon satu-satunya
+                   penanda tombol. */
+                color: #ffffff !important;
             }
 
             html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link i {
                 font-size: 1.35rem !important;
-                color: #fecaca !important;
+                /* Sama seperti induknya: putih penuh, tanpa pudar. */
+                color: #ffffff !important;
             }
 
             html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link:hover,
@@ -1626,14 +2101,15 @@
             }
 
             /* Baris logo + nama sekolah: tinggi pas, logo & teks sejajar vertikal.
-               pb-3 (1rem) dihapus di sini supaya jarak ke garis pembatas dan ke
-               menu pertama tidak dobel. */
+               FASE 2: garis pemisah di turunkan 10px (dari 0) supaya tidak
+               menempel pada logo - nilai ini SAMA dengan mode collapsed,
+               jadi garis tidak melompat saat sidebar dibuka/tutup. */
             .sidebar-brand > .sidebar-brand-row {
                 align-items: center !important;
                 justify-content: flex-start !important;
                 min-height: 46px !important;
                 width: 100% !important;
-                padding-bottom: 0 !important;
+                padding-bottom: 10px !important;
             }
 
             /* Nama sekolah boleh turun ke baris berikutnya, tidak terpotong dan
@@ -1646,7 +2122,155 @@
             }
         }
 
+        /* --------------------------------------------------------------------------
+           JARAK BAWAH KONTEN SERAGAM (SUMBER BERSAMA)
+
+           Nilai diambil dari halaman PRESENSI sebagai acuan: wrapper-nya
+           memakai `pb-4` (= 1rem / 16px) sebagai jarak bawah. Dashboard,
+           Kehadiran, Rekap, dan Pengaturan sebelumnya memakai `mb-4`
+           (= 1.5rem / 24px) pada elemen terakhir, sehingga jaraknya 8px
+           lebih besar dari Presensi dan antar halaman tidak seragam.
+
+           Diperbaiki DI SATU kontainer layout bersama - bukan per halaman:
+             - kontainer konten (`.flex-1` di dalam <main>) diberi
+               padding-bottom 1rem, sama persis dengan `pb-4` di Presensi;
+             - margin bawah elemen TERAKHIR dinolkan supaya tidak menambah
+               jarak ganda (termasuk tombol SIMPAN di Pengaturan, yang
+               sebelumnya memakai `mb-4`).
+
+           Tidak menambah scrollbar baru: padding-bottom ini menggantikan
+           margin yang dihapus, jadi total tinggi konten di halaman pendek
+           justru tidak bertambah.
+        -------------------------------------------------------------------------- */
+        .content-scroll-wrapper > main > .flex-1 {
+            padding-bottom: 1rem !important;
+        }
+
+        .content-scroll-wrapper > main > .flex-1 > *:last-child {
+            margin-bottom: 0 !important;
+        }
+
         /* ==========================================================================
+           TABEL DATA DI MOBILE (< 1024px) - SAMA PERSIS DENGAN DESKTOP
+
+           Sebelumnya tabel di bawah 1024px diubah menjadi KARTU BERTUMPUK:
+           <thead> disembunyikan, tiap <tr> jadi satu kotak, tiap <td> jadi
+           baris "label : nilai" yang labelnya dibaca dari atribut data-label,
+           dan sel Aksi turun ke bawah kartu. SEMUA itu dihapus.
+
+           Sekarang mobile memakai tabel yang persis sama dengan desktop:
+           header kolom tetap terlihat, semua kolom tetap tampil (termasuk
+           kolom Aksi), lebar kolom, zebra, dan header sticky tidak berubah.
+
+           Kalau lebar layar tidak cukup, tabel digeser kiri-kanan (horizontal
+           swipe) - overflow-x: auto + -webkit-overflow-scrolling: touch sudah
+           dipasang pada .table-responsive di layout bersama (lihat blok
+           "TABEL DATA: SCROLL VERTIKAL DI SISI KANAN" di bawah), dan setiap
+           tabel punya min-width supaya kolom tidak gepeng. Pola persis sama
+           dengan tabel Rekap yang sudah benar.
+
+           DESKTOP >= 1024px sama sekali tidak tersentuh oleh blok ini.
+        ========================================================================== */
+        @media (max-width: 1023.98px) {
+
+            /* 1. Kotak tabel TETAP jadi area scroll (vertikal + horizontal),
+                  sama seperti desktop: tabel yang lebih lebar dari layar
+                  digeser dengan sentuhan, bukan membuat halaman ikut
+                  memanjang dan tidak lagi jadi dokumen panjang. */
+            .table-responsive {
+                overflow: auto !important;
+                height: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior: contain !important;
+            }
+
+            /* 2. Lantai lebar tabel: nilai minimal supaya kolom tidak gepeng.
+                  Selector ditulis dengan :where() supaya kontribusinya 0,
+                  sehingga halaman yang sudah punya min-width sendiri (Rekap
+                  800px, Presensi Kelas 720px, Presensi 680px, Kehadiran 680px,
+                  Data Siswa, Data Guru, Data Kelas) tetap memakai nilainya. */
+            :where(.table-responsive) table {
+                min-width: 620px;
+            }
+        }
+
+        /* ==========================================================================
+           TOOLBAR HALAMAN DATA - SUSUNAN VERTIKAL FULL WIDTH (< 1024px)
+
+           Breakpoint sama dengan bottom navigation (max-width: 1023.98px),
+           jadi DESKTOP >= 1024px sama sekali tidak berubah.
+
+           Susunan yang dikehendaki (urutan TIDAK diubah, hanya tampilannya):
+             1. input cari + tombol ikon search  -> satu baris utuh
+             2. dropdown filter                 -> baris berikutnya
+             3. tombol aksi                     -> satu per satu, full width
+
+           Hanya mengubah SUMBANG VERTIKAL & LEBAR. Urutan elemen di DOM,
+           warna tombol, dan teksnya tetap apa adanya. Class yang dipakai
+           (action-bar-section, action-search-form, search-box-wrap,
+           search-input-wrap, filter-box-wrap, action-buttons-wrap,
+           btn-solid-pill) sama di halaman Siswa, Guru, dan Kelas, jadi satu
+           aturan di layout bersama cukup untuk ketiganya.
+        ========================================================================== */
+        @media (max-width: 1023.98px) {
+
+            /* 1. Baris utama jadi satu kolom. */
+            body .action-bar-section,
+            body .action-search-form {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.6rem !important;
+            }
+
+            /* 2. Input cari + ikon search: full width, tetap satu baris,
+                  tidak pernah turun atau terpotong (flex-wrap: nowrap
+                  berasal dari aturan halaman dan tidak ditimpa). */
+            body .action-search-form .search-box-wrap,
+            body .action-search-form .search-input-wrap,
+            body .action-bar-section .search-box-wrap,
+            body .action-bar-section .search-input-wrap {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+            }
+
+            /* 3. Dropdown filter: baris penuh sendiri di bawah pencarian. */
+            body .action-search-form .filter-box-wrap,
+            body .action-bar-section .filter-box-wrap {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                max-width: none !important;
+                min-width: 0 !important;
+            }
+
+            body .action-search-form .filter-box-wrap select.form-select,
+            body .action-bar-section .filter-box-wrap select.form-select {
+                width: 100% !important;
+            }
+
+            /* 4. Tombol aksi: satu per satu, full width, seperti tombol mobile
+                  Presensi - tidak menyamping, tidak terpotong. */
+            body .action-buttons-wrap {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                gap: 0.5rem !important;
+                margin-left: 0 !important;
+                margin-top: 0.25rem !important;
+                width: 100% !important;
+            }
+
+            body .action-buttons-wrap .btn-solid-pill {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                justify-content: center !important;
+            }
+        }
+
+        /* --------------------------------------------------------------------------
            TABEL DATA: SCROLL VERTIKAL DI SISI KANAN + HEADER STICKY
            SATU-SATUNYA sumber gaya ini (letak di layout bersama), dipakai SEMUA
            halaman yang tabelnya dibungkus .table-responsive:
@@ -1685,16 +2309,37 @@
             background-color: #f8f9fa !important;
         }
 
-        /* Scrollbar yang SELALU terlihat (bukan overlay yang menghilang).
-           Warna memakai warna teks abu-abu yang sudah dipakai di tabel. */
+        /* --------------------------------------------------------------------------
+           SCROLLBAR TABEL - VERTIKAL SAJA DI DESKTOP, SEMBUNYI DI MOBILE
+
+           DESKTOP (>= 1024px):
+             - scrollbar VERTIKAL (kanan) tetap terlihat, tebal 10px, warna abu-abu
+               yang sama dengan warna teks tabel (bukan overlay yang menghilang);
+             - scrollbar HORIZONTAL (bawah) DISEMBUNYIKAN (height: 0), supaya
+               tabel lebar tidak menampilkan kotak scroll di bawah. Tabel tetap
+               bisa digeser lewat wheel / trackpad / Shift+scroll.
+
+           MOBILE (< 1024px):
+             - KEDUA scrollbar (kanan & bawah) disembunyikan. Tabel tetap bisa
+               digeser dengan sentuhan (overflow-x/y auto tetap aktif).
+
+           Yang disembunyikan hanya VISUAL scrollbar-nya. overflow, min-width
+           tabel, dan header sticky tidak berubah, jadi fungsi scroll, swipe
+           horizontal, dan isi tabel tidak berubah sama sekali.
+
+           Catatan Firefox: Firefox tidak punya cara menyembunyikan scrollbar
+           per sumbu lewat CSS. Di sana sumbu horizontal tetap tipis (thin).
+           Chrome / Edge / Safari (Android & iOS) ikut aturan di bawah.
+        -------------------------------------------------------------------------- */
         .table-responsive {
-            scrollbar-width: auto !important;
+            scrollbar-width: thin !important;
             -ms-overflow-style: scrollbar !important;
         }
 
+        /* height: 0 = sembunyikan scrollbar horizontal (bawah). */
         .table-responsive::-webkit-scrollbar {
             width: 10px !important;
-            height: 10px !important;
+            height: 0 !important;
             display: block !important;
             background-color: #f1f5f9;
             border-radius: 8px;
@@ -1715,6 +2360,27 @@
             background-color: #64748b;
         }
 
+        /* Sudut pertemuan dua sumbu tidak perlu digambar. */
+        .table-responsive::-webkit-scrollbar-corner {
+            display: none !important;
+        }
+
+        /* MOBILE: sembunyikan KEDUA sumbu (kanan & bawah). Cara ini sama dengan
+           .no-scrollbar & .content-scroll-wrapper di layout ini, jadi tidak ada
+           pola baru. */
+        @media (max-width: 1023.98px) {
+            .table-responsive {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+            }
+
+            .table-responsive::-webkit-scrollbar {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+        }
+
         /* ==========================================================================
            PAGINASI TEKS MURNI BERSAMA (Single Source of Truth)
            Susunan "‹ Sebelumnya  1 2 3 4 5  Berikutnya ›" + info "Menampilkan ...".
@@ -1724,8 +2390,9 @@
            Blok ini adalah SUMBER BERSAMA untuk halaman yang paginasinya berada
            DI DALAM area scroll tabel: Catatan Kehadiran, Rekap, dan Data Siswa.
            Catatan Kehadiran & Rekap masih membawa salinan nilai yang sama di
-           @push('styles') masing-masing (keduanya identik, jadi tidak ada gaya
+           push "styles" masing-masing (keduanya identik, jadi tidak ada gaya
            yang berubah); Data Siswa memakai blok bersama ini tanpa salinan.
+           (Sengaja ditulis tanpa "@" supaya Blade tidak mengompilasinya.)
            ========================================================================== */
         .kehadiran-pagination {
             /* Berada DI DALAM area scroll: padding atas/bawah lega supaya tidak
@@ -2013,6 +2680,906 @@
             background-color: #e2e8f0 !important;
             color: #1e293b !important;
         }
+        /* ==========================================================================
+           TEMA DIALOG BERSAMA (SEMUA DIALOG HAPUS + LOG OUT)
+
+           SATU sumber gaya untuk:
+             - dialog hapus satuan  (Siswa, Guru, Kelas, Hari Libur, Tahun Ajaran,
+                                    Tempat Sampah, dan halaman lain)
+             - dialog hapus massal ("Hapus Seluruh Data ...")
+             - dialog konfirmasi Log Out (#logoutConfirmModal)
+
+           Semua dialog memakai kelas yang sama persis, sehingga tidak ada
+           copy-paste CSS per halaman. Warna diambil dari palet yang sudah
+           dipakai aplikasi (merah #dc2626, merah tua #b91c1c, abu #f1f5f9)
+           - tidak ada warna baru.
+
+           Peringatan: selector di bawah sengaja tidak memakai karakter '<'
+           atau '>' agar aman bila class ini ikut disalin ke dalam string
+           JavaScript (tidak memicu parser HTML).
+        ========================================================================== */
+        :root {
+            --app-dialog-red: #dc2626;
+            --app-dialog-red-dark: #b91c1c;
+            --app-dialog-red-soft: #fee2e2;
+            /* Aksen biru untuk dialog NON-hapus (mis. "Aktifkan Tahun Ajaran?").
+               Nilainya persis sama dengan palet biru yang sudah dipakai aplikasi
+               (tombol btn-primary / kartu dashboard), jadi tidak ada warna baru. */
+            --app-dialog-blue: #2563eb;
+            --app-dialog-blue-dark: #1d4ed8;
+            --app-dialog-blue-soft: #dbeafe;
+            --app-dialog-gray-bg: #f8fafc;
+            --app-dialog-gray-border: #e2e8f0;
+            --app-dialog-gray-text: #64748b;
+            --app-dialog-gray-btn: #f1f5f9;
+            --app-dialog-gray-btn-hover: #e2e8f0;
+            --app-dialog-text: #1e293b;
+        }
+
+        /* ---------- OVERLAY: gelap semi transparan + blur ringan ----------
+           NILAI WARNA + BLUR DI SINI ADALAH ACUAN TEMA SELURUH APLIKASI.
+           .modal-backdrop (semua modal Bootstrap, termasuk Log Out) dan
+           #logoutConfirmModal sengaja disamakan persis dengan nilai di sini.
+           Ubah overlay semua dialog HANYA di blok ini.
+
+           Overlay TIDAK BERANIMASI (sengaja):
+           - .swal2-container diberi .swal2-show oleh SweetAlert2, dan
+             bawaan SweetAlert2 untuk kelas itu adalah
+                @keyframes swal2-show { transform: scale(0.7 -> 1.05 -> 1) }
+                animation: swal2-show 0.3s
+             yaitu "muncul pelan" + pantulan skala. Ini dihapus supaya
+             overlay muncul seketika, persis seperti yang diminta.
+           - transition juga dihapus agar tidak ada penundaan apa pun. */
+        .swal2-container,
+        .swal2-backdrop {
+            backdrop-filter: blur(4px) !important;
+            -webkit-backdrop-filter: blur(4px) !important;
+            animation: none !important;
+            transition: none !important;
+        }
+
+        .swal2-backdrop {
+            background: rgba(15, 23, 42, 0.55) !important;
+        }
+
+        /* ---------- KARTU DIALOG (KECIL & PADAT) ---------- */
+        .swal2-popup.app-dialog {
+            max-width: 380px !important;
+            width: 380px !important;
+            margin: 16px auto !important;
+            padding: 24px !important;
+            border-radius: 20px !important;
+            border: 0 !important;
+            background: #ffffff !important;
+            color: var(--app-dialog-text) !important;
+            box-shadow: 0 18px 36px -12px rgba(15, 23, 42, 0.22) !important;
+            overflow: hidden !important;
+            /* Isi boleh scroll di dalam kartu, tombol tetap terlihat. */
+            display: flex !important;
+            flex-direction: column !important;
+            max-height: calc(100vh - 32px) !important;
+            max-height: calc(100dvh - 32px) !important;
+        }
+
+        .swal2-popup.app-dialog .swal2-html-container {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+        }
+
+        /* ---------- ISI: header, judul, teks (JARAK DIPADATKAN) ---------- */
+        .app-dialog-icon {
+            width: 52px !important;
+            height: 52px !important;
+            border-radius: 50% !important;
+            background-color: var(--app-dialog-red-soft) !important;
+            color: var(--app-dialog-red) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 auto 12px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .app-dialog-icon i {
+            font-size: 25px !important;
+            line-height: 1 !important;
+        }
+
+        .app-dialog-title {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            color: var(--app-dialog-text) !important;
+            text-align: center !important;
+            margin: 0 0 6px !important;
+            text-transform: none !important;
+        }
+
+        .app-dialog-text {
+            font-size: 14px !important;
+            line-height: 1.45 !important;
+            color: var(--app-dialog-gray-text) !important;
+            text-align: center !important;
+            margin: 0 !important;
+        }
+
+        .app-dialog-text strong {
+            color: var(--app-dialog-text) !important;
+            font-weight: 700 !important;
+        }
+
+        .app-dialog-sub {
+            font-size: 13px !important;
+            line-height: 1.4 !important;
+            color: var(--app-dialog-gray-text) !important;
+            text-align: center !important;
+            margin: 6px 0 0 !important;
+        }
+
+        /* ---------- CHECKBOX KONFIRMASI (TANPA KARTU / BORDER / BACKGROUND) ----------
+           Cukup baris biasa: checkbox 18px di kiri + teks 13px rata kiri.
+           Label membungkus checkbox sehingga TEKS maupun KOTAKnya bisa diklik
+           (klik di area teks akan mencentang checkbox). */
+        .app-dialog-checks {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            margin: 14px 0 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            text-align: left !important;
+        }
+
+        .app-dialog-check {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            cursor: pointer !important;
+            font-size: 13px !important;
+            line-height: 1.45 !important;
+            color: var(--app-dialog-text) !important;
+            text-align: left !important;
+            transition: color 0.1s ease !important;
+        }
+
+        /* Border abu-abu gelap + merah saat dicentang, dan tetap jelas
+           di atas background apa pun (tidak memakai opacity tipis). */
+        .app-dialog-check input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            min-width: 18px !important;
+            flex: 0 0 auto !important;
+            margin: 1px 0 0 !important;
+            padding: 0 !important;
+            accent-color: var(--app-dialog-red) !important;
+            cursor: pointer !important;
+        }
+
+        .app-dialog-check:hover,
+        .app-dialog-check:hover span {
+            color: var(--app-dialog-red) !important;
+        }
+
+        /* ---------- TOMBOL (BERDAMPINGAN, TINGGI 42px) ---------- */
+        .swal2-popup.app-dialog .swal2-actions {
+            width: 100% !important;
+            margin: 16px 0 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 10px !important;
+            flex: 0 0 auto !important;
+        }
+
+        .swal2-popup.app-dialog .swal2-actions .btn {
+            flex: 1 1 50% !important;
+            width: 50% !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            padding: 0 10px !important;
+            margin: 0 !important;
+            border: 1px solid transparent !important;
+            border-radius: 10px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            cursor: pointer !important;
+            transition: background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease !important;
+        }
+
+        /* Kiri: "Tidak" / "Batal" - abu-abu terang, teks gelap. */
+        .swal2-popup.app-dialog .swal2-actions .btn-light {
+            background-color: var(--app-dialog-gray-btn) !important;
+            border-color: var(--app-dialog-gray-border) !important;
+            color: var(--app-dialog-text) !important;
+        }
+
+        .swal2-popup.app-dialog .swal2-actions .btn-light:hover {
+            background-color: var(--app-dialog-gray-btn-hover) !important;
+            color: var(--app-dialog-text) !important;
+        }
+
+        /* Kanan: "Hapus" / "Hapus Semua" / "Ya, Log Out" - merah solid. */
+        .swal2-popup.app-dialog .swal2-actions .btn-danger {
+            background-color: var(--app-dialog-red) !important;
+            border-color: var(--app-dialog-red) !important;
+            color: #ffffff !important;
+        }
+
+        .swal2-popup.app-dialog .swal2-actions .btn-danger:hover {
+            background-color: var(--app-dialog-red-dark) !important;
+            border-color: var(--app-dialog-red-dark) !important;
+            color: #ffffff !important;
+        }
+
+        /* Tombol merah yang BELUM aktif (checkbox belum dicentang). */
+        .swal2-popup.app-dialog .swal2-actions .btn-danger:disabled,
+        .swal2-popup.app-dialog .swal2-actions .btn-danger.app-dialog-btn-disabled {
+            background-color: #fca5a5 !important;
+            border-color: #fca5a5 !important;
+            color: #ffffff !important;
+            opacity: 0.85 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* ---------- VARIAN BIRU: DIALOG NON-HAPUS ----------
+           Dialog yang BUKAN penghapusan (mis. "Aktifkan Tahun Ajaran?") memakai
+           kartu, overlay, ikon, judul, deskripsi, dan tombol yang PERSIS SAMA
+           dengan dialog hapus; yang dibedakan HANYA warna aksennya (biru, bukan
+           merah) lewat class .app-dialog-primary pada popup.
+           Aktif hanya bila confirmUniversalDelete() dipanggil dengan
+           tone: 'primary'. Semua halaman hapus lain tidak memakai class ini,
+           jadi tampilannya tidak berubah sama sekali. */
+        .swal2-popup.app-dialog.app-dialog-primary .app-dialog-icon {
+            background-color: var(--app-dialog-blue-soft) !important;
+            color: var(--app-dialog-blue) !important;
+        }
+
+        .swal2-popup.app-dialog.app-dialog-primary .app-dialog-check input[type="checkbox"] {
+            accent-color: var(--app-dialog-blue) !important;
+        }
+
+        .swal2-popup.app-dialog.app-dialog-primary .app-dialog-check:hover,
+        .swal2-popup.app-dialog.app-dialog-primary .app-dialog-check:hover span {
+            color: var(--app-dialog-blue) !important;
+        }
+
+        /* Tombol konfirmasi biru solid. Menimpa .btn-primary bawaan Bootstrap
+           (yang warnanya sedikit lebih terang) supaya sama persis dengan
+           kartu & tombol biru lain di aplikasi. */
+        .swal2-popup.app-dialog.app-dialog-primary .swal2-actions .app-dialog-confirm {
+            background-color: var(--app-dialog-blue) !important;
+            border-color: var(--app-dialog-blue) !important;
+            color: #ffffff !important;
+        }
+
+        .swal2-popup.app-dialog.app-dialog-primary .swal2-actions .app-dialog-confirm:hover {
+            background-color: var(--app-dialog-blue-dark) !important;
+            border-color: var(--app-dialog-blue-dark) !important;
+            color: #ffffff !important;
+        }
+
+        /* ---------- ANIMASI KARTU: LANGSUNG MUNCUL, LANGSUNG HILANG ----------
+           Semua dialog memakai aturan yang SAMA persis (hapus, aktifkan,
+           pulihkan, Log Out, tambah, edit, import, cetak): overlay tanpa
+           animasi, kartu tanpa scale / tanpa geser / tanpa transisi.
+
+          (scale 0.95 -> 1 + translateY 6px) + keyframe appDialogIn 0.15s
+           dihapus karena:
+             1. memakai keyframe 0.15s, sehingga terasa "muncul pelan";
+             2. SweetAlert2 menambahkan .swal2-show saat membuka dan
+                .swal2-hide saat menutup, dan dia menunggu animasi yang
+                sedang berjalan sebelum menutup dialog. Selama animasi
+                kartu masih hidup, kartu ikut tertahan - tidak konsisten
+                dengan overlay yang sekarang muncul seketika;
+             3. scale membuat ukuran kartu BERBEDA dari kartu modal
+                Bootstrap yang tidak di-scale sama sekali, sehingga
+                keduanya terlihat tidak sama padahal harus sama persis.
+
+           Batal / klik di luar / Esc -> kartu langsung hilang. */
+        .swal2-popup.app-dialog {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+
+        /* Class yang dipakai SweetAlert2 saat menutup adalah .swal2-hide pada popup. */
+        .swal2-popup.app-dialog.swal2-hide {
+            animation: none !important;
+            transition: none !important;
+        }
+
+        /* ---------- MOBILE: LEBIH KECIL, RAPI, TETAP PROFESIONAL ----------
+           Semua angka di bawah 1px lebih kecil dari desktop supaya dialog
+           terasa ringan di layar HP, TAPI struktur & perilakunya tidak berubah:
+           tombol tetap berdampingan 50/50 (tidak menumpuk), overlay tetap blur,
+           dan isi tetap bisa scroll di dalam kartu saat layar pendek. */
+        @media (max-width: 575.98px) {
+            .swal2-popup.app-dialog {
+                /* Lebar maksimal 320px, margin kiri-kanan minimal 20px. */
+                width: calc(100vw - 40px) !important;
+                max-width: 320px !important;
+                margin: 20px auto !important;
+                padding: 20px !important;
+                border-radius: 18px !important;
+                /* Layar pendek: tinggi maksimal dikurangi 2x margin 20px,
+                   isi scroll di dalam kartu, tombol tetap terlihat. */
+                max-height: calc(100vh - 40px) !important;
+                max-height: calc(100dvh - 40px) !important;
+            }
+
+            /* Lingkaran ikon 44px (desktop 52px). */
+            .app-dialog-icon {
+                width: 44px !important;
+                height: 44px !important;
+                margin: 0 auto 10px !important;
+            }
+
+            .app-dialog-icon i {
+                font-size: 21px !important;
+            }
+
+            /* Judul 16px (desktop 18px), jarak ke deskripsi 5px. */
+            .app-dialog-title {
+                font-size: 16px !important;
+                line-height: 1.3 !important;
+                margin: 0 0 5px !important;
+            }
+
+            /* Deskripsi 13px (desktop 14px). */
+            .app-dialog-text {
+                font-size: 13px !important;
+                line-height: 1.4 !important;
+            }
+
+            /* Baris penjelas kecil 12px. */
+            .app-dialog-sub {
+                font-size: 12px !important;
+                line-height: 1.4 !important;
+                margin: 5px 0 0 !important;
+            }
+
+            /* Checkbox tetap POLOS (tanpa kartu/border/background), cuma lebih
+               rapat: jarak antar baris 8px, jarak ke isi 11px. */
+            .app-dialog-checks {
+                gap: 8px !important;
+                margin: 11px 0 0 !important;
+            }
+
+            .app-dialog-check {
+                gap: 8px !important;
+                font-size: 12.5px !important;
+                line-height: 1.4 !important;
+            }
+
+            .app-dialog-check input[type="checkbox"] {
+                width: 16px !important;
+                height: 16px !important;
+                min-width: 16px !important;
+                margin: 0 !important;
+            }
+
+            /* Jarak isi -> tombol 12px (desktop 16px), jarak antar tombol 10px
+               (SAMA dengan desktop, tidak ikut mengecil). */
+            .swal2-popup.app-dialog .swal2-actions {
+                margin: 12px 0 0 !important;
+                gap: 10px !important;
+            }
+
+            /* Tombol tetap 50/50, tinggi 40px (desktop 42px), font 13px,
+               radius tetap 10px. */
+            .swal2-popup.app-dialog .swal2-actions .btn {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                height: 40px !important;
+                min-height: 40px !important;
+                font-size: 13px !important;
+                padding: 0 6px !important;
+                border-radius: 10px !important;
+            }
+        }
+
+        /* ==========================================================================
+           TEMA MODAL FORM BERSAMA (Bootstrap .modal)
+
+           Berlaku untuk SEMUA modal yang sudah ada di project: Tambah/
+           Edit Siswa, Guru, Kelas, Tahun Ajaran, Hari Libur, Import Excel,
+           Cetak Kartu, Ubah Status Kehadiran, dan modal Log Out.
+
+           Cakupannya murni CSS di layout bersama - tidak ada satu pun file
+           view yang perlu diubah, dan tidak ada file baru.
+
+           Lebar menyesuaikan isi:
+             - default (form pendek)  : 480px
+             - .modal-lg  (form panjang): 560px + scroll di dalam kartu
+           Mobile: margin kiri-kanan minimal 16px.
+        ========================================================================== */
+
+        /* ---------- OVERLAY: gelap semi transparan + blur ringan ----------
+           NILAI & SUMBER DAYA DISAMAKAN PERSIS DENGAN OVERLAY DIALOG HAPUS
+           (SweetAlert2), supaya SEMUA pop up/modal punya efek latar yang sama:
+             warna : rgba(15, 23, 42, 0.55)   -> sama dgn .swal2-backdrop
+             blur  : 4px                       -> sama dgn .swal2-container
+
+           Kenapa opacity HARUS dipaksa 1 (ini akar masalah "blur tidak
+           kelihatan" pada modal Bootstrap):
+             Bawaan Bootstrap 5.3:
+               .modal-backdrop.show { opacity: var(--bs-backdrop-opacity) }
+               --bs-backdrop-opacity: 0.5
+           SweetAlert2 TIDAK memakai opacity untuk overlaynya, jadi opacity-nya 1
+           dan blur 4px-nya tampil PENUH.
+
+           Jika sebuah elemen punya opacity < 1, hasil komposisinya adalah:
+               opacity x (backdrop yang SUDAH di-blur)  +  (1 - opacity) x
+               (backdrop ASLI yang MASIH TAJAM)
+           Jadi dengan opacity 0.5, separuh gambar di belakang tetap tajam ->
+           blur 4px nyaris tak terlihat dan tabel di belakang tetap "bersih".
+           Akibatnya juga warnanya jadi 0.55 x 0.5 = 0.275 (jauh lebih terang
+           dari 0.55 milik dialog Hapus).
+
+           Solusi: alpha dipindah ke background-color, opacity dipaksa 1.
+           Animasi fade-in sengaja TIDAK dipakai lagi (lihat catatan
+           "MUNCUL PELAN" di bawah .modal-backdrop): transisi opacity
+           pada overlay justru membuat Bootstrap menunggu sebelum dialog
+           boleh tampil. Overlay sekarang langsung muncul penuh.
+           Catatan: nilai lama "opacity: 0.15s" itu TIDAK VALID CSS (0.15s
+           adalah <time>, bukan <number>) sehingga selalu diabaikan browser. */
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.55) !important;
+            backdrop-filter: blur(4px) !important;
+            -webkit-backdrop-filter: blur(4px) !important;
+
+            /* ---------- APAKAH MODAL BOOTSTRAP "MUNCUL PELAN"? ----------
+               YA - dan ini akar masalah slow-mo, bukan cuma soal tampilan.
+               Modal._showBackdrop() di Bootstrap 5.3 berjalan kira-kira:
+                   this._backdrop.show(() => this._showElement(...))
+               dan Backdrop.show() memanggil _emulateAnimation() ->
+               executeAfterTransition(el, cb, {isAnimated:true}), yaitu
+               MENUNGGU transisi .modal-backdrop SELESAI dulu.
+               Bawaan .fade memberi transition opacity 0.15s linear, jadi ada
+               JEDA MATI +/- 150ms sebelum dialog boleh tampil, lalu overlay
+               masih fade 150ms, lalu kartu ikut fade 150ms.
+               Total +/- 300ms - inilah "animasi pelan" yang dikeluhkan.
+
+               Karena transisi dihapus total, transition-duration hasil hitung
+               Bootstrap = 0ms -> callback dipanggil seketika -> overlay dan
+               dialog langsung muncul, tanpa jeda sama sekali. */
+            transition: none !important;
+            animation: none !important;
+        }
+
+        /* Tanpa transisi, tidak ada lagi perlunya state opacity 0 -> 1.
+           Overlay langsung tampil PENUH (blur 4px terlihat, darkness 0.55),
+           persis sama seperti .swal2-backdrop milik dialog hapus. */
+        .modal-backdrop.fade,
+        .modal-backdrop.show {
+            opacity: 1 !important;
+        }
+
+        /* ---------- LEBAR ---------- */
+        .modal-dialog {
+            max-width: 480px !important;
+            width: calc(100% - 32px) !important;
+            margin: 16px auto !important;
+        }
+
+        .modal-dialog.modal-lg {
+            max-width: 560px !important;
+        }
+
+        /* ---------- KARTU ---------- */
+        .modal-content {
+            border: 0 !important;
+            border-radius: 20px !important;
+            background: #ffffff !important;
+            box-shadow: 0 18px 36px -12px rgba(15, 23, 42, 0.22) !important;
+            /* Form panjang: isi boleh scroll DI DALAM kartu, footer tetap
+               terlihat (given short screen). */
+            max-height: calc(100vh - 32px) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .modal-content > .modal-body {
+            overflow-y: auto !important;
+            min-height: 0 !important;
+            flex: 1 1 auto !important;
+        }
+
+        /* ---------- HEADER: judul 18px tebal, tanpa ruang kosong berlebihan -- */
+        .modal-content > .modal-header {
+            padding: 20px 24px 0 !important;
+            flex: 0 0 auto !important;
+            border-bottom: 0 !important;
+        }
+
+        .modal-content > .modal-header .modal-title {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+        }
+
+        /* ---------- BODY: padding rapat ---------- */
+        .modal-content > .modal-body {
+            padding: 14px 24px !important;
+        }
+
+        /* ---------- FOOTER: tombol berdampingan, sama lebar ---------- */
+        .modal-content > .modal-footer {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 4px 24px 20px !important;
+            margin: 0 !important;
+            border-top: 0 !important;
+            background: transparent !important;
+            flex: 0 0 auto !important;
+        }
+
+        .modal-content > .modal-footer > * {
+            margin: 0 !important;
+        }
+
+        .modal-content > .modal-footer .btn {
+            flex: 1 1 50% !important;
+            width: 50% !important;
+            min-width: 0 !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            border-radius: 10px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            padding: 0 10px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            transition: background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease !important;
+        }
+
+        /* ---------- ANIMASI MODAL: LANGSUNG MUNCUL, TANPA SCALE ----------
+           Semua modal di project ini (Tambah/Edit Siswa, Guru, Kelas, Tahun
+           Ajaran, Hari Libur, Import Excel, Cetak Kartu, Ubah Status
+           Kehadiran, dan Log Out) memakai blok ini, sehingga tidak ada satu
+           pun yang lebih lambat atau lebih cepat dari dialog hapus.
+
+          scale 0.95 -> 1 + transition 0.15s dihapus karena:
+             1. menambah 150ms-plus sebelum kartu benar-benar tampil;
+             2. membuat kartu BootstrapBERBEDA dari kartu dialog hapus
+                (yang tidak di-scale);
+             3. state "scale(0.95) + opacity:0" bisa tertinggal bila .show
+                gagal ditambahkan, membuat dialog tampak hilang/tak berubah.
+
+           Efek yang dipakai: TIDAK ADA (0s). Kalau nanti mau maksimal
+           fade 0.1s, cukup ubah "transition: none" di bawah menjadi
+           "transition: opacity 0.1s linear" TANPA mengubah nilai opacity. */
+        .modal.fade,
+        .modal.fade .modal-dialog,
+        .modal.fade .modal-content,
+        .modal.fade .modal-header,
+        .modal.fade .modal-body,
+        .modal.fade .modal-footer {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        .modal.fade .modal-dialog,
+        .modal.fade.show .modal-dialog {
+            transform: none !important;
+            opacity: 1 !important;
+        }
+
+        /* ---------- MOBILE (<= 768px): POP UP FORM KECIL, RAPI, TEPAT DI TENGAH ----------
+           ACUAN UKURAN: blok .swal2-popup.app-dialog mobile di atas (dialog hapus).
+
+           Yang diubah HANYA UKURAN. Isi form, nama field, validasi, dan tombol
+           tidak disentuh. Semua aturan dikunci di media query max-width:
+           767.98px, jadi DESKTOP >= 769px sama sekali tidak berubah.
+
+           PENTING - STRUKTUR MODAL DI PROJECT INI:
+               .modal > .modal-dialog(.modal-dialog-centered[.modal-lg])
+                        > .modal-content > .modal-header + <form>
+                                                      > .modal-body + .modal-footer
+           Jadi <form> adalah anak LANGSUNG .modal-content, bukan .modal-body /
+           .modal-footer. Aturan desktop di atas memakai selector ">"
+           (mis. .modal-content > .modal-body) sehingga TIDAK ikut kena pada
+           modal ini. Supaya aturan mobile di bawah tetap bekerja, selector
+           memakai DESCENDANT (.modal-content .modal-body) sehingga keduanya
+           aman tanpa perlu menyentuh file view. */
+        @media (max-width: 767.98px) {
+
+            /* 1. KARTU: maksimal 340px, margin kiri-kanan minimal 20px,
+                  tepat di tengah layar (vertikal & horizontal). */
+            .modal-dialog,
+            .modal-dialog.modal-lg {
+                max-width: 340px !important;
+                width: calc(100vw - 40px) !important;
+                margin: 20px auto !important;
+            }
+
+            /* min-height dikurangi 2 x margin 20px supaya pemusatan vertikal
+               presisi dan kartu tidak pernah melebihi tinggi layar. */
+            .modal-dialog-centered {
+                display: flex !important;
+                align-items: center !important;
+                min-height: calc(100% - 40px) !important;
+            }
+
+            .modal-content {
+                width: 100% !important;
+                border-radius: 18px !important;
+                /* Isi panjang (Tambah/Edit Siswa & Guru): maksimal 85vh, isi
+                   scroll DI DALAM kartu, header & tombol tetap terlihat. */
+                max-height: 85vh !important;
+                max-height: 85dvh !important;
+                overflow: hidden !important;
+            }
+
+            /* <form> jadi flex item yang boleh menyusut. Tanpa ini isi form
+               yang panjang terpotong oleh overflow:hidden pada .modal-content
+               dan tidak bisa di-scroll sama sekali. */
+            .modal-content > form {
+                display: flex !important;
+                flex-direction: column !important;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* 2. HEADER: judul 16px tebal, tombol X 28px dan redup. */
+            .modal-content > .modal-header,
+            .modal-content > form > .modal-header {
+                flex: 0 0 auto !important;
+                padding: 20px 18px 0 !important;
+            }
+
+            /* Judul 16px tebal. Sebagian modal memakai <h5 class="fw-bold">
+               TANPA class .modal-title, jadi selectornya mencakup heading
+               apa pun di dalam .modal-header agar semua ikut 16px. */
+            .modal-content .modal-title,
+            .modal-content .modal-header h1,
+            .modal-content .modal-header h2,
+            .modal-content .modal-header h3,
+            .modal-content .modal-header h4,
+            .modal-content .modal-header h5,
+            .modal-content .modal-header h6 {
+                font-size: 16px !important;
+                font-weight: 700 !important;
+                line-height: 1.3 !important;
+                margin-bottom: 0 !important;
+                /* Jarak aman dari tombol X di kanan untuk judul panjang. */
+                padding-right: 24px !important;
+            }
+
+            .modal-content .btn-close {
+                width: 28px !important;
+                height: 28px !important;
+                min-width: 28px !important;
+                padding: 5px !important;
+                margin: -3px -3px 0 auto !important;
+                flex-shrink: 0 !important;
+                opacity: 0.45 !important;
+                background-size: 11px 11px !important;
+                border-radius: 8px !important;
+            }
+
+            .modal-content .btn-close:hover,
+            .modal-content .btn-close:focus-visible {
+                opacity: 0.85 !important;
+            }
+
+            /* 3. BODY: padding 18px, scroll di dalam (scrollbar-nya
+                  disembunyikan oleh blok "TIDAK ADA SCROLLBAR MOBILE" di
+                  bawah). */
+            .modal-content .modal-body {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior: contain !important;
+                padding: 12px 18px !important;
+            }
+
+            /* 4. FOOTER: tombol berdampingan 50/50, tinggi 40px, font 13px,
+                  radius 10px, gap 10px, tidak all-caps & tidak membesar. */
+            .modal-content .modal-footer {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                gap: 10px !important;
+                flex: 0 0 auto !important;
+                padding: 4px 18px 20px !important;
+                margin: 0 !important;
+                border-top: 0 !important;
+            }
+
+            .modal-content .modal-footer > * {
+                margin: 0 !important;
+            }
+
+            .modal-content .modal-footer .btn {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                min-width: 0 !important;
+                height: 40px !important;
+                min-height: 40px !important;
+                border-radius: 10px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                padding: 0 8px !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                line-height: 1.2 !important;
+                text-transform: none !important;
+                letter-spacing: 0 !important;
+                white-space: nowrap !important;
+            }
+
+            /* 5. FIELD: label 12.5px tebal, input/select 38px & font 13px. */
+            .modal-content .form-label,
+            .modal-content label {
+                font-size: 12.5px !important;
+                font-weight: 600 !important;
+                line-height: 1.3 !important;
+                margin-bottom: 4px !important;
+            }
+
+            .modal-content .form-control,
+            .modal-content .form-select {
+                height: 38px !important;
+                min-height: 38px !important;
+                font-size: 13px !important;
+                line-height: 1.35 !important;
+                padding: 6px 10px !important;
+                border-radius: 8px !important;
+            }
+
+            /* Textarea tetap beberapa baris (jangan dipipihkan jadi 1 baris). */
+            .modal-content textarea.form-control {
+                height: auto !important;
+                min-height: 72px !important;
+                padding: 8px 10px !important;
+            }
+
+            .modal-content .input-group-text {
+                font-size: 13px !important;
+                padding: 6px 10px !important;
+            }
+
+            /* Jarak antar field 10-12px (tidak ada ruang kosong besar). Hanya sumbu
+               VERTIKAL yang dikecilkan; sumbu horizontal dibiarkan mengikuti
+               gutter milik halaman (g-2/g-3) supaya dua kolom tetap cukup
+               lebar di kartu 340px. */
+            .modal-content .row {
+                --bs-gutter-y: 0.625rem !important;
+            }
+
+            .modal-content .mb-4 { margin-bottom: 10px !important; }
+            .modal-content .mb-3 { margin-bottom: 10px !important; }
+            .modal-content .mb-2 { margin-bottom: 8px !important; }
+            .modal-content .mt-2 { margin-top: 8px !important; }
+            .modal-content .form-text { font-size: 11.5px !important; margin-top: 3px !important; }
+            .modal-content .invalid-feedback { font-size: 11.5px !important; margin-top: 3px !important; }
+
+            /* 6. RADIO & CHECKBOX 16px, teks 13px. */
+            .modal-content .form-check {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding-left: 0 !important;
+                margin-bottom: 8px !important;
+            }
+
+            .modal-content .form-check-input {
+                position: static !important;
+                flex: 0 0 auto !important;
+                width: 16px !important;
+                height: 16px !important;
+                min-width: 16px !important;
+                margin: 0 !important;
+            }
+
+            .modal-content .form-check-label {
+                font-size: 13px !important;
+                line-height: 1.35 !important;
+                margin: 0 !important;
+            }
+
+            /* 7. KOTAK INFO (biru muda / hijau muda / merah muda):
+                  padding 10px, font 12px. */
+            .modal-content .alert {
+                padding: 10px 12px !important;
+                font-size: 12px !important;
+                line-height: 1.4 !important;
+                margin-bottom: 10px !important;
+                border-radius: 10px !important;
+            }
+
+            .modal-content .alert i {
+                font-size: 1rem !important;
+                line-height: 1 !important;
+            }
+
+            /* Kotak info yang bukan .alert (kelas "p-3 bg-light rounded-3 small"
+               di modal Import Excel Siswa/Guru/Kelas) ikut diperkecil agar
+               konsisten dengan kotak info di atas. */
+            .modal-content .p-3.bg-light.rounded-3 {
+                padding: 10px 12px !important;
+                font-size: 12px !important;
+                line-height: 1.4 !important;
+                margin-bottom: 10px !important;
+                border-radius: 10px !important;
+            }
+        }
+
+        /* ==========================================================================
+           TIDAK ADA SCROLLBAR DI MOBILE (<= 768px) - SEMUA HALAMAN
+
+           Satu sumber gaya untuk SELURUH aplikasi: html, body, kotak putih
+           utama, tabel, pop up/modal, dropdown, sidebar, dan semua container
+           lain yang bisa scroll (Dashboard, Presensi, Kehadiran, Rekap, Siswa,
+           Guru, Kelas, Pengaturan, Tempat Sampah, Tahun Ajaran, Hari Libur, dll).
+
+           Yang disembunyikan HANYA tampilan scrollbar. Fungsi scroll tetap
+           berjalan penuh:
+             - geser (swipe) sentuhan untuk vertikal & horizontal,
+             - scroll wheel / trackpad tetap bekerja,
+             - min-width tabel dan text-overflow tidak berubah.
+           Tidak ada nilai overflow yang diubah, jadi tidak ada elemen yang
+           tadinya bisa digeser menjadi tidak bisa.
+
+           DESKTOP (>= 769px) tidak tersentuh: blok ini hanya ada di media query
+           mobile. Aturan scrollbar tabel yang sudah ada (blok "TABEL DATA:
+           SCROLL VERTIKAL...") juga tidak diubah.
+           ========================================================================== */
+        @media (max-width: 767.98px) {
+            html,
+            body,
+            *,
+            *::before,
+            *::after {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+            }
+
+            html::-webkit-scrollbar,
+            body::-webkit-scrollbar,
+            *::-webkit-scrollbar {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+        }
+
         .bg-danger-subtle {
             background-color: #fee2e2 !important;
             color: #dc2626 !important;
@@ -2140,9 +3707,13 @@
             /* min-height di-reset: pemusatan vertikal ditangani oleh
                align-items:center pada overlay, bukan oleh min-height. */
             min-height: 0;
-            width: calc(100% - 2rem);
-            max-width: 400px;
-            margin: 0 auto;
+            /* Margin kiri-kanan minimal 16px di layar kecil (mobile). */
+            width: calc(100% - 32px) !important;
+            /* Lebar 380px: PERSIS sama dengan dialog hapus (Swal), begitu juga
+               tema kartu/overlay/tombol/animasinya. Di mobile dikecilkan jadi
+               320px oleh blok media query di akhir bagian ini. */
+            max-width: 380px !important;
+            margin: 16px auto !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2151,30 +3722,223 @@
 
         #logoutConfirmModal .modal-content {
             width: 100%;
-            max-width: 400px;
+            max-width: 380px !important;
             pointer-events: auto;
+            /* Kartu dialog: tema sama persis dengan dialog hapus (Swal):
+               380px / radius 20px / padding 24px / shadow lembut. Padding
+               ditaruh pada KARTU (bukan pada .modal-body yang sudah dilepas). */
+            padding: 24px !important;
+            border: 0 !important;
+            border-radius: 20px !important;
+            background: #ffffff !important;
+            overflow: hidden !important;
+            box-shadow: 0 18px 36px -12px rgba(15, 23, 42, 0.22) !important;
         }
 
-        /* Isi modal: judul + tombol X tetap di atas (kiri-kanan),
-           teks pertanyaan dan tombol aksi dibuat rata tengah & seimbang. */
         #logoutConfirmModal .modal-body {
             text-align: center;
+            /* Isi boleh scroll di dalam kartu; tombol tetap terlihat. */
+            overflow-y: auto !important;
+            max-height: calc(100vh - 180px) !important;
         }
 
+        /* Dua tombol: BERDAMPINGAN 50%/50% (TIDAK menumpuk ke bawah), tinggi
+           42px, radius 10px, jarak 10px - sama persis dengan dialog hapus.
+           flex-wrap: nowrap WAJIB: bawaan Bootstrap .modal-footer memakai
+           flex-wrap: wrap, sehingga dua tombol 50% + gap 10px (total 110%)
+           membungkus ke baris bawah. border-top: 0 + background transparan
+           menghapus garis pemisah tipis bawaan Bootstrap di atas tombol Batal. */
         #logoutConfirmModal .modal-footer {
-            justify-content: center;
-            gap: 0.5rem;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            margin: 16px 0 0 !important;
+            padding: 0 !important;
+            border-top: 0 !important;
+            background: transparent !important;
         }
 
-        /* Netralkan margin default Bootstrap pada anak footer supaya jarak
-           antara kedua tombol benar-benar sama, lalu samakan lebar tombol. */
         #logoutConfirmModal .modal-footer > * {
             margin: 0 !important;
-            flex: 0 0 auto;
         }
 
         #logoutConfirmModal .modal-footer .btn {
-            min-width: 8.5rem;
+            flex: 1 1 50% !important;
+            width: 50% !important;
+            min-width: 0 !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            border-radius: 10px !important;
+            border: 1px solid transparent !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            padding: 0 10px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            transition: background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease !important;
+        }
+
+        #logoutConfirmModal .modal-footer .btn i {
+            font-size: 1rem !important;
+            line-height: 1 !important;
+        }
+
+        /* ---------- OVERLAY LOG OUT: WARNA + BLUR PERSIS SEPERTI DIALOG HAPUS ----------
+           AKAR MASALAH "LATAR GELAP HAMPIR HITAM":
+           area gelap Log Out TERNYATA digambar DUA LAPIS, bukan satu:
+
+             lapis 1 = .modal-backdrop (SAUDARA modal, dibuat Bootstrap),
+                       sudah di-style persis seperti overlay dialog hapus:
+                       rgba(15,23,42,0.55) + blur(4px)
+             lapis 2 = #logoutConfirmModal itu sendiri, yang SEBELUMNYA
+                       juga diberi background gelap + blur(4px) yang sama
+
+           Dua lapis rgba(15,23,42,0.55) bertumpuk menjadi:
+               0.55 + (1 - 0.55) x 0.55 = 0.55 + 0.2475 = 0.7975
+               -> sekitar 80% hitam  =>  "hampir hitam" seperti dikeluhkan
+           DAN karena blur ikut di-override dua kali, blur 4px di modal
+           menimpa blur yang sudah ada di backdrop sehingga blur terlihat
+           tidak bersih. Dialog hapus (Swal) hanya 1 lapis = 0.55, jauh
+           lebih terang - itulah selisihnya.
+
+           PERBAIKAN (di akar masalah, bukan dengan menurunkan warna):
+           modal Log Out dibuat TRANSPARAN, jadi overlay_now HANYA berasal
+           dari .modal-backdrop. Hasilnya:
+             - darkness tepat 0.55, sama persis dialog hapus;
+             - blur 4px hanya satu kali terpasang -> tajam & konsisten;
+             - tetap berlaku di desktop & mobile karena berasal dari satu
+               aturan global, bukan per halaman. */
+        #logoutConfirmModal {
+            background-color: transparent !important;
+            background-image: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Z-index tertinggi: di atas sidebar, loader, dan dialog Swal. */
+        #logoutConfirmModal {
+            z-index: 1000000000 !important;
+        }
+
+        /* ---------- ANIMASI LOG OUT: INSTAN (SAMA DENGAN DIALOG HAPUS) ----------
+           Pair aturan yang SEBELUMNYA ada di sini justru membuat dialog
+           Log Out terasa lambat DAN ukurannya tidak sama dengan dialog hapus:
+
+             #logoutConfirmModal .modal-dialog      { transition: transform .15s }
+             #logoutConfirmModal.show .modal-dialog { transform: scale(1) }
+             #logoutConfirmModal.fade .modal-dialog { transform: scale(.95) }
+
+           MASALAH specificity: ".show" dan ".fade" di sini punya specificity
+           yang SAMA (1 id + 2 class), dan ".fade" ditulis SESUDAH ".show",
+           sehingga transform: scale(0.95) SELALU menang walau .show sudah
+           ditambahkan -> kartu diam permanen di 95% (kartu Log Out lebih
+           kecil dari kartu dialog hapus) PLUS tetap Transitional 0.15s.
+
+           SEMUA pair itu dihapus di sini. Log Out sekarang TIDAK punya aturan
+           animasi sendiri: Ia mewarisi blok global ".modal.fade ..." di atas,
+           sehingga:
+             - overlay: 0s, tanpa transisi (tidak ada jeda executeAfterTransition)
+             - kartu  : 0s, tanpa scale, tanpa geser
+             - tutup (Batal / klik luar / Esc): 0s, langsung hilang
+           Efek yang dipakai TIDAK ADA. Kalau nanti mau fade maksimal 0.1s,
+           ubah HANYA blok global ".modal.fade .modal-dialog" di atas. */
+
+        /* Varian dengan class tambahan (belum dipakai halaman mana pun saat ini).
+           Nilainya dibuat sama dengan .modal-backdrop di atas - termasuk
+           transition: none, supaya tidak ada satu pun overlay yang lebih
+           lambat dari dialog hapus. */
+        .modal-backdrop.app-dialog-backdrop {
+            background-color: rgba(15, 23, 42, 0.55) !important;
+            backdrop-filter: blur(4px) !important;
+            -webkit-backdrop-filter: blur(4px) !important;
+            opacity: 1 !important;
+            transition: none !important;
+            animation: none !important;
+        }
+
+        /* ---------- LOG OUT: AKSEN MERAH (SAMA PERSIS DENGAN DIALOG HAPUS) ----------
+           Dialog Log Out memakai tema dialog hapus: overlay (blur 4px), ukuran
+           kartu, font, jarak isi, dan baris tombol 50/50 semuanya sama; yang
+           berbeda HANYA isi dialog dan ikonnya (bx-log-out). Karena itu aksennya
+           juga MERAH - tidak ada warna baru, memakai variabel yang sama dengan
+           tombol "Hapus".
+
+           - Lingkaran ikon: TIDAK diberi override warna di sini, jadi memakai
+             .app-dialog-icon bersama (latar merah muda lembut #fee2e2 + ikon
+             merah #dc2626) yang juga dipakai lingkaran ikon dialog hapus.
+             Karena berasal dari aturan yang sama, keduanya dijamin identik.
+           - Tombol "Ya, Log Out": merah solid #dc2626, hover merah lebih gelap
+             #b91c1c, teks putih - persis tombol "Hapus".
+           - Tombol "Batal": abu-abu terang + teks gelap, persis tombol kiri
+             dialog hapus. */
+        #logoutConfirmModal .modal-footer .btn-danger {
+            background-color: var(--app-dialog-red) !important;
+            border-color: var(--app-dialog-red) !important;
+            color: #ffffff !important;
+        }
+
+        #logoutConfirmModal .modal-footer .btn-danger:hover {
+            background-color: var(--app-dialog-red-dark) !important;
+            border-color: var(--app-dialog-red-dark) !important;
+            color: #ffffff !important;
+        }
+
+        #logoutConfirmModal .modal-footer .btn-light {
+            background-color: var(--app-dialog-gray-btn) !important;
+            border-color: var(--app-dialog-gray-border) !important;
+            color: var(--app-dialog-text) !important;
+        }
+
+        #logoutConfirmModal .modal-footer .btn-light:hover {
+            background-color: var(--app-dialog-gray-btn-hover) !important;
+            color: var(--app-dialog-text) !important;
+        }
+
+        /* ---------- MOBILE: PERSIS SAMA DENGAN DIALOG HAPUS ----------
+           Nilai kartu & tombol di layar kecil disamakan dengan dialog hapus
+           (SweetAlert2): kartu max 320px / margin 20px / padding 20px /
+           radius 18px, tombol tetap berdampingan 50/50 dengan tinggi 40px +
+           font 13px + padding 0 6px, dan jarak isi-ke-tombol 12px.
+           Blok ini HARUS diletakkan SETELAH semua aturan #logoutConfirmModal di
+           atas (sele crip specificity sama, jadi yang belakangan menang). */
+        @media (max-width: 575.98px) {
+            #logoutConfirmModal .modal-dialog {
+                max-width: 320px !important;
+                width: calc(100% - 40px) !important;
+                margin: 20px auto !important;
+            }
+
+            #logoutConfirmModal .modal-content {
+                padding: 20px !important;
+                border-radius: 18px !important;
+                /* Layar pendek: tinggi maksimal dikurangi 2x margin 20px. */
+                max-height: calc(100vh - 40px) !important;
+                max-height: calc(100dvh - 40px) !important;
+            }
+
+            #logoutConfirmModal .modal-body {
+                max-height: calc(100dvh - 180px) !important;
+            }
+
+            #logoutConfirmModal .modal-footer {
+                margin: 12px 0 0 !important;
+                gap: 10px !important;
+            }
+
+            #logoutConfirmModal .modal-footer .btn {
+                height: 40px !important;
+                min-height: 40px !important;
+                font-size: 13px !important;
+                padding: 0 6px !important;
+            }
         }
 
     </style>
@@ -2202,9 +3966,13 @@
         @include('partials.sidebar')
     </aside>
 
-    <!-- KONTEN UTAMA: Kotak Light Cream dengan Bezel Simetris -->
+    <!-- KONTEN UTAMA: Kotak Light Cream dengan Bezel Simetris
+         Class tambahan per halaman lewat @yield('canvas_class'), misalnya
+         .page-canvas-fixed = kanvas dikunci setinggi satu layar dan isinya
+         menggulir di dalam kanvas (lihat blok CSS "3.C KANVAS SATU LAYAR").
+         Halaman yang tidak menentukan section ini tidak berubah sama sekali. -->
     <div class="flex-1 min-w-0 h-screen overflow-y-auto overflow-x-hidden content-scroll-wrapper box-border">
-        <main class="w-full bg-[#F8F3F0] rounded-none md:rounded-2xl shadow-none md:shadow-md p-4 sm:p-5 md:p-6 box-border flex flex-col relative">
+        <main class="w-full bg-[#F8F3F0] rounded-none md:rounded-2xl shadow-none md:shadow-md p-4 sm:p-5 md:p-6 box-border flex flex-col relative @yield('canvas_class')">
 
             <!-- HEADER UTAMA DENGAN TOMBOL GARIS TIGA DI POJOK KIRI ATAS UNTUK MOBILE/TABLET/IPAD -->
             <div class="app-header-bar d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2.5 sm:gap-3 mb-3 sm:mb-4 w-100">
@@ -2400,21 +4168,22 @@
 <!-- Penutupan modal: tombol "Batal", tombol "X", klik area overlay gelap,    -->
 <!-- dan tombol Esc semuanya sudah difasilitasi Bootstrap 5 secara bawaan.  -->
 <!-- ========================================================================= -->
-<div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+<div class="modal fade app-dialog-modal" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <form action="{{ route('logout') }}" method="POST" class="d-flex flex-column">
+        <div class="modal-content border-0 app-dialog-card">
+            <form action="{{ route('logout') }}" method="POST" class="d-flex flex-column app-dialog-card-body">
                 @csrf
-                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold text-dark fs-5 mb-0" id="logoutConfirmModalLabel">Log Out</h5>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <div class="modal-body p-0 text-center">
+                    <div class="app-dialog-icon">
+                        <i class='bx bx-log-out'></i>
+                    </div>
+                    <h5 class="modal-title app-dialog-title mb-0" id="logoutConfirmModalLabel">Log Out</h5>
+                    <p class="app-dialog-text mt-2 mb-0">Apakah Anda yakin untuk Log Out?</p>
+                    <p class="app-dialog-sub">Anda harus login kembali untuk mengakses sistem.</p>
                 </div>
-                <div class="modal-body py-3 px-4">
-                    <p class="mb-0 text-secondary">Apakah Anda yakin untuk Log Out?</p>
-                </div>
-                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger rounded-3 px-3 fw-semibold">Ya, Log Out</button>
+                <div class="modal-footer app-dialog-footer">
+                    <button type="button" class="btn btn-light app-dialog-btn" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger app-dialog-btn">Ya, Log Out</button>
                 </div>
             </form>
         </div>
@@ -2426,41 +4195,116 @@
 <script src="{{ asset('js/instant-download.js') }}?v={{ file_exists(public_path('js/instant-download.js')) ? filemtime(public_path('js/instant-download.js')) : config('app.version', '1') }}"></script>
 <script>
     /**
-     * Universal Soft UI Delete Confirmation Modal
-     * Standardized across Desktop and Mobile (Premium Soft UI Circle)
+     * TEMA DIALOG BERSAMA - dialog konfirmasi hapus (satuan & massal).
+     *
+     * SATU fungsi ini dipakai oleh SEMUA halaman yang punya tombol hapus,
+     * sehingga tema, ukuran, animasi, dan perilakunya benar-benar sama
+     * persis di mana-mana. Gaya semuanya datang dari kelas .app-dialog-*
+     * dan .swal2-popup.app-dialog di layout bersama.
+     *
+     * Opsi:
+     *   title        - judul dialog
+     *   html / text  - deskripsi (mendukung tag tebal: b / strong)
+     *   sub          - baris penjelas kecil di bawah deskripsi
+     *   icon         - kelas ikon Boxicons di dalam lingkaran
+     *                  (default 'bx-error-circle')
+     *   tone         - 'danger' (default, aksen MERAH - untuk semua dialog hapus)
+     *                  atau 'primary' (aksen BIRU - untuk dialog NON-hapus,
+     *                  mis. "Aktifkan Tahun Ajaran?"). Kartu, overlay, ikon,
+     *                  judul, deskripsi, dan tombol TETAP sama persis; hanya
+     *                  warna aksen yang dibedakan.
+     *   confirmText  - teks tombol kanan (default "Hapus")
+     *   cancelText   - teks tombol kiri  (default "Tidak")
+     *   checks       - array of string/HTML label untuk checkbox konfirmasi
+     *                  (opsional; bila diisi, tombol Hapus NONAKTIF sampai
+     *                   semua checkbox dicentang)
+     *   onConfirm    - callback saat tombol merah ditekan
+     *
+     * Klik di luar kartu atau tombol Esc menutup dialog (sama seperti
+     * menekan tombol "Tidak") - perilaku bawaan SweetAlert2.
      */
     window.confirmUniversalDelete = function(options) {
         const opts = options || {};
         const title = opts.title || 'Hapus Data?';
         const confirmText = opts.confirmText || 'Hapus';
         const cancelText = opts.cancelText || 'Tidak';
-        const message = opts.html || opts.text || 'Tindakan ini bersifat permanen. Apakah Anda yakin ingin menghapus data ini?';
+        const message = opts.html || opts.text || 'Data ini akan dihapus.';
+        const sub = opts.sub || '';
+        const icon = opts.icon || 'bx-error-circle';
+        const checks = Array.isArray(opts.checks) ? opts.checks : [];
 
-        const fullHtml = `
-            <div style="text-align: center;">
-                <div style="color: #dc2626; margin-bottom: 1rem;">
-                    <i class='bx bx-error' style="font-size: 2.5rem; line-height: 1; display: block;"></i>
-                </div>
-                <h5 style="font-weight: 700; color: #1e293b; font-size: 1.25rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em;">${title}</h5>
-                <div style="color: #64748b; line-height: 1.625; margin-bottom: 1.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.02em; text-align: justify; text-align-last: center; padding: 0 0.5rem;">${message}</div>
-            </div>
-        `;
+        /* Aksen dialog. Default 'danger' (= merah) dipakai semua dialog hapus
+           yang sudah ada, sehingga perilakunya TIDAK berubah sama sekali.
+           Dialog non-hapus cukup mengesmukan tone: 'primary'. */
+        const isPrimaryTone = opts.tone === 'primary';
+
+        // Bangun isi dialog dari class yang sama untuk semua halaman.
+        let html = '';
+
+        html += '<div class="app-dialog-icon"><i class="bx ' + icon + '"></i></div>';
+        html += '<h5 class="app-dialog-title">' + title + '</h5>';
+        html += '<p class="app-dialog-text">' + message + '</p>';
+
+        if (sub) {
+            html += '<p class="app-dialog-sub">' + sub + '</p>';
+        }
+
+        if (checks.length) {
+            html += '<div class="app-dialog-checks">';
+            checks.forEach(function (label, i) {
+                html += '<label class="app-dialog-check">'
+                      + '<input type="checkbox" class="app-dialog-check-box" data-app-check="' + i + '">'
+                      + '<span>' + label + '</span>'
+                      + '</label>';
+            });
+            html += '</div>';
+        }
 
         return Swal.fire({
-            html: fullHtml,
+            html: html,
             showCancelButton: true,
             confirmButtonText: confirmText,
             cancelButtonText: cancelText,
             reverseButtons: true,
             focusCancel: true,
             buttonsStyling: false,
+            // Tepat di tengah layar, z-index tertinggi (loader global 999999999).
+            position: 'center',
+            backdrop: 'rgba(15,23,42,0.55)',
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            draggable: false,
             customClass: {
-                popup: 'swal2-modal-soft shadow-lg border-0',
-                actions: 'd-flex justify-content-center gap-3 w-100 m-0 p-0',
-                confirmButton: 'btn btn-danger fw-medium px-4 py-2',
-                cancelButton: 'btn btn-light text-secondary fw-medium px-4 py-2 border'
+                popup: 'app-dialog' + (isPrimaryTone ? ' app-dialog-primary' : ''),
+                actions: 'app-dialog-actions',
+                confirmButton: 'btn ' + (isPrimaryTone ? 'btn-primary' : 'btn-danger') + ' app-dialog-confirm',
+                cancelButton: 'btn btn-light app-dialog-cancel'
+            },
+            didOpen: function (popup) {
+                if (!checks.length) return;
+
+                // Tombol konfirmasi NONAKTIF sampai semua checkbox dicentang.
+                const btn = popup.querySelector('.app-dialog-confirm');
+                const boxes = Array.prototype.slice.call(
+                    popup.querySelectorAll('.app-dialog-check-box')
+                );
+
+                const sync = function () {
+                    const allChecked = boxes.every(function (b) { return b.checked; });
+                    btn.disabled = !allChecked;
+                    btn.classList.toggle('app-dialog-btn-disabled', !allChecked);
+                };
+
+                boxes.forEach(function (box) {
+                    box.addEventListener('change', sync);
+                });
+
+                sync();
             }
-        }).then(function(result) {
+        }).then(function (result) {
+            // Bila dialog ditutup lewat Esc / klik luar,	result.isDismissed
+            // bernilai true dan onConfirm TIDAK dipanggil - sama persis
+            // dengan menekan tombol "Tidak".
             if (result.isConfirmed && typeof opts.onConfirm === 'function') {
                 opts.onConfirm();
             }
@@ -2692,6 +4536,107 @@
             } catch (e) { /* abaikan */ }
         }
     });
+})();
+</script>
+
+<!-- ==========================================================================
+     NOTIFIKASI GLOBAL - HILANG OTOMATIS + TOMBOL X (SEMUA HALAMAN)
+     --------------------------------------------------------------------------
+     SATU script untuk SELURUH halaman, jadi tidak perlu menulis logika
+     notifikasi per halaman. Cukup dengan Alert Bootstrap
+     (alert + alert-dismissible + tombol .btn-close) di halaman mana pun.
+
+     Yang dihapus otomatis:
+       - sukses tambah / edit / pulihkan / hapus permanen / import (sukses)
+       - gagal / peringatan (hapus, import 0 baris, validasi dari server, dll)
+
+     Yang TIDAK dihapus otomatis:
+       - kotak info statis (Zona Berbahaya, format Excel, catatan Pengaturan,
+         dsb) - semuanya tidak punya .btn-close sehingga tidak tersentuh.
+       - notifikasi error VALIDASI FORM yang ditandai data-flash-persist
+         (tetap tampil sampai user memperbaikinya atau menekan tombol X).
+
+     Alur: tampil 3 detik -> fade-out halus 0.3s -> elemen DIHAPUS dari layout
+     (bukan disembunyikan), supaya konten di bawahnya langsung naik tanpa
+     menyisakan celah kosong.
+
+     Tombol X tetap berfungsi seperti biasa (Bootstrap Alert.close), sehingga
+     notifikasi bisa ditutup lebih cepat secara manual.
+     ========================================================================== -->
+<script>
+(function () {
+    'use strict';
+
+    var TUNGGU_MS = 3000;  /* notifikasi tetap tampil 3 detik          */
+    var FADE_MS = 300;    /* durasi fade-out (0.3 detik)             */
+
+    var PERSIST_ATTR = 'data-flash-persist';
+    var ARMED_ATTR = 'data-flash-armed';   /* penanda sudah dijadwalkan */
+
+    /**
+     * Notifikasi yang boleh hilang otomatis.
+     * Syarat: alert Bootstrap yang bisa ditutup (punya .btn-close) dan tidak
+     * ditandai data-flash-persist.
+     */
+    function findAutoDismissAlerts() {
+        var all = document.querySelectorAll('.alert.alert-dismissible');
+        var out = [];
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            if (el.hasAttribute(PERSIST_ATTR)) continue;      /* validasi form */
+            if (el.getAttribute('data-flash-auto') === 'off') continue;
+            if (!el.querySelector('.btn-close')) continue;    /* bukan notifikasi */
+            if (el.closest('.modal')) continue;              /* isi modal, bukan flash */
+            if (el.hasAttribute(ARMED_ATTR)) continue;       /* sudah dijadwalkan */
+            out.push(el);
+        }
+        return out;
+    }
+
+    /** Fade-out lalu HAPUS elemennya dari layout. */
+    function hideAlert(el) {
+        if (!el || el.getAttribute('data-flash-hiding') === '1') return;
+        el.setAttribute('data-flash-hiding', '1');
+
+        /* Melepas .show memicu transisi opacity Bootstrap -> fade-out. */
+        el.classList.remove('show');
+        /* Jangan bisa diklik lagi selama memudar. */
+        el.style.pointerEvents = 'none';
+
+        window.setTimeout(function () {
+            /* Hapus dari DOM (bukan disembunyikan) -> konten bawah langsung naik. */
+            if (el.parentNode) {
+                el.parentNode.removeChild(el);
+            }
+        }, FADE_MS + 40);
+    }
+
+    function schedule(el, delay) {
+        window.setTimeout(function () { hideAlert(el); }, delay);
+    }
+
+    function boot() {
+        var alerts = findAutoDismissAlerts();
+        for (var i = 0; i < alerts.length; i++) {
+            alerts[i].setAttribute(ARMED_ATTR, '1');
+            schedule(alerts[i], TUNGGU_MS);
+        }
+    }
+
+    /* Notifikasi tetap hilang tepat 3 detik walau user sedang memuat ulang. */
+    boot();
+
+    /* Halaman yang menyisipkan notifikasi lewat JavaScript (bukan render
+       server) ikut ditangani: satu MutationObserver cukup untuk semuanya,
+       tanpa menulis logika notifikasi per halaman. */
+    if (typeof window.MutationObserver === 'function') {
+        var observer = new MutationObserver(function () {
+            boot();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        /* Observer cukup Lama untuk memproses elemen yang baru ditambahkan. */
+        window.setTimeout(function () { observer.disconnect(); }, 10000);
+    }
 })();
 </script>
 @yield('scripts')

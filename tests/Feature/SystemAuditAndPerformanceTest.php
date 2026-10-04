@@ -67,7 +67,9 @@ class SystemAuditAndPerformanceTest extends TestCase
             'late_limit_time' => '07:00',
             'check_out_time' => '14:00',
             'school_address' => 'Jl. Pendidikan No. 99',
-            'school_phone' => '021-99999',
+            // Aturan FASE 1: telepon hanya angka, 10-15 digit (tanpa tanda hubung).
+            'school_phone' => '0219999999',
+            'headmaster_nip' => '197508122000031002',
         ]);
 
         $response->assertRedirect(route('admin.settings.index'));
@@ -110,12 +112,16 @@ class SystemAuditAndPerformanceTest extends TestCase
         $this->assertDatabaseHas('students', ['id' => $student->id]);
         $this->assertDatabaseHas('attendances', ['student_id' => $student->id]);
 
-        // Test destroyAll
-        $response = $this->actingAs($this->admin)->delete(route('admin.students.destroy-all'));
+        // Test destroyAllActive: siswa aktif di-soft-delete (masuk Tempat Sampah),
+        // butuh 2 checkbox; flash 'error' agar tampil merah sesuai aturan warna.
+        $response = $this->actingAs($this->admin)->delete(route('admin.students.destroy-all-active'), [
+            'confirm_active' => '1',
+            'confirm_all' => '1',
+        ]);
         $response->assertRedirect(route('admin.students.index'));
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error');
 
-        $this->assertDatabaseMissing('students', ['id' => $student->id]);
+        $this->assertSoftDeleted('students', ['id' => $student->id]);
         $this->assertDatabaseMissing('attendances', ['student_id' => $student->id]);
     }
 
@@ -148,14 +154,15 @@ class SystemAuditAndPerformanceTest extends TestCase
             'check_in' => '06:42:00',
         ]);
 
-        // Test destroyAll classes
+        // Test destroyAll classes: kelas berisi siswa AKTIF ditolak dengan pesan
+        // jelas (tidak ikut terhapus); hanya kelas kosong yang dipindahkan ke sampah.
         $response = $this->actingAs($this->admin)->delete(route('admin.classes.destroy-all'));
         $response->assertRedirect(route('admin.classes.index'));
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error');
 
-        $this->assertDatabaseMissing('school_classes', ['id' => $class->id]);
-        $this->assertDatabaseMissing('students', ['id' => $student->id]);
-        $this->assertDatabaseMissing('attendances', ['student_id' => $student->id]);
+        $this->assertDatabaseHas('school_classes', ['id' => $class->id]);
+        $this->assertDatabaseHas('students', ['id' => $student->id]);
+        $this->assertDatabaseHas('attendances', ['student_id' => $student->id]);
     }
 
     /**
@@ -242,8 +249,9 @@ class SystemAuditAndPerformanceTest extends TestCase
 
         $responseAll = $this->actingAs($this->admin)->delete(route('admin.guru.destroy-all'));
         $responseAll->assertRedirect(route('admin.guru.index'));
+        $responseAll->assertSessionHas('error');
 
-        $this->assertDatabaseMissing('teachers', ['id' => $teacher2->id]);
+        $this->assertSoftDeleted('teachers', ['id' => $teacher2->id]);
         $this->assertNull($class->fresh()->teacher_id);
     }
 
@@ -331,9 +339,9 @@ class SystemAuditAndPerformanceTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('kelasList.0.total_siswa', 2)
-            ->assertJsonPath('kelasList.0.hadir', 2)
+            ->assertJsonPath('kelasList.0.hadir', 1)
             ->assertJsonPath('kelasList.0.terlambat', 1)
-            ->assertJsonPath('hadir_count', 2);
+            ->assertJsonPath('hadir_count', 1);
     }
 
     /**

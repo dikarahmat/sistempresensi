@@ -398,11 +398,48 @@ class StudentController extends Controller
     {
         $studentName = $student->name;
 
-        // Soft delete: data masih bisa dipulihkan dari halaman Arsip
-        $student->delete();
+        // Soft delete: data masih bisa dipulihkan dari halaman Arsip.
+        // Dibungkus try/catch supaya bila ada kegagalan sistem, pengguna
+        // tetap mendapat pesan yang jelas dan errornya tercatat di log
+        // (tidak lagi halaman 500 tanpa penjelasan).
+        try {
+            $student->delete();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal menghapus data siswa: ' . $e->getMessage(), [
+                'student_id' => $student->id,
+            ]);
 
-        return redirect()->route('admin.students.index')
-            ->with('success', "Siswa {$studentName} berhasil diarsipkan. Anda dapat memulihkannya dari halaman Arsip.");
+            return $this->backToStudentIndex('Gagal menghapus data siswa. Coba lagi.');
+        }
+
+        // Notifikasi hapus memakai flash 'error' (alert-danger/merah), bukan
+        // 'success' (hijau) - flash hijau dipakai untuk tambah/ubah data.
+        return $this->backToStudentIndex(
+            "Data siswa {$studentName} berhasil dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.",
+            'error'
+        );
+    }
+
+    /**
+     * Kembali ke daftar siswa sambil MEMPERTAHANKAN filter & pencarian aktif.
+     *
+     * Parameter yang sedang dipakai ikut disalin ke query string redirect,
+     * sehingga kata kunci pencarian dan filter kelas tidak ikut hilang setelah
+     * menghapus data. `withInput()` saja tidak cukup karena hanya mengisi
+     * session untuk old(), bukanquerystring.
+     */
+    private function backToStudentIndex(string $message, string $type = 'success'): RedirectResponse
+    {
+        $params = [];
+        foreach (['search', 'class_id', 'status', 'sort', 'direction', 'per_page'] as $key) {
+            if (request()->filled($key)) {
+                $params[$key] = request($key);
+            }
+        }
+
+        $url = route('admin.students.index') . ($params ? '?' . http_build_query($params) : '');
+
+        return redirect($url)->with($type, $message);
     }
 
     /**
@@ -421,7 +458,7 @@ class StudentController extends Controller
             'confirm_all' => 'accepted',
         ], [
             'confirm_permanent.accepted' => 'Centang pernyataan "Saya memahami data yang dihapus permanen tidak dapat dikembalikan."',
-            'confirm_all.accepted' => 'Centang pernyataan "Saya yakin ingin menghapus semua data siswa di arsip."',
+            'confirm_all.accepted' => 'Centang pernyataan "Saya yakin ingin menghapus semua data siswa di Tempat Sampah."',
         ]);
 
         DB::beginTransaction();
@@ -437,13 +474,64 @@ class StudentController extends Controller
             }
 
             DB::commit();
+            // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
+            // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
             return redirect()->route('admin.students.trash')
-                ->with('success', "Berhasil menghapus permanen {$total} siswa di arsip.");
+                ->with('error', "Berhasil menghapus permanen {$total} siswa di Tempat Sampah.");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.students.trash')
-                ->with('error', 'Gagal menghapus semua data siswa di arsip. Coba lagi.');
+                ->with('error', 'Gagal menghapus semua data siswa di Tempat Sampah. Coba lagi.');
+        }
+    }
+
+    /**
+     * Hapus SELURUH data siswa yang masih AKTIF (hapus massal dari toolbar
+     * Data Siswa), dengan proteksi transaksi.
+     *
+     * Berbeda dengan destroyAll() di atas yang mengosongkan Tempat Sampah:
+     * method ini memakai SOFT DELETE, jadi seluruh siswa aktif dipindahkan ke
+     * Tempat Sampah dan masih bisa dipulihkan dari Pengaturan.
+     *
+     * Jaminan:
+     *  - tabel `users` TIDAK disentuh sama sekali (akun guru/admin aman);
+     *  - hanya siswa AKTIF yang dikenai, siswa di Tempat Sampah tidak berubah;
+     *  - dua pernyataan konfirmasi wajib dicentang (divalidasi di server).
+     */
+    public function destroyAllActive(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'confirm_active' => 'accepted',
+            'confirm_all' => 'accepted',
+        ], [
+            'confirm_active.accepted' => 'Centang pernyataan "Saya memahami bahwa seluruh data siswa aktif akan dihapus dan dapat dipulihkan dari Tempat Sampah di Pengaturan."',
+            'confirm_all.accepted' => 'Centang pernyataan "Saya yakin ingin menghapus semua data siswa aktif."',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $total = Student::count();
+
+            if ($total > 0) {
+                // Riwayat presensi dibersihkan terlebih dahulu (mencegah
+                // pelanggaran foreign key), lalu siswa di-soft-delete sehingga
+                // masuk ke Tempat Sampah dan bisa dipulihkan.
+                \App\Models\Attendance::whereIn('student_id', Student::query()->select('id'))->delete();
+                Student::query()->delete();
+            }
+
+            DB::commit();
+
+            return $this->backToStudentIndex(
+                "Seluruh data siswa aktif ({$total} data) berhasil dihapus dan dipindahkan ke Tempat Sampah.",
+                'error'
+            );
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return $this->backToStudentIndex('Gagal menghapus seluruh data siswa aktif. Coba lagi.', 'error');
         }
     }
 
@@ -500,8 +588,10 @@ class StudentController extends Controller
             $student->forceDelete();
 
             DB::commit();
+            // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
+            // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
             return redirect()->route('admin.students.trash')
-                ->with('success', "Data siswa {$studentName} berhasil dihapus permanen!");
+                ->with('error', "Data siswa {$studentName} berhasil dihapus permanen!");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);

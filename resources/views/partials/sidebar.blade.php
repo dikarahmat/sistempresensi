@@ -20,10 +20,21 @@
     $isRekapActive = panel_is('rekap*');
 
     $siswaRoute = panel_route('students.index');
-    $isSiswaActive = panel_is('students*');
+
+    // Halaman TEMPAT SAMPAH (admin.students.trash, admin.teachers.trash, dan
+    // admin.classes.trash) kini menjadi modul di bawah PENGATURAN, bukan di bawah
+    // SISWA/GURU/KELAS. Ketiga route itu dikeluarkan dari syarat aktif modulnya
+    // masing-masing supaya item PENGATURAN saja yang menyala, tidak dua-duanya.
+    //(admin.classes.trash sempat terlewat karena route-nya dibuat belakangan.)
+    $isTrashPage = request()->routeIs(
+        'admin.students.trash',
+        'admin.teachers.trash',
+        'admin.classes.trash'
+    );
+    $isSiswaActive = panel_is('students*') && ! $isTrashPage;
 
     $kelasRoute = panel_route('classes.index');
-    $isKelasActive = panel_is('classes*') || panel_is('kelas*');
+    $isKelasActive = (panel_is('classes*') || panel_is('kelas*')) && ! $isTrashPage;
 @endphp
 
 <!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot
@@ -43,7 +54,7 @@
     <div class="sidebar-brand flex-shrink-0">
         <div class="sidebar-brand-row d-flex align-items-center gap-2 pb-3 border-bottom border-light border-opacity-25">
             <!-- Pure Logo dibesarkan sedikit jadi 46px -->
-            <img src="{{ asset(\App\Models\Setting::getLogo()) }}" 
+            <img src="{{ \App\Models\Setting::getLogoUrl() }}" 
                  alt="Logo Sekolah" 
                  class="sidebar-brand-logo" style="width: 46px; height: 46px; object-fit: contain;"
                  loading="lazy"
@@ -122,24 +133,10 @@
             @endif
 
             @if($userRole === 'admin')
-            <li class="nav-item">
-                
-                <a href="{{ route('admin.academic-years.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.academic-years.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="Tahun Ajaran" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-time fs-5 {{ request()->routeIs('admin.academic-years.*') ? 'text-primary' : 'text-white' }}'></i> 
-                    <span class="sidebar-nav-label">Tahun Ajaran</span>
-                </a>
-                
-                <a href="{{ route('admin.holidays.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.holidays.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="Hari Libur" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-calendar-x fs-5 {{ request()->routeIs('admin.holidays.*') ? 'text-primary' : 'text-white' }}'></i> 
-                    <span class="sidebar-nav-label">Hari Libur</span>
-                </a>
-            </li>
+            <!-- CATATAN FASE 1: item TAHUN AJARAN & HARI LIBUR sengaja dihapus dari
+                 sidebar. Modul tersebut kini diakses dari halaman PENGATURAN
+                 (bagian "Pengelolaan Sistem"). Item Pengaturan di bawah tetap
+                 menyala di kedua halaman tersebut (lihat kondisi active). -->
             @endif
 
             <li class="nav-item">
@@ -154,10 +151,10 @@
 
                 @if($isAdminPanel)
                 <a href="{{ route('admin.guru.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="Guru" 
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
+                   data-label="Guru"
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-group fs-5 {{ request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') ? 'text-primary' : 'text-white' }}'></i> 
+                    <i class='bx bx-group fs-5 {{ (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage ? 'text-primary' : 'text-white' }}'></i> 
                     <span class="sidebar-nav-label">Guru</span>
                 </a>
                 @endif
@@ -172,12 +169,23 @@
             </li>
 
             @if($isAdminPanel)
+            <!-- PENGATURAN juga menyala di halaman Tahun Ajaran, Hari Libur, dan
+                     Tempat Sampah (Siswa / Guru / Kelas), karena semua modul itu kini
+                     hidup di bawah Pengaturan. -->
+            @php $isPengaturanActive = request()->routeIs(
+                'admin.settings.*',
+                'admin.academic-years.*',
+                'admin.holidays.*',
+                'admin.students.trash',
+                'admin.teachers.trash',
+                'admin.classes.trash'
+            ); @endphp
             <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ request()->routeIs('admin.settings.*') ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="Pengaturan" 
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isPengaturanActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
+                   data-label="Pengaturan"
                    style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-cog fs-5 {{ request()->routeIs('admin.settings.*') ? 'text-primary' : 'text-white' }}'></i> 
+                    <i class='bx bx-cog fs-5 {{ $isPengaturanActive ? 'text-primary' : 'text-white' }}'></i> 
                     <span class="sidebar-nav-label">Pengaturan</span>
                 </a>
             </li>

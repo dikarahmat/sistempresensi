@@ -229,14 +229,14 @@
                         $statusTampil = strtolower($attendance->effective_status);
                     @endphp
                     <tr>
-                        <td class="text-secondary">{{ $loop->iteration }}</td>
-                        <td class="col-tanggal">{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') }}</td>
-                        <td>
+                        <td data-label="No" class="text-secondary">{{ $loop->iteration }}</td>
+                        <td data-label="Tanggal" class="col-tanggal">{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
+                        <td data-label="Hari">{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') }}</td>
+                        <td data-label="Status">
                             <span class="status-{{ $statusTampil }}">{{ ucfirst($attendance->effective_status) }}</span>
                         </td>
-                        <td class="col-jam">{{ $attendance->check_in ? substr($attendance->check_in, 0, 5) : '-' }}</td>
-                        <td class="text-start">{{ $attendance->notes && $attendance->notes !== '-' ? $attendance->notes : '-' }}</td>
+                        <td data-label="Jam Masuk" class="col-jam">{{ $attendance->check_in ? substr($attendance->check_in, 0, 5) : '-' }}</td>
+                        <td data-label="Catatan" class="text-start">{{ $attendance->notes && $attendance->notes !== '-' ? $attendance->notes : '-' }}</td>
                     </tr>
                     @empty
                     <tr>

@@ -451,8 +451,8 @@
 @endpush
 
 @section('content')
-<div class="pt-1 pb-4 space-y-3">
-    
+<div class="pt-1 space-y-3">
+
     <!-- RINGKASAN STATUS + SCANNER: satu container -->
     <div class="status-summary-grid mb-3">
         <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold py-1.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs w-100 class-attendance-scan" style="font-size: 0.82rem;" onclick="toggleInlineScanner()">

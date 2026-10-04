@@ -113,23 +113,29 @@
 @endpush
 
 @section('content')
+    {{-- Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
+         Tombol X center vertikal oleh CSS notifikasi global di layout. --}}
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
-            <span>{{ session('success') }}</span>
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
-            <span>{{ session('error') }}</span>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 

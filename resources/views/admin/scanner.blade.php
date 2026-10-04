@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Presensi Gerbang | {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
-    <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <title>Presensi Gerbang - {{ \App\Models\Setting::getTitleAppName() }}</title>
+    <link rel="icon" type="image/webp" href="{{ \App\Models\Setting::getLogoUrl() }}">
 
     <!-- Google Fonts: Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -555,7 +555,7 @@
     <header class="kiosk-header">
         <div class="kiosk-header-inner">
             <div class="kiosk-brand">
-                <img src="{{ asset(\App\Models\Setting::getLogo()) }}" alt="Logo Sekolah" class="kiosk-brand-logo" onerror="this.outerHTML='<i class=\'bx bxs-school kiosk-brand-fallback\'></i>'">
+                <img src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo Sekolah" class="kiosk-brand-logo" onerror="this.outerHTML='<i class=\'bx bxs-school kiosk-brand-fallback\'></i>'">
                 <div class="kiosk-brand-text">
                     <p class="kiosk-school-name">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</p>
                     <div class="kiosk-subtitle">Absensi Gerbang</div>

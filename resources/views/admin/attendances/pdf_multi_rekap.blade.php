@@ -91,6 +91,12 @@
         .badge-a { color: #e11d48; font-weight: bold; }
         .badge-l { color: #94a3b8; }
 
+        /* Kolom JK: L biru cerah, P merah cerah — sama dengan tampilan web Rekap
+           (.rekap-jk). Huruf medium, TIDAK bold, dan ukuran font tidak
+           diubah supaya tinggi baris & paginasi PDF tetap sama. */
+        .jk-l { color: #3B82F6; font-weight: 500; }
+        .jk-p { color: #EF4444; font-weight: 500; }
+
         /* Legenda + tanda tangan per kelas: tidak boleh terpisah halaman. */
         .section-footer {
             page-break-inside: avoid;
@@ -191,7 +197,7 @@
                 <td>{{ $row['student']->nis }}</td>
                 <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
-                <td>{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 <td>{{ $row['check_in'] }}</td>
                 <td>{{ $row['late_text'] }}</td>
                 <td>
@@ -246,7 +252,7 @@
                 <td>{{ $row['student']->nis }}</td>
                 <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
-                <td>{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @foreach($dateColumns as $d)
                     @php
                         $code = $row['days'][$d['date']] ?? '-';
@@ -305,7 +311,7 @@
                 <td>{{ $row['student']->nis }}</td>
                 <td class="text-left" style="font-size: 7pt;"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
-                <td>{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     @php
                         $code = $row['days'][$d] ?? '-';

@@ -4,6 +4,11 @@
 @section('page_title', 'Rekap Presensi Siswa')
 @section('page_subtitle', 'Kelola rekapitulasi kehadiran siswa harian, mingguan, dan bulanan.')
 
+{{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
+     sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
+     bersama, sama seperti halaman acuan. --}}
+@section('canvas_class', 'page-canvas-fixed')
+
 @push('styles')
 <style>
     /* Header Bar Alignment on Mobile (< 768px) */
@@ -148,14 +153,33 @@
     .rekap-legend-item { font-size: 0.92rem; }
     .rekap-legend-item strong { font-size: 1rem; font-weight: 700; }
 
-    /* ===== JK (poin 1): teks murni, kontras tajam ===== */
+    /* ===== JK (poin 1): warna cerah, huruf medium (bukan bold) =====
+       L = biru cerah (#3B82F6), P = merah cerah (#EF4444),
+       font-weight 500, ukuran 0.82rem — PERSIS SAMA dengan teks kolom
+       tabel lainnya supaya tidak terlihat "menonjol"/tegas berlebihan.
+
+       Kenapa !important tetap dipakai di sini (hanya pada .rekap-jk):
+         - .table-matrix tbody td menetapkan `color` (#1e293b);
+         - .table-hover Bootstrap 5.3 menimpa `color` pada <td> saat hover;
+         - baris abu-abu/hover hanya mengubah background, bukan warna teks.
+       Karena span ini punya deklarasi `color` sendiri, nilainya selalu menang
+       atas pewarisan (inheritance) dari <td> — di hover, di baris abu-abu,
+       maupun di baris putih, jadi warnanya tidak pernah pudar/tertimpa.
+       TIDAK ada `opacity` di sini: tidak ada aturan lain yang membuat
+       L/P terlihat pucat, jadi opacity hanya perlu dihapus, bukan ditambahkan. */
     .rekap-jk {
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 0.82rem;           /* 13px, sama dengan teks tabel lain */
+        font-weight: 500;
         line-height: 1.2;
     }
-    .rekap-jk.is-laki     { color: #1d4ed8 !important; }  /* biru tua  */
-    .rekap-jk.is-perempuan { color: #be185d !important; }  /* magenta/merah tua */
+    .rekap-jk.is-laki {
+        color: #3B82F6 !important;    /* biru cerah */
+        font-weight: 500 !important;
+    }
+    .rekap-jk.is-perempuan {
+        color: #EF4444 !important;    /* merah cerah */
+        font-weight: 500 !important;
+    }
 
     /* ===== IKON SEARCH / TOMBOL FILTER (poin 3): lebih besar & tebal =====
        Tinggi 40px disamakan dengan .filter-input & dropdown Pilih Kelas
@@ -738,7 +762,7 @@
                             </td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             <td class="text-center">
-                                {{-- JK: teks murni, kontras tinggi. L = biru tua, P = magenta tua. --}}
+                                {{-- JK: L biru cerah, P merah cerah, huruf medium (bukan bold). --}}
                                 <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
                                     {{ optional($student)->gender == 'Perempuan' ? 'P' : 'L' }}
                                 </span>

@@ -1,12 +1,23 @@
 @extends('layouts.app')
 
 {{-- Judul & subjudul sengaja SAMA PERSIS dengan students/trash.blade.php dan
-     classes/trash.blade.php. Judul modul di dalam konten (yang tadinya
-     "Tempat Sampah Guru") sudah dihapus supaya tidak ada judul ganda: header
+     teachers/trash.blade.php. Judul modul di dalam konten (yang tadinya
+     "Tempat Sampah Kelas") sudah dihapus supaya tidak ada judul ganda: header
      dari layout sudah otomatis huruf besar. --}}
 @section('title', 'Tempat Sampah')
 @section('page_title', 'Tempat Sampah')
 @section('page_subtitle', 'Pulihkan atau hapus permanen data yang telah dihapus')
+
+{{-- ===========================================================================
+     Halaman ini memakai pola yang SAMA persis dengan
+     admin/teachers/trash.blade.php: deretan tab Siswa | Guru | Kelas, tabel
+     dengan tombol Pulihkan + Hapus Permanen per baris, zona "Hapus Semua",
+     dan dialog konfirmasi dari confirmUniversalDelete() (layout bersama).
+
+     Isi tabel hanya kelas yang ber-soft delete, karena model SchoolClass
+     memakai trait SoftDeletes sehingga global scope otomatis menyembunyikan
+     kelas yang masih aktif.
+     =========================================================================== --}}
 
 @push('styles')
 <style>
@@ -34,8 +45,6 @@
     .table-zebra-custom tbody td {
         color: #1e293b !important;
         font-weight: 400 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-restore {
@@ -69,8 +78,8 @@
 
     /* ===== Tab Siswa | Guru | Kelas =====
        Deretan tombol pill; gaya ini sama persis dengan tab di
-       students/trash.blade.php supaya ketiga halaman Tempat Sampah
-       terasa satu kesatuan. Tab aktif biru solid, tab lain abu-abu terang. */
+       students/trash.blade.php dan teachers/trash.blade.php supaya ketiga
+       halaman Tempat Sampah terasa satu kesatuan. */
     .trash-tab {
         display: inline-flex;
         align-items: center;
@@ -109,14 +118,14 @@
     {{-- ===========================================================================
          DERETAN TAB SAMPAH (Siswa | Guru | Kelas)
          Di KIRI ATAS, sejajar dengan awal konten. Tombol "Kembali" (baik yang
-         ke Pengaturan maupun yang ke Data Guru) sudah dihapus: navigasi cukup
+         ke Pengaturan maupun yang ke Data Kelas) sudah dihapus: navigasi cukup
          lewat menu PENGATURAN di sidebar. Kelas utility dan jarak (gap-2 mb-3)
          sama persis dengan dua halaman trash lain.
          =========================================================================== --}}
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
         <a href="{{ route('admin.students.trash') }}" class="trash-tab">Siswa</a>
-        <span class="trash-tab trash-tab-active" aria-current="page">Guru</span>
-        <a href="{{ route('admin.classes.trash') }}" class="trash-tab">Kelas</a>
+        <a href="{{ route('admin.teachers.trash') }}" class="trash-tab">Guru</a>
+        <span class="trash-tab trash-tab-active" aria-current="page">Kelas</span>
     </div>
 
     {{-- Notifikasi. Layout tidak menampilkan flash secara global, jadi blok ini
@@ -164,13 +173,13 @@
     </div>
     @endif
 
-    {{-- Judul modul di dalam konten ("Tempat Sampah Guru") + subjudulnya sudah
+    {{-- Judul modul di dalam konten ("Tempat Sampah Kelas") + subjudulnya sudah
          DIHAPUS supaya tidak dobel dengan header halaman. Yang tersisa hanya teks
          info satu baris kecil, sama persis formatnya dengan halaman trash Siswa
-         dan trash Kelas. --}}
+         dan trash Guru. --}}
     <div class="mb-3">
         <p class="text-secondary mb-0" style="font-size: 0.85rem;">
-            Data guru yang dihapus akan disimpan di sini. Anda dapat memulihkan atau menghapus permanen data.
+            Data kelas yang dihapus akan disimpan di sini. Anda dapat memulihkan atau menghapus permanen data.
         </p>
     </div>
 
@@ -180,28 +189,30 @@
                 <thead>
                     <tr>
                         <th class="text-center py-3 px-3">NO</th>
-                        <th class="text-center py-3 px-3">NIP</th>
-                        <th class="text-center py-3 px-3">NAMA GURU</th>
-                        <th class="text-center py-3 px-3">KELAS</th>
+                        <th class="text-center py-3 px-3">NAMA KELAS</th>
+                        <th class="text-center py-3 px-3">TINGKAT</th>
+                        <th class="text-center py-3 px-3">TAHUN AJARAN</th>
+                        <th class="text-center py-3 px-3">WALI KELAS</th>
                         <th class="text-center py-3 px-3">TANGGAL DIHAPUS</th>
                         <th class="text-center py-3 px-3">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($teachers as $index => $teacher)
+                    @forelse($classes as $index => $class)
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle">
-                        <td data-label="No" class="text-center px-3">{{ $teachers->firstItem() + $index }}</td>
-                        <td data-label="NIP" class="text-center px-3">{{ $teacher->nip }}</td>
-                        <td data-label="Nama Guru" class="text-center px-3 fw-semibold">{{ $teacher->name }}</td>
-                        <td data-label="Kelas" class="text-center px-3">{{ $teacher->schoolClass->name ?? '-' }}</td>
-                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $teacher->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
+                        <td data-label="No" class="text-center px-3">{{ $classes->firstItem() + $index }}</td>
+                        <td data-label="Nama Kelas" class="text-center px-3 fw-semibold">{{ $class->name }}</td>
+                        <td data-label="Tingkat" class="text-center px-3">{{ $class->level ?: $class->grade }}</td>
+                        <td data-label="Tahun Ajaran" class="text-center px-3">{{ $class->academicYear->name ?? '-' }}</td>
+                        <td data-label="Wali Kelas" class="text-center px-3">{{ $class->teacher->name ?? '-' }}</td>
+                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $class->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
                         <td data-label="Aksi" class="text-center px-3">
                             <div class="d-flex justify-content-center gap-2">
-                                <form action="{{ panel_route('teachers.restore', $teacher->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('admin.classes.restore', $class->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn-restore" title="Pulihkan">Pulihkan</button>
                                 </form>
-                                <button type="button" class="btn-force-delete" title="Hapus Permanen" onclick="confirmForceDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
+                                <button type="button" class="btn-force-delete" title="Hapus Permanen" onclick="confirmForceDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')">
                                     Hapus Permanen
                                 </button>
                             </div>
@@ -209,9 +220,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-5 text-muted">
                             <i class='bx bx-inbox fs-1 d-block mb-2 opacity-50'></i>
-                            Tidak ada data guru di Tempat Sampah
+                            Tidak ada data kelas di Tempat Sampah
                         </td>
                     </tr>
                     @endforelse
@@ -219,30 +230,34 @@
             </table>
         </div>
 
-        {!! render_compact_pagination($teachers, 'daftar-arsip-guru') !!}
+        {!! render_compact_pagination($classes, 'daftar-arsip-kelas') !!}
     </div>
 
-    <!-- Zona Berbahaya: HAPUS SEMUA isi Tempat Sampah Guru (permanen).
-         Dialog-nya memakai confirmUniversalDelete() dari layout bersama,
-         jadi sama persis dengan dialog di halaman Sampah Siswa: ikon bulat
+    <!-- Zona Berbahaya: HAPUS SEMUA isi Tempat Sampah Kelas (permanen).
+         Dialog-nya memakai confirmUniversalDelete() dari layout bersama, jadi
+         sama persis dengan dialog di halaman Sampah Siswa & Guru: ikon bulat
          merah muda, judul rata tengah, dua checkbox polos, tombol Batal +
          "Hapus Permanen" 50/50, dan tombol NONAKTIF (pudar, not-allowed)
-         sampai kedua checkbox dicentang. -->
+         sampai kedua checkbox dicentang.
+
+         Data siswa TIDAK ikut terhapus: kelas hanya bisa masuk Tempat Sampah
+         kalau sudah tidak punya siswa aktif, dan halaman ini tidak pernah
+         menghapus data siswa. -->
     @if(Auth::check() && Auth::user()->role === 'admin')
     <div class="card border border-danger rounded-4 p-4 bg-white">
         <h6 class="fw-bold text-danger mb-2">Zona Berbahaya</h6>
         <p class="text-secondary small mb-3">
-            Tindakan ini menghapus permanen seluruh isi Tempat Sampah ({{ $trashedCount }} data guru).
-            Guru yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.
+            Tindakan ini menghapus permanen seluruh isi Tempat Sampah ({{ $trashedCount }} data kelas).
+            Kelas yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.
         </p>
 
         <button type="button"
-                id="btnDeleteAllTeacherArchive"
+                id="btnDeleteAllClassArchive"
                 class="btn btn-danger rounded-3 px-4 fw-semibold"
-                onclick="confirmDeleteAllTeacherArchive()"
-                title="Hapus permanen seluruh isi Tempat Sampah Guru"
+                onclick="confirmDeleteAllClassArchive()"
+                title="Hapus permanen seluruh isi Tempat Sampah Kelas"
                 {{ $trashedCount === 0 ? 'disabled' : '' }}>
-            Hapus Semua Guru (Permanen)
+            Hapus Semua Kelas (Permanen)
         </button>
     </div>
     @endif
@@ -252,14 +267,14 @@
      ukuran, ikon, checkbox, tombol, dan overlay-nya sama persis dengan
      dialog hapus di halaman lain. Dipasang DI LUAR tabel supaya tidak
      terpotong atau ikut ter-scroll. -->
-<form id="forceDeleteTeacherForm" method="POST" class="d-none"
-      data-url-base="{{ panel_route('teachers.force-delete', '__ID__') }}">
+<form id="forceDeleteClassForm" method="POST" class="d-none"
+      data-url-base="{{ route('admin.classes.force-delete', '__ID__') }}">
     @csrf
     @method('DELETE')
 </form>
 
-{{-- Form tersembunyi untuk HAPUS SEMUA isi Tempat Sampah Guru. --}}
-<form action="{{ route('admin.teachers.trash-destroy-all') }}" method="POST" id="deleteAllTeacherArchiveForm" class="d-none">
+{{-- Form tersembunyi untuk HAPUS SEMUA isi Tempat Sampah Kelas. --}}
+<form action="{{ route('admin.classes.trash-destroy-all') }}" method="POST" id="deleteAllClassArchiveForm" class="d-none">
     @csrf
     @method('DELETE')
 </form>
@@ -269,23 +284,23 @@
 @push('scripts')
 <script>
     /**
-     * Konfirmasi HAPUS PERMANEN per baris (guru).
+     * Konfirmasi HAPUS PERMANEN per baris (kelas).
      *
      * Memakai confirmUniversalDelete() dari layout bersama dengan opsi `checks`
-     * yang sama persis dengan dialog "Hapus Semua dari Tempat Sampah?" di
-     * halaman Tempat Sampah Siswa, sehingga tampilannya identik: ikon bulat
-     * merah muda, judul rata tengah, deskripsi, dua checkbox polos, tombol
-     * Batal + "Hapus Permanen" 50/50, dan tombol Hapus Permanen NONAKTIF
-     * (pudar, cursor not-allowed) sampai kedua checkbox dicentang. Kalau
-     * salah satu dilepas tombolnya nonaktif lagi, dan saat dialog dibuka ulang
-     * keduanya kembali kosong karena checkbox dibuat ulang oleh
-     * confirmUniversalDelete(). Logika backend tidak berubah.
+     * yang sama persis dengan dialog per baris di Sampah Siswa dan Sampah Guru:
+     * ikon bulat merah muda, judul rata tengah, deskripsi abu-abu, dua checkbox
+     * polos (tanpa kartu/border/background), tombol Batal + "Hapus Permanen"
+     * 50/50, dan tombol Hapus Permanen NONAKTIF (pudar, cursor not-allowed)
+     * sampai kedua checkbox dicentang. Kalau salah satu dilepas tombolnya
+     * nonaktif lagi, dan saat dialog dibuka ulang keduanya kembali kosong
+     * karena checkbox dibuat ulang oleh confirmUniversalDelete().
+     * Logika backend tidak berubah.
      */
-    function confirmForceDeleteTeacher(id, name) {
+    function confirmForceDeleteClass(id, name) {
         confirmUniversalDelete({
             title: 'Hapus Permanen?',
             icon: 'bx-error-circle',
-            html: `Data guru <strong>${name}</strong> akan dihapus permanen dan tidak dapat dikembalikan.`,
+            html: `Data rombel kelas <strong>${name}</strong> akan dihapus permanen dan tidak dapat dikembalikan.`,
             confirmText: 'Hapus Permanen',
             cancelText: 'Batal',
             checks: [
@@ -293,12 +308,12 @@
                 'Saya yakin ingin menghapus data ini secara permanen.'
             ],
             onConfirm: function () {
-                const form = document.getElementById('forceDeleteTeacherForm');
+                const form = document.getElementById('forceDeleteClassForm');
                 if (!form) {
-                    console.error('HAPUS PERMANEN GURU: form forceDeleteTeacherForm tidak ditemukan. Muat ulang halaman.');
+                    console.error('HAPUS PERMANEN KELAS: form forceDeleteClassForm tidak ditemukan. Muat ulang halaman.');
                     return;
                 }
-                // __ID__ diganti id guru yang dipilih (URL dasar dari route).
+                // __ID__ diganti id kelas yang dipilih (URL dasar dari route).
                 form.action = form.getAttribute('data-url-base').replace('__ID__', id);
                 form.submit();
             }
@@ -306,7 +321,7 @@
     }
 
     /**
-     * Konfirmasi HAPUS SELURUH isi Tempat Sampah Guru (permanen).
+     * Konfirmasi HAPUS SELURUH isi Tempat Sampah Kelas (permanen).
      *
      * Memakai confirmUniversalDelete() dari layout bersama supaya tema, ukuran,
      * animasi, dan tombol nonaktif-hingga-checkbox-nya SAMA PERSIS dengan
@@ -315,9 +330,9 @@
      * Kalau Tempat Sampah kosong, dialog tidak muncul sama sekali karena
      * tombolnya sudah disabled di sisi tampilan (blade).
      */
-    function confirmDeleteAllTeacherArchive() {
+    function confirmDeleteAllClassArchive() {
         const total = {{ (int) $trashedCount }};
-        const btn = document.getElementById('btnDeleteAllTeacherArchive');
+        const btn = document.getElementById('btnDeleteAllClassArchive');
 
         // Tidak ada yang bisa dihapus -> jangan tampilkan dialog sama sekali.
         if (total <= 0 || (btn && btn.disabled)) return;
@@ -325,7 +340,7 @@
         confirmUniversalDelete({
             title: 'Hapus Semua dari Tempat Sampah?',
             icon: 'bx-error-circle',
-            html: `<strong>${total} guru</strong> di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.`,
+            html: `<strong>${total} kelas</strong> di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.`,
             confirmText: 'Hapus Permanen',
             cancelText: 'Batal',
             checks: [
@@ -333,9 +348,9 @@
                 'Saya yakin ingin menghapus semua data di Tempat Sampah.'
             ],
             onConfirm: function () {
-                const form = document.getElementById('deleteAllTeacherArchiveForm');
+                const form = document.getElementById('deleteAllClassArchiveForm');
                 if (!form) {
-                    console.error('HAPUS SEMUA TEMPAT SAMPAH GURU: form deleteAllTeacherArchiveForm tidak ditemukan. Muat ulang halaman.');
+                    console.error('HAPUS SEMUA TEMPAT SAMPAH KELAS: form deleteAllClassArchiveForm tidak ditemukan. Muat ulang halaman.');
                     return;
                 }
                 form.submit();

@@ -53,10 +53,24 @@ class SchoolClass extends Model
         });
 
         static::deleting(function (SchoolClass $schoolClass) {
-            // Gunakan each() agar event deleting pada model Student tetap terpanggil
-            $schoolClass->students()->each(function (Student $student) {
-                $student->delete();
-            });
+            // Cascade HANYA saat hapus PERMANEN (force delete).
+            //
+            // Soft delete (pindah ke Tempat Sampah) TIDAK boleh menyentuh data
+            // siswa sama sekali. Halaman "Data Kelas" sudah menolak hapus
+            // kelas yang masih punya siswa aktif, dan model Student punya
+            // global scope SoftDeletes sehingga students() di sini hanya
+            // menghitung siswa aktif.
+            //
+            // isForceDeleting() dipakai supaya students.school_class_id
+            // (foreign key ke school_classes) tidak menyebabkan error saat
+            // kelas benar-benar dihapus permanen dari Tempat Sampah.
+            if ($schoolClass->isForceDeleting()) {
+                // Gunakan each() agar event deleting pada model Student tetap terpanggil
+                $schoolClass->students()->each(function (Student $student) {
+                    $student->delete();
+                });
+            }
+
             \App\Services\DownloadCacheService::clearCardsCache();
         });
     }

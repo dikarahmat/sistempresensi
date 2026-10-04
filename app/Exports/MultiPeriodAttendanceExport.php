@@ -292,7 +292,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $dates = $this->periodDates();
             $totalEffective = count(array_filter(
                 $dates,
-                fn (Carbon $d) => !($d->isSunday() || Holiday::isHoliday($d->toDateString()))
+                fn (Carbon $d) => !($d->isWeekend() || Holiday::isHoliday($d->toDateString()))
             ));
 
             $headerRow = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'JK'];
@@ -335,7 +335,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $holidayCount = 0;
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $dDate = Carbon::createFromDate($year, $month, $d);
-                if ($dDate->isSunday() || Holiday::isHoliday($dDate->toDateString())) {
+                if ($dDate->isWeekend() || Holiday::isHoliday($dDate->toDateString())) {
                     $holidayCount++;
                 }
             }
@@ -537,8 +537,8 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 ->get()
                 ->keyBy('student_id');
 
-            $isSunday = Carbon::parse($date)->isSunday();
-            $isHoliday = Holiday::isHoliday($date) || $isSunday;
+            $isWeekend = Carbon::parse($date)->isWeekend();
+            $isHoliday = Holiday::isHoliday($date) || $isWeekend;
 
             foreach ($students as $student) {
                 $att = $attendances->get($student->id);
@@ -625,7 +625,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         }
                     } else {
                         $dObj = Carbon::parse($dStr);
-                        if ($dObj->isSunday() || Holiday::isHoliday($dStr)) {
+                        if ($dObj->isWeekend() || Holiday::isHoliday($dStr)) {
                             $code = 'L';
                         } elseif ($dStr <= $now->toDateString()) {
                             $code = 'A';
@@ -702,7 +702,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     }
                 } else {
                     $dObj = Carbon::createFromDate($year, $month, $d);
-                    if ($dObj->isSunday() || Holiday::isHoliday($cDate)) {
+                    if ($dObj->isWeekend() || Holiday::isHoliday($cDate)) {
                         $code = 'L';
                     } elseif ($cDate <= $nowDateStr) {
                         $code = 'A';
@@ -772,6 +772,9 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $sheet->getStyle("A5:A{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle("B5:B{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle("D5:E{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // Kolom JK (E): L biru cerah, P merah cerah (tidak bold).
+            $this->styleJkColumn($sheet);
         }
 
         // Legenda
@@ -808,6 +811,35 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         }
 
         return [];
+    }
+
+    /**
+     * Warna huruf kolom JK (kolom E) di Excel:
+     * L = biru cerah (#3B82F6), P = merah cerah (#EF4444) — PERSIS sama
+     * dengan kolom JK di halaman web Rekap (lihat .rekap-jk di
+     * admin/attendances/rekap.blade.php).
+     *
+     * HANYA warna yang diubah: huruf dibiarkan TIDAK bold dan ukuran font
+     * tetap default sheet, supaya tidak menonjol dibanding kolom lain.
+     * Nilai sel dibaca dari sheet yang sudah terisi, jadi tidak ada data,
+     * urutan, maupun perhitungan yang berubah.
+     * Berlaku untuk Harian, Mingguan, dan Bulanan (kolom JK selalu kolom E).
+     */
+    protected function styleJkColumn(Worksheet $sheet): void
+    {
+        for ($row = $this->dataStartRow; $row <= $this->dataEndRow; $row++) {
+            $value = $sheet->getCell('E' . $row)->getValue();
+            $jk = is_scalar($value) ? strtoupper(trim((string) $value)) : '';
+
+            if ($jk !== 'L' && $jk !== 'P') {
+                continue;
+            }
+
+            // Jangan setBold()/setSize(): sel tetap memakai gaya default
+            // (tidak bold, ukuran 11) seperti kolom data lainnya.
+            $sheet->getStyle('E' . $row)->getFont()
+                ->setColor(new Color($jk === 'L' ? '3B82F6' : 'EF4444'));
+        }
     }
 
     /**

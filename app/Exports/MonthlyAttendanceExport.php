@@ -50,8 +50,8 @@ class MonthlyAttendanceExport implements FromArray, ShouldAutoSize, WithStyles
         // Cari hari libur di bulan ini
         for ($d = 1; $d <= $this->daysInMonth; $d++) {
             $curDate = Carbon::createFromDate($this->year, $this->month, $d)->toDateString();
-            $isSunday = Carbon::createFromDate($this->year, $this->month, $d)->isSunday();
-            if ($isSunday || Holiday::isHoliday($curDate)) {
+            $isWeekend = Carbon::createFromDate($this->year, $this->month, $d)->isWeekend();
+            if ($isWeekend || Holiday::isHoliday($curDate)) {
                 $this->holidayDays[] = $d;
             }
         }
@@ -111,10 +111,10 @@ class MonthlyAttendanceExport implements FromArray, ShouldAutoSize, WithStyles
 
             for ($d = 1; $d <= $this->daysInMonth; $d++) {
                 $cDate = Carbon::createFromDate($this->year, $this->month, $d)->toDateString();
-                $isSunday = Carbon::createFromDate($this->year, $this->month, $d)->isSunday();
+                $isWeekend = Carbon::createFromDate($this->year, $this->month, $d)->isWeekend();
                 $isHol = Holiday::isHoliday($cDate);
 
-                if ($isSunday || $isHol) {
+                if ($isWeekend || $isHol) {
                     $row[] = 'L'; // Libur
                 } else {
                     $att = $studentAtts->get($d);

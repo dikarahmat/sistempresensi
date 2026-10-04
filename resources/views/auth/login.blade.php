@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Masuk ke Dashboard | {{ \App\Models\Setting::getSchoolName() }}</title>
+    <title>{{ \App\Models\Setting::getTitleAppName() }}</title>
 
     <!-- Global Favicon Dinamis -->
-    <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
+    <link rel="icon" type="image/webp" href="{{ \App\Models\Setting::getLogoUrl() }}">
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -645,7 +645,7 @@
         <div class="branding-center-wrapper">
             <div class="logo-hero-wrapper">
                 <img
-                    src="{{ asset(\App\Models\Setting::getLogo()) }}"
+                    src="{{ \App\Models\Setting::getLogoUrl() }}"
                     alt="Logo Sekolah"
                     class="school-logo-hero"
                     loading="lazy"

@@ -4,6 +4,11 @@
 @section('page_title', 'Data Siswa')
 @section('page_subtitle', 'Kelola informasi siswa')
 
+{{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
+     sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
+     bersama, sama seperti halaman acuan. --}}
+@section('canvas_class', 'page-canvas-fixed')
+
 @push('styles')
 <style>
     /* Subtitle Data Siswa: full width, tidak terpotong (mobile & desktop) */
@@ -48,7 +53,11 @@
 
     .table-zebra-custom {
         width: 100%;
-        min-width: 700px;
+        /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
+           kolom-kolomnya dipipihkan. Semua kolom (termasuk Jenis Kelamin &
+           Nama Wali) ikut dihitung; nilai desktop tidak berubah karena tabel
+           selalu lebih lebar dari ini. */
+        min-width: 860px;
         margin-bottom: 0;
     }
 
@@ -111,7 +120,10 @@
 
     /* ===== Action Bar Layout =====
        Satu baris rata tengah: [input cari][ikon search][dropdown kelas]
-       ..... [CETAK KARTU][IMPORT EXCEL][TAMBAH SISWA][ARSIP].
+       ..... [CETAK KARTU][IMPORT EXCEL][TAMBAH SISWA].
+       (Tombol ARSIP sengaja tidak ada di sini: data siswa yang dihapus
+        dipindah ke Pengaturan > Pengelolaan Sistem > TEMPAT SAMPAH,
+        URL tetap admin/students/trash.)
        Semua elemen tinggi 38px; wrap rapi (bukan elemen terpotong) di layar sempit. */
     .action-bar-section {
         display: flex;
@@ -201,6 +213,7 @@
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
+        text-align: center;
         gap: 0.4rem;
         height: 38px !important;
         border-radius: 6px !important;
@@ -214,6 +227,17 @@
         box-shadow: none !important;
         letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
+        /* === UKURAN 4 TOMBOL ACTION BAR DISAMAkan ===
+           Tanpa min-width, tiap tombol lebarnya mengikuti panjang teksnya
+           sendiri, sehingga "Cetak Kartu" lebih kecil dari "Tambah Siswa".
+           Teks terpanjang adalah "TAMBAH SISWA" (12 karakter, uppercase,
+           font 0.85rem + letter-spacing 0.03em + padding 0 1rem) yang
+           membutuhkan sekitar 138px. min-width 150px sengaja sedikit lebih
+           besar agar keempat tombol benar-benar sama persis (tidak ada satu
+           pun yang melebihi nilai ini), dan teks tetap rata tengah.
+           Di layar kecil (< 1024px) aturan layout bersama membuat keempat
+           tombol full-width, jadi ukurannya tetap seragam. */
+        min-width: 150px;
     }
     .btn-solid-pill:hover {
         filter: brightness(0.94);
@@ -287,15 +311,19 @@
              wrapper padding (10+10, hanya >=768)
            + padding main atas/bawah
            + tinggi header halaman + margin bawah header
-           Offset tiap breakpoint:
-             >=1024 : 10+24+45+16+24      = 129px = 8.1rem
-             768-1023: 10+24+72+16+96      = 228px = 14.25rem
-             640-767 : 0+0+68+16+96        = 180px = 11.25rem
-             <640    : 0+0+68+10+96        = 174px = 10.9rem
+           + padding bawah kontainer isi (.flex-1 = 1rem, aturan bersama
+             "JARAK BAWAH KONTEN SERAGAM" di layouts/app.blade.php)
+           Offset >=1024 :
+             10+24+45+16+16+24        = 145.6px = 9.1rem
+           Fallback di bawah 1024px (tabel tampil sebagai kartu, tinggi
+           kartu dipaksa `auto` oleh aturan layout bersama):
+             768-1023: 10+24+72+16+96   = 228px = 14.25rem
+             640-767 : 0+0+68+16+96      = 180px = 11.25rem
+             <640    : 0+0+68+10+96      = 174px = 10.9rem
            (96 = padding bawah main di layar kecil: bottom-nav 56 + 40.)
            Pola & tujuan sama dengan #daftar-kehadiran (13rem) dan
            #daftar-rekap (17rem) - cuma angkanya menyesuaikan isi halaman ini. */
-        height: calc(100dvh - 8.1rem);
+        height: calc(100dvh - 9.1rem);
         min-height: 20rem;
         margin-bottom: 0 !important;   /* tidak ada ruang kosong di bawah card */
     }
@@ -354,54 +382,77 @@
 
 @section('content')
 
+    {{-- Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
+         Tombol X center vertikal oleh CSS notifikasi global di layout. --}}
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
-            <span>{{ session('success') }}</span>
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
-            <span>{{ session('error') }}</span>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     {{-- Notifikasi import sebagian berhasil (kuning/oranye) --}}
     @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
-            <span>{{ session('warning') }}</span>
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <span>{{ session('warning') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     {{-- Rincian baris Excel yang dilewati --}}
     @if(session('import_errors') && count(session('import_errors')) > 0)
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center mb-1">
-            <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
-            <strong>Baris yang dilewati:</strong>
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center mb-1">
+                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <strong>Baris yang dilewati:</strong>
+            </div>
+            <ul class="mb-0 ps-3 small">
+                @foreach(collect(session('import_errors'))->take(10) as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+                @if(count(session('import_errors')) > 10)
+                    <li>… dan {{ count(session('import_errors')) - 10 }} baris lainnya.</li>
+                @endif
+            </ul>
         </div>
-        <ul class="mb-0 ps-3 small">
-            @foreach(collect(session('import_errors'))->take(10) as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-            @if(count(session('import_errors')) > 10)
-                <li>… dan {{ count(session('import_errors')) - 10 }} baris lainnya.</li>
-            @endif
-        </ul>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
+    @endif
+
+    <!-- Form Hapus Semua Siswa (Hidden, dipanggil via confirmDeleteAllStudents()).
+         Ditempatkan DI LUAR blok script, persis seperti pola halaman Data
+         Guru & Data Kelas. Dua input konfirmasi ikut dikirim karena
+         controller memvalidasinya di server, bukan hanya lewat checkbox. -->
+    @if(Auth::check() && Auth::user()->role === 'admin')
+    <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all-active') }}" method="POST" class="d-none">
+        @csrf
+        @method('DELETE')
+        <input type="hidden" name="confirm_active" value="1">
+        <input type="hidden" name="confirm_all" value="1">
+    </form>
     @endif
 
     <!-- KARTU UTAMA DATA SISWA -->
@@ -458,9 +509,14 @@
                         <span>Tambah Siswa</span>
                     </button>
 
-                    <a href="{{ panel_route('students.trash') }}" class="btn-solid-pill btn-solid-red" title="Arsip Siswa">
-                        <span>Arsip</span>
-                    </a>
+                    <!-- Hapus Semua Siswa (merah) - di sebelah Tambah Siswa,
+                         sama seperti halaman Data Guru & Data Kelas.
+                         Memakai route students.destroy-all-active: siswa aktif
+                         di-soft-delete sehingga bisa dipulihkan dari
+                         TEMPAT SAMPAH di Pengaturan. -->
+                    <button type="button" class="btn-solid-pill btn-solid-red" title="Hapus Semua Data Siswa" onclick="confirmDeleteAllStudents()">
+                        <span>Hapus</span>
+                    </button>
                     @endif
                 </div>
 
@@ -476,8 +532,8 @@
                         <th class="text-center" style="width: 80px;">Kelas</th>
                         <th class="text-center">NIS</th>
                         <th class="text-start indent-nama">Nama Siswa</th>
-                        <th class="text-start d-none d-md-table-cell">Jenis Kelamin</th>
-                        <th class="text-start d-none d-md-table-cell">Nama Wali</th>
+                        <th class="text-start">Jenis Kelamin</th>
+                        <th class="text-start">Nama Wali</th>
                         <th class="text-center" style="min-width: 180px;">Aksi</th>
                     </tr>
                 </thead>
@@ -488,13 +544,13 @@
                         $isMale = in_array($rawJk, ['laki-laki', 'laki - laki', 'l', 'pria', 'male']);
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
-                        <td class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
-                        <td class="text-center font-monospace">{{ $student->nis }}</td>
-                        <td class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
-                        <td class="text-start d-none d-md-table-cell">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
-                        <td class="text-start text-secondary d-none d-md-table-cell">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
-                        <td class="text-center">
+                        <td data-label="No" class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
+                        <td data-label="Kelas" class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
+                        <td data-label="NIS" class="text-center font-monospace">{{ $student->nis }}</td>
+                        <td data-label="Nama Siswa" class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
+                        <td data-label="Jenis Kelamin" class="text-start">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
+                        <td data-label="Nama Wali" class="text-start text-secondary">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
+                        <td data-label="Aksi" class="text-center">
                             <div class="crud-center-wrapper">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail">
                                     Detail
@@ -807,11 +863,44 @@
     function confirmDeleteStudent(id, name) {
         confirmUniversalDelete({
             title: 'Hapus Data Siswa?',
-            html: `Siswa <b class="text-dark">${name}</b> akan dipindahkan ke Arsip. Anda dapat memulihkannya kapan saja dari halaman Arsip.`,
+            html: `Siswa <strong>${name}</strong> akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.`,
             confirmText: 'Hapus',
             cancelText: 'Tidak',
             onConfirm: function() {
-                document.getElementById(`deleteStudentForm-${id}`).submit();
+                // Dicek null dulu: kalau form tidak ada,error ini akan
+                // dilempar sebagai TypeError dan tombol Hapus akan terlihat
+                // "tidak berfungsi" tanpa pesan apa pun.
+                const form = document.getElementById(`deleteStudentForm-${id}`);
+                if (!form) {
+                    console.error('HAPUS: form deleteStudentForm-' + id + ' tidak ditemukan. Muat ulang halaman.');
+                    return;
+                }
+                const qs = window.location.search;
+                if (qs && form.action.indexOf('?') === -1) {
+                    form.action = form.action + qs;
+                }
+                form.submit();
+            }
+        });
+    }
+
+    // Konfirmasi Hapus Semua Siswa Massal.
+    // Memakai confirmUniversalDelete() dari layout bersama supaya tema,
+    // ukuran, animasi, dan tombol nonaktif-hingga-checkbox-nya SAMA PERSIS
+    // dengan dialog hapus di halaman lain.
+    function confirmDeleteAllStudents() {
+        confirmUniversalDelete({
+            title: 'Hapus Seluruh Data Siswa?',
+            icon: 'bx-error-circle',
+            html: 'Seluruh data siswa aktif akan dihapus dan dipindahkan ke <strong>Tempat Sampah</strong> di Pengaturan.',
+            confirmText: 'Hapus Semua',
+            cancelText: 'Tidak',
+            checks: [
+                'Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.',
+                'Saya yakin ingin menghapus semua data siswa aktif.'
+            ],
+            onConfirm: function () {
+                document.getElementById('deleteAllStudentsForm').submit();
             }
         });
     }
@@ -821,7 +910,7 @@
     (function () {
         var hasError = {{ $errors->any() ? 'true' : 'false' }};
         if (!hasError) return;
-        var targetId = {{ $errors->has('file_excel') ? "'importModal'" : "'addStudentModal'" }};
+        var targetId = @json($errors->has('file_excel') ? 'importModal' : 'addStudentModal');
         var modalEl = document.getElementById(targetId);
         if (modalEl) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();

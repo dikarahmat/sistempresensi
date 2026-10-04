@@ -125,7 +125,7 @@ class TrashArchiveTest extends TestCase
         $response = $this->actingAs($this->admin)->delete(route('admin.students.force-delete', $student->id));
 
         $response->assertRedirect(route('admin.students.trash'));
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error');
         $this->assertDatabaseMissing('students', ['id' => $student->id]);
     }
 
@@ -150,11 +150,16 @@ class TrashArchiveTest extends TestCase
         $arsip = $this->buatSiswa('Siswa Berada Di Arsip', '900008');
         $arsip->delete();
 
-        $response = $this->actingAs($this->admin)->delete(route('admin.students.destroy-all'));
+        // destroy-all mengosongkan TEMPAT SAMPAH saja (arsip -> permanen),
+        // siswa aktif tidak tersentuh; butuh 2 checkbox konfirmasi.
+        $response = $this->actingAs($this->admin)->delete(route('admin.students.destroy-all'), [
+            'confirm_permanent' => '1',
+            'confirm_all' => '1',
+        ]);
 
-        $response->assertRedirect(route('admin.students.index'));
-        $response->assertSessionHas('success');
-        $this->assertDatabaseMissing('students', ['id' => $aktif->id]);
+        $response->assertRedirect(route('admin.students.trash'));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('students', ['id' => $aktif->id]);
         $this->assertDatabaseMissing('students', ['id' => $arsip->id]);
     }
 
@@ -199,7 +204,7 @@ class TrashArchiveTest extends TestCase
         $response = $this->actingAs($this->admin)->delete(route('admin.teachers.force-delete', $teacher->id));
 
         $response->assertRedirect(route('admin.teachers.trash'));
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error');
         $this->assertDatabaseMissing('teachers', ['id' => $teacher->id]);
     }
 }

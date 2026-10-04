@@ -89,6 +89,14 @@ class HolidayController extends Controller
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'description' => 'required|string|max:255',
+            ], [
+                'start_date.required' => 'Tanggal mulai wajib diisi.',
+                'start_date.date' => 'Tanggal mulai tidak valid.',
+                'end_date.required' => 'Tanggal selesai wajib diisi.',
+                'end_date.date' => 'Tanggal selesai tidak valid.',
+                'end_date.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+                'description.required' => 'Keterangan hari libur wajib diisi.',
+                'description.max' => 'Keterangan maksimal 255 karakter.',
             ]);
 
             Holiday::create([
@@ -101,6 +109,11 @@ class HolidayController extends Controller
             $request->validate([
                 'date' => 'required|date',
                 'description' => 'required|string|max:255',
+            ], [
+                'date.required' => 'Tanggal hari libur wajib diisi.',
+                'date.date' => 'Tanggal hari libur tidak valid.',
+                'description.required' => 'Keterangan hari libur wajib diisi.',
+                'description.max' => 'Keterangan maksimal 255 karakter.',
             ]);
 
             Holiday::create([
@@ -123,6 +136,14 @@ class HolidayController extends Controller
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'description' => 'required|string|max:255',
+            ], [
+                'start_date.required' => 'Tanggal mulai wajib diisi.',
+                'start_date.date' => 'Tanggal mulai tidak valid.',
+                'end_date.required' => 'Tanggal selesai wajib diisi.',
+                'end_date.date' => 'Tanggal selesai tidak valid.',
+                'end_date.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+                'description.required' => 'Keterangan hari libur wajib diisi.',
+                'description.max' => 'Keterangan maksimal 255 karakter.',
             ]);
 
             $holiday->update([
@@ -135,6 +156,11 @@ class HolidayController extends Controller
             $request->validate([
                 'date' => 'required|date',
                 'description' => 'required|string|max:255',
+            ], [
+                'date.required' => 'Tanggal hari libur wajib diisi.',
+                'date.date' => 'Tanggal hari libur tidak valid.',
+                'description.required' => 'Keterangan hari libur wajib diisi.',
+                'description.max' => 'Keterangan maksimal 255 karakter.',
             ]);
 
             $holiday->update([
@@ -151,6 +177,8 @@ class HolidayController extends Controller
     public function destroy(Holiday $holiday): RedirectResponse
     {
         $holiday->delete();
-        return redirect()->route('admin.holidays.index')->with('success', 'Hari libur berhasil dihapus!');
+        // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
+        // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
+        return redirect()->route('admin.holidays.index')->with('error', 'Hari libur berhasil dihapus!');
     }
 }

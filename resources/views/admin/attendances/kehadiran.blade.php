@@ -4,6 +4,11 @@
 @section('page_title', 'Catatan Kehadiran')
 @section('page_subtitle', 'Lihat histori kehadiran per kelas')
 
+{{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
+     sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
+     bersama, sama seperti halaman acuan. --}}
+@section('canvas_class', 'page-canvas-fixed')
+
 @push('styles')
 <style>
     /* Container Card Master & Tabel Enterprise Responsif */
@@ -18,6 +23,94 @@
     .table-responsive {
         -webkit-overflow-scrolling: touch;
         overflow-x: auto;
+    }
+
+    /* ==========================================================================
+       FILTER SEARCH + DROPDOWN "SEMUA KELAS" - SAMA PERSIS DENGAN DATA SISWA
+       (acuan: resources/views/admin/students/index.blade.php)
+
+       MARKUP & CLASS-nya juga disamakan persis dengan Data Siswa / Data Guru /
+       Data Kelas:
+         - .input-group.search-box-wrap  -> input 38px + tombol ikon search
+           (kaca pembesar) yang menempel di kanan input (gaya bersama di
+           layout: border #cbd5e1, radius 6px, padding-right 2.75rem supaya
+           teks tidak ketiban ikon);
+         - .filter-box-wrap              -> pembungkus <select>;
+         - .action-search-form           -> pemicu aturan susunan mobile yang
+           sama persis di layout bersama (lihat blok "TOOLBAR HALAMAN DATA").
+
+       Yang ditulis di halaman ini hanya LEBAR & JARAK, juga sama dengan
+       Data Siswa:
+         - input cari : flex 1 1 240px, min 170px (mengisi sisa ruang)
+         - dropdown   : flex 0 1 200px, min 150px, max 200px
+         - jarak      : 0.5rem, align-items center (sejajar vertikal, tinggi
+                        sama-sama 38px)
+
+       >= 1280px memakai proporsi yang sama dengan action bar Data Siswa
+       (input mengisi ruang, dropdown 36% dengan min 160px).
+       < 1024px aturan bersama di layout men-stack: search di atas, dropdown
+       di bawah, keduanya lebar penuh - persis seperti Data Siswa.
+       Fungsi search & filter TIDAK diubah: name="search", name="class_filter",
+       id="filterSearch", id="classFilter", dan onchange submit tetap sama.
+       ========================================================================== */
+    .kehadiran-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        /* TINGGI WRAPPER MENGIKUTI ISI - tidak ada lagi pembengkakan:
+           tanpa height/min-height/flex-grow yang memaksa melar. */
+        height: auto;
+        min-height: 0;
+        align-content: flex-start;
+        gap: 0.5rem;
+        flex: 1 1 380px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
+    .kehadiran-filter-form .search-box-wrap {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        flex: 1 1 240px;
+        min-width: 170px;
+        width: auto;
+        max-width: none;
+        height: 38px;
+        margin-bottom: 0;
+    }
+    .kehadiran-filter-form .search-box-wrap input.form-control {
+        height: 38px;
+        min-width: 0;
+    }
+    .kehadiran-filter-form .search-box-wrap > .btn {
+        height: 38px;
+        flex: 0 0 auto;
+    }
+
+    .kehadiran-filter-form .filter-box-wrap {
+        flex: 0 1 200px;
+        min-width: 150px;
+        max-width: 200px;
+        width: auto;
+    }
+    .kehadiran-filter-form .filter-box-wrap select.form-select {
+        height: 38px;
+    }
+
+    @media (min-width: 1280px) {
+        .kehadiran-filter-form .search-box-wrap {
+            flex: 1 1 0%;
+            min-width: 220px;
+            max-width: none;
+        }
+        .kehadiran-filter-form .filter-box-wrap {
+            flex: 0 1 36%;
+            min-width: 160px;
+            max-width: none;
+        }
     }
 
     .table-enterprise {
@@ -153,18 +246,40 @@
 
     /* ==========================================================================
        LAYOUT KARTU CATATAN KEHADIRAN
-       Susunan vertikal: filter (kartu terpisah di atas) -> kartu tabel yang
-       mengisi sisa tinggi layar -> paginasi menempel di paling bawah.
-       Hanya .table-responsive yang jadi tempat scroll vertikal, sehingga baris
-       terakhir tidak pernah tertutup paginasi dan paginasi tidak ikut
-       ter-scroll / terpotong tepi layar.
+       Susunan vertikal (satu kartu): toolbar filter -> tabel -> paginasi,
+       semuanya di dalam #daftar-kehadiran. Hanya .table-responsive yang jadi
+       tempat scroll vertikal, sehingga baris terakhir tidak pernah tertutup
+       paginasi dan paginasi tidak ikut ter-scroll / terpotong tepi layar.
+
+       Toolbar filter kini jadi anak pertama kartu ini (bukan kartu terpisah),
+       jadi angkanya sama persis dengan #daftar-siswa:
+         >=1024 : 9.1rem  |  768-1023 : 14.25rem
+         640-767 : 11.25rem  |  <640  : 10.9rem
        ========================================================================== */
     #daftar-kehadiran {
         display: flex;
         flex-direction: column;
-        height: calc(100dvh - 13rem);
-        min-height: 20rem;
+        /* PERBAIKAN (ruang kosong): tinggi TIDAK lagi dipaksa.
+           Sebelumnya `height: calc(100dvh - 13rem)` + toolbar di kartu
+           terpisah membuat halaman terlalu tinggi: kartu tabel tetap
+           setinggi layar meski isinya cuma beberapa baris, sehingga muncul
+           kotak putih kosong besar dan tabel terdorong jauh ke bawah.
+
+           Sekarang: `height: auto` (kartu mengikuti isinya) + `max-height`
+           sebagai batas. Baris banyak -> .table-responsive yang meng-scroll
+           di dalam kotak putih; baris sedikit -> kartu ikut mengecil dan
+           tidak ada lagi ruang kosong. */
+        height: auto !important;
+        max-height: calc(100dvh - 9.1rem);
+        min-height: 0 !important;
         margin-bottom: 0 !important;   /* paginasi sudah di dasar layar */
+    }
+
+    /* Toolbar di dalam kartu tabel: tinggi ikut isi, tidak pernah diremas
+       oleh flex, dan tidak pernah ikut melar mengikuti tinggi kartu. */
+    #daftar-kehadiran > .p-3 {
+        flex: 0 0 auto;
+        height: auto;
     }
 
     #daftar-kehadiran .table-responsive {
@@ -175,10 +290,22 @@
     }
 
     /* Offset lebih besar di layar kecil: header layout lebih tinggi (sticky +
-       safe-area) dan kartu filter jadi 2 kolom. */
+       safe-area), tabel tampil sebagai kartu, dan ada bottom-nav. */
+    @media (max-width: 1023.98px) {
+        #daftar-kehadiran {
+            max-height: calc(100dvh - 14.25rem);
+        }
+    }
+
     @media (max-width: 767.98px) {
         #daftar-kehadiran {
-            height: calc(100dvh - 22rem);
+            max-height: calc(100dvh - 11.25rem);
+        }
+    }
+
+    @media (max-width: 639.98px) {
+        #daftar-kehadiran {
+            max-height: calc(100dvh - 10.9rem);
         }
     }
 
@@ -349,43 +476,65 @@
          diperlukan karena:
            - dropdown kelas langsung memuat ulang data saat diganti,
            - pencarian berjalan otomatis (debounce 400ms) + tetap bisa Enter,
-           - mengosongkan kolom pencarian kembali ke tampilan default. -->
-    <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-white">
-        <form method="GET" action="{{ panel_route('kehadiran') }}" class="d-flex flex-column flex-md-row gap-2" id="formFilterKehadiran">
-            <div class="input-group">
-                <input type="text" name="search" id="filterSearch" class="form-control form-control-sm filter-input" placeholder="Cari nama atau NIS..." value="{{ $search }}" aria-label="Cari siswa" autocomplete="off">
-                <button type="submit" class="btn btn-sm btn-light border" title="Cari" aria-label="Cari">
-                    <i class='bx bx-search'></i>
-                </button>
-            </div>
-            <div class="flex-md-shrink-0" style="min-width: 180px;">
-                <select name="class_filter" id="classFilter" class="form-select form-select-sm filter-input w-100" aria-label="Semua Kelas">
-                    {{-- Opsi "Semua Kelas" memakai nilai kosong (tidak ada filter). --}}
-                    <option value="" {{ request('class_filter') == '' ? 'selected' : '' }}>Semua Kelas</option>
-                    {{-- Daftar kelas SELALU lengkap: tidak lagi ikut ter-filter
-                         oleh kata pencarian. --}}
-                    @foreach($classHistories as $class)
-                        <option value="{{ $class->name }}" {{ request('class_filter') == $class->name ? 'selected' : '' }}>
-                            {{ $class->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </form>
-    </div>
+           - mengosongkan kolom pencarian kembali ke tampilan default.
+         Tampilan search + dropdown disamakan PERSIS dengan Data Siswa / Data
+         Guru / Data Kelas (tinggi 38px, ikon search di kanan input, dropdown
+         "Semua Kelas" max 200px, jarak 0.5rem). Fungsi tidak berubah. -->
+    <!-- ==========================================================
+         SATU KARTU: toolbar filter + tabel (PERSIS seperti Data Siswa)
 
-    <script>
-        // 1. Ganti dropdown kelas -> langsung memuat ulang data (tanpa tombol).
-        document.getElementById('classFilter').addEventListener('change', function () {
-            this.form.submit();
-        });
+         Sebelumnya toolbar berada di kartu TERPISAH di atas kartu tabel.
+         Akibatnya Searching & dropdown "Semua Kelas" tampak seperti
+         memiliki wrapper yang membengkak: kartu toolbar + kartu tabel
+         (yang punya tinggi tetap) menyisakan kotak putih kosong besar
+         sehingga tabel terdorong jauh ke bawah.
 
-        // 2. Pencarian otomatis (debounce 400ms + tombol "x" di input) ditangani
-        //    secara bersama oleh script auto-filter di layouts/app.blade.php.
-    </script>
+         Sekarang toolbar jadi anak PERTAMA dari kartu tabel, dengan
+         padding 16px (mobile) / 24px (desktop) + garis pemisah
+         `border-bottom` - persis seperti Data Siswa / Data Guru /
+         Data Kelas. Tidak ada lagi kartu atau celah di antara
+         search dan tabel.
+         ========================================================== -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-kehadiran">
 
-    <!-- Tabel Histori Kehadiran per Siswa -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" id="daftar-kehadiran">
+        <!-- Action Bar & Filter: tinggi wrapper mengikuti isi (height:auto),
+             search + tombol cari + dropdown dalam satu baris, tinggi 38px. -->
+        <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
+            <form method="GET" action="{{ panel_route('kehadiran') }}" class="action-search-form kehadiran-filter-form" id="formFilterKehadiran">
+                <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
+                <div class="input-group search-box-wrap">
+                    <input type="text"
+                           name="search"
+                           id="filterSearch"
+                           class="form-control border-secondary-subtle border-end-0 shadow-none ps-3"
+                           placeholder="Cari nama atau NIS..."
+                           value="{{ $search }}"
+                           aria-label="Cari nama atau NIS"
+                           autocomplete="off"
+                           style="font-size: 0.85rem; letter-spacing: 0.03em;">
+                    <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
+                        <i class='bx bx-search fs-6'></i>
+                    </button>
+                </div>
+
+                <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang -->
+                <div class="filter-box-wrap">
+                    <select name="class_filter" id="classFilter" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="Semua Kelas">
+                        {{-- Opsi "Semua Kelas" memakai nilai kosong (tidak ada filter). --}}
+                        <option value="" {{ request('class_filter') == '' ? 'selected' : '' }}>Semua Kelas</option>
+                        {{-- Daftar kelas SELALU lengkap: tidak lagi ikut ter-filter
+                             oleh kata pencarian. --}}
+                        @foreach($classHistories as $class)
+                            <option value="{{ $class->name }}" {{ request('class_filter') == $class->name ? 'selected' : '' }}>
+                                {{ $class->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabel Histori Kehadiran per Siswa -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
                 <thead class="bg-light">
@@ -515,6 +664,21 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // 1. Ganti dropdown kelas -> langsung memuat ulang data (tanpa tombol).
+            //    Dipindah ke sini (bukan blok script inline di atas) karena
+            //    toolbar kini berada di dalam kartu tabel yang sama.
+            const classFilter = document.getElementById('classFilter');
+            if (classFilter) {
+                classFilter.addEventListener('change', function () {
+                    this.form.submit();
+                });
+            }
+
+            // 2. Pencarian otomatis (debounce 400ms + tombol "x" di input)
+            //    ditangani secara bersama oleh script auto-filter di
+            //    layouts/app.blade.php - tidak diubah.
+
+            // 3. Fokus ke tabel saat datang dari paginasi.
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('page')) {
                 const el = document.getElementById('daftar-kehadiran');

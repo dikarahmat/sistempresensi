@@ -101,6 +101,26 @@ class Setting extends Model
         return (string) self::get('app_title', 'Sistem Presensi Sekolah');
     }
 
+    /**
+     * Judul aplikasi untuk <title> tab browser.
+     * Fallback berurutan: app_title -> nama sekolah -> nama aplikasi default.
+     * Dipakai supaya <title> tidak pernah kosong dan tidak perlu hard-coded di view.
+     */
+    public static function getTitleAppName(): string
+    {
+        $appTitle = trim((string) (self::get('app_title') ?? ''));
+        if ($appTitle !== '') {
+            return $appTitle;
+        }
+
+        $schoolName = trim((string) (self::get('school_name') ?? ''));
+        if ($schoolName !== '') {
+            return $schoolName;
+        }
+
+        return 'Sistem Presensi Sekolah';
+    }
+
     public static function getSchoolAddress(): string
     {
         return (string) self::get('school_address', 'Jl. Pendidikan No. 45, Kota Pelajar');
@@ -150,5 +170,18 @@ class Setting extends Model
             }
             return 'images/logo.webp';
         });
+    }
+
+    /**
+     * URL logo siap pakai di HTML (sidebar, login, favicon, dst).
+     * Ditambah cache-busting ?v=<mtime file> supaya logo baru yang diunggah
+     * langsung terlihat tanpa hard refresh, walau nama berkasnya sama.
+     */
+    public static function getLogoUrl(): string
+    {
+        $path = self::getLogo();
+        $version = @filemtime(public_path($path));
+
+        return asset($path) . '?v=' . ($version ?: time());
     }
 }

@@ -213,10 +213,11 @@ class MultiRoleAuthTest extends TestCase
         $this->assertStringContainsString('display: flex !important;', $html);
         $this->assertStringContainsString('justify-content: center;', $html);
 
-        // 4. Modal punya lebar wajar (max 400px) dan margin samping di layar kecil.
-        $this->assertStringContainsString('max-width: 400px;', $html);
-        $this->assertStringContainsString('width: calc(100% - 2rem);', $html);
-        $this->assertStringContainsString('margin: 0 auto;', $html);
+        // 4. Modal punya lebar wajar (max 380px sesuai spesifikasi terbaru) dan
+        //    margin samping minimal 16px di layar kecil.
+        $this->assertStringContainsString('max-width: 380px', $html);
+        $this->assertStringContainsString('width: calc(100% - 32px)', $html);
+        $this->assertStringContainsString('margin: 16px auto', $html);
 
         // 5. Overlay menutupi viewport penuh dan TIDAK memakai trik offset.
         $this->assertStringContainsString('#logoutConfirmModal {', $html);
@@ -235,10 +236,14 @@ class MultiRoleAuthTest extends TestCase
         // Teks pertanyaan rata tengah.
         $this->assertStringContainsString('#logoutConfirmModal .modal-body {', $html);
 
-        // Dua tombol sejajar, jarak sama, ukuran konsisten.
+        // Dua tombol sejajar, jarak sama, ukuran konsisten: lebar sama (50%),
+        // tinggi sama (46px), radius sama (12px).
         $this->assertStringContainsString('#logoutConfirmModal .modal-footer {', $html);
         $this->assertStringContainsString('#logoutConfirmModal .modal-footer .btn {', $html);
-        $this->assertStringContainsString('min-width: 8.5rem;', $html);
+        $this->assertStringContainsString('flex: 1 1 50% !important;', $html);
+        $this->assertStringContainsString('height: 42px !important;', $html);
+        $this->assertStringContainsString('border-radius: 10px !important;', $html);
+        $this->assertStringContainsString('gap: 10px !important;', $html);
 
         // Tombol BATAL & YA, LOG OUT tetap ada; YA, LOG OUT tetap merah (btn-danger).
         $this->assertStringContainsString('data-bs-dismiss="modal"', $html);
@@ -343,11 +348,15 @@ class MultiRoleAuthTest extends TestCase
             'gender' => 'Laki-laki', 'status' => 'Aktif',
         ]);
 
-        // Tombol "HAPUS SEMUA SISWA (PERMANEN)"
-        $this->actingAs($admin)->delete(route('admin.students.destroy-all'))
-            ->assertRedirect(route('admin.students.index'));
+        // Tombol "HAPUS SEMUA SISWA (PERMANEN)" -> destroy-all-active:
+        // soft-delete massal (masuk Tempat Sampah), butuh 2 checkbox.
+        $this->actingAs($admin)->delete(route('admin.students.destroy-all-active'), [
+            'confirm_active' => '1',
+            'confirm_all' => '1',
+        ])->assertRedirect(route('admin.students.index'));
 
-        $this->assertDatabaseCount('students', 0);
+        $this->assertSame(0, Student::count());
+        $this->assertSame(1, Student::withTrashed()->count());
         $this->assertDatabaseCount('users', $jumlahUserAwal);
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
     }
@@ -365,15 +374,16 @@ class MultiRoleAuthTest extends TestCase
             'teacher_id' => $teacher->id,
         ]);
 
-        // Tombol "HAPUS SEMUA GURU"
+        // Tombol "HAPUS SEMUA GURU" -> soft-delete massal (masuk Tempat Sampah).
         $this->actingAs($admin)->delete(route('admin.guru.destroy-all'))
             ->assertRedirect(route('admin.guru.index'));
-        $this->assertDatabaseCount('teachers', 0);
+        $this->assertSame(0, Teacher::count());
+        $this->assertSame(2, Teacher::withTrashed()->count());
 
-        // Tombol "HAPUS SEMUA KELAS"
+        // Tombol "HAPUS SEMUA KELAS" -> kelas kosong masuk sampah (soft-delete).
         $this->actingAs($admin)->delete(route('admin.classes.destroy-all'))
             ->assertRedirect(route('admin.classes.index'));
-        $this->assertDatabaseCount('school_classes', 0);
+        $this->assertSame(0, SchoolClass::count());
 
         // Tabel users tetap utuh.
         $this->assertDatabaseCount('users', $jumlahUserAwal);

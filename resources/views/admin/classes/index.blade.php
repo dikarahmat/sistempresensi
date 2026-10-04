@@ -23,6 +23,11 @@
 
     .table-zebra-custom {
         width: 100%;
+        /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
+           kolom-kolomnya dipipihkan. Semua kolom (NO, KELAS, NAMA KELAS,
+           STATUS WALI KELAS, JUMLAH SISWA, AKSI) ikut dihitung; nilai desktop
+           tidak berubah karena tabel selalu lebih lebar dari ini. */
+        min-width: 720px;
         margin-bottom: 0;
     }
 
@@ -187,31 +192,14 @@
 
     /* --------------------------------------------------------------------------
        NOTIFIKASI HALAMAN DATA KELAS (.alert-kelas)
-       Tombol X dibuat statis (bukan absolut) sehingga sejajar rapi dengan teks
-       notifikasi. Berlaku untuk hijau (berhasil), kuning (sebagian), merah (gagal).
+       Struktur notifikasi: [ .alert-kelas-body (ikon + teks) ] [ tombol X ].
+       Perataan tombol X (center vertikal, selalu di dalam kotak) dikerjakan
+       oleh CSS notifikasi global di layout/app.blade.php supaya identik di
+       semua halaman. Di sini hanya sisanya.
        Scoped hanya ke halaman ini -> halaman lain TIDAK ikut.
        -------------------------------------------------------------------------- */
-    .alert-kelas.alert-dismissible {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding-right: 0.75rem;
-    }
-
     .alert-kelas-body {
-        flex: 1 1 auto;
-        min-width: 0;
-    }
-
-    .alert-kelas.alert-dismissible .btn-close {
-        position: static;
-        top: auto;
-        right: auto;
-        z-index: auto;
-        align-self: center;
-        flex: 0 0 auto;
-        margin: 0;
-        padding: 0.35rem 0.4rem;
+        display: block;
     }
 
     .btn-solid-pill,
@@ -231,6 +219,21 @@
         padding: 0 1rem;
         transition: filter 0.15s ease, transform 0.1s ease;
         box-shadow: none !important;
+        /* === UKURAN 3 TOMBOL ACTION BAR DISAMAkan (SAMA NILAI DENGAN DATA SISWA) ===
+           Tanpa min-width, tiap tombol lebarnya mengikuti panjang teksnya
+           sendiri, sehingga "IMPORT EXCEL" (12 karakter) jauh lebih lebar dari
+           "HAPUS" (5 karakter).
+           min-width 150px — nilai yang PERSIS sama dengan acuan Data Siswa,
+           yang di sana sudah cukup untuk "IMPORT EXCEL" (12 karakter) dan
+           "TAMBAH SISWA" (12 karakter). Di halaman ini teks terpanjang juga
+           12 karakter ("IMPORT EXCEL" dan "TAMBAH KELAS"), jadi 150px sudah
+           cukup dan ketiga tombol benar-benar sama lebar, teksnya rata tengah.
+           Tinggi sudah sama sejak awal (height: 38px di atas), dan jarak antar
+           tombol juga sudah sama (gap 0.5rem pada .action-buttons-wrap).
+           Di bawah 1024px, aturan layout bersama sudah memaksa tiap tombol
+           full width satu per satu, jadi tampilan mobile tidak berubah. */
+        min-width: 150px;
+        text-align: center;
     }
     .btn-solid-pill:hover {
         filter: brightness(0.94);
@@ -279,7 +282,7 @@
 @section('content')
     <!-- Alert Notifikasi (3 status import: hijau sukses / kuning sebagian / merah gagal) -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
         <div class="alert-kelas-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
@@ -291,7 +294,7 @@
     @endif
 
     @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
         <div class="alert-kelas-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
@@ -314,7 +317,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
         <div class="alert-kelas-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
@@ -338,7 +341,7 @@
 
     {{-- Rincian baris Excel yang dilewati ketika tidak ada pesan utama (3 status) --}}
     @if(!session('success') && !session('warning') && !session('error') && session('import_errors') && count(session('import_errors')) > 0)
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
         <div class="alert-kelas-body">
             <div class="d-flex align-items-center mb-1">
                 <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
@@ -355,7 +358,9 @@
     @endif
 
     @if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+    {{-- Error validasi form: TETAP tampil (tidak hilang otomatis) sampai user
+         memperbaikinya atau menekan tombol X. --}}
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert" data-flash-persist>
         <div class="alert-kelas-body">
             <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Terjadi kesalahan input:</div>
             <ul class="mb-0 ps-3 small">
@@ -459,21 +464,21 @@
                 <tbody>
                     @forelse($classes as $index => $class)
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td class="text-center text-nowrap px-3">{{ $classes->firstItem() + $index }}</td>
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="No" class="text-center text-nowrap px-3">{{ $classes->firstItem() + $index }}</td>
+                        <td data-label="Kelas" class="text-center text-nowrap px-3">
                             {{ $class->grade ?? ($class->level == 'VII' ? '7' : ($class->level == 'VIII' ? '8' : '9')) }}
                         </td>
-                        <td class="text-center text-nowrap fw-semibold text-dark px-3">
+                        <td data-label="Nama Kelas" class="text-center text-nowrap fw-semibold text-dark px-3">
                             {{ $class->name }}
                         </td>
-                        <td class="text-start text-nowrap indent-nama px-3 pe-4 text-secondary">
+                        <td data-label="Status Wali Kelas" class="text-start text-nowrap indent-nama px-3 pe-4 text-secondary">
                             {{ $class->teacher->name ?? 'Belum Ditentukan' }}
                         </td>
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="Jumlah Siswa" class="text-center text-nowrap px-3">
                             {{ $class->students_count }} Siswa
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <td class="text-center text-nowrap px-3">
+                        <td data-label="Aksi" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="Edit">
@@ -647,7 +652,7 @@
     function confirmDeleteClass(id, name) {
         confirmUniversalDelete({
             title: 'Hapus Data Kelas?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus rombel kelas <b class="text-dark">${name}</b> dari sistem. Pastikan tidak ada data siswa aktif di dalam rombel ini.`,
+            html: `Rombel kelas <strong>${name}</strong> akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.`,
             confirmText: 'Hapus',
             cancelText: 'Tidak',
             onConfirm: function() {
@@ -659,9 +664,14 @@
     function confirmDeleteAllClasses() {
         confirmUniversalDelete({
             title: 'Hapus Seluruh Data Kelas?',
-            html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data kelas</b> secara massal dari sistem.',
+            icon: 'bx-error-circle',
+            html: 'Seluruh data kelas aktif akan dihapus dan dipindahkan ke <strong>Tempat Sampah</strong> di Pengaturan. Kelas yang masih memiliki siswa aktif akan dilewati.',
             confirmText: 'Hapus Semua',
             cancelText: 'Tidak',
+            checks: [
+                'Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.',
+                'Saya yakin ingin menghapus semua data kelas aktif.'
+            ],
             onConfirm: function() {
                 document.getElementById('deleteAllClassesForm').submit();
             }

@@ -4,6 +4,11 @@
 @section('page_title', is_admin() ? 'Dashboard Administrator' : 'DASHBOARD GURU')
 @section('page_subtitle', is_admin() ? 'Sistem Presensi Terintegrasi' : 'Selamat Datang, ' . (Auth::user()->name ?? 'Guru'))
 
+{{-- Kanvas dikunci setinggi satu layar (sama seperti halaman acuan Presensi /
+     Data Guru / Data Kelas) dan isi dashboard menggulir di dalam kanvas.
+     Aturan class ini ada di layout bersama, layouts/app.blade.php. --}}
+@section('canvas_class', 'page-canvas-fixed')
+
 @section('page_header_right')
 <!-- Tanggal di Sisi Kanan Modern
      Blok ini kini bisa diklik: ikon kalender + blok teks dibungkus <form> GET
@@ -101,8 +106,34 @@
         transition: transform 0.2s ease;
         display: inline-block;
     }
-    .absence-row-interactive:hover i {
-        transform: scale(1.15);
+
+    /* ===== Ikon status pada baris Ketidakhadiran (Sakit / Izin / Alpha) =====
+       Satu kelas dipakai KETIGA baris supaya ukuran, bentuk, dan posisinya
+       selalu identik; yang berbeda hanya warna. Warna disuntikkan per baris
+       lewat dua custom property (--absence-icon-color & --absence-icon-bg),
+       sehingga tidak perlu menulis ulang ukuran per status. */
+    .absence-status-icon {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.15rem;
+        line-height: 1;
+        color: var(--absence-icon-color, #2563eb);
+        background-color: var(--absence-icon-bg, #dbeafe);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Hover: kotak ikon ikut membesar sedikit (bukan ikon di dalamnya), supaya
+       posisi ikon, judul, dan keterangan tidak terlihat bergeser. */
+    .absence-row-interactive:hover .absence-status-icon {
+        transform: scale(1.08);
+    }
+    .absence-row-interactive:active .absence-status-icon {
+        transform: scale(0.96);
     }
 
     /* Penanda jelas saat status ketidakhadiran sedang aktif sebagai filter */
@@ -290,6 +321,18 @@
             padding: 0.75rem !important;
             border-radius: 12px !important;
         }
+        /* Ikon status tetap sama untuk ketiga baris, hanya dikecilkan agar
+           judul + keterangan + angka tetap muat di layar sempit. */
+        .absence-row-interactive {
+            padding: 0.7rem 0.8rem;
+        }
+        .absence-status-icon {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            font-size: 1rem;
+            border-radius: 9px;
+        }
         .stat-card-modern:hover,
         .shortcut-card-interactive:hover,
         .operasional-card-interactive:hover {
@@ -409,22 +452,30 @@
                     <!-- Grid 8 Pintasan Cepat (App Drawer Style) -->
                     <div class="row g-3">
                         
-                        <!-- 1. Presensi Hari Ini (ikon QR/Kamera) -->
+                        <!-- 1. Presensi Hari Ini (ikon QR/Kamera)
+                             Kartu pertama, paling kiri baris pertama.
+                             Arahkan ke HALAMAN PRESENSI (route yang sama dengan menu
+                             Presensi di sidebar: absensi.index), BUKAN route scanner,
+                             supaya kamera tidak ikut menyala. Tombol "Buka Scanner QR"
+                             & "Mode Gerbang" tetap tersedia di halaman tujuan. -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ panel_route('scanner') }}" 
+                            <a href="{{ panel_route('absensi.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
-                               title="Buka Kamera Scanner QR Presensi">
+                               title="Buka halaman Presensi (Scanner QR &amp; Mode Gerbang)">
                                 <i class='bx bx-qr-scan text-primary fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Presensi Hari Ini</span>
                                 <span class="text-secondary small d-block mt-0.5 text-truncate w-100" style="font-size: 0.7rem;">Scanner QR Siswa</span>
                             </a>
                         </div>
 
-                        <!-- 2. Catatan Kehadiran (ikon List/Ceklis) -->
+                        <!-- 2. Catatan Kehadiran (ikon List/Ceklis)
+                             Menuju HALAMAN KEHADIRAN (route yang sama dengan menu
+                             Kehadiran di sidebar: kehadiran), bukan halaman Presensi,
+                             supaya tidak tumpang tindih dengan kartu 1. -->
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" 
+                            <a href="{{ panel_route('kehadiran') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
-                               title="Lihat Log Kehadiran & Presensi Harian">
+                               title="Lihat Log Kehadiran &amp; Presensi Harian">
                                 <i class='bx bx-list-check text-success fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Catatan Kehadiran</span>
                                 <span class="text-secondary small d-block mt-0.5 text-truncate w-100" style="font-size: 0.7rem;">Log Presensi Harian</span>
@@ -528,18 +579,12 @@
                         </p>
                     </div>
                 </div>
+                {{-- CATATAN: tombol "Scan QR" di section ini sudah dihapus.
+                     Akses scanner kini HANYA lewat pintasan "Presensi Hari Ini"
+                     (tabel presensi) dan menu Presensi di sidebar, supaya user
+                     tidak bisa terpental langsung ke kamera dari header analitik.
+                     Dua tombol di bawah tetap, styling & posisinya tidak diubah. --}}
                 <div class="d-flex align-items-center gap-2.5 flex-wrap">
-                    {{-- SCAN QR: styled persis sama dengan tombol "Presensi Hari Ini"
-                         di sebelahnya (btn-primary + rounded-3 + shadow-sm +
-                         btn-modern-smooth). Cukup satu klik: tautan langsung ke
-                         route scanner yang sudah ada, dan halaman scanner itu
-                         otomatis menyalakan kamera lewat scanner.js saat dimuat
-                         (startCameraKiosk pada DOMContentLoaded). Tidak ada
-                         logika scanner yang diduplikasi. --}}
-                    <a href="{{ panel_route('scanner') }}" class="btn btn-primary rounded-3 shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
-                        <i class='bx bx-scan'></i>
-                        <span>Scan QR</span>
-                    </a>
                     <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
                         <span>Presensi Hari Ini</span>
                     </a>
@@ -632,9 +677,13 @@
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}"
                            title="Klik untuk menyaring siswa sakit hari ini; klik lagi untuk melepas">
                             <div class="d-flex align-items-center gap-3">
+                                {{-- Ikon biru: plester (Boxicons yang sudah dipakai project) --}}
+                                <span class="absence-status-icon" style="--absence-icon-color: #2563eb; --absence-icon-bg: #dbeafe;" aria-hidden="true">
+                                    <i class='bx bxs-band-aid'></i>
+                                </span>
                                 <div>
                                     <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Sakit @if(request('status') === 'Sakit')<span class="absence-row-active-badge">Aktif</span>@endif</span>
-                                    <span class="text-secondary small" style="font-size: 0.73rem;">Surat keterangan dokter</span>
+                                    <span class="text-secondary small d-block" style="font-size: 0.73rem;">Surat keterangan dokter</span>
                                 </div>
                             </div>
                             <div class="text-end">
@@ -648,10 +697,15 @@
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}"
                            title="Klik untuk menyaring siswa izin hari ini; klik lagi untuk melepas">
                             <div class="d-flex align-items-center gap-3">
-                                <i class='bx bx-envelope text-purple fs-3' style="color: #9333ea; width: 26px; text-align: center;"></i>
+                                {{-- Ikon ungu: amplop/surat izin. Ikon lama (bx bx-envelope
+                                     tanpa kotak) diganti supaya ukurannya sama dengan
+                                     ikon Sakit & Alpha. --}}
+                                <span class="absence-status-icon" style="--absence-icon-color: #9333ea; --absence-icon-bg: #f3e8ff;" aria-hidden="true">
+                                    <i class='bx bxs-envelope'></i>
+                                </span>
                                 <div>
                                     <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Izin @if(request('status') === 'Izin')<span class="absence-row-active-badge">Aktif</span>@endif</span>
-                                    <span class="text-secondary small" style="font-size: 0.73rem;">Pemberitahuan orang tua</span>
+                                    <span class="text-secondary small d-block" style="font-size: 0.73rem;">Pemberitahuan orang tua</span>
                                 </div>
                             </div>
                             <div class="text-end">
@@ -665,9 +719,13 @@
                            class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}"
                            title="Klik untuk menyaring siswa alpha hari ini; klik lagi untuk melepas">
                             <div class="d-flex align-items-center gap-3">
+                                {{-- Ikon merah: user-x (siswa tidak hadir) --}}
+                                <span class="absence-status-icon" style="--absence-icon-color: #dc2626; --absence-icon-bg: #fee2e2;" aria-hidden="true">
+                                    <i class='bx bxs-user-x'></i>
+                                </span>
                                 <div>
                                     <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Alpha @if(request('status') === 'Alfa')<span class="absence-row-active-badge">Aktif</span>@endif</span>
-                                    <span class="text-secondary small" style="font-size: 0.73rem;">Tanpa keterangan sah</span>
+                                    <span class="text-secondary small d-block" style="font-size: 0.73rem;">Tanpa keterangan sah</span>
                                 </div>
                             </div>
                             <div class="text-end">

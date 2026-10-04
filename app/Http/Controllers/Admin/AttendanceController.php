@@ -38,9 +38,9 @@ class AttendanceController extends Controller
         }
 
         $selectedDateObj = Carbon::parse($tanggal);
-        $isSunday = $selectedDateObj->isSunday();
-        $isHoliday = Holiday::isHoliday($tanggal) || $isSunday;
-        $holidayDescription = Holiday::getHolidayDescription($tanggal) ?? ($isSunday ? 'Hari Minggu (Akhir Pekan)' : null);
+        $isWeekend = $selectedDateObj->isWeekend();
+        $isHoliday = Holiday::isHoliday($tanggal) || $isWeekend;
+        $holidayDescription = Holiday::getHolidayDescription($tanggal) ?? ($isWeekend ? 'Akhir Pekan (Sabtu/Minggu)' : null);
 
         $jamMasuk = Setting::getCheckInTime();
         $jamPulang = Setting::getCheckOutTime();
@@ -259,9 +259,9 @@ class AttendanceController extends Controller
 
         $tanggal = $request->input('tanggal', $request->input('date', $hariIni));
         $selectedDateObj = Carbon::parse($tanggal);
-        $isSunday = $selectedDateObj->isSunday();
-        $isHoliday = Holiday::isHoliday($tanggal) || $isSunday;
-        $holidayDescription = Holiday::getHolidayDescription($tanggal) ?? ($isSunday ? 'Hari Minggu (Akhir Pekan)' : null);
+        $isWeekend = $selectedDateObj->isWeekend();
+        $isHoliday = Holiday::isHoliday($tanggal) || $isWeekend;
+        $holidayDescription = Holiday::getHolidayDescription($tanggal) ?? ($isWeekend ? 'Akhir Pekan (Sabtu/Minggu)' : null);
 
         $jamMasuk = Setting::getCheckInTime();
         $jamPulang = Setting::getCheckOutTime();
