@@ -205,7 +205,7 @@
                         <td data-label="Tingkat" class="text-center px-3">{{ $class->level ?: $class->grade }}</td>
                         <td data-label="Tahun Ajaran" class="text-center px-3">{{ $class->academicYear->name ?? '-' }}</td>
                         <td data-label="Wali Kelas" class="text-center px-3">{{ $class->teacher->name ?? '-' }}</td>
-                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $class->deleted_at->format('d M Y H:i') }}</td>
+                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $class->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
                         <td data-label="Aksi" class="text-center px-3">
                             <div class="d-flex justify-content-center gap-2">
                                 <form action="{{ route('admin.classes.restore', $class->id) }}" method="POST" class="d-inline">

@@ -452,7 +452,13 @@
 
 @section('content')
 <div class="pt-1 space-y-3">
-    
+    <div class="d-flex align-items-center gap-2 mb-1">
+        <a href="{{ panel_route('absensi.index', ['tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-outline-secondary btn-sm rounded-3 d-inline-flex align-items-center gap-1 px-3 py-2" style="min-height:40px;">
+            <i class='bx bx-arrow-back'></i> Kembali
+        </a>
+        <span class="text-muted small">Presensi Kelas {{ $selectedClass->name ?? '' }}</span>
+    </div>
+
     <!-- RINGKASAN STATUS + SCANNER: satu container -->
     <div class="status-summary-grid mb-3">
         <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold py-1.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs w-100 class-attendance-scan" style="font-size: 0.82rem;" onclick="toggleInlineScanner()">

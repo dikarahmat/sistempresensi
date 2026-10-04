@@ -348,11 +348,15 @@ class MultiRoleAuthTest extends TestCase
             'gender' => 'Laki-laki', 'status' => 'Aktif',
         ]);
 
-        // Tombol "HAPUS SEMUA SISWA (PERMANEN)"
-        $this->actingAs($admin)->delete(route('admin.students.destroy-all'))
-            ->assertRedirect(route('admin.students.index'));
+        // Tombol "HAPUS SEMUA SISWA (PERMANEN)" -> destroy-all-active:
+        // soft-delete massal (masuk Tempat Sampah), butuh 2 checkbox.
+        $this->actingAs($admin)->delete(route('admin.students.destroy-all-active'), [
+            'confirm_active' => '1',
+            'confirm_all' => '1',
+        ])->assertRedirect(route('admin.students.index'));
 
-        $this->assertDatabaseCount('students', 0);
+        $this->assertSame(0, Student::count());
+        $this->assertSame(1, Student::withTrashed()->count());
         $this->assertDatabaseCount('users', $jumlahUserAwal);
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
     }
@@ -370,15 +374,16 @@ class MultiRoleAuthTest extends TestCase
             'teacher_id' => $teacher->id,
         ]);
 
-        // Tombol "HAPUS SEMUA GURU"
+        // Tombol "HAPUS SEMUA GURU" -> soft-delete massal (masuk Tempat Sampah).
         $this->actingAs($admin)->delete(route('admin.guru.destroy-all'))
             ->assertRedirect(route('admin.guru.index'));
-        $this->assertDatabaseCount('teachers', 0);
+        $this->assertSame(0, Teacher::count());
+        $this->assertSame(2, Teacher::withTrashed()->count());
 
-        // Tombol "HAPUS SEMUA KELAS"
+        // Tombol "HAPUS SEMUA KELAS" -> kelas kosong masuk sampah (soft-delete).
         $this->actingAs($admin)->delete(route('admin.classes.destroy-all'))
             ->assertRedirect(route('admin.classes.index'));
-        $this->assertDatabaseCount('school_classes', 0);
+        $this->assertSame(0, SchoolClass::count());
 
         // Tabel users tetap utuh.
         $this->assertDatabaseCount('users', $jumlahUserAwal);

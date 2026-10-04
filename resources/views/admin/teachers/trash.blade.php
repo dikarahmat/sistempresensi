@@ -194,7 +194,7 @@
                         <td data-label="NIP" class="text-center px-3">{{ $teacher->nip }}</td>
                         <td data-label="Nama Guru" class="text-center px-3 fw-semibold">{{ $teacher->name }}</td>
                         <td data-label="Kelas" class="text-center px-3">{{ $teacher->schoolClass->name ?? '-' }}</td>
-                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $teacher->deleted_at->format('d M Y H:i') }}</td>
+                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $teacher->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
                         <td data-label="Aksi" class="text-center px-3">
                             <div class="d-flex justify-content-center gap-2">
                                 <form action="{{ panel_route('teachers.restore', $teacher->id) }}" method="POST" class="d-inline">
