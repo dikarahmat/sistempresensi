@@ -192,13 +192,41 @@ class SchoolClassController extends Controller
     {
         $request->validate([
             'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ], [
+            'file_excel.required' => 'Pilih file Excel data kelas yang akan diunggah.',
+            'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
+            'file_excel.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         try {
             $import = new SchoolClassesImport();
             Excel::import($import, $request->file('file_excel'));
 
-            return redirect()->route('admin.classes.index')->with('success', 'Data kelas berhasil diimpor dari Excel!');
+            $imported = $import->getImportedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
+
+            // 1) Semua baris berhasil -> notifikasi hijau (sukses)
+            if ($imported > 0 && $skipped === 0) {
+                return redirect()->route('admin.classes.index')
+                    ->with('success', "Import berhasil: {$imported} kelas diimpor.");
+            }
+
+            // 2) Sebagian berhasil -> notifikasi kuning (peringatan) + alasan per baris
+            if ($imported > 0) {
+                return redirect()->route('admin.classes.index')
+                    ->with('warning', "Import sebagian berhasil: {$imported} diimpor, {$skipped} dilewati.")
+                    ->with('import_errors', $errors);
+            }
+
+            // 3) Tidak ada baris yang masuk -> notifikasi merah (gagal)
+            $reason = $skipped > 0
+                ? "{$skipped} baris dilewati."
+                : 'File tidak memiliki baris data.';
+
+            return redirect()->route('admin.classes.index')
+                ->with('error', "Import gagal: tidak ada data yang diimpor. {$reason} Periksa format file Excel.")
+                ->with('import_errors', $errors);
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.classes.index')

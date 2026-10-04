@@ -113,6 +113,26 @@
 @endpush
 
 @section('content')
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4 py-2.5 px-3" role="alert">
+        <div class="d-flex align-items-center">
+            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+            <span>{{ session('success') }}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4 py-2.5 px-3" role="alert">
+        <div class="d-flex align-items-center">
+            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+            <span>{{ session('error') }}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <div class="row g-4">
         <!-- Informasi Siswa -->
         <div class="col-12 col-lg-7">

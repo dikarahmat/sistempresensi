@@ -251,18 +251,20 @@
         overflow: hidden;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
     }
-    /* Sembunyikan Scrollbar Horizontal Secara Total (Clean Look) */
-    .table-responsive,
+    /* Sembunyikan Scrollbar Horizontal Secara Total (Clean Look)
+       CATATAN: .table-responsive TIDAK ikut disembunyikan di sini, karena pada
+       halaman ini tabelnya harus punya scrollbar vertikal yang terlihat di sisi
+       kanan. Aturan table-wide (max-height, scrollbar, header sticky) datang
+       dari layout bersama. Yang tetap disembunyikan hanya elemen non-tabel. */
     .table-custom-card,
     .badges-scroll-container,
-    div[class*="table-responsive"] {
+    div[class*="table-responsive"]:not(.table-responsive) {
         scrollbar-width: none !important; /* Firefox */
         -ms-overflow-style: none !important; /* IE 10+ & Edge */
     }
-    .table-responsive::-webkit-scrollbar,
     .table-custom-card::-webkit-scrollbar,
     .badges-scroll-container::-webkit-scrollbar,
-    div[class*="table-responsive"]::-webkit-scrollbar {
+    div[class*="table-responsive"]:not(.table-responsive)::webkit-scrollbar {
         display: none !important; /* Chrome, Safari, WebKit, Edge */
         width: 0 !important;
         height: 0 !important;
@@ -465,6 +467,79 @@
         overflow: hidden;
         transition: all 0.2s ease;
     }
+
+    /* ==========================================================================
+       RAPIRAN TABEL PRESENSI HARI INI
+       Semua aturan di bawah HANYA berlaku di halaman ini (blok styles milik
+       view ini), jadi halaman lain tidak ikut berubah.
+
+       Warna status memakai set yang SAMA dengan Presensi Kelas dan diambil dari
+       warna teks yang sudah dipakai di public/css/presensi-tokens.css
+       (baris .presensi-badge.*) + #1d4ed8 yang sudah ada di sistem. Dipilih
+       versi gelap supaya kontrasnya tetap terbaca.
+       ========================================================================== */
+
+    /* --- STATUS: TEKS MURNI, TANPA CONTAINER ------------------------------- */
+    .presensi-hari-ini-status {
+        font-weight: 600 !important;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .presensi-hari-ini-status.hadir     { color: #065f46 !important; } /* hijau */
+    .presensi-hari-ini-status.terlambat { color: #92400e !important; } /* oranye */
+    .presensi-hari-ini-status.sakit     { color: #1d4ed8 !important; } /* biru  */
+    .presensi-hari-ini-status.izin      { color: #5b21b6 !important; } /* ungu   */
+    .presensi-hari-ini-status.alfa      { color: #991b1b !important; } /* merah  */
+    .presensi-hari-ini-status.libur,
+    .presensi-hari-ini-status.belum     { color: #475569 !important; } /* abu    */
+
+    /* --- UPPERCASE UNTUK SEMUA DATA TABEL (header kolom tidak diubah) ----- */
+    .table-enterprise tbody td,
+    .table-enterprise tbody td .fw-bold {
+        text-transform: uppercase;
+    }
+
+    /* Nama siswa di tabel ini tidak bold, satu baris (selaras dengan
+       kolom Nama Siswa di Presensi Kelas). */
+    .table-enterprise tbody td .presensi-hari-ini-nama {
+        font-weight: 400 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* --- TABEL MENGISI SAMPAI BAWAH, SCROLL HANYA DI DALAM TABEL ---------- */
+    /* Rantai flex: kolom -> card -> .table-responsive, sama seperti Presensi
+       Kelas, supaya tabel mentok ke bawah dan tidak ada ruang kosong. Kartu
+       badge ringkasan & tombol Scanner di atas tetap tidak ikut scroll.
+       Offset lebih besar dari Presensi Kelas karena halaman ini punya satu blok
+       tambahan (kartu tombol Scanner / baris badge ringkasan). */
+    .presensi-table-col {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 15rem);
+        min-height: 20rem;
+    }
+
+    .presensi-table-col > .card {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .presensi-table-col .table-responsive {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
+    }
+
+    @media (max-width: 767.98px) {
+        .presensi-table-col {
+            height: calc(100dvh - 25rem);
+        }
+    }
 </style>
 @endpush
 
@@ -623,19 +698,17 @@
 
         @if(request()->filled('status'))
         <!-- Kolom Tabel Siswa Terfilter -->
-        <div class="col-12">
+        <div class="col-12 presensi-table-col">
             <div class="alert alert-primary d-flex align-items-center justify-content-between py-2 px-3 mb-3 rounded-3 shadow-xs">
                 <div class="d-flex align-items-center gap-2">
                     <i class='bx bx-filter-alt fs-5'></i>
                     <span class="small fw-semibold">Menampilkan siswa dengan status: <strong class="badge bg-primary fs-7">{{ ucfirst(request('status')) }}</strong> pada tanggal {{ \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('d F Y') }} ({{ count($processedStudents ?? []) }} Siswa)</span>
                 </div>
-                <a href="{{ panel_route('presensi.index', ['tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn btn-sm btn-light border text-dark fw-semibold py-1 px-2.5 rounded-2" style="font-size: 0.78rem;">
-                    <i class='bx bx-x'></i> Reset Filter
-                </a>
             </div>
             
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="table-responsive no-scrollbar" style="scrollbar-width: none; -ms-overflow-style: none;">
+                <!-- Scrollbar tabel sengaja TIDAK disembunyikan (butuh scroll vertikal di kanan) -->
+                <div class="table-responsive">
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">
@@ -652,7 +725,7 @@
                             <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} text-nowrap">
                                 <td class="text-center text-secondary small text-nowrap">{{ $idx + 1 }}</td>
                                 <td class="text-nowrap">
-                                    <div class="fw-bold text-dark text-nowrap">{{ $st->name }}</div>
+                                    <div class="fw-bold text-dark text-nowrap presensi-hari-ini-nama">{{ $st->name }}</div>
                                 </td>
                                 <td class="text-center text-secondary font-monospace small text-nowrap">
                                     {{ $st->nis ?? '-' }}
@@ -662,16 +735,19 @@
                                 </td>
                                 <td class="text-center text-nowrap">
                                     @php
+                                        // Status tetap TEKS MURNI (tanpa badge/container).
+                                        // Kelas status menentukan warnanya lewat CSS halaman ini.
                                         $statusColor = match(strtolower($st->current_status ?? '')) {
-                                            'hadir' => 'text-success',
-                                            'terlambat' => 'text-warning',
-                                            'sakit' => 'text-primary',
-                                            'izin' => 'text-info',
-                                            'alfa', 'alpha' => 'text-danger',
-                                            default => 'text-secondary',
+                                            'hadir' => 'hadir',
+                                            'terlambat' => 'terlambat',
+                                            'sakit' => 'sakit',
+                                            'izin' => 'izin',
+                                            'alfa', 'alpha' => 'alfa',
+                                            'libur' => 'libur',
+                                            default => 'belum',
                                         };
                                     @endphp
-                                    <span class="{{ $statusColor }} fw-semibold text-nowrap">{{ $st->current_status }}</span>
+                                    <span class="presensi-hari-ini-status {{ $statusColor }} text-nowrap">{{ $st->current_status }}</span>
                                 </td>
                                 <td class="text-center text-secondary small text-nowrap">
                                     {{ $st->notes ?? '-' }}
@@ -692,9 +768,10 @@
         </div>
         @else
         <!-- Kolom Tabel Rekap Kelas Kanan (Kaya Data & Compact) -->
-        <div class="col-12" id="tableColumn">
+        <div class="col-12 presensi-table-col" id="tableColumn">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="table-responsive no-scrollbar" style="scrollbar-width: none; -ms-overflow-style: none;">
+                <!-- Scrollbar tabel sengaja TIDAK disembunyikan (butuh scroll vertikal di kanan) -->
+                <div class="table-responsive">
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">

@@ -115,7 +115,11 @@
                         <td class="text-center text-nowrap px-3">{{ $student->schoolClass->name ?? '-' }}</td>
                         <td class="text-center text-nowrap font-monospace px-3">{{ $student->nis }}</td>
                         <td class="text-start text-nowrap px-3">{{ $student->name }}</td>
-                        <td class="text-center text-nowrap px-3">{{ $student->deleted_at->format('d M Y H:i') }}</td>
+                        <td class="text-center text-nowrap px-3">
+                            {{-- Tampilan tanggal hapus: dd MMM yyyy, HH:mm WIB
+                                 (deleted_at dikonversi ke zona waktu Asia/Jakarta) --}}
+                            {{ $student->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
+                        </td>
                         <td class="text-center text-nowrap px-3">
                             <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                 <!-- Tombol Restore -->
@@ -156,17 +160,69 @@
     @if(Auth::check() && Auth::user()->role === 'admin')
     <div class="card border border-danger rounded-4 p-4 bg-white">
         <h6 class="fw-bold text-danger mb-2">Zona Berbahaya</h6>
-        <p class="text-secondary small mb-3">Tindakan ini akan menghapus seluruh data siswa secara permanen. Data yang dihapus tidak dapat dikembalikan.</p>
-        <button type="button" class="btn btn-danger rounded-3 px-4 fw-semibold" onclick="confirmDeleteAllStudents()">
+        <p class="text-secondary small mb-3">
+            Tindakan ini menghapus permanen seluruh isi Arsip ({{ $trashedCount }} data) beserta riwayat presensinya.
+            Siswa yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.
+        </p>
+        <button type="button" class="btn btn-danger rounded-3 px-4 fw-semibold" data-bs-toggle="modal" data-bs-target="#deleteAllArchiveModal">
             Hapus Semua Siswa (Permanen)
         </button>
+
+        <!-- MODAL KONFIRMASI DUA LANGKAH: HAPUS SEMUA (PERMANEN) -->
+        <div class="modal fade" id="deleteAllArchiveModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header bg-danger text-white border-bottom-0 pb-0">
+                        <h5 class="fw-bold mb-0"><i class='bx bx-error me-1'></i> Hapus Semua Arsip Siswa?</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ panel_route('students.destroy-all') }}" method="POST" id="deleteAllArchiveForm">
+                        @csrf
+                        @method('DELETE')
+                        <div class="modal-body py-3">
+                            <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3" role="alert">
+                                <i class='bx bx-error-circle me-1'></i>
+                                <strong>{{ $trashedCount }} siswa di arsip</strong> akan dihapus permanen dan tidak bisa dikembalikan.
+                            </div>
+
+                            @if($errors->any())
+                            <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3" role="alert">
+                                <i class='bx bx-error-circle me-1'></i> Data belum bisa diproses. Centang kedua pernyataan di bawah ini.
+                            </div>
+                            @endif
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input @error('confirm_permanent') is-invalid @enderror" type="checkbox" id="chkConfirmPermanen" name="confirm_permanent" value="1">
+                                <label class="form-check-label small" for="chkConfirmPermanen">
+                                    Saya memahami data yang dihapus permanen tidak dapat dikembalikan.
+                                </label>
+                                @error('confirm_permanent')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input @error('confirm_all') is-invalid @enderror" type="checkbox" id="chkConfirmAll" name="confirm_all" value="1">
+                                <label class="form-check-label small" for="chkConfirmAll">
+                                    Saya yakin ingin menghapus semua data siswa di arsip.
+                                </label>
+                                @error('confirm_all')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+
+                            @if($trashedCount === 0)
+                            <div class="alert alert-warning border-0 rounded-3 py-2 px-3 small mt-3 mb-0" role="alert">
+                                Arsip kosong, tidak ada data yang bisa dihapus.
+                            </div>
+                            @endif
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold" id="btnConfirmDeleteAll" disabled>Hapus Permanen</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
     @endif
-
-    <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all') }}" method="POST" class="d-none">
-        @csrf
-        @method('DELETE')
-    </form>
 @endsection
 
 @push('scripts')
@@ -188,16 +244,30 @@
         });
     }
 
-    function confirmDeleteAllStudents() {
-        confirmUniversalDelete({
-            title: 'Hapus Semua Siswa?',
-            html: 'Seluruh data siswa akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.',
-            confirmText: 'Hapus Semua',
-            cancelText: 'Tidak',
-            onConfirm: function() {
-                document.getElementById('deleteAllStudentsForm').submit();
-            }
-        });
-    }
+    // Tombol HAPUS pada modal "Hapus Semua (Permanen)" baru aktif
+    // setelah KEDUA pernyataan dicentang dan arsip tidak kosong.
+    (function () {
+        var chkA = document.getElementById('chkConfirmPermanen');
+        var chkB = document.getElementById('chkConfirmAll');
+        var btn = document.getElementById('btnConfirmDeleteAll');
+        var total = {{ (int) $trashedCount }};
+
+        function refresh() {
+            if (!btn) return;
+            btn.disabled = !(total > 0 && chkA && chkB && chkA.checked && chkB.checked);
+        }
+
+        if (chkA) chkA.addEventListener('change', refresh);
+        if (chkB) chkB.addEventListener('change', refresh);
+        refresh();
+
+        // Buka kembali modal bila validasi konfirmasi ditolak oleh server.
+        @if($errors->any())
+        var modalEl = document.getElementById('deleteAllArchiveModal');
+        if (modalEl) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+        @endif
+    })();
 </script>
 @endpush

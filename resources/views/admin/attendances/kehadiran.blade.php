@@ -152,6 +152,157 @@
     }
 
     /* ==========================================================================
+       LAYOUT KARTU CATATAN KEHADIRAN
+       Susunan vertikal: filter (kartu terpisah di atas) -> kartu tabel yang
+       mengisi sisa tinggi layar -> paginasi menempel di paling bawah.
+       Hanya .table-responsive yang jadi tempat scroll vertikal, sehingga baris
+       terakhir tidak pernah tertutup paginasi dan paginasi tidak ikut
+       ter-scroll / terpotong tepi layar.
+       ========================================================================== */
+    #daftar-kehadiran {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 13rem);
+        min-height: 20rem;
+        margin-bottom: 0 !important;   /* paginasi sudah di dasar layar */
+    }
+
+    #daftar-kehadiran .table-responsive {
+        flex: 1 1 auto;
+        min-height: 0;
+        /* lepas max-height bawaan layout (65vh) supaya tinggi ikut flex */
+        max-height: none !important;
+    }
+
+    /* Offset lebih besar di layar kecil: header layout lebih tinggi (sticky +
+       safe-area) dan kartu filter jadi 2 kolom. */
+    @media (max-width: 767.98px) {
+        #daftar-kehadiran {
+            height: calc(100dvh - 22rem);
+        }
+    }
+
+    /* ==========================================================================
+       HEADER STICKY - BERSIH, BARIS TIDAK MENIMPA / TIDAK TERPOTONG
+       Latar header dibuat pekat (opaque) dan berada di atas semua baris,
+       sehingga tidak ada baris yang "bocor" melewati header saat digulir.
+       Warna, border, dan font header TIDAK diubah - hanya posisi & layering.
+       ========================================================================== */
+    #daftar-kehadiran .table-responsive > table > thead {
+        z-index: 5 !important;
+    }
+
+    #daftar-kehadiran .table-responsive > table > thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 5 !important;
+        /* palet sama seperti aslinya, dipaksa pekat untuk sticky header */
+        background-color: #f8fafc !important;
+    }
+
+    /* Baris data selalu berlapis di bawah header. */
+    #daftar-kehadiran .table-responsive > table > tbody > tr > td {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ==========================================================================
+       PAGINASI CATATAN KEHADIRAN - TEKS MURNI
+       Tanpa background, border, shadow, pill, lingkaran, atau kotak.
+       Area klik dibuat nyaman lewat PADDING, bukan lewat bentuk.
+       ========================================================================== */
+    .kehadiran-pagination {
+        /* Sekarang berada DI DALAM area scroll, jadi bukan lagi flex item kartu.
+           Padding atas/bawah lega supaya tidak menempel baris terakhir dan tidak
+           terpotong tepi bawah layar saat scroll sudah mentok. */
+        padding: 1.25rem 0.5rem 1.5rem;
+        margin: 0;
+        text-align: center;
+        border-top: 1px solid #f1f5f9;
+        background-color: #ffffff;
+        /* Lebar penuh area scroll, tidak melebar Horizontal. */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .kehadiran-pagination-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem 1.1rem;
+        list-style: none;
+        margin: 0 0 0.35rem;
+        padding: 0;
+    }
+
+    .kehadiran-pagination-step,
+    .kehadiran-pagination-page {
+        display: inline-block;
+        padding: 0.45rem 0.3rem;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.2;
+        text-decoration: none;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    /* Halaman aktif: biru tema, tebal, garis bawah tipis. */
+    .kehadiran-pagination-page.is-active {
+        color: #2563eb !important;
+        font-weight: 700;
+        border-bottom: 2px solid #2563eb !important;
+        cursor: default;
+    }
+
+    /* Hover: hanya warna teks, tanpa bentuk muncul. */
+    .kehadiran-pagination-step:hover,
+    .kehadiran-pagination-page:hover {
+        color: #2563eb !important;
+        text-decoration: underline;
+    }
+
+    /* Fokus keyboard: outline tipis pada TEKS saja. */
+    .kehadiran-pagination-step:focus-visible,
+    .kehadiran-pagination-page:focus-visible {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 1px;
+        border-radius: 0 !important;
+    }
+
+    /* Redup + tidak bisa diklik di halaman pertama / terakhir. */
+    .kehadiran-pagination-step.is-disabled {
+        color: #cbd5e1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .kehadiran-pagination-step.is-disabled:hover {
+        color: #cbd5e1;
+        text-decoration: none;
+    }
+
+    .kehadiran-pagination-ellipsis {
+        display: inline-block;
+        padding: 0.45rem 0.1rem;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        line-height: 1.2;
+    }
+
+    .kehadiran-pagination-info {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #64748b;
+        letter-spacing: 0.02em;
+    }
+
+    /* ==========================================================================
        PERBAIKAN MOBILE: rapatkan tabel & aksi agar tidak neurotransisi
        ========================================================================== */
     @media (max-width: 767.98px) {
@@ -193,18 +344,26 @@
 @endpush
 
 @section('content')
-    <!-- Filter Search & Kelas (tanpa label, dropdown full-width di mobile) -->
+    <!-- Filter Search & Kelas (tanpa label, dropdown full-width di mobile)
+         CATATAN: tombol RESET DIHAPUS. Tidak ada lagi aksi manual yang
+         diperlukan karena:
+           - dropdown kelas langsung memuat ulang data saat diganti,
+           - pencarian berjalan otomatis (debounce 400ms) + tetap bisa Enter,
+           - mengosongkan kolom pencarian kembali ke tampilan default. -->
     <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 mb-4 bg-white">
-        <form method="GET" action="{{ panel_route('kehadiran') }}" class="d-flex flex-column flex-md-row gap-2">
+        <form method="GET" action="{{ panel_route('kehadiran') }}" class="d-flex flex-column flex-md-row gap-2" id="formFilterKehadiran">
             <div class="input-group">
-                <input type="text" name="search" class="form-control form-control-sm filter-input" placeholder="Cari nama atau NIS..." value="{{ $search }}" aria-label="Cari siswa">
+                <input type="text" name="search" id="filterSearch" class="form-control form-control-sm filter-input" placeholder="Cari nama atau NIS..." value="{{ $search }}" aria-label="Cari siswa" autocomplete="off">
                 <button type="submit" class="btn btn-sm btn-light border" title="Cari" aria-label="Cari">
                     <i class='bx bx-search'></i>
                 </button>
             </div>
             <div class="flex-md-shrink-0" style="min-width: 180px;">
                 <select name="class_filter" id="classFilter" class="form-select form-select-sm filter-input w-100" aria-label="Semua Kelas">
-                    <option value="">Semua Kelas</option>
+                    {{-- Opsi "Semua Kelas" memakai nilai kosong (tidak ada filter). --}}
+                    <option value="" {{ request('class_filter') == '' ? 'selected' : '' }}>Semua Kelas</option>
+                    {{-- Daftar kelas SELALU lengkap: tidak lagi ikut ter-filter
+                         oleh kata pencarian. --}}
                     @foreach($classHistories as $class)
                         <option value="{{ $class->name }}" {{ request('class_filter') == $class->name ? 'selected' : '' }}>
                             {{ $class->name }}
@@ -212,19 +371,17 @@
                     @endforeach
                 </select>
             </div>
-            @if(request('search') || request('class_filter'))
-            <div class="flex-md-shrink-0 align-self-start">
-                <a href="{{ panel_route('kehadiran') }}" class="btn btn-sm btn-light border rounded-3">Reset</a>
-            </div>
-            @endif
         </form>
     </div>
 
     <script>
-        // Submit form hanya saat dropdown kelas berubah
+        // 1. Ganti dropdown kelas -> langsung memuat ulang data (tanpa tombol).
         document.getElementById('classFilter').addEventListener('change', function () {
             this.form.submit();
         });
+
+        // 2. Pencarian otomatis (debounce 400ms + tombol "x" di input) ditangani
+        //    secara bersama oleh script auto-filter di layouts/app.blade.php.
     </script>
 
     <!-- Tabel Histori Kehadiran per Siswa -->
@@ -272,15 +429,87 @@
                     <tr>
                         <td colspan="10" class="text-center py-5 text-muted fw-normal">
                             <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
-                            BELUM ADA DATA SISWA YANG TERDAFTAR.
+                            @if(request('search') || request('class_filter'))
+                                TIDAK ADA DATA SISWA YANG COCOK DENGAN PENCARIAN/FILTER.
+                            @else
+                                BELUM ADA DATA SISWA YANG TERDAFTAR.
+                            @endif
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
-        {!! render_compact_pagination($studentHistories, 'daftar-kehadiran') !!}
+        <!-- ==========================================================================
+         PAGINASI CATATAN KEHADIRAN - TEKS MURNI (TANPA KONTAINER)
+         Markup sendiri, BUKAN helper render_compact_pagination, supaya helper
+         bersama yang dipakai halaman lain (Guru, Kelas, Rekap, Arsip, dll.)
+         tidak ikut berubah. Tanpa background/border/shadow/pill - murni teks.
+
+         POSISI: blok ini sengaja DI DALAM .table-responsive (area scroll),
+         tepat di bawah baris terakhir. Jadi pagination ikut ter-scroll dan
+         baru terlihat setelah user menggulir sampai baris ke-100.
+         ======================================================================= -->
+        @php
+            $pgCurrent = $studentHistories->currentPage();
+            $pgLast = $studentHistories->lastPage();
+            $pgHash = '#daftar-kehadiran';
+
+            // Semua nomor ditampilkan bila <= 7 halaman (500 siswa / 100 = 5 hal).
+            // Kalau lebih, sisipkan "..." di kiri & kanan sekitar halaman aktif.
+            $pgPages = [];
+            if ($pgLast <= 7) {
+                $pgPages = range(1, $pgLast);
+            } else {
+                $pgPages[] = 1;
+                $pgStart = max(2, $pgCurrent - 1);
+                $pgEnd = min($pgLast - 1, $pgCurrent + 1);
+                if ($pgStart > 2) {
+                    $pgPages[] = '...';
+                }
+                for ($i = $pgStart; $i <= $pgEnd; $i++) {
+                    $pgPages[] = $i;
+                }
+                if ($pgEnd < $pgLast - 1) {
+                    $pgPages[] = '...';
+                }
+                $pgPages[] = $pgLast;
+            }
+        @endphp
+
+        @if ($pgLast > 1)
+            <nav class="kehadiran-pagination" id="kehadiran-pagination" aria-label="Navigasi halaman catatan kehadiran">
+                <ul class="kehadiran-pagination-list">
+                    @if ($pgCurrent <= 1)
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; Sebelumnya</span></li>
+                    @else
+                        <li><a class="kehadiran-pagination-step" href="{{ $studentHistories->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; Sebelumnya</a></li>
+                    @endif
+
+                    @foreach ($pgPages as $pgItem)
+                        @if ($pgItem === '...')
+                            <li><span class="kehadiran-pagination-ellipsis" aria-hidden="true">&hellip;</span></li>
+                        @elseif ($pgItem === $pgCurrent)
+                            <li><span class="kehadiran-pagination-page is-active" aria-current="page">{{ $pgItem }}</span></li>
+                        @else
+                            <li><a class="kehadiran-pagination-page" href="{{ $studentHistories->url($pgItem) }}{{ $pgHash }}">{{ $pgItem }}</a></li>
+                        @endif
+                    @endforeach
+
+                    @if ($pgCurrent >= $pgLast)
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">Berikutnya &rsaquo;</span></li>
+                    @else
+                        <li><a class="kehadiran-pagination-step" href="{{ $studentHistories->nextPageUrl() }}{{ $pgHash }}" rel="next">Berikutnya &rsaquo;</a></li>
+                    @endif
+                </ul>
+
+                <p class="kehadiran-pagination-info">
+                    Menampilkan {{ $studentHistories->firstItem() ?? 0 }}&ndash;{{ $studentHistories->lastItem() ?? 0 }}
+                    dari {{ $studentHistories->total() }} siswa
+                </p>
+            </nav>
+        @endif
+        </div><!-- /.table-responsive : penutup area scroll, pagination ikut di dalam -->
     </div>
 
     @push('scripts')

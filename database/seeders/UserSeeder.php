@@ -2,13 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\AcademicYear;
-use App\Models\SchoolClass;
-use App\Models\Teacher;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
+/**
+ * Wrapper yang meneruskan ke DatabaseSeeder (sumber kebenaran tunggal).
+ *
+ * SEBELUMNYA seeder ini memakai kredensial BERBEDA dari DatabaseSeeder
+ * (akun admin@smppresensipgri.sch.id dengan admin123) dan juga membuat data
+ * guru + kelas contoh. Itu menimbulkan dua masalah:
+ *   1. ada dua akun admin dengan password berbeda -> membingungkan;
+ *   2. seeder ini bisa menimpa password akun yang sudah ada.
+ *
+ * Sekarang seeding akun sepenuhnya ditentukan DatabaseSeeder, sehingga
+ * `db:seed --class=UserSeeder` menghasilkan kredensial yang sama persis dan
+ * tidak pernah menimpa password dengan nilai lain.
+ */
 class UserSeeder extends Seeder
 {
     /**
@@ -16,61 +24,6 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Akun Administrator Utama
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@smppresensipgri.sch.id'],
-            [
-                'name' => 'Administrator SMP PGRI',
-                'username' => 'admin',
-                'password' => Hash::make('admin123'),
-                'role' => 'admin',
-                'email_verified_at' => now(),
-            ]
-        );
-
-        // 2. Akun Guru (Budi Santoso, S.Pd.)
-        $guruUser = User::updateOrCreate(
-            ['email' => 'guru@smppresensipgri.sch.id'],
-            [
-                'name' => 'Budi Santoso, S.Pd.',
-                'username' => 'guru',
-                'password' => Hash::make('guru123'),
-                'role' => 'guru',
-                'email_verified_at' => now(),
-            ]
-        );
-
-        // Hubungkan akun user guru ke profil guru di tabel teachers
-        $teacher = Teacher::updateOrCreate(
-            ['nip' => '198503122010011002'],
-            [
-                'user_id' => $guruUser->id,
-                'name' => 'Budi Santoso, S.Pd.',
-                'gender' => 'Laki-laki',
-                'phone_number' => '081234567890',
-                'phone' => '081234567890',
-            ]
-        );
-
-        // Pastikan teacher->user_id terisi
-        if ($teacher->user_id !== $guruUser->id) {
-            $teacher->update(['user_id' => $guruUser->id]);
-        }
-
-        // Hubungkan ke kelas 7A (atau VII A) sebagai Guru Kelas
-        $activeYear = AcademicYear::getActive();
-        if ($activeYear) {
-            $kelas7A = SchoolClass::where('academic_year_id', $activeYear->id)
-                ->where(function ($q) {
-                    $q->where('name', '7A')->orWhere('name', 'VII A');
-                })->first();
-
-            if ($kelas7A) {
-                $kelas7A->update(['teacher_id' => $teacher->id]);
-            }
-        }
-
-        // 3. Sistem hanya memiliki dua role: admin dan guru,
-        //    sehingga tidak ada akun tambahan lain yang di-seed di sini.
+        (new DatabaseSeeder())->seedAccounts();
     }
 }

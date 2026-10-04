@@ -4,9 +4,6 @@
 @section('page_title', 'Rekap Presensi Siswa')
 @section('page_subtitle', 'Kelola rekapitulasi kehadiran siswa harian, mingguan, dan bulanan.')
 
-@section('page_header_right')
-
-
 @push('styles')
 <style>
     /* Header Bar Alignment on Mobile (< 768px) */
@@ -141,6 +138,186 @@
     .rekap-legend-items { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.55rem; }
     .rekap-legend-item { display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; }
 
+    /* ===== LABEL KETERANGAN (poin 2): diperbesar & lebih jelas ===== */
+    .rekap-legend {
+        padding: 0.6rem 0.85rem;
+        font-size: 0.92rem;
+    }
+    .rekap-legend-label { font-size: 0.85rem; }
+    .rekap-legend-items { gap: 0.35rem 0.85rem; }
+    .rekap-legend-item { font-size: 0.92rem; }
+    .rekap-legend-item strong { font-size: 1rem; font-weight: 700; }
+
+    /* ===== JK (poin 1): teks murni, kontras tajam ===== */
+    .rekap-jk {
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .rekap-jk.is-laki     { color: #1d4ed8 !important; }  /* biru tua  */
+    .rekap-jk.is-perempuan { color: #be185d !important; }  /* magenta/merah tua */
+
+    /* ===== IKON SEARCH / TOMBOL FILTER (poin 3): lebih besar & tebal =====
+       Tinggi 40px disamakan dengan .filter-input & dropdown Pilih Kelas
+       supaya sejajar satu baris. */
+    .recap-mobile-submit i,
+    .rekap-filter-submit i {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .rekap-filter-submit {
+        width: 56px;
+        height: 40px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #475569 !important;
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        border-radius: 0 8px 8px 0 !important;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .rekap-filter-submit:hover {
+        color: #1d4ed8 !important;
+        background: #f8fafc !important;
+    }
+
+    /* ======================================================================
+       LAYOUT KARTU REKAP (poin 7)
+       Pola sama dengan Presensi & Catatan Kehadiran: kartu tabel mengisi sisa
+       tinggi layar, hanya .table-responsive yang jadi area scroll (scrollbar
+       kanan + header sticky), dan pagination berada DI DALAM area scroll tepat
+       di bawah baris ke-100.
+       ====================================================================== */
+    #daftar-rekap {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 17rem);
+        min-height: 20rem;
+        margin-bottom: 0 !important;
+    }
+
+    #daftar-rekap .table-responsive {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
+    }
+
+    @media (max-width: 767.98px) {
+        #daftar-rekap {
+            height: calc(100dvh - 26rem);
+        }
+    }
+
+    /* Header sticky bersih: latar pekat & selalu di atas baris data. */
+    #daftar-rekap .table-responsive > table > thead { z-index: 5 !important; }
+    #daftar-rekap .table-responsive > table > thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 5 !important;
+    }
+    #daftar-rekap .table-responsive > table > tbody > tr > td {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ======================================================================
+       PAGINASI REKAP (poin 7)
+       NILAI & GAYA PERSIS SAMA dengan Catatan Kehadiran (kelas .kehadiran-pagination*).
+       Sengaja memakai nama kelas yang sama supaya tidak ada gaya baru:
+       block CSS di bawah merupakan SALINAN nilai yang sama, karena CSS Catatan
+       Kehadiran berada di blok push styles milik view lain dan tidak bisa
+       dipakai lintas halaman tanpa menyentuh file yang dilarang sesi ini.
+       (Catatan: teks "push styles" sengaja ditulis tanpa tanda @ karena
+        directive Blade harus ditutup, bukan disebut di dalam komentar CSS.)
+       ====================================================================== */
+    .kehadiran-pagination {
+        padding: 1.25rem 0.5rem 1.5rem;
+        margin: 0;
+        text-align: center;
+        border-top: 1px solid #f1f5f9;
+        background-color: #ffffff;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .kehadiran-pagination-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem 1.1rem;
+        list-style: none;
+        margin: 0 0 0.35rem;
+        padding: 0;
+    }
+
+    .kehadiran-pagination-step,
+    .kehadiran-pagination-page {
+        display: inline-block;
+        padding: 0.45rem 0.3rem;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.2;
+        text-decoration: none;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    .kehadiran-pagination-page.is-active {
+        color: #2563eb !important;
+        font-weight: 700;
+        border-bottom: 2px solid #2563eb !important;
+        cursor: default;
+    }
+
+    .kehadiran-pagination-step:hover,
+    .kehadiran-pagination-page:hover {
+        color: #2563eb !important;
+        text-decoration: underline;
+    }
+
+    .kehadiran-pagination-step:focus-visible,
+    .kehadiran-pagination-page:focus-visible {
+        outline: 2px solid #2563eb !important;
+        outline-offset: 1px;
+        border-radius: 0 !important;
+    }
+
+    .kehadiran-pagination-step.is-disabled {
+        color: #cbd5e1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .kehadiran-pagination-step.is-disabled:hover {
+        color: #cbd5e1;
+        text-decoration: none;
+    }
+
+    .kehadiran-pagination-ellipsis {
+        display: inline-block;
+        padding: 0.45rem 0.1rem;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        line-height: 1.2;
+    }
+
+    .kehadiran-pagination-info {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #64748b;
+        letter-spacing: 0.02em;
+    }
+
     /* Gaya Pagination Disamakan Persis dengan Data Siswa */
     .pagination-compact .pagination {
         margin-bottom: 0;
@@ -178,7 +355,7 @@
     <div class="d-block d-md-none mb-3">
         <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white recap-mobile-card">
             <form method="GET" action="{{ panel_route('rekap') }}" class="recap-mobile-period mb-2">
-                @foreach(request()->except('type') as $key => $value)
+                @foreach(request()->except(['type', 'page']) as $key => $value)
                     @if(is_scalar($value))
                     <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endif
@@ -209,12 +386,12 @@
                 @if($type === 'harian')
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Tanggal Presensi</label>
-                        <input type="date" name="date" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $date ?? date('Y-m-d') }}">
+                        <input type="date" name="date" id="mobileRekapDate" onchange="this.form.submit()" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
                         <div class="input-group">
-                            <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
+                            <select name="class_id" id="mobileRekapClassId" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
                                 <option value="">Semua Kelas</option>
                                 @foreach($classes as $c)
                                     <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
@@ -227,17 +404,17 @@
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Tanggal Mulai</label>
-                            <input type="date" name="start_date" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $startDate }}">
+                            <input type="date" name="start_date" id="mobileRekapStartDate" onchange="this.form.submit()" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $startDate }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Tanggal Selesai</label>
-                            <input type="date" name="end_date" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $endDate }}">
+                            <input type="date" name="end_date" id="mobileRekapEndDate" onchange="this.form.submit()" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $endDate }}">
                         </div>
                     </div>
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
                         <div class="input-group">
-                            <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
+                            <select name="class_id" id="mobileRekapClassId" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
                                 <option value="">Semua Kelas</option>
                                 @foreach($classes as $c)
                                     <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
@@ -250,7 +427,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Bulan</label>
-                            <select name="month" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <select name="month" id="mobileRekapMonth" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                                 @for($m = 1; $m <= 12; $m++)
                                     <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate($year, $m, 1)->translatedFormat('F') }}</option>
                                 @endfor
@@ -258,7 +435,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Tahun</label>
-                            <select name="year" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <select name="year" id="mobileRekapYear" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                                 @for($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                     <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                 @endfor
@@ -268,7 +445,7 @@
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
                         <div class="input-group">
-                            <select name="class_id" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
+                            <select name="class_id" id="mobileRekapClassId" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
                                 <option value="">Semua Kelas</option>
                                 @foreach($classes as $c)
                                     <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
@@ -286,13 +463,13 @@
     <div class="d-none d-md-block">
         <div class="period-container">
             <div class="period-nav">
-                <a href="{{ panel_route('rekap', array_merge(request()->except('type'), ['type' => 'harian'])) }}" class="period-link {{ $type === 'harian' ? 'active' : '' }}">
+                <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'harian'])) }}" class="period-link {{ $type === 'harian' ? 'active' : '' }}">
                     <i class='bx bx-calendar-event'></i> <span>Harian</span>
                 </a>
-                <a href="{{ panel_route('rekap', array_merge(request()->except('type'), ['type' => 'mingguan'])) }}" class="period-link {{ $type === 'mingguan' ? 'active' : '' }}">
+                <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'mingguan'])) }}" class="period-link {{ $type === 'mingguan' ? 'active' : '' }}">
                     <i class='bx bx-calendar-week'></i> <span>Mingguan</span>
                 </a>
-                <a href="{{ panel_route('rekap', array_merge(request()->except('type'), ['type' => 'bulanan'])) }}" class="period-link {{ $type === 'bulanan' ? 'active' : '' }}">
+                <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'bulanan'])) }}" class="period-link {{ $type === 'bulanan' ? 'active' : '' }}">
                     <i class='bx bx-calendar'></i> <span>Bulanan</span>
                 </a>
             </div>
@@ -304,21 +481,21 @@
                 @if($type === 'harian')
                     <div class="d-flex flex-column" style="width: 180px;">
                         <label class="filter-label">Tanggal Presensi</label>
-                        <input type="date" name="date" class="form-control form-control-sm filter-input" value="{{ $date ?? date('Y-m-d') }}">
+                        <input type="date" name="date" id="rekapDate" onchange="this.form.submit()" class="form-control form-control-sm filter-input" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                 @elseif($type === 'mingguan')
                     <div class="d-flex flex-column" style="width: 160px;">
                         <label class="filter-label">Tanggal Mulai</label>
-                        <input type="date" name="start_date" class="form-control form-control-sm filter-input" value="{{ $startDate }}">
+                        <input type="date" name="start_date" id="rekapStartDate" onchange="this.form.submit()" class="form-control form-control-sm filter-input" value="{{ $startDate }}">
                     </div>
                     <div class="d-flex flex-column" style="width: 160px;">
                         <label class="filter-label">Tanggal Selesai</label>
-                        <input type="date" name="end_date" class="form-control form-control-sm filter-input" value="{{ $endDate }}">
+                        <input type="date" name="end_date" id="rekapEndDate" onchange="this.form.submit()" class="form-control form-control-sm filter-input" value="{{ $endDate }}">
                     </div>
                 @else
                     <div class="d-flex flex-column" style="width: 140px;">
                         <label class="filter-label">Bulan</label>
-                        <select name="month" class="form-select form-select-sm filter-input">
+                        <select name="month" id="rekapMonth" onchange="this.form.submit()" class="form-select form-select-sm filter-input">
                             @for($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate($year, $m, 1)->translatedFormat('F') }}</option>
                             @endfor
@@ -326,7 +503,7 @@
                     </div>
                     <div class="d-flex flex-column" style="width: 100px;">
                         <label class="filter-label">Tahun</label>
-                        <select name="year" class="form-select form-select-sm filter-input">
+                        <select name="year" id="rekapYear" onchange="this.form.submit()" class="form-select form-select-sm filter-input">
                             @for($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
@@ -336,13 +513,13 @@
                 <div class="d-flex flex-column" style="min-width: 200px; flex: 1;">
                     <label class="filter-label">Pilih Kelas</label>
                     <div class="input-group">
-                        <select name="class_id" class="form-select form-select-sm filter-input rounded-start-3">
+                        <select name="class_id" id="rekapClassId" onchange="this.form.submit()" class="form-select form-select-sm filter-input rounded-start-3">
                             <option value="">Semua Kelas</option>
                             @foreach($classes as $c)
                                 <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data"><i class='bx bx-search'></i></button>
+                        <button type="submit" class="btn btn-sm rekap-filter-submit" title="Tampilkan data"><i class='bx bx-search'></i></button>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto" style="margin-top: 22px;">
@@ -375,8 +552,9 @@
             <span class="rekap-legend-item"><strong style="color: #d97706;">T</strong> Terlambat</span>
             <span class="rekap-legend-item"><strong class="text-primary">S</strong> Sakit</span>
             <span class="rekap-legend-item"><strong style="color: #7e22ce;">I</strong> Izin</span>
-            <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> Alpha</span>
+            <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> Alfa</span>
             <span class="rekap-legend-item"><strong style="color: #64748b;">L</strong> Libur</span>
+            <span class="rekap-legend-item"><strong style="color: #94a3b8;">-</strong> Belum Hadir</span>
         </div>
     </div>
     @endif
@@ -423,8 +601,9 @@
                             <td class="text-center">
                                 @if($lateText === 'Tepat Waktu')
                                     <span class="text-success small">Tepat Waktu</span>
-                                @elseif(str_starts_with($lateText, '+'))
-                                    <span class="text-warning-emphasis small">{{ $lateText }}</span>
+                                @elseif($status === 'Terlambat')
+                                    {{-- Format ramah dari rekap_format_late_minutes(): "15 MNT" / "1 JAM 5 MNT" --}}
+                                    <span class="text-warning-emphasis small fw-semibold">{{ $lateText }}</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -558,8 +737,9 @@
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
                             </td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
-                            <td>
-                                <span class="small" style="{{ optional($student)->gender == 'Perempuan' ? 'color:#ec4899;' : 'color:#2563eb;' }}">
+                            <td class="text-center">
+                                {{-- JK: teks murni, kontras tinggi. L = biru tua, P = magenta tua. --}}
+                                <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
                                     {{ optional($student)->gender == 'Perempuan' ? 'P' : 'L' }}
                                 </span>
                             </td>
@@ -591,9 +771,67 @@
                     </tbody>
                 </table>
             @endif
-        </div>
 
-        {!! render_compact_pagination($dataRows, 'daftar-rekap') !!}
+        <!-- ==========================================================================
+             PAGINASI REKAP - TEKS MURNI (TANPA KONTAINER)
+             Gaya PERSIS SAMA dengan Catatan Kehadiran (kelas .kehadiran-pagination*).
+             POSISI: DI DALAM .table-responsive, tepat di bawah baris ke-100, jadi
+             ikut ter-scroll dan baru terlihat setelah user scroll ke baris terakhir.
+             ====================================================================== -->
+        @php
+            $pgPaginator = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator) ? $dataRows : null;
+            $pgCurrent = $pgPaginator ? $pgPaginator->currentPage() : 1;
+            $pgLast = $pgPaginator ? $pgPaginator->lastPage() : 1;
+            $pgTotal = $pgPaginator ? $pgPaginator->total() : 0;
+            $pgHash = '#daftar-rekap';
+
+            $pgPages = [];
+            if ($pgLast <= 7) {
+                $pgPages = range(1, $pgLast);
+            } else {
+                $pgPages[] = 1;
+                $pgStart = max(2, $pgCurrent - 1);
+                $pgEnd = min($pgLast - 1, $pgCurrent + 1);
+                if ($pgStart > 2) { $pgPages[] = '...'; }
+                for ($i = $pgStart; $i <= $pgEnd; $i++) { $pgPages[] = $i; }
+                if ($pgEnd < $pgLast - 1) { $pgPages[] = '...'; }
+                $pgPages[] = $pgLast;
+            }
+        @endphp
+
+        @if ($pgPaginator && $pgLast > 1)
+            <nav class="kehadiran-pagination" id="rekap-pagination" aria-label="Navigasi halaman rekap presensi">
+                <ul class="kehadiran-pagination-list">
+                    @if ($pgCurrent <= 1)
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; Sebelumnya</span></li>
+                    @else
+                        <li><a class="kehadiran-pagination-step" href="{{ $pgPaginator->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; Sebelumnya</a></li>
+                    @endif
+
+                    @foreach ($pgPages as $pgItem)
+                        @if ($pgItem === '...')
+                            <li><span class="kehadiran-pagination-ellipsis" aria-hidden="true">&hellip;</span></li>
+                        @elseif ($pgItem === $pgCurrent)
+                            <li><span class="kehadiran-pagination-page is-active" aria-current="page">{{ $pgItem }}</span></li>
+                        @else
+                            <li><a class="kehadiran-pagination-page" href="{{ $pgPaginator->url($pgItem) }}{{ $pgHash }}">{{ $pgItem }}</a></li>
+                        @endif
+                    @endforeach
+
+                    @if ($pgCurrent >= $pgLast)
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">Berikutnya &rsaquo;</span></li>
+                    @else
+                        <li><a class="kehadiran-pagination-step" href="{{ $pgPaginator->nextPageUrl() }}{{ $pgHash }}" rel="next">Berikutnya &rsaquo;</a></li>
+                    @endif
+                </ul>
+
+                <p class="kehadiran-pagination-info">
+                    Menampilkan {{ $pgPaginator->firstItem() ?? 0 }}&ndash;{{ $pgPaginator->lastItem() ?? 0 }}
+                    dari {{ $pgTotal }} siswa
+                </p>
+            </nav>
+        @endif
+        </div><!-- /.table-responsive : pagination ikut di dalam area scroll -->
     </div>
 
     @push('scripts')

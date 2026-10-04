@@ -136,6 +136,17 @@
     </div>
     @endif
 
+    <!-- Bantuan Singkat Aturan Tahun Ajaran Aktif (di bawah judul halaman) -->
+    <div class="d-flex align-items-start gap-2 mb-3">
+        <i class='bx bx-info-circle text-muted mt-1'></i>
+        <span class="small text-muted" style="line-height: 1.5;">
+            Hanya <b class="text-dark">satu tahun ajaran</b> yang dapat aktif dalam satu waktu.
+            Untuk memindahkannya, klik tombol <b class="text-dark">AKTIFKAN</b> pada tahun ajaran lain
+            &mdash; tahun ajaran yang sedang aktif otomatis dinonaktifkan.
+            Tahun ajaran yang sedang berlangsung tidak dapat dihapus.
+        </span>
+    </div>
+
     <!-- ========================================================================= -->
     <!-- 1. KONTEN KHUSUS MOBILE (< 768px): KARTU KONTINER TOMBOL AKSI               -->
     <!-- ========================================================================= -->
@@ -168,14 +179,9 @@
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle text-nowrap">
                         <td class="text-center text-nowrap px-3">{{ $academicYears->firstItem() + $index }}</td>
                         <td class="text-center text-nowrap px-3">
-                            <div class="d-inline-flex align-items-center justify-content-center gap-2">
-                                <span>{{ $year->name }}</span>
-                                @if($year->is_active)
-                                    <span class="fw-bold text-success" style="font-size: 0.7rem;">
-                                        AKTIF
-                                    </span>
-                                @endif
-                            </div>
+                            {{-- Kolom ini hanya berisi nama tahun ajaran (mis. "2026/2027").
+                                 Status "AKTIF" hanya tampil di kolom Status Aktif. --}}
+                            <span>{{ $year->name }}</span>
                         </td>
                         <td class="text-center text-nowrap px-3">
                             Semester {{ $year->semester }}
@@ -187,15 +193,22 @@
                         </td>
                         <td class="text-center text-nowrap px-3">
                             <span class="col-status-aktif">
-                                <form action="{{ panel_route('academic-years.toggle-active', $year->id) }}" method="POST" id="toggleForm{{ $year->id }}" class="d-inline m-0">
-                                    @csrf
-                                    <div class="form-check form-switch d-inline-flex align-items-center justify-content-center gap-2 m-0 p-0">
-                                        <input class="form-check-input float-none m-0" type="checkbox" role="switch" id="switch{{ $year->id }}" {{ $year->is_active ? 'checked disabled' : '' }} onchange="confirmToggleActive('{{ $year->id }}', '{{ $year->name }}', '{{ $year->semester }}', this)" style="cursor: pointer; width: 38px; height: 20px;">
-                                        <label class="form-check-label small fw-semibold {{ $year->is_active ? 'text-success' : 'text-muted' }}" for="switch{{ $year->id }}" style="cursor: pointer;">
-                                            {{ $year->is_active ? 'Sedang Aktif' : 'Aktifkan' }}
-                                        </label>
-                                    </div>
-                                </form>
+                                @if($year->is_active)
+                                    <span class="d-inline-flex align-items-center gap-1 fw-bold text-success" style="font-size: 0.78rem;" title="Tahun ajaran ini sedang aktif di sistem">
+                                        <i class='bx bx-check-circle'></i> AKTIF
+                                    </span>
+                                @else
+                                    {{-- Konfirmasi ada di onsubmit (bukan onclick tombol) supaya
+                                         tombol type="submit" tetap mengirim form walau JS gagal
+                                         dimuat; lihat confirmToggleActive() di bawah. --}}
+                                    <form action="{{ panel_route('academic-years.toggle-active', $year->id) }}" method="POST" id="activateYearForm-{{ $year->id }}" class="d-inline m-0"
+                                          onsubmit="return confirmToggleActive(this, '{{ $year->id }}', '{{ $year->name }}', '{{ $year->semester }}')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success" title="Jadikan tahun ajaran ini sebagai tahun ajaran aktif">
+                                            Aktifkan
+                                        </button>
+                                    </form>
+                                @endif
                             </span>
                         </td>
                         <td class="text-center text-nowrap px-3">
@@ -206,9 +219,20 @@
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
-                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteYear('{{ $year->id }}', '{{ $year->name }}')" {{ $year->is_active ? 'disabled title="Tidak dapat menghapus tahun ajaran aktif"' : 'title="Hapus"' }}>
-                                    Hapus
-                                </button>
+                                @if($year->is_active)
+                                    <!-- Tahun ajaran aktif: tombol tampil redup/nonaktif + tooltip alasan.
+                                         Pembungkus <span> ber-title karena elemen disabled sering tidak
+                                         menampilkan tooltip di sebagian browser. -->
+                                    <span class="d-inline-flex" title="Tahun ajaran sedang berlangsung, tidak dapat dihapus">
+                                        <button type="button" class="btn btn-sm btn-danger disabled" aria-disabled="true">
+                                            Hapus
+                                        </button>
+                                    </span>
+                                @else
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteYear('{{ $year->id }}', '{{ $year->name }}')" title="Hapus">
+                                        Hapus
+                                    </button>
+                                @endif
                                 <form id="deleteYearForm-{{ $year->id }}" action="{{ panel_route('academic-years.destroy', $year->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
@@ -250,10 +274,23 @@
                                                 <input type="date" name="end_date" class="form-control rounded-3" value="{{ \Carbon\Carbon::parse($year->end_date)->format('Y-m-d') }}" required>
                                             </div>
                                         </div>
-                                        <div class="form-check form-switch mt-2">
-                                            <input class="form-check-input" type="checkbox" name="is_active" value="1" id="editActive{{ $year->id }}" {{ $year->is_active ? 'checked' : '' }}>
-                                            <label class="form-check-label small fw-semibold" for="editActive{{ $year->id }}">Set sebagai Tahun Ajaran Aktif</label>
-                                        </div>
+                                        @if($year->is_active)
+                                            <!-- Tahun ajaran aktif: checkbox dikunci (tidak bisa dimatikan langsung),
+                                                 nilai is_active tetap dikirim via hidden input agar edit lain tetap tersimpan. -->
+                                            <input type="hidden" name="is_active" value="1">
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" name="is_active_disabled" value="1" id="editActive{{ $year->id }}" checked disabled>
+                                                <label class="form-check-label small fw-semibold text-success" for="editActive{{ $year->id }}">Tahun Ajaran Aktif (tidak dapat dinonaktifkan langsung)</label>
+                                            </div>
+                                            <div class="form-text mt-1">
+                                                Untuk memindahkan tahun ajaran aktif, gunakan tombol AKTIFKAN pada tahun ajaran lain.
+                                            </div>
+                                        @else
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" name="is_active" value="1" id="editActive{{ $year->id }}">
+                                                <label class="form-check-label small fw-semibold" for="editActive{{ $year->id }}">Set sebagai Tahun Ajaran Aktif</label>
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="modal-footer border-top-0 pt-0">
                                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
@@ -350,35 +387,73 @@
         });
     }
 
-    function confirmToggleActive(id, name, semester, checkbox) {
-        Swal.fire({
-            title: 'Aktifkan Tahun Ajaran?',
-            text: `Jadikan tahun ajaran ${name} (Semester ${semester}) sebagai yang aktif di sistem?`,
-            icon: 'question',
-            iconColor: '#3b82f6',
-            showCancelButton: true,
-            confirmButtonColor: '#3b82f6',
-            cancelButtonColor: '#f1f5f9',
-            confirmButtonText: 'Ya, Aktifkan',
-            cancelButtonText: 'Batal',
-            reverseButtons: true,
-            focusCancel: true,
-            buttonsStyling: false,
-            customClass: {
-                popup: 'shadow-lg border-0 rounded-4 p-4',
-                title: 'fw-bold fs-4 text-dark mb-2',
-                htmlContainer: 'text-secondary fs-6 mb-4',
-                actions: 'gap-2 w-100 justify-content-center m-0',
-                confirmButton: 'btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-xs',
-                cancelButton: 'btn btn-light text-secondary px-4 py-2 rounded-3 fw-semibold border'
+    /**
+     * Konfirmasi pengaktifan tahun ajaran.
+     * Dipanggil dari onsubmit form AKTIFKAN (bukan onclick tombol):
+     *  - Swal tersedia  -> tahan submit asli (return false), tampilkan dialog,
+     *                      kirim form hanya setelah dikonfirmasi.
+     *  - Swal tidak ada  -> fallback window.confirm() bawaan browser.
+     *  - JS sama sekali mati -> tombol type="submit" tetap mengirim form,
+     *                      jadi tombol AKTIFKAN tidak pernah "mati total".
+     * Penyebab kegagalan dicatat ke console browser (tab Console) untuk diagnosis.
+     */
+    function confirmToggleActive(form, id, name, semester) {
+        const message = `Aktifkan tahun ajaran ${name} - ${semester}? Tahun ajaran aktif saat ini akan dinonaktifkan.`;
+
+        const submitForm = () => {
+            const target = document.getElementById(`activateYearForm-${id}`) || form;
+            if (!target) {
+                console.error(`AKTIFKAN: form activateYearForm-${id} tidak ditemukan di halaman. Muat ulang halaman.`);
+                return;
             }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById(`toggleForm${id}`).submit();
-            } else {
-                checkbox.checked = false;
-            }
-        })
+            target.submit();
+        };
+
+        if (typeof Swal === 'undefined' || typeof Swal.fire !== 'function') {
+            console.warn('AKTIFKAN: SweetAlert2 tidak termuat (CDN gagal/blokir?), memakai konfirmasi browser.');
+            return window.confirm(message);
+        }
+
+        try {
+            Swal.fire({
+                title: 'Aktifkan Tahun Ajaran?',
+                text: message,
+                icon: 'question',
+                iconColor: '#3b82f6',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#f1f5f9',
+                confirmButtonText: 'Ya, Aktifkan',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                focusCancel: true,
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'shadow-lg border-0 rounded-4 p-4',
+                    title: 'fw-bold fs-4 text-dark mb-2',
+                    htmlContainer: 'text-secondary fs-6 mb-4',
+                    actions: 'gap-2 w-100 justify-content-center m-0',
+                    confirmButton: 'btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-xs',
+                    cancelButton: 'btn btn-light text-secondary px-4 py-2 rounded-3 fw-semibold border'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitForm();
+                }
+            }).catch((err) => {
+                console.error('AKTIFKAN: dialog konfirmasi gagal, memakai konfirmasi browser.', err);
+                if (window.confirm(message)) {
+                    submitForm();
+                }
+            });
+        } catch (err) {
+            console.error('AKTIFKAN: gagal menampilkan dialog konfirmasi.', err);
+            return window.confirm(message);
+        }
+
+        // Tahan submit asli; pengiriman dilakukan manual setelah konfirmasi
+        // (form.submit() tidak memicu onsubmit, jadi tidak ada pengulangan).
+        return false;
     }
 </script>
 @endpush

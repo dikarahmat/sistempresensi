@@ -39,7 +39,7 @@ class RekapController extends Controller
             $query->where('school_class_id', $classId);
         }
         $studentPaginator = $paginateStudents
-            ? $query->orderBy('name', 'asc')->paginate(50)->withQueryString()
+            ? $query->orderBy('name', 'asc')->paginate(100)->withQueryString()
             : null;
         $students = $studentPaginator
             ? $studentPaginator->getCollection()
@@ -84,9 +84,13 @@ class RekapController extends Controller
                     if ($status === 'Hadir') {
                         $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
                         if ($att->time_remark === 'Terlambat') {
+                            // Cara menghitung selisih menit TIDAK diubah.
+                            // $diff dibulatkan ke integer karena diffInMinutes()
+                            // bisa menghasilkan float (mis. 892.0166666666667).
                             $diff = Carbon::parse($att->check_in)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                            $lateMinutes = $diff < 0 ? abs($diff) : 0;
-                            $lateText = "+{$lateMinutes}m";
+                            $lateMinutes = $diff < 0 ? (int) round(abs($diff)) : 0;
+                            // Format tampilan ramah: "15 MNT" / "1 JAM 5 MNT".
+                            $lateText = rekap_format_late_minutes($lateMinutes);
                             $status = 'Terlambat';
                             $totalTerlambat++;
                             $totalHadir++;
@@ -414,21 +418,22 @@ class RekapController extends Controller
 
             $fileName = "Rekap_Presensi_{$type}_" . Str::slug($className) . ".pdf";
 
-            return \App\Services\DownloadCacheService::downloadRekapFile('pdf', $type, $classId, $request->all(), function() use ($type, $classId, $request, $className, $selectedClass) {
+            return \App\Services\DownloadCacheService::downloadRekapFile('pdf', $type, $classId, $request->all(), function() use ($type, $classId, $request, $className) {
                 $schoolName = Setting::getSchoolName();
                 $schoolAddress = Setting::getSchoolAddress();
                 $activeYear = AcademicYear::getActive();
 
                 $recap = $this->getRecapData($type, $classId, $request->all());
 
-                $reportHeading = "LAPORAN REKAPITULASI PRESENSI - " . strtoupper($type);
-                if ($type === 'harian') {
-                    $reportSubheading = "Tanggal: " . Carbon::parse($recap['date'])->translatedFormat('l, d F Y') . " | Kelas: {$className}";
-                } elseif ($type === 'mingguan') {
-                    $reportSubheading = "Periode: " . Carbon::parse($recap['startDate'])->translatedFormat('d M Y') . " s/d " . Carbon::parse($recap['endDate'])->translatedFormat('d M Y') . " | Kelas: {$className}";
-                } else {
-                    $reportSubheading = "Bulan: " . Carbon::createFromDate($recap['year'], $recap['month'], 1)->translatedFormat('F Y') . " | Kelas: {$className}";
-                }
+                // Section per kelas: urutan kelas dari data (tingkat -> rombel),
+                // nomor urut lanjut, wali kelas diambil dari Data Guru,
+                // judul & sub-judul memakai helper yang SAMA dengan ekspor Excel.
+                $sections = MultiPeriodAttendanceExport::buildSections(
+                    $recap['dataRows'],
+                    $type,
+                    $request->all(),
+                    $classId
+                );
 
                 // Ambil logo sekolah jika ada
                 $logoPath = Setting::getLogo();
@@ -438,21 +443,15 @@ class RekapController extends Controller
                     $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
                 }
 
-                $rightSignatoryTitle = $selectedClass ? 'Guru Kelas ' . $selectedClass->name : 'Petugas Presensi';
-
                 $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
                     'title' => "Laporan Presensi {$type} - {$className}",
                     'schoolName' => $schoolName,
                     'schoolAddress' => $schoolAddress,
-                    'reportHeading' => $reportHeading,
-                    'reportSubheading' => $reportSubheading,
                     'logoBase64' => $logoBase64,
                     'activeYear' => $activeYear,
                     'headmasterName' => Setting::getHeadmasterName(),
                     'headmasterNip' => Setting::getHeadmasterNip(),
-                    'teacherName' => $selectedClass?->teacher?->name,
-                    'teacherNip' => $selectedClass?->teacher?->nip,
-                    'rightSignatoryTitle' => $rightSignatoryTitle,
+                    'sections' => $sections,
                 ]))->setPaper('a4', 'landscape');
 
                 return $pdf->output();

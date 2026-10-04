@@ -17,20 +17,80 @@
             <directory>app</directory>
         </include>
     </source>
+    <!--
+        WAJIB: test TIDAK BOLEH pernah menyentuh database MySQL lokal (presensi_smp).
+
+        Kenapa force="true" itu wajib?
+        PHPUnit hanya menulis variabel <env> ke environment proses bila variabel
+        tersebut BELUM ada, KECUALI bila force="true".
+        Sumber: vendor/phpunit/phpunit/src/TextUI/Configuration/PhpHandler.php
+                if ($force || getenv($name) === false) { putenv(...); }
+
+        Di mesin ini DB_CONNECTION=mysql / DB_DATABASE=presensi_smp sudah ada di
+        environment proses (User-level OS), sehingga tanpa force="true" PHPUnit
+        TIDAK menimpanya -> test tetap memakai MySQL. Karena test memakai
+        RefreshDatabase (migrate:fresh), seluruh database presensi_smp beserta
+        data siswa/guru/kelas akan TERHAPUS. Inilah akar masalah data hilang.
+       Lihat juga tests/TestCase.php yang gagal keras bila bukan SQLite.
+    -->
     <php>
-        <env name="APP_ENV" value="testing"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
-        <env name="DB_URL" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
-        <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
-        <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="true"/>
+        <env name="BROADCAST_CONNECTION" value="null" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <env name="DB_HOST" value="127.0.0.1" force="true"/>
+        <env name="DB_PORT" value="3306" force="true"/>
+        <env name="DB_USERNAME" value="" force="true"/>
+        <env name="DB_PASSWORD" value="" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="PULSE_ENABLED" value="false" force="true"/>
+        <env name="TELESCOPE_ENABLED" value="false" force="true"/>
+        <env name="NIGHTWATCH_ENABLED" value="false" force="true"/>
+
+        <!--
+            WAJIB SANGAT: blok <server> di bawah BUKAN redundant dengan <env> di atas.
+
+            Faktor-faktor kenapa:
+            1. PHPUnit hanya menulis <env> ke putenv() + $_ENV
+               (vendor/phpunit/phpunit/src/TextUI/Configuration/PhpHandler.php:105-122).
+               Keduanya TIDAK cukup untuk overriding, karena
+            2. Laravel membaca env lewat Illuminate\Support\Env -> Dotenv, yang urutan
+               adapter-nya (vendor/vlucas/phpdotenv/src/Repository/RepositoryBuilder.php:25-28)
+               adalah: ServerConstAdapter ($_SERVER) DULUAN, lalu EnvConstAdapter ($_ENV),
+               lalu PutenvAdapter (getenv).
+               Artinya $_SERVER punya PRIORITAS TERTINGGI.
+            3. Di mesin ini DB_CONNECTION=mysql & DB_DATABASE=presensi_smp sudah ada
+               di environment proses sehingga PHP CLI mengisinya ke $_SERVER.
+               Akibatnya test memakai MySQL walaupun <env> sudah di-set ke sqlite.
+            4. Test memakai RefreshDatabase (migrate:fresh) -> SELURUH database
+               presensi_smp beserta data siswa/guru/kelas ikut terhapus.
+            5. PHPUnit menulis $_SERVER secara unconditional lewat
+               handleServerVariables() (PhpHandler.php:91-96), jadi blok <server>
+               inilah yang benar-benar memaksa test ke SQLite in-memory.
+        -->
+        <server name="APP_ENV" value="testing"/>
+        <server name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <server name="BCRYPT_ROUNDS" value="4"/>
+        <server name="BROADCAST_CONNECTION" value="null"/>
+        <server name="CACHE_STORE" value="array"/>
+        <server name="DB_CONNECTION" value="sqlite"/>
+        <server name="DB_DATABASE" value=":memory:"/>
+        <server name="DB_URL" value=""/>
+        <server name="DB_HOST" value="127.0.0.1"/>
+        <server name="DB_PORT" value="3306"/>
+        <server name="DB_USERNAME" value=""/>
+        <server name="DB_PASSWORD" value=""/>
+        <server name="MAIL_MAILER" value="array"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <server name="SESSION_DRIVER" value="array"/>
+        <server name="PULSE_ENABLED" value="false"/>
+        <server name="TELESCOPE_ENABLED" value="false"/>
+        <server name="NIGHTWATCH_ENABLED" value="false"/>
     </php>
 </phpunit>

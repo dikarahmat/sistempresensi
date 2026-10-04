@@ -2,26 +2,26 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
+/**
+ * Wrapper yang meneruskan ke DatabaseSeeder (sumber kebenaran tunggal).
+ *
+ * SEBELUMNYA seeder ini membuat/menimpa akun admin@smppresensipgri.sch.id
+ * dengan password "password123", sedangkan DatabaseSeeder memakai
+ * admin@presensi.com dengan "admin123". Dua kredensial admin yang berbeda
+ * dalam satu aplikasi membuat login gagal secara membingungkan.
+ *
+ * Sekarang tidak ada lagi penulisan akun di sini; seluruh identitas dan
+ * password mengikuti DatabaseSeeder sehingga tidak pernah saling menimpa.
+ */
 class AdminUserSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Jalankan seeder akun Admin dan Guru default.
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@smppresensipgri.sch.id'],
-            [
-                'name' => 'Administrator PGRI',
-                'username' => 'admin',
-                'password' => Hash::make('password123'),
-                'role' => 'admin',
-                'email_verified_at' => now(),
-            ]
-        );
+        (new DatabaseSeeder())->seedAccounts();
     }
 }

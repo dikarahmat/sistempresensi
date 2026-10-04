@@ -36,32 +36,26 @@ return new class extends Migration {
             $table->string('qr_token', 255)->nullable()->change();
         });
 
-        // 3. Reset total data students dan teachers (auto-increment ke 1)
-        //    PERHATIAN: Blok reset data bersifat DESTRUKTIF. Hanya jalankan di
-        //    lingkungan non-production (development/local). Di production
-        //    (Railway) migrasi harus murni perubahan skema tanpa menghapus data.
-        if (!app()->environment('production')) {
-            if (DB::getDriverName() === 'mysql') {
-                DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
-            }
-
-            // Bersihkan data presensi yang bergantung pada siswa
-            DB::table('attendances')->truncate();
-
-            // Reset kelas agar relasi teacher_id menjadi null
-            DB::table('school_classes')->update(['teacher_id' => null]);
-
-            // Kosongkan tabel siswa dan guru
-            DB::table('students')->truncate();
-            DB::table('teachers')->truncate();
-
-            // Reset auto increment
-            if (DB::getDriverName() === 'mysql') {
-                DB::statement('ALTER TABLE students AUTO_INCREMENT = 1;');
-                DB::statement('ALTER TABLE teachers AUTO_INCREMENT = 1;');
-                DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
-            }
-        }
+        // 3. CATATAN PENTING - BLOK RESET DATA SUDAH DIHAPUS (tanggal 2026-10-03)
+        //
+        // Versi migration ini sebelumnya berisi blok:
+        //     DB::table('attendances')->truncate();
+        //     DB::table('school_classes')->update(['teacher_id' => null]);
+        //     DB::table('students')->truncate();
+        //     DB::table('teachers')->truncate();
+        //     ALTER TABLE students/teachers AUTO_INCREMENT = 1;
+        // yang dijalankan setiap kali migration ini dieksekusi pada environment
+        // non-production.
+        //
+        // Migration bersifat BERJALAN SEKALI per database. Namun jika dikombinasikan
+        // dengan `migrate:fresh` / `migrate:refresh` (yang dipanggil RefreshDatabase
+        // saat test), blok tersebut ikut ter-eksekusi dan MENGHAPUS SELURUH data
+        // siswa, guru, dan presensi di database development. Ini salah satu sumber
+        // kehilangan data, jadi blok destruktifnya dihapus permanen.
+        //
+        // Jika diperlukan membersihkan data, JANGAN lewat migration. Gunakan
+        // perintah eksplisit dan sadar: `php artisan db:wipe` / truncate manual,
+        // atau tombol "Hapus Semua" di aplikasi (yang sudah dibatasi per tabel).
     }
 
     public function down(): void

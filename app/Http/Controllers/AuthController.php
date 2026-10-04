@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Teacher;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ class AuthController extends Controller
      */
     public function showLoginForm(Request $request)
     {
+        $this->warnIfUsersTableEmpty();
+
         if (Auth::check()) {
             // Role yang dikenal: langsung arahkan ke dashboard panelnya.
             // Role tak dikenal: logout agar tidak terjadi loop redirect ke /login.
@@ -29,6 +32,47 @@ class AuthController extends Controller
         }
 
         return view('auth.login');
+    }
+
+    /**
+     * Peringatan dini bila tabel `users` kosong.
+     *
+     * Gejala "Username atau kata sandi yang Anda masukkan salah" hampir selalu
+     * bermula dari tabel users yang ikut terhapus. Karena itu, saat halaman
+     * login dibuka, kondisi ini dicatat ke log agar masalah cepat terdeteksi.
+     *
+     * PENTING:
+     *   - peringatan hanya ditulis ke LOG, tidak pernah ditampilkan ke publik;
+     *   - aplikasi TIDAK PERNAH membuat akun otomatis, termasuk di production,
+     *     supaya tidak menjadi celah keamanan.
+     *
+     * Hanya dicatat pada environment local/testing agar log production tetap
+     * bersih dan tidak membocorkan informasi struktur database.
+     */
+    protected function warnIfUsersTableEmpty(): void
+    {
+        if (! app()->environment(['local', 'testing'])) {
+            return;
+        }
+
+        try {
+            if (! Schema::hasTable('users')) {
+                Log::warning('AUTH: tabel users belum ada. Jalankan `php artisan migrate`.');
+                return;
+            }
+
+            if (User::count() === 0) {
+                Log::warning(
+                    'AUTH: tabel users KOSONG - tidak ada akun yang bisa login. '
+                    .'Kemungkinan besar database ter-reset (mis. migrate:fresh atau '
+                    .'seeder/fitur yang menghapus massal). Jalankan `php artisan db:seed` '
+                    .'untuk membuat ulang akun admin/guru.'
+                );
+            }
+        } catch (\Throwable $e) {
+            // Deteksi dini tidak boleh menjatuhkan halaman login.
+            report($e);
+        }
     }
 
     /**
@@ -50,7 +94,7 @@ class AuthController extends Controller
             'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ], [
-            'login.required' => 'Email atau Username wajib diisi.',
+            'login.required' => 'Username wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
@@ -116,7 +160,7 @@ class AuthController extends Controller
 
         // Autentikasi Gagal
         return back()->withInput($request->only('login', 'remember'))->withErrors([
-            'login' => 'Email/Username atau kata sandi yang Anda masukkan salah.',
+            'login' => 'Username atau kata sandi yang Anda masukkan salah.',
         ]);
     }
 

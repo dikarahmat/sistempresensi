@@ -109,35 +109,89 @@
         text-transform: uppercase;
     }
 
-    /* ===== Action Bar Layout ===== */
+    /* ===== Action Bar Layout =====
+       Satu baris rata tengah: [input cari][ikon search][dropdown kelas]
+       ..... [CETAK KARTU][IMPORT EXCEL][TAMBAH SISWA][ARSIP].
+       Semua elemen tinggi 38px; wrap rapi (bukan elemen terpotong) di layar sempit. */
     .action-bar-section {
         display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-    }
-    @media (min-width: 992px) {
-        .action-bar-section {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem 1rem;
     }
 
-    /* Responsive Search + Dropdown Filter */
-    @media (max-width: 991.98px) {
-        .search-box-wrap,
-        .filter-box-wrap {
-            max-width: 100% !important;
-            width: 100% !important;
-        }
+    .action-search-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1 1 380px;
+        min-width: 0;
+        margin: 0;
     }
-    @media (min-width: 992px) {
-        .search-box-wrap {
-            max-width: 350px !important;
+
+    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
+    .action-search-form .search-box-wrap {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        flex: 1 1 240px;
+        min-width: 170px;
+        width: auto;
+        max-width: none;
+        height: 38px;
+        margin-bottom: 0;
+    }
+    .action-search-form .search-box-wrap input.form-control {
+        height: 38px;
+        min-width: 0;
+    }
+    .action-search-form .search-box-wrap button.btn {
+        height: 38px;
+        flex: 0 0 auto;
+    }
+
+    .action-search-form .filter-box-wrap {
+        flex: 0 1 200px;
+        min-width: 150px;
+        max-width: 200px;
+        width: auto;
+    }
+    .action-search-form .filter-box-wrap select.form-select {
+        height: 38px;
+    }
+
+    /* Deretan tombol aksi di kanan: tidak mengecil (teks tetap utuh) dan tidak menumpuk */
+    .action-buttons-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        flex: 0 1 auto;
+        margin-left: auto;
+    }
+    .action-buttons-wrap .btn-solid-pill {
+        flex: 0 0 auto;
+    }
+
+    @media (max-width: 767.98px) {
+        .action-search-form {
+            flex: 1 1 100%;
         }
-        .filter-box-wrap {
-            max-width: 200px !important;
+        .action-search-form .search-box-wrap {
+            flex: 1 1 calc(100% - 0.5rem);
+        }
+        .action-search-form .filter-box-wrap {
+            flex: 1 1 100%;
+            max-width: none;
+        }
+        .action-buttons-wrap {
+            flex: 1 1 100%;
+            margin-left: 0;
+        }
+        .action-buttons-wrap .btn-solid-pill {
+            flex: 1 1 calc(50% - 0.25rem);
         }
     }
 
@@ -214,6 +268,87 @@
     .search-filter-group .input-group button.btn {
         border-radius: 0 6px 6px 0 !important;
     }
+
+    /* ==========================================================================
+       LAYOUT KARTU DATA SISWA - SAMA PERSIS dengan Catatan Kehadiran & Rekap
+       - kartu tabel mengisi sisa tinggi layar sampai mentok bawah,
+       - hanya .table-responsive yang jadi area scroll vertikal (scrollbar kanan),
+       - header kolom sticky & bersih (latar pekat, di atas baris data),
+       - pagination berada DI DALAM area scroll, tepat di bawah baris ke-100,
+       - bar pencarian + tombol aksi ada di luar area scroll (tidak ikut scroll),
+       - margin-bottom kartu dipaksa 0 supaya tidak ada ruang kosong di bawah.
+       ========================================================================== */
+    #daftar-siswa {
+        display: flex;
+        flex-direction: column;
+        /* Tinggi kartu = sisa tinggi layar, jadi kartu MENTOK ke bawah
+           (tanpa ruang kosong) dan hanya .table-responsive yang men-scroll.
+           Angka offset dihitung dari tata letak layout bersama:
+             wrapper padding (10+10, hanya >=768)
+           + padding main atas/bawah
+           + tinggi header halaman + margin bawah header
+           Offset tiap breakpoint:
+             >=1024 : 10+24+45+16+24      = 129px = 8.1rem
+             768-1023: 10+24+72+16+96      = 228px = 14.25rem
+             640-767 : 0+0+68+16+96        = 180px = 11.25rem
+             <640    : 0+0+68+10+96        = 174px = 10.9rem
+           (96 = padding bawah main di layar kecil: bottom-nav 56 + 40.)
+           Pola & tujuan sama dengan #daftar-kehadiran (13rem) dan
+           #daftar-rekap (17rem) - cuma angkanya menyesuaikan isi halaman ini. */
+        height: calc(100dvh - 8.1rem);
+        min-height: 20rem;
+        margin-bottom: 0 !important;   /* tidak ada ruang kosong di bawah card */
+    }
+
+    @media (max-width: 1023.98px) {
+        #daftar-siswa {
+            height: calc(100dvh - 14.25rem);
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        #daftar-siswa {
+            height: calc(100dvh - 11.25rem);
+        }
+    }
+
+    @media (max-width: 639.98px) {
+        #daftar-siswa {
+            height: calc(100dvh - 10.9rem);
+        }
+    }
+
+    /* Bar aksi (pencarian + tombol) TIDAK ikut mengecil/terpotong: berada di
+       luar area scroll, jadi selalu terlihat penuh. */
+    #daftar-siswa > .p-3 {
+        flex: 0 0 auto;
+    }
+
+    #daftar-siswa .table-responsive {
+        flex: 1 1 auto;
+        min-height: 0;
+        /* lepas max-height bawaan layout (65vh) supaya tinggi ikut flex */
+        max-height: none !important;
+    }
+
+    /* Header sticky - bersih, baris tidak menimpa / tidak bocor melewatinya. */
+    #daftar-siswa .table-responsive > table > thead { z-index: 5 !important; }
+    #daftar-siswa .table-responsive > table > thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 5 !important;
+        background-color: #f8fafc !important;
+    }
+
+    /* Baris data selalu berlapis di bawah header. */
+    #daftar-siswa .table-responsive > table > tbody > tr > td {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Gaya pagination TIDAK ditulis di sini: memakai blok bersama
+       .kehadiran-pagination* di layouts/app.blade.php (satu sumber gaya,
+       sama persis dengan Catatan Kehadiran & Rekap). */
 </style>
 @endpush
 
@@ -239,39 +374,64 @@
     </div>
     @endif
 
-    @if(is_admin())
-    <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all') }}" method="POST" class="d-none">
-        @csrf
-        @method('DELETE')
-    </form>
+    {{-- Notifikasi import sebagian berhasil (kuning/oranye) --}}
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
+        <div class="d-flex align-items-center">
+            <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+            <span>{{ session('warning') }}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
+    {{-- Rincian baris Excel yang dilewati --}}
+    @if(session('import_errors') && count(session('import_errors')) > 0)
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
+        <div class="d-flex align-items-center mb-1">
+            <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+            <strong>Baris yang dilewati:</strong>
+        </div>
+        <ul class="mb-0 ps-3 small">
+            @foreach(collect(session('import_errors'))->take(10) as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+            @if(count(session('import_errors')) > 10)
+                <li>… dan {{ count(session('import_errors')) - 10 }} baris lainnya.</li>
+            @endif
+        </ul>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+    </div>
     @endif
 
     <!-- KARTU UTAMA DATA SISWA -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-siswa">
         
         <!-- Action Bar & Filter -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
                 
-                <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas -->
-                <form method="GET" action="{{ panel_route('students.index') }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
-                    <!-- Search Bar -->
-                    <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
+                <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas (satu baris sejajar) -->
+                <form method="GET" action="{{ panel_route('students.index') }}" class="action-search-form">
+                    <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
+                    <div class="input-group search-box-wrap">
                         <input type="text" 
                                name="search" 
-                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 w-100" 
+                               id="studentSearchInput"
+                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3" 
                                placeholder="Cari nama atau NIS..." 
                                value="{{ request('search') }}"
                                aria-label="Cari nama atau NIS"
-                               style="height: 38px; font-size: 0.85rem; letter-spacing: 0.03em;">
-                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" style="height: 38px;">
+                               autocomplete="off"
+                               style="font-size: 0.85rem; letter-spacing: 0.03em;">
+                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
 
-                    <!-- Dropdown Filter Kelas -->
-                    <div class="w-100 filter-box-wrap" style="max-width: 200px;">
-                        <select name="class_id" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="height: 38px; font-size: 0.82rem; letter-spacing: 0.02em;">
+                    <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang (pola Catatan Kehadiran) -->
+                    <div class="filter-box-wrap">
+                        <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="Pilih kelas">
                             <option value="">Semua Kelas</option>
                             @foreach($classes as $c)
                             <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>
@@ -281,31 +441,24 @@
                         </select>
                     </div>
 
-                    @if(request('search') || request('class_id'))
-                    <div class="w-100 w-md-auto">
-                        <a href="{{ panel_route('students.index') }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
-                            Reset
-                        </a>
-                    </div>
-                    @endif
                 </form>
 
                 <!-- Sisi Kanan: Deretan Tombol Aksi -->
-                <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
-                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#printCardsModal">
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#printCardsModal">
                         <span>Cetak Kartu</span>
                     </button>
 
                     @if(Auth::check() && Auth::user()->role === 'admin')
-                    <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
                         <span>Import Excel</span>
                     </button>
 
-                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addStudentModal">
                         <span>Tambah Siswa</span>
                     </button>
 
-                    <a href="{{ panel_route('students.trash') }}" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Arsip Siswa">
+                    <a href="{{ panel_route('students.trash') }}" class="btn-solid-pill btn-solid-red" title="Arsip Siswa">
                         <span>Arsip</span>
                     </a>
                     @endif
@@ -365,15 +518,88 @@
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted">
                             <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
-                            BELUM ADA DATA SISWA YANG TERDAFTAR.
+                            @if(request('search') || request('class_id'))
+                                Tidak ada data siswa yang cocok dengan pencarian.
+                            @else
+                                BELUM ADA DATA SISWA YANG TERDAFTAR.
+                            @endif
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
 
-        {!! render_compact_pagination($students, 'daftar-siswa') !!}
+        <!-- ==========================================================================
+         PAGINASI DATA SISWA - TEKS MURNI (TANPA KONTAINER)
+         Markup & gaya SAMA PERSIS dengan Catatan Kehadiran dan Rekap:
+         "‹ Sebelumnya  1 2 3 4 5  Berikutnya ›" + "Menampilkan 1-100 dari 500 siswa".
+         Gaya memakai kelas .kehadiran-pagination* dari blok bersama di
+         layouts/app.blade.php (bukan salinan baru, bukan helper lama).
+
+         POSISI: blok ini sengaja DI DALAM .table-responsive (area scroll),
+         tepat di bawah baris terakhir, jadi ikut ter-scroll dan baru terlihat
+         setelah user menggulir sampai baris ke-100.
+         ======================================================================= -->
+        @php
+            $pgCurrent = $students->currentPage();
+            $pgLast = $students->lastPage();
+            $pgHash = '#daftar-siswa';
+
+            // Semua nomor ditampilkan bila <= 7 halaman (500 siswa / 100 = 5 hal).
+            // Kalau lebih, sisipkan "..." di kiri & kanan sekitar halaman aktif.
+            $pgPages = [];
+            if ($pgLast <= 7) {
+                $pgPages = range(1, $pgLast);
+            } else {
+                $pgPages[] = 1;
+                $pgStart = max(2, $pgCurrent - 1);
+                $pgEnd = min($pgLast - 1, $pgCurrent + 1);
+                if ($pgStart > 2) {
+                    $pgPages[] = '...';
+                }
+                for ($i = $pgStart; $i <= $pgEnd; $i++) {
+                    $pgPages[] = $i;
+                }
+                if ($pgEnd < $pgLast - 1) {
+                    $pgPages[] = '...';
+                }
+                $pgPages[] = $pgLast;
+            }
+        @endphp
+
+        @if ($pgLast > 1)
+            <nav class="kehadiran-pagination" id="siswa-pagination" aria-label="Navigasi halaman data siswa">
+                <ul class="kehadiran-pagination-list">
+                    @if ($pgCurrent <= 1)
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; Sebelumnya</span></li>
+                    @else
+                        <li><a class="kehadiran-pagination-step" href="{{ $students->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; Sebelumnya</a></li>
+                    @endif
+
+                    @foreach ($pgPages as $pgItem)
+                        @if ($pgItem === '...')
+                            <li><span class="kehadiran-pagination-ellipsis" aria-hidden="true">&hellip;</span></li>
+                        @elseif ($pgItem === $pgCurrent)
+                            <li><span class="kehadiran-pagination-page is-active" aria-current="page">{{ $pgItem }}</span></li>
+                        @else
+                            <li><a class="kehadiran-pagination-page" href="{{ $students->url($pgItem) }}{{ $pgHash }}">{{ $pgItem }}</a></li>
+                        @endif
+                    @endforeach
+
+                    @if ($pgCurrent >= $pgLast)
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">Berikutnya &rsaquo;</span></li>
+                    @else
+                        <li><a class="kehadiran-pagination-step" href="{{ $students->nextPageUrl() }}{{ $pgHash }}" rel="next">Berikutnya &rsaquo;</a></li>
+                    @endif
+                </ul>
+
+                <p class="kehadiran-pagination-info">
+                    Menampilkan {{ $students->firstItem() ?? 0 }}&ndash;{{ $students->lastItem() ?? 0 }}
+                    dari {{ $students->total() }} siswa
+                </p>
+            </nav>
+        @endif
+        </div><!-- /.table-responsive : penutup area scroll, pagination ikut di dalam -->
     </div>
 
 <!-- MODAL CETAK KARTU MASSAL -->
@@ -441,61 +667,77 @@
             <form action="{{ panel_route('students.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
+                    @if($errors->any() && !$errors->has('file_excel'))
+                    <div class="alert alert-danger py-2 px-3 small mb-3 border-0 rounded-3" role="alert">
+                        <i class='bx bx-error-circle me-1'></i> Data belum bisa disimpan. Periksa isian yang bertanda merah.
+                    </div>
+                    @endif
+
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control rounded-3" placeholder="Masukkan nama lengkap siswa" required>
+                        <input type="text" name="name" class="form-control rounded-3 @error('name') is-invalid @enderror" placeholder="Masukkan nama lengkap siswa" value="{{ old('name') }}" required>
+                        @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small fw-semibold">NIS <span class="text-danger">*</span></label>
-                            <input type="text" name="nis" class="form-control rounded-3" placeholder="Nomor Induk Siswa" required>
+                            <input type="text" name="nis" class="form-control rounded-3 @error('nis') is-invalid @enderror" placeholder="Nomor Induk Siswa" value="{{ old('nis') }}" inputmode="numeric" pattern="[0-9]*" maxlength="30" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
+                            @error('nis')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-semibold">NISN <span class="text-muted">(Opsional)</span></label>
-                            <input type="text" name="nisn" class="form-control rounded-3" placeholder="Nomor Induk Siswa Nasional">
+                            <input type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="10 digit angka" value="{{ old('nisn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                            @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Kelas <span class="text-danger">*</span></label>
-                            <select name="school_class_id" class="form-select rounded-3" required>
+                            <select name="school_class_id" class="form-select rounded-3 @error('school_class_id') is-invalid @enderror" required>
                                 <option value="">Pilih Kelas</option>
                                 @foreach($classes as $c)
-                                <option value="{{ $c->id }}">Kelas {{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ old('school_class_id') == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
                                 @endforeach
                             </select>
+                            @error('school_class_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Jenis Kelamin <span class="text-danger">*</span></label>
-                            <select name="gender" class="form-select rounded-3" required>
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
+                            <select name="gender" class="form-select rounded-3 @error('gender') is-invalid @enderror" required>
+                                <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                             </select>
+                            @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Tempat Lahir</label>
-                            <input type="text" name="birth_place" class="form-control rounded-3" placeholder="Contoh: Bandung">
+                            <input type="text" name="birth_place" class="form-control rounded-3 @error('birth_place') is-invalid @enderror" placeholder="Contoh: Bandung" value="{{ old('birth_place') }}">
+                            @error('birth_place')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Tanggal Lahir</label>
-                            <input type="date" name="birth_date" class="form-control rounded-3">
+                            <input type="date" name="birth_date" class="form-control rounded-3 @error('birth_date') is-invalid @enderror" value="{{ old('birth_date') }}">
+                            @error('birth_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small fw-semibold">Nama Orang Tua / Wali</label>
-                            <input type="text" name="parent_name" class="form-control rounded-3" placeholder="Nama Orang Tua">
+                            <input type="text" name="parent_name" class="form-control rounded-3 @error('parent_name') is-invalid @enderror" placeholder="Nama Orang Tua" value="{{ old('parent_name') }}">
+                            @error('parent_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-semibold">No. WhatsApp / HP</label>
-                            <input type="text" name="parent_phone" class="form-control rounded-3" placeholder="08xxxxxxxxxx">
+                            <input type="text" name="parent_phone" class="form-control rounded-3 @error('parent_phone') is-invalid @enderror" placeholder="08xxxxxxxxxx" value="{{ old('parent_phone') }}" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                            @error('parent_phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small fw-semibold">Alamat Lengkap</label>
-                        <textarea name="address" class="form-control rounded-3" rows="2" placeholder="Alamat tempat tinggal siswa"></textarea>
+                        <textarea name="address" class="form-control rounded-3 @error('address') is-invalid @enderror" rows="2" placeholder="Alamat tempat tinggal siswa">{{ old('address') }}</textarea>
+                        @error('address')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
@@ -518,6 +760,12 @@
             <form action="{{ panel_route('students.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
+                    @if($errors->any() && $errors->has('file_excel'))
+                    <div class="alert alert-danger py-2 px-3 small mb-3 border-0 rounded-3" role="alert">
+                        <i class='bx bx-error-circle me-1'></i> Data belum bisa disimpan. Periksa isian yang bertanda merah.
+                    </div>
+                    @endif
+
                     <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             Format kolom file Excel: <strong>NIS, NISN, Nama Lengkap, Kelas, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, Alamat, Nama Wali, No WhatsApp</strong> (.xlsx atau .csv)
@@ -525,7 +773,8 @@
                         <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
                     </div>
                     <label class="form-label small fw-semibold">Pilih File Excel</label>
-                    <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
+                    <input type="file" name="file_excel" class="form-control rounded-3 @error('file_excel') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>
+                    @error('file_excel')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
@@ -558,7 +807,7 @@
     function confirmDeleteStudent(id, name) {
         confirmUniversalDelete({
             title: 'Hapus Data Siswa?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus data siswa <b class="text-dark">${name}</b> dari sistem dan data tidak dapat dipulihkan.`,
+            html: `Siswa <b class="text-dark">${name}</b> akan dipindahkan ke Arsip. Anda dapat memulihkannya kapan saja dari halaman Arsip.`,
             confirmText: 'Hapus',
             cancelText: 'Tidak',
             onConfirm: function() {
@@ -567,16 +816,16 @@
         });
     }
 
-    function confirmDeleteAllStudents() {
-        confirmUniversalDelete({
-            title: 'Hapus Seluruh Data Siswa?',
-            html: 'Tindakan ini bersifat permanen. Anda akan menghapus <b class="text-dark">seluruh data siswa</b> beserta riwayat presensinya dari sistem.',
-            confirmText: 'Hapus Semua',
-            cancelText: 'Tidak',
-            onConfirm: function() {
-                document.getElementById('deleteAllStudentsForm').submit();
-            }
-        });
-    }
+    // Buka kembali modal form (Tambah Siswa / Import Excel) bila validasi
+    // server gagal, supaya isian lama (old) dan pesan error tetap terlihat.
+    (function () {
+        var hasError = {{ $errors->any() ? 'true' : 'false' }};
+        if (!hasError) return;
+        var targetId = {{ $errors->has('file_excel') ? "'importModal'" : "'addStudentModal'" }};
+        var modalEl = document.getElementById(targetId);
+        if (modalEl) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    })();
 </script>
 @endpush

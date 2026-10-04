@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -34,7 +35,7 @@ class TeacherController extends Controller
             });
         }
 
-        $teachers = $query->orderBy('name')->paginate(20);
+        $teachers = $query->orderBy('name')->paginate(20)->withQueryString();
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('admin.teachers.index', compact('teachers', 'classes'));
@@ -45,58 +46,55 @@ class TeacherController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'nip' => 'required|regex:/^[0-9]{18}$/|unique:teachers,nip',
-            'gender' => 'required|in:Laki-laki,Perempuan',
-            'birth_place' => 'nullable|string|max:100',
-            'birth_date' => 'nullable|date',
-            'phone_number' => 'required|regex:/^[0-9]{10,14}$/',
-            'email' => 'nullable|email|max:255',
-            'school_class_id' => 'nullable|exists:school_classes,id',
-        ], [
-            'name.required' => 'Nama lengkap guru wajib diisi.',
-            'nip.regex' => 'NIP harus berupa angka 18 digit.',
-            'nip.unique' => 'NIP sudah terdaftar pada guru lain.',
-            'gender.required' => 'Jenis kelamin wajib dipilih.',
-            'phone_number.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
-        ]);
-
-        if (empty($validated['qr_token'])) {
-            $validated['qr_token'] = (string) Str::uuid();
+        try {
+            $validated = $request->validate($this->teacherRules(), $this->teacherMessages(), $this->teacherAttributes());
+        } catch (ValidationException $e) {
+            return $this->formErrorRedirect($e, 'add');
         }
 
-        $validated['phone'] = $validated['phone_number'] ?? null;
+        try {
+            if (empty($validated['qr_token'])) {
+                $validated['qr_token'] = (string) Str::uuid();
+            }
 
-        if (!empty($validated['nip'])) {
-            $userEmail = !empty($validated['email'])
-                ? $validated['email']
-                : $validated['nip'] . '@guru.smppresensipgri.sch.id';
+            $validated['phone'] = $validated['phone_number'] ?? null;
 
-            $user = User::firstOrCreate(
-                ['email' => $userEmail],
-                [
-                    'name' => $validated['name'],
-                    'password' => Hash::make($validated['nip']),
-                    'role' => 'guru',
-                    'email_verified_at' => now(),
-                ]
-            );
+            if (!empty($validated['nip'])) {
+                $userEmail = !empty($validated['email'])
+                    ? $validated['email']
+                    : $validated['nip'] . '@guru.smppresensipgri.sch.id';
 
-            $validated['user_id'] = $user->id;
+                $user = User::firstOrCreate(
+                    ['email' => $userEmail],
+                    [
+                        'name' => $validated['name'],
+                        'password' => Hash::make($validated['nip']),
+                        'role' => 'guru',
+                        'email_verified_at' => now(),
+                    ]
+                );
+
+                $validated['user_id'] = $user->id;
+            }
+
+            $classId = $validated['school_class_id'] ?? null;
+            unset($validated['school_class_id'], $validated['email']);
+
+            $teacher = Teacher::create($validated);
+
+            if ($classId) {
+                SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+                SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
+            }
+        } catch (\Throwable $ex) {
+            report($ex);
+            return redirect()->route('admin.guru.index')
+                ->withInput($request->all())
+                ->with('open_modal', 'add')
+                ->with('form_error', 'Gagal menyimpan data guru. Coba lagi.');
         }
 
-        $classId = $validated['school_class_id'] ?? null;
-        unset($validated['school_class_id'], $validated['email']);
-
-        $teacher = Teacher::create($validated);
-
-        if ($classId) {
-            SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
-            SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
-        }
-
-        return redirect()->route('admin.guru.index')->with('success', "Data Guru '{$teacher->name}' berhasil ditambahkan!");
+        return redirect()->route('admin.guru.index')->with('success', "Data guru {$teacher->name} berhasil disimpan.");
     }
 
     /**
@@ -113,41 +111,43 @@ class TeacherController extends Controller
             }
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'nip' => 'required|regex:/^[0-9]{18}$/|unique:teachers,nip,' . $teacher->id,
-            'gender' => 'required|in:Laki-laki,Perempuan',
-            'birth_place' => 'nullable|string|max:100',
-            'birth_date' => 'nullable|date',
-            'phone_number' => 'required|regex:/^[0-9]{10,14}$/',
-            'school_class_id' => 'nullable',
-        ], [
-            'name.required' => 'Nama lengkap guru wajib diisi.',
-            'nip.regex' => 'NIP harus berupa angka 18 digit.',
-            'nip.unique' => 'NIP sudah terdaftar pada guru lain.',
-            'gender.required' => 'Jenis kelamin wajib dipilih.',
-            'phone_number.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
-        ]);
-
-        if (empty($teacher->qr_token)) {
-            $validated['qr_token'] = (string) Str::uuid();
+        try {
+            $validated = $request->validate($this->teacherRules($teacher), $this->teacherMessages(), $this->teacherAttributes());
+        } catch (ValidationException $e) {
+            return $this->formErrorRedirect($e, 'edit', $teacher->id);
         }
 
-        $validated['phone'] = $validated['phone_number'] ?? $teacher->phone;
+        try {
+            if (empty($teacher->qr_token)) {
+                $validated['qr_token'] = (string) Str::uuid();
+            }
 
-        $classId = $validated['school_class_id'] ?? null;
-        unset($validated['school_class_id']);
+            $validated['phone'] = $validated['phone_number'] ?? $teacher->phone;
 
-        $teacher->update($validated);
+            $classId = $validated['school_class_id'] ?? null;
+            if ($classId === 'none' || $classId === '') {
+                $classId = null;
+            }
+            unset($validated['school_class_id']);
 
-        if ($classId) {
-            SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
-            SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
-        } else {
-            SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+            $teacher->update($validated);
+
+            if ($classId) {
+                SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+                SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
+            } else {
+                SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+            }
+        } catch (\Throwable $ex) {
+            report($ex);
+            return redirect()->route('admin.guru.index')
+                ->withInput($request->all())
+                ->with('open_modal', 'edit')
+                ->with('open_teacher_id', $teacher->id)
+                ->with('form_error', 'Gagal menyimpan data guru. Coba lagi.');
         }
 
-        return redirect()->route('admin.guru.index')->with('success', "Data guru '{$teacher->name}' berhasil diperbarui!");
+        return redirect()->route('admin.guru.index')->with('success', "Data guru {$teacher->name} berhasil disimpan.");
     }
 
     /**
@@ -228,30 +228,129 @@ class TeacherController extends Controller
      */
     public function import(Request $request): RedirectResponse
     {
-        $request->validate([
-            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
-        ], [
-            'file_excel.required' => 'Pilih file Excel yang akan diunggah.',
-            'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
-        ]);
+        try {
+            $request->validate([
+                'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            ], [
+                'file_excel.required' => 'Pilih file Excel yang akan diunggah.',
+                'file_excel.file' => 'File tidak valid. Silakan pilih ulang file Excel.',
+                'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
+                'file_excel.max' => 'Ukuran file maksimal 5 MB.',
+            ], [
+                'file_excel' => 'file Excel',
+            ]);
+        } catch (ValidationException $e) {
+            return $this->formErrorRedirect($e, 'import');
+        }
 
         try {
             $import = new TeachersImport();
             Excel::import($import, $request->file('file_excel'));
 
-            $message = "Import selesai! {$import->getImportedCount()} data guru berhasil diimpor.";
-            if ($import->getSkippedCount() > 0) {
-                $message .= " ({$import->getSkippedCount()} data dilewati)";
+            $imported = $import->getImportedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
+
+            if ($imported > 0 && $skipped === 0) {
+                $status = 'success';
+                $message = "Import berhasil: {$imported} guru diimpor.";
+            } elseif ($imported > 0) {
+                $status = 'warning';
+                $message = "Import sebagian berhasil: {$imported} diimpor, {$skipped} dilewati.";
+            } else {
+                $status = 'danger';
+                $message = "Import gagal: tidak ada data yang diimpor. {$skipped} baris dilewati. Periksa format file Excel dan alasan di bawah.";
             }
 
-            return redirect()->route('admin.guru.index')
-                ->with('success', $message)
-                ->with('import_errors', $import->getErrors());
+            $redirect = redirect()->route('admin.guru.index')
+                ->with('import_status', $status)
+                ->with('import_message', $message);
+
+            if (!empty($errors)) {
+                $redirect->with('import_errors', $errors);
+            }
+
+            return $redirect;
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.guru.index')
                 ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
         }
+    }
+
+    /**
+     * Aturan validasi bersama Tambah/Edit guru (Bahasa Indonesia).
+     */
+    private function teacherRules(?Teacher $teacher = null): array
+    {
+        $nipUnique = $teacher
+            ? 'unique:teachers,nip,' . $teacher->id
+            : 'unique:teachers,nip';
+
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'nip' => ['required', 'regex:/^[0-9]{18}$/', $nipUnique],
+            'gender' => ['required', 'in:Laki-laki,Perempuan'],
+            'birth_place' => ['nullable', 'string', 'max:100'],
+            'birth_date' => ['nullable', 'date'],
+            'phone_number' => ['required', 'regex:/^[0-9]{10,15}$/'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'school_class_id' => $teacher ? ['nullable'] : ['nullable', 'exists:school_classes,id'],
+        ];
+    }
+
+    private function teacherMessages(): array
+    {
+        return [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'name.string' => 'Nama lengkap tidak valid.',
+            'name.max' => 'Nama lengkap maksimal 255 karakter.',
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.regex' => 'NIP harus 18 digit angka.',
+            'nip.unique' => 'NIP sudah terdaftar.',
+            'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'gender.in' => 'Jenis kelamin tidak valid.',
+            'birth_place.string' => 'Tempat lahir tidak valid.',
+            'birth_place.max' => 'Tempat lahir maksimal 100 karakter.',
+            'birth_date.date' => 'Tanggal lahir tidak valid.',
+            'phone_number.required' => 'Nomor telepon wajib diisi.',
+            'phone_number.regex' => 'Nomor telepon harus 10-15 digit angka.',
+            'email.email' => 'Format email tidak valid.',
+            'email.max' => 'Email maksimal 255 karakter.',
+            'school_class_id.exists' => 'Penugasan kelas tidak valid.',
+        ];
+    }
+
+    private function teacherAttributes(): array
+    {
+        return [
+            'name' => 'nama lengkap',
+            'nip' => 'NIP',
+            'gender' => 'jenis kelamin',
+            'birth_place' => 'tempat lahir',
+            'birth_date' => 'tanggal lahir',
+            'phone_number' => 'nomor telepon',
+            'email' => 'email',
+            'school_class_id' => 'penugasan kelas',
+        ];
+    }
+
+    /**
+     * Redirect balik ke index dengan isian lama, modal dibuka kembali,
+     * dan pesan error siap ditampilkan di dalam form terkait.
+     */
+    private function formErrorRedirect(ValidationException $e, string $modal, ?int $teacherId = null): RedirectResponse
+    {
+        $redirect = redirect()->route('admin.guru.index')
+            ->withInput($e->validator->getData())
+            ->with('open_modal', $modal)
+            ->withErrors($e->validator->errors());
+
+        if ($teacherId !== null) {
+            $redirect->with('open_teacher_id', $teacherId);
+        }
+
+        return $redirect;
     }
 
     /**

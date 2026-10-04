@@ -143,28 +143,95 @@
     .pagination-compact .page-link {
         padding: 0.25rem 0.6rem;
     }
+
+    /* --------------------------------------------------------------------------
+       NOTIFIKASI HALAMAN HARI LIBUR (.alert-libur)
+       Tombol X dibuat statis (bukan absolut) sehingga sejajar vertikal di tengah
+       dengan teks notifikasi, dengan jarak kanan yang konsisten.
+       Berlaku untuk semua jenis notifikasi di halaman ini: hijau (berhasil),
+       kuning (peringatan), dan merah (gagal).
+       Scoped hanya ke halaman ini -> halaman lain (Siswa/Guru/Kelas) TIDAK ikut.
+       -------------------------------------------------------------------------- */
+    .alert-libur.alert-dismissible {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-right: 0.75rem;
+    }
+
+    .alert-libur-body {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .alert-libur.alert-dismissible .btn-close {
+        position: static;
+        top: auto;
+        right: auto;
+        z-index: auto;
+        align-self: center;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0.35rem 0.4rem;
+    }
 </style>
 @endpush
 
 @section('content')
     <!-- Alert Notifikasi -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
-            <span>{{ session('success') }}</span>
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2 alert-libur" role="alert">
+        <div class="alert-libur-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+    </div>
+    @endif
+
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2 alert-libur" role="alert">
+        <div class="alert-libur-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <span>{{ session('warning') }}</span>
+            </div>
+            @if(session('import_errors') && count(session('import_errors')) > 0)
+            <ul class="mb-0 ps-4 small mt-1">
+                @foreach(array_slice(session('import_errors'), 0, 3) as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+                @if(count(session('import_errors')) > 3)
+                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                @endif
+            </ul>
+            @endif
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
-            <span>{{ session('error') }}</span>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2 alert-libur" role="alert">
+        <div class="alert-libur-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
+            @if(session('import_errors') && count(session('import_errors')) > 0)
+            <ul class="mb-0 ps-4 small mt-1">
+                @foreach(array_slice(session('import_errors'), 0, 3) as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+                @if(count(session('import_errors')) > 3)
+                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                @endif
+            </ul>
+            @endif
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 

@@ -108,11 +108,18 @@ class AttendanceController extends Controller
                     $notes = $att->notes;
                     $proofDocument = $att->proof_document;
 
-                    if ($status === 'Hadir' && $timeRemark === 'Terlambat' && $checkIn) {
-                        $checkInCarbon = Carbon::parse($checkIn);
-                        $lateLimitCarbon = Carbon::parse($batasTerlambat);
-                        $diff = $checkInCarbon->diffInMinutes($lateLimitCarbon, false);
-                        $lateMinutes = $diff < 0 ? abs($diff) : 0;
+                    // Sama seperti Presensi Kelas: status yang ditampilkan
+                    // memakai accessor effective_status supaya "Terlambat"
+                    // tidak tampil sebagai "Hadir".
+                    $effectiveStatus = $att->effective_status;
+                    $status = ($effectiveStatus === 'Terlambat') ? 'Terlambat' : $status;
+
+                    if ($effectiveStatus === 'Terlambat') {
+                        $lateMinutes = (int) ($att->late_minutes ?? 0);
+                        if ($lateMinutes === 0 && $checkIn) {
+                            $lateMinutes = (int) abs(Carbon::parse($checkIn)
+                                ->diffInMinutes(Carbon::parse($batasTerlambat), false));
+                        }
                     }
                 } else {
                     if ($isHoliday) {
@@ -297,25 +304,44 @@ class AttendanceController extends Controller
                 $notes = $att->notes;
                 $proofDocument = $att->proof_document;
 
-                if ($status === 'Hadir') {
-                    if ($timeRemark === 'Terlambat') {
-                        $countTerlambat++;
-                        $countHadir++;
-                        if ($checkIn) {
-                            $checkInCarbon = Carbon::parse($checkIn);
-                            $lateLimitCarbon = Carbon::parse($batasTerlambat);
-                            $diff = $checkInCarbon->diffInMinutes($lateLimitCarbon, false);
-                            $lateMinutes = $diff < 0 ? abs($diff) : 0;
-                        }
-                    } else {
-                        $countHadir++;
-                    }
-                } elseif ($status === 'Sakit') {
+                /*
+                 * STATUS TAMPILAN: 'Terlambat' disimpan di DB sebagai status
+                 * 'Hadir' + time_remark (atau is_late), jadi angka ringkasan
+                 * selalu benar. TETAPI tabel harus menampilkan "Terlambat",
+                 * bukan "Hadir" -> pakai accessor effective_status yang sudah
+                 * ada di model Attendance (satu sumber kebenaran).
+                 */
+                $effectiveStatus = $att->effective_status;
+                $isTerlambat = ($effectiveStatus === 'Terlambat');
+                $status = $isTerlambat ? 'Terlambat' : $status;
+
+                /*
+                 * TERLAMBAT = HADIR YANG TELAT. Jadi keduanya sama-sama menambah
+                 * $countHadir (total kehadiran), lalu $countTerlambat dihitung
+                 * terpisah. Dengan begitu:
+                 *   TepatWaktu + Terlambat + Sakit + Izin + Alfa + Belum
+                 *   = total siswa kelas  (angka ringkasan selalu konsisten)
+                 * dan $countHadirTepat = $countHadir - $countTerlambat.
+                 */
+                if ($effectiveStatus === 'Hadir' || $effectiveStatus === 'Terlambat') {
+                    $countHadir++;
+                } elseif ($effectiveStatus === 'Sakit') {
                     $countSakit++;
-                } elseif ($status === 'Izin') {
+                } elseif ($effectiveStatus === 'Izin') {
                     $countIzin++;
-                } elseif ($status === 'Alfa') {
+                } elseif ($effectiveStatus === 'Alfa') {
                     $countAlfa++;
+                }
+
+                if ($isTerlambat) {
+                    $countTerlambat++;
+                    // late_minutes: pakai yang tersimpan, atau hitung ulang dari
+                    // jam masuk bila kolomnya kosong (data lama).
+                    $lateMinutes = (int) ($att->late_minutes ?? 0);
+                    if ($lateMinutes === 0 && $checkIn) {
+                        $lateMinutes = (int) abs(Carbon::parse($checkIn)
+                            ->diffInMinutes(Carbon::parse($batasTerlambat), false));
+                    }
                 }
             } else {
                 if ($isHoliday) {
@@ -408,10 +434,11 @@ class AttendanceController extends Controller
             });
         }
 
-        if ($search !== '') {
-            $classesQuery->where('name', 'like', "%{$search}%");
-        }
-
+        // CATATAN (Perbaikan 2026-10-03): $search TIDAK lagi memfilter daftar
+        // kelas. Sebelumnya kelas ikut disaring dengan kata pencarian, sehingga
+        // begitu user mengetik nama siswa, opsi dropdown kelas menyusut dan
+        // hanya menyisakan "Semua Kelas" sehingga harus menekan RESET.
+        // Sekarang daftar kelas selalu lengkap; pencarian hanya untuk tabel.
         $classes = $classesQuery->orderBy('grade')->orderBy('name')->get();
 
         $today = Carbon::now('Asia/Jakarta')->toDateString();
@@ -511,7 +538,16 @@ class AttendanceController extends Controller
         });
 
         // Data per siswa untuk tabel histori kehadiran
-        $classFilter = $request->input('class_filter', '');
+        //
+        // PERBAIKAN (2026-10-03): nilai class_filter dinormalisasi lebih dulu.
+        // Option "Semua Kelas" bernilai kosong, tapi bila URL pernah membawa
+        // label ("Semua Kelas") atau nilai sentinel lain, query lama
+        // `whereHas('schoolClass', name = $classFilter)` tidak akan cocok dengan
+        // kelas mana pun sehingga tabel selalu kosong.
+        $classFilter = trim((string) $request->input('class_filter', ''));
+        $isAllClasses = ($classFilter === '')
+            || in_array(mb_strtolower($classFilter), ['semua kelas', 'semua', 'all', '0', '-'], true);
+
         $studentsQuery = Student::with('schoolClass')
             ->where('status', 'Aktif')
             ->select(['id', 'school_class_id', 'name', 'nis']);
@@ -524,12 +560,14 @@ class AttendanceController extends Controller
             });
         }
 
-        if ($classFilter !== '') {
+        // Hanya filter kelas bila benar-benar memilih kelas tertentu.
+        if (! $isAllClasses) {
             $studentsQuery->whereHas('schoolClass', function ($q) use ($classFilter) {
                 $q->where('name', $classFilter);
             });
         }
 
+        // Pencarian nama / NIS berlaku di SEMUA kelas, termasuk saat "Semua Kelas".
         if ($search !== '') {
             $studentsQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -539,8 +577,9 @@ class AttendanceController extends Controller
 
         $studentsQuery->orderBy('name', 'asc');
 
-        // Paginasi server 50 siswa per halaman (desktop & mobile) dengan membawa seluruh query string.
-        $studentPaginator = $studentsQuery->paginate(50)->withQueryString();
+        // Paginasi server 100 siswa per halaman (sebelumnya 50) dengan seluruh query
+        // string ikut terbawa, supaya pencarian & filter kelas tidak hilang.
+        $studentPaginator = $studentsQuery->paginate(100)->withQueryString();
         $activeStudentsList = $studentPaginator->getCollection();
 
         $studentHistories = collect();
@@ -603,31 +642,62 @@ class AttendanceController extends Controller
         Carbon::setLocale('id');
         $student->load('schoolClass');
 
-        $startDate = $request->input('start_date', now()->subDays(7)->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        // PERBAIKAN (2026-10-03): $period SEBELUMNYA dibaca tapi TIDAK PERNAH
+        // dipakai membatas query, sehingga tab Harian / Mingguan / Bulanan
+        // menampilkan data yang sama persis. Sekarang satu tanggal acuan
+        // (`tanggal`, default hari ini) menentukan rentang data sesuai mode.
+        $period = (string) $request->input('period', 'mingguan');
+        if (! in_array($period, ['harian', 'mingguan', 'bulanan'], true)) {
+            $period = 'mingguan';
+        }
 
+        $anchor = Carbon::parse($request->input('tanggal', Carbon::now('Asia/Jakarta')->toDateString()));
+
+        if ($period === 'harian') {
+            $startDate = $anchor->copy()->startOfDay();
+            $endDate = $anchor->copy()->endOfDay();
+            $periodLabel = $anchor->translatedFormat('l, d F Y');
+        } elseif ($period === 'bulanan') {
+            $startDate = $anchor->copy()->startOfMonth();
+            $endDate = $anchor->copy()->endOfMonth();
+            $periodLabel = $anchor->translatedFormat('F Y');
+        } else {
+            // Mingguan: Senin - Minggu dari tanggal acuan.
+            $startDate = $anchor->copy()->startOfWeek(Carbon::MONDAY);
+            $endDate = $anchor->copy()->endOfWeek(Carbon::SUNDAY);
+            $periodLabel = $startDate->translatedFormat('d M')
+                . ' - ' . $endDate->translatedFormat('d M Y');
+        }
+
+        // Keamanan: pastikan rentang tidak terbalik.
+        if ($endDate->lt($startDate)) {
+            [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
+        }
+
+        // Data HANYA dari periode terpilih (bukan seluruh riwayat).
         $attendances = \App\Models\Attendance::where('student_id', $student->id)
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
             ->orderBy('date', 'desc')
             ->get();
 
         $stats = [
-            'hadir' => $attendances->where('status', 'Hadir')->count(),
-            // Keterlambatan disimpan pada kolom time_remark (status tetap 'Hadir')
-            'terlambat' => $attendances->filter(fn ($att) => $att->status === 'Hadir' && $att->time_remark === 'Terlambat')->count(),
+            // Terlambat tetap bagian dari kehadiran: status 'Hadir' yang
+            // time_remark-nya Terlambat (sama seperti halaman Presensi).
+            'hadir' => $attendances->filter(fn ($att) => $att->effective_status === 'Hadir')->count(),
+            'terlambat' => $attendances->filter(fn ($att) => $att->effective_status === 'Terlambat')->count(),
             'sakit' => $attendances->where('status', 'Sakit')->count(),
             'izin' => $attendances->where('status', 'Izin')->count(),
             'alfa' => $attendances->where('status', 'Alfa')->count(),
         ];
 
         $totalDays = $attendances->count();
-        $attendanceRate = $totalDays > 0 ? round(($stats['hadir'] / $totalDays) * 100, 1) : 0;
-
-        $period = $request->input('period', 'mingguan');
+        // Persentase = (tepat waktu + terlambat) / total catatan.
+        $hadirDanTerlambat = $stats['hadir'] + $stats['terlambat'];
+        $attendanceRate = $totalDays > 0 ? round(($hadirDanTerlambat / $totalDays) * 100, 1) : 0;
 
         return view('admin.kehadiran.student-history', compact(
             'student', 'attendances', 'stats', 'totalDays', 'attendanceRate',
-            'startDate', 'endDate', 'period'
+            'period', 'periodLabel', 'anchor'
         ));
     }
 
@@ -747,15 +817,19 @@ class AttendanceController extends Controller
 
         $activeYear = AcademicYear::getActive();
 
-        $status = $request->status;
-        $timeRemark = null;
+        $requestedStatus = $request->status;
+        $batasTerlambat = Setting::getLateLimitTime();
 
-        if ($status === 'Terlambat') {
-            $status = 'Hadir';
-            $timeRemark = 'Terlambat';
-        } elseif ($status === 'Hadir') {
-            $timeRemark = 'Tepat Waktu';
-        }
+        // Hadir & Terlambat sama-sama berarti SISWA HADIR (terlambat = hadir
+        // yang datang telat). Keduanya disimpan sebagai status 'Hadir' +
+        // penanda terlambat, supaya semua query lama yang menghitung
+        // `status = 'Hadir'` (Dashboard, Rekap, Kehadiran) tetap benar.
+        $isAttendance = in_array($requestedStatus, [Attendance::STATUS_HADIR, Attendance::STATUS_TERLAMBAT], true);
+
+        $status = $requestedStatus;
+        $timeRemark = null;
+        $isLate = false;
+        $lateMinutes = 0;
 
         $attendance = Attendance::firstOrNew([
             'student_id' => $request->student_id,
@@ -766,11 +840,62 @@ class AttendanceController extends Controller
             $attendance->academic_year_id = $activeYear?->id;
         }
 
+        /*
+         * JAM MASUK (Prioritas 2):
+         * - Hadir / Terlambat => jam masuk WAJIB ada.
+         *   * kalau admin mengirim jam (modal override) => pakai jam itu;
+         *   * kalau tidak dikirim (dropdown cepat) dan belum ada jam =>
+         *     isi otomatis dengan waktu sekarang Asia/Jakarta;
+         *   * kalau sudah ada jam sebelumnya => JAGA (tidak dihapus), supaya
+         *     mengubah Hadir <-> Terlambat tidak menghilangkan jam masuk.
+         * - Sakit / Izin / Alfa => jam masuk dikosongkan (wajar, bukan hadir).
+         */
+        if ($isAttendance) {
+            if ($request->filled('check_in')) {
+                $jamMasuk = substr(trim((string) $request->check_in), 0, 8);
+                if (strlen($jamMasuk) === 5) {
+                    $jamMasuk .= ':00';
+                }
+            } elseif (!empty($attendance->check_in)) {
+                $jamMasuk = $attendance->check_in;
+            } else {
+                $jamMasuk = Carbon::now('Asia/Jakarta')->format('H:i:s');
+            }
+
+            $attendance->check_in = $jamMasuk;
+
+            // Satu-satunya penentu status terlambat (satu sumber kebenaran).
+            $evaluasi = Attendance::evaluateCheckInTime($jamMasuk, $batasTerlambat);
+
+            if ($requestedStatus === Attendance::STATUS_TERLAMBAT) {
+                // Pilihan admin = koreksi manual, DIDAHULUKAN walaupun jamnya
+                // kebetulan masih di bawah batas terlambat. late_minutes tetap
+                // dihitung dari jam yang benar-benar tersimpan.
+                $timeRemark = Attendance::REMARK_TERLAMBAT;
+                $isLate = true;
+                $lateMinutes = (int) $evaluasi['late_minutes'];
+            } else {
+                // "Hadir" dipilih eksplisit: status mengikuti jam yang tersimpan
+                // bila ada jam, supaya tidak ada data yang bertentangan.
+                $timeRemark = $evaluasi['time_remark'];
+                $isLate = (bool) $evaluasi['is_late'];
+                $lateMinutes = (int) $evaluasi['late_minutes'];
+            }
+
+            $status = Attendance::STATUS_HADIR;
+            $attendance->is_late = $isLate;
+            $attendance->late_minutes = $lateMinutes;
+        } else {
+            // Tidak hadir: jam masuk dikosongkan.
+            $status = $requestedStatus;
+            $timeRemark = null;
+            $attendance->check_in = null;
+            $attendance->is_late = false;
+            $attendance->late_minutes = 0;
+        }
+
         $attendance->status = $status;
         $attendance->time_remark = $timeRemark;
-        if ($request->filled('check_in')) {
-            $attendance->check_in = $request->check_in;
-        }
         $attendance->notes = $request->notes;
 
         if ($request->hasFile('proof_document')) {

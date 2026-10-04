@@ -160,22 +160,27 @@ class ScannerController extends Controller
             // KASUS 1: Presensi Masuk (Check-In)
             if (empty($attendance->check_in)) {
                 $attendance->check_in = $currentTime;
-                $attendance->status = 'Hadir';
+                /*
+                 * Penentuan status terlambat memakai SATU sumber kebenaran:
+                 * Attendance::evaluateCheckInTime() - fungsi yang sama dengan
+                 * dipakai presensi manual. Scan <= batas terlambat = Hadir
+                 * (Tepat Waktu), scan > batas = Hadir + penanda Terlambat.
+                 * Yang tersimpan tetap status 'Hadir' supaya seluruh query
+                 * kehadiran (Dashboard, Rekap, Kehadiran) konsisten; status
+                 * "Terlambat" dibaca lewat accessor effective_status.
+                 */
+                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime);
 
-                $lateMinutes = 0;
-                $isLate = strtotime($currentTime) > strtotime($lateLimitTime);
+                $attendance->status = Attendance::STATUS_HADIR;
+                $attendance->time_remark = $evaluasi['time_remark'];
+                $attendance->is_late = (bool) $evaluasi['is_late'];
+                $attendance->late_minutes = (int) $evaluasi['late_minutes'];
 
-                if ($isLate) {
-                    $diff = Carbon::parse($currentTime)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                    $lateMinutes = $diff < 0 ? abs($diff) : 0;
-                    $timeRemark = 'Terlambat';
-                    $displayRemark = "Terlambat (+{$lateMinutes} mnt)";
-                } else {
-                    $timeRemark = 'Tepat Waktu';
-                    $displayRemark = 'Tepat Waktu';
-                }
+                $isLate = (bool) $evaluasi['is_late'];
+                $lateMinutes = (int) $evaluasi['late_minutes'];
+                $timeRemark = $evaluasi['time_remark'];
+                $displayRemark = $evaluasi['display_remark'];
 
-                $attendance->time_remark = $timeRemark;
                 $attendance->save();
 
                 return [

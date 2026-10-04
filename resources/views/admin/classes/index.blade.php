@@ -91,37 +91,129 @@
         font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
-    /* ===== Action Bar Layout: Filter Stretch Memanjang, Sejajar 1 Baris (sama seperti Data Siswa/Guru) ===== */
+    /* ===== Action Bar: SATU BARIS RATA (pola sama persis dengan Data Siswa & Data Guru) =====
+       [input cari][ikon search][dropdown tingkat] ..... [IMPORT EXCEL][TAMBAH KELAS][HAPUS].
+       Semua elemen tinggi 38px dan sejajar vertikal; ikon search MENEMPEL di samping input
+       (flex-wrap: nowrap pada .search-box-wrap), bukan turun ke baris kedua. */
     .action-bar-section {
         display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem 1rem;
     }
-    @media (min-width: 992px) {
+
+    .action-bar-section .action-search-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1 1 380px;
+        min-width: 0;
+        width: auto;
+        margin: 0;
+    }
+
+    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
+    .action-bar-section .search-box-wrap {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        flex: 1 1 240px;
+        min-width: 170px;
+        width: auto;
+        max-width: none;
+        height: 38px;
+        margin-bottom: 0;
+    }
+    .action-bar-section .search-box-wrap input.form-control {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        height: 38px;
+    }
+    .action-bar-section .search-box-wrap > .btn {
+        flex: 0 0 auto;
+        height: 38px;
+    }
+
+    .action-bar-section .filter-box-wrap {
+        flex: 0 1 200px;
+        min-width: 150px;
+        max-width: 200px;
+        width: auto;
+    }
+    .action-bar-section .filter-box-wrap select.form-select {
+        height: 38px;
+    }
+
+    /* Deretan tombol aksi di kanan: lebar mengikuti isi (padding sama seperti Siswa/Guru),
+       bukan melebar mengisi ruang. Input yang fleksibel mengisi sisa lebar. */
+    .action-bar-section .action-buttons-wrap {
+        display: flex;
+        flex: 0 1 auto;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-left: auto;
+        width: auto;
+    }
+    .action-bar-section .action-buttons-wrap .btn-solid-pill {
+        flex: 0 0 auto;
+    }
+
+    @media (max-width: 767.98px) {
         .action-bar-section {
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .action-bar-section .action-search-form,
+        .action-bar-section .action-buttons-wrap {
+            flex: 1 1 auto;
+            width: 100%;
+            margin-left: 0;
+        }
+        .action-bar-section .search-box-wrap {
+            flex: 1 1 calc(100% - 0.5rem);
+        }
+        .action-bar-section .filter-box-wrap {
+            flex: 1 1 100%;
+            max-width: none;
+        }
+        .action-bar-section .action-buttons-wrap .btn-solid-pill {
+            flex: 1 1 calc(50% - 0.25rem);
         }
     }
 
-    /* Responsive Search + Dropdown Filter */
-    @media (max-width: 991.98px) {
-        .search-box-wrap,
-        .filter-box-wrap {
-            max-width: 100% !important;
-            width: 100% !important;
-        }
+    /* --------------------------------------------------------------------------
+       NOTIFIKASI HALAMAN DATA KELAS (.alert-kelas)
+       Tombol X dibuat statis (bukan absolut) sehingga sejajar rapi dengan teks
+       notifikasi. Berlaku untuk hijau (berhasil), kuning (sebagian), merah (gagal).
+       Scoped hanya ke halaman ini -> halaman lain TIDAK ikut.
+       -------------------------------------------------------------------------- */
+    .alert-kelas.alert-dismissible {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-right: 0.75rem;
     }
-    @media (min-width: 992px) {
-        .search-box-wrap {
-            max-width: 350px !important;
-        }
-        .filter-box-wrap {
-            max-width: 200px !important;
-        }
+
+    .alert-kelas-body {
+        flex: 1 1 auto;
+        min-width: 0;
     }
+
+    .alert-kelas.alert-dismissible .btn-close {
+        position: static;
+        top: auto;
+        right: auto;
+        z-index: auto;
+        align-self: center;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0.35rem 0.4rem;
+    }
+
     .btn-solid-pill,
     button.btn-solid-pill,
     a.btn-solid-pill {
@@ -185,51 +277,94 @@
 @endpush
 
 @section('content')
-    <!-- Alert Notifikasi -->
+    <!-- Alert Notifikasi (3 status import: hijau sukses / kuning sebagian / merah gagal) -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
-            <span>{{ session('success') }}</span>
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+        <div class="alert-kelas-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
-    @if(session('import_errors'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center mb-1">
-            <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
-            <strong>Beberapa baris data kelas gagal diimport:</strong>
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+        <div class="alert-kelas-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <span>{{ session('warning') }}</span>
+            </div>
+            @if(session('import_errors') && count(session('import_errors')) > 0)
+            <ul class="mb-0 ps-4 small mt-1">
+                <li class="fw-semibold">Alasan:</li>
+                @foreach(array_slice(session('import_errors'), 0, 3) as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+                @if(count(session('import_errors')) > 3)
+                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                @endif
+            </ul>
+            @endif
         </div>
-        <ul class="mb-0 ps-3 small">
-            @foreach(session('import_errors') as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="d-flex align-items-center">
-            <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
-            <span>{{ session('error') }}</span>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+        <div class="alert-kelas-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
+            @if(session('import_errors') && count(session('import_errors')) > 0)
+            <ul class="mb-0 ps-4 small mt-1">
+                <li class="fw-semibold">Alasan:</li>
+                @foreach(array_slice(session('import_errors'), 0, 3) as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+                @if(count(session('import_errors')) > 3)
+                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                @endif
+            </ul>
+            @endif
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+    </div>
+    @endif
+
+    {{-- Rincian baris Excel yang dilewati ketika tidak ada pesan utama (3 status) --}}
+    @if(!session('success') && !session('warning') && !session('error') && session('import_errors') && count(session('import_errors')) > 0)
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+        <div class="alert-kelas-body">
+            <div class="d-flex align-items-center mb-1">
+                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <strong>Baris yang dilewati:</strong>
+            </div>
+            <ul class="mb-0 ps-3 small">
+                @foreach(session('import_errors') as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
     @if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3" role="alert">
-        <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Terjadi kesalahan input:</div>
-        <ul class="mb-0 ps-3 small">
-            @foreach($errors->all() as $err)
-                <li>{{ $err }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 py-2.5 px-3 alert-kelas" role="alert">
+        <div class="alert-kelas-body">
+            <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Terjadi kesalahan input:</div>
+            <ul class="mb-0 ps-3 small">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
     @endif
 
@@ -248,28 +383,30 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
 
         <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
-        <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
+        <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
 
-                <!-- Sisi Kiri: Form Pencarian & Dropdown Tingkat Kelas (Flex Column on Mobile, Row on Desktop) -->
-                <form method="GET" action="{{ url()->current() }}" class="d-flex flex-column flex-md-row gap-2 w-100 m-0">
-                    <!-- Search Bar -->
-                    <div class="input-group w-100 search-box-wrap" style="max-width: 350px;">
+                <!-- Sisi Kiri: Form Pencarian & Dropdown Tingkat Kelas (satu baris sejajar) -->
+                <form method="GET" action="{{ url()->current() }}" class="action-search-form">
+                    <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
+                    <div class="input-group search-box-wrap">
                         <input type="text" 
                                name="search" 
-                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3 w-100" 
+                               id="classSearchInput"
+                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3" 
                                placeholder="Cari nama kelas..." 
                                value="{{ request('search') }}"
                                aria-label="Cari nama kelas"
-                               style="height: 38px; font-size: 0.85rem;">
-                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" style="height: 38px;">
+                               autocomplete="off"
+                               style="font-size: 0.85rem; letter-spacing: 0.03em;">
+                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
 
-                    <!-- Dropdown Filter Tingkat Kelas -->
-                    <div class="w-100 filter-box-wrap" style="max-width: 200px;">
-                        <select name="grade" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="height: 38px; font-size: 0.85rem;">
+                    <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang -->
+                    <div class="filter-box-wrap">
+                        <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="Pilih tingkat kelas">
                             <option value="">Semua Tingkat</option>
                             <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>Kelas 7</option>
                             <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>Kelas 8</option>
@@ -277,32 +414,25 @@
                         </select>
                     </div>
 
-                    @if(request('search') || request('grade'))
-                    <div class="w-100 w-md-auto">
-                        <a href="{{ url()->current() }}" class="btn btn-light d-inline-flex align-items-center justify-content-center px-2.5 flex-shrink-0 w-100 w-md-auto" style="height: 38px; border-radius: 6px; font-size: 0.85rem;" title="Reset Filter">
-                            <i class='bx bx-refresh fs-5 me-1'></i> Reset
-                        </a>
-                    </div>
-                    @endif
                 </form>
 
                 @if(Auth::check() && Auth::user()->role === 'admin')
                 <!-- Sisi Kanan: Deretan Tombol Aksi (Stacked Layout di Mobile) -->
-                <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+                <div class="action-buttons-wrap">
                     @if(Route::has('admin.classes.import'))
                     <!-- 1. Import Excel (Solid Hijau) -->
-                    <button type="button" class="btn-solid-pill btn-solid-green w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#importClassModal">
+                    <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importClassModal">
                         <span>Import Excel</span>
                     </button>
                     @endif
 
                     <!-- 2. Tambah Kelas (Solid Biru, Aksi Utama) -->
-                    <button type="button" class="btn-solid-pill btn-solid-blue w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addClassModal">
                         <span>Tambah Kelas</span>
                     </button>
 
                     <!-- 3. Hapus Semua Kelas (Solid Merah - Urutan Terakhir) -->
-                    <button type="button" class="btn-solid-pill btn-solid-red w-100 w-md-auto" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
+                    <button type="button" class="btn-solid-pill btn-solid-red" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
                         <span>Hapus</span>
                     </button>
                 </div>
@@ -366,7 +496,11 @@
                     <tr class="align-middle">
                         <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted text-nowrap">
                             <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
-                            Belum ada data kelas yang sesuai dengan filter.
+                            @if(request('search') || request('grade'))
+                                Tidak ada data kelas yang cocok dengan pencarian/filter.
+                            @else
+                                Belum ada data kelas yang terdaftar.
+                            @endif
                         </td>
                     </tr>
                     @endforelse

@@ -456,6 +456,41 @@
             transform: none;
         }
 
+        /* Cincin loading di dalam tombol login (varian kecil).
+           Cincin PUTIH -> kontras di atas latar tombol biru --primary-blue. */
+        .app-loader {
+            display: inline-block;
+            width: 50px;
+            padding: 8px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #ffffff;
+            --_m:
+                conic-gradient(#0000 10%, #000),
+                linear-gradient(#000 0 0) content-box;
+            -webkit-mask: var(--_m);
+            mask: var(--_m);
+            -webkit-mask-composite: source-out;
+            mask-composite: subtract;
+            animation: app-spin 1s infinite linear;
+            flex: 0 0 auto;
+        }
+
+        .app-loader--sm {
+            width: 22px;
+            padding: 3px;
+        }
+
+        @keyframes app-spin {
+            to { transform: rotate(1turn); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .app-loader {
+                animation-duration: 5s;
+            }
+        }
+
         /* ============================================================ */
         /* RESPONSIVE MOBILE                                           */
         /* ============================================================ */
@@ -683,13 +718,13 @@
         >
             @csrf
 
-            <!-- EMAIL / USERNAME -->
+            <!-- USERNAME -->
             <div class="form-group-item">
                 <label
                     class="input-label-custom"
                     for="loginInput"
                 >
-                    Email / Username
+                    Username
                 </label>
 
                 <div class="input-box-wrapper {{ $errors->has('login') ? 'is-invalid-field' : '' }}">
@@ -705,7 +740,8 @@
                         value="{{ old('login') }}"
                         required
                         autofocus
-                        placeholder="Masukkan Email, Username, atau NIP"
+                        placeholder="Masukkan username"
+                        aria-label="Username"
                         autocomplete="username"
                     >
                 </div>
@@ -793,9 +829,10 @@
                 </span>
 
                 <span
-                    class="spinner-border spinner-border-sm d-none"
+                    class="app-loader app-loader--sm d-none"
                     id="spinnerLogin"
                     role="status"
+                    aria-label="Memverifikasi"
                 ></span>
             </button>
         </form>

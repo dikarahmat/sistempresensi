@@ -47,26 +47,37 @@
         box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
 
-    /* Date Filter - full width bagi 3 */
+    /* Date Filter - full width bagi 3
+       UKURAN DIPERBESAR (input tanggal & tombol Tampilkan) supaya mudah
+       dibaca dan diklik - warna dan font family tetap sama. */
     .date-filter-group {
         display: flex;
-        align-items: center;
-        gap: 0.3rem;
+        align-items: stretch;
+        gap: 0.5rem;
         width: 100%;
     }
     .date-filter-group input[type="date"] {
         flex: 1;
         min-width: 0;
-        padding: 0.15rem 0.35rem;
-        font-size: 0.68rem;
-        height: 26px;
+        padding: 0.55rem 0.75rem;
+        font-size: 1rem;
+        height: 46px;
+        cursor: pointer;
     }
     .date-filter-group .btn {
         flex: 0 0 auto;
         white-space: nowrap;
-        padding: 0.15rem 0.6rem;
-        font-size: 0.68rem;
-        height: 26px;
+        padding: 0.55rem 1.25rem;
+        font-size: 0.95rem;
+        height: 46px;
+        cursor: pointer;
+    }
+
+    /* Keterangan periode aktif di atas tabel */
+    .period-caption {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
     }
 
     /* Table */
@@ -86,11 +97,26 @@
     .table-history tbody tr:nth-child(odd) > td { background-color: #ffffff !important; }
     .table-history tbody tr:hover > td { background-color: #e2e8f0 !important; }
 
-    .status-hadir { color: #16a34a; font-weight: 400; }
-    .status-terlambat { color: #d97706; font-weight: 400; }
-    .status-sakit { color: #2563eb; font-weight: 400; }
-    .status-izin { color: #7e22ce; font-weight: 400; }
-    .status-alfa { color: #ef4444; font-weight: 400; }
+    /* Status: TEKS MURNI (tanpa badge/container), warna diselaraskan dengan
+       halaman Presensi agar konsisten & kontrasnya tinggi. */
+    .status-hadir { color: #065f46; font-weight: 400; }
+    .status-terlambat { color: #92400e; font-weight: 400; }
+    .status-sakit { color: #1d4ed8; font-weight: 400; }
+    .status-izin { color: #5b21b6; font-weight: 400; }
+    .status-alfa { color: #991b1b; font-weight: 400; }
+    .status-libur, .status-belum { color: #475569; font-weight: 400; }
+
+    /* Tanggal di tabel dibuat lebih besar & mudah dibaca.
+       Font family, warna, dan uppercase tidak diubah. */
+    .table-history tbody td.col-tanggal {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+
+    .table-history tbody td.col-jam {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
 
     /* Mobile */
     @media (max-width: 767.98px) {
@@ -99,9 +125,11 @@
         .table-history thead th { font-size: 0.72rem; padding: 0.5rem 0.35rem; }
         .table-history tbody td { font-size: 0.78rem; padding: 0.5rem 0.35rem; }
         .period-link { font-size: 0.78rem; padding: 0.3rem 0.4rem; }
-        .date-filter-group input[type="date"] { font-size: 0.55rem; height: 20px; padding: 0 0.15rem; }
-        .date-filter-group .btn { font-size: 0.55rem; height: 20px; padding: 0 0.3rem; }
-        .date-filter-group span { font-size: 0.6rem !important; }
+        /* Di mobile input tanggal tetap diperbesar (jangan mengecil lagi),
+           hanya tinggi & font-nya dikecilkan sedikit agar tetap muat. */
+        .date-filter-group input[type="date"] { font-size: 0.95rem; height: 40px; padding: 0.35rem 0.6rem; }
+        .date-filter-group .btn { font-size: 0.85rem; height: 40px; padding: 0.35rem 0.9rem; }
+        .period-caption { font-size: 0.75rem; }
     }
 </style>
 @endpush
@@ -118,6 +146,7 @@
     <!-- 1. Statistik + Filter - 1 Container Kompak -->
     <div class="card border-0 shadow-sm rounded-4 p-2 mb-2 bg-white">
         <form method="GET" action="{{ panel_route('kehadiran.student-history', $student->id) }}">
+            <input type="hidden" name="period" value="{{ $period }}">
             <!-- Stats -->
             <div class="d-flex flex-wrap justify-content-between gap-1 mb-2 pb-2" style="border-bottom: 1px solid #f1f5f9;">
                 <div class="stat-item">
@@ -146,25 +175,33 @@
                 </div>
             </div>
 
-            <!-- Period Nav -->
+            <!-- Period Nav
+         Setiap tab membawa `tanggal` yang sedang dipilih agar berpindah mode
+         TIDAK mengembalikan tanggal ke default. -->
             <div class="period-nav mb-2">
-                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'harian']) }}" class="period-link {{ $period === 'harian' ? 'active' : '' }}">
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'harian', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'harian' ? 'active' : '' }}">
                     Harian
                 </a>
-                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'mingguan']) }}" class="period-link {{ $period === 'mingguan' ? 'active' : '' }}">
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'mingguan', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'mingguan' ? 'active' : '' }}">
                     Mingguan
                 </a>
-                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'bulanan']) }}" class="period-link {{ $period === 'bulanan' ? 'active' : '' }}">
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'bulanan', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'bulanan' ? 'active' : '' }}">
                     Bulanan
                 </a>
             </div>
 
-            <!-- Date Filter -->
+            <!-- Teks Periode hasil mode + tanggal yang dipilih -->
+            <div class="period-caption text-secondary mb-2">
+                Periode: <strong>{{ $periodLabel }}</strong>
+                <span class="text-muted">({{ ucfirst($period) }})</span>
+            </div>
+
+            <!-- Date Filter: satu tanggal acuan,.ukuran diperbesar agar mudah
+                 diklik / dibaca (pengguna kemungkinan orang tua).
+                 UKURAN & AREA KLIK DIPERBESAR - warna & font family tidak diubah. -->
             <div class="date-filter-group">
-                <input type="date" name="start_date" class="form-control form-control-sm" value="{{ $startDate }}">
-                <span class="text-muted" style="font-size: 0.75rem; white-space: nowrap; text-transform: uppercase;">s/d</span>
-                <input type="date" name="end_date" class="form-control form-control-sm" value="{{ $endDate }}">
-                <button type="submit" class="btn btn-primary btn-sm">Tampilkan</button>
+                <input type="date" name="tanggal" id="studentHistoryDate" onchange="this.form.submit()" class="form-control" value="{{ $anchor->toDateString() }}" aria-label="Pilih tanggal">
+                <button type="submit" class="btn btn-primary">Tampilkan</button>
             </div>
         </form>
     </div>
@@ -180,32 +217,26 @@
                         <th style="width: 80px;">Hari</th>
                         <th style="width: 100px;">Status</th>
                         <th style="width: 100px;">Jam Masuk</th>
-                        <th>Keterangan</th>
+                        <th title="Diisi dari kolom Catatan / Keterangan pada form Ubah Presensi di halaman Presensi Kelas">Keterangan</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($attendances as $attendance)
+                    @php
+                        // Status TAMPILAN memakai effective_status: di database
+                        // "Terlambat" tersimpan sebagai status 'Hadir' +
+                        // time_remark, jadi status mentah akan selalu "Hadir".
+                        $statusTampil = strtolower($attendance->effective_status);
+                    @endphp
                     <tr>
                         <td class="text-secondary">{{ $loop->iteration }}</td>
-                        <td>{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
+                        <td class="col-tanggal">{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
                         <td>{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') }}</td>
                         <td>
-                            @if($attendance->status === 'Hadir')
-                                <span class="status-hadir">Hadir</span>
-                            @elseif($attendance->status === 'Terlambat')
-                                <span class="status-terlambat">Terlambat</span>
-                            @elseif($attendance->status === 'Sakit')
-                                <span class="status-sakit">Sakit</span>
-                            @elseif($attendance->status === 'Izin')
-                                <span class="status-izin">Izin</span>
-                            @elseif($attendance->status === 'Alfa')
-                                <span class="status-alfa">Alfa</span>
-                            @else
-                                <span class="text-secondary">{{ $attendance->status }}</span>
-                            @endif
+                            <span class="status-{{ $statusTampil }}">{{ ucfirst($attendance->effective_status) }}</span>
                         </td>
-                        <td>{{ $attendance->check_in ?? '-' }}</td>
-                        <td class="text-start">{{ $attendance->notes ?? '-' }}</td>
+                        <td class="col-jam">{{ $attendance->check_in ? substr($attendance->check_in, 0, 5) : '-' }}</td>
+                        <td class="text-start">{{ $attendance->notes && $attendance->notes !== '-' ? $attendance->notes : '-' }}</td>
                     </tr>
                     @empty
                     <tr>

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AcademicYear extends Model
 {
@@ -30,8 +31,21 @@ class AcademicYear extends Model
 
     public function makeActive(): void
     {
-        self::query()->update(['is_active' => false]);
-        $this->update(['is_active' => true]);
+        // Satu transaksi: hanya boleh ada SATU tahun ajaran aktif, dan tidak
+        // pernah berakhir nol (atau dua) yang aktif — bila ada langkah yang
+        // gagal, seluruh perubahan dibatalkan dan status lama tetap utuh.
+        DB::transaction(function () {
+            self::query()->update(['is_active' => false]);
+
+            // refresh() wajib: atribut di memori masih bisa bernilai "true",
+            // sehingga update() berikutnya dianggap tidak ada perubahan dan
+            // tidak pernah menulis apa pun (berakhir nol yang aktif).
+            $this->refresh();
+            $this->update(['is_active' => true]);
+        });
+
+        // Dihapus SETELAH commit supaya Dashboard, Rekap, dan Presensi segera
+        // membaca tahun ajaran aktif yang baru, bukan cache lama (TTL 1 jam).
         self::clearActiveCache();
     }
 

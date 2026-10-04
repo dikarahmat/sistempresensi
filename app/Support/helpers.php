@@ -114,6 +114,38 @@ if (!function_exists('is_mobile_request')) {
     }
 }
 
+if (!function_exists('rekap_format_late_minutes')) {
+    /**
+     * Format tampilan kolom Keterlambatan (dipakai Harian/Mingguan/Bulanan,
+     * Export Excel, dan PDF Report agar SEMUA konsisten).
+     *
+     * Aturan:
+     *   < 60 menit  -> "15 MNT"
+     *   >= 60 menit -> "1 JAM 5 MNT"  (0 menit sisa ditampilkan "1 JAM")
+     *   <= 0        -> "0 MNT"
+     *
+     * Fungsi ini HANYA mengubah FORMAT TAMPILAN. Cara menghitung selisih menit
+     * (check_in vs batas terlambat di Pengaturan) TIDAK diubah.
+     */
+    function rekap_format_late_minutes($minutes): string
+    {
+        $total = (int) round((float) $minutes);
+
+        if ($total < 60) {
+            return $total . ' MNT';
+        }
+
+        $jam = intdiv($total, 60);
+        $sisa = $total % 60;
+
+        if ($sisa === 0) {
+            return $jam . ' JAM';
+        }
+
+        return $jam . ' JAM ' . $sisa . ' MNT';
+    }
+}
+
 if (!function_exists('render_compact_pagination')) {
     /**
      * Komponen Pagination Bersama (Single Source of Truth)

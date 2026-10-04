@@ -33,6 +33,12 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            if (!preg_match('/^[0-9]{18}$/', $nip)) {
+                $this->skippedCount++;
+                $this->errors[] = "Baris {$rowIndex}: Format NIP tidak valid (harus 18 digit angka). Baris dilewati.";
+                continue;
+            }
+
             if (empty($name)) {
                 $this->skippedCount++;
                 $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama Guru wajib diisi (kosong).";

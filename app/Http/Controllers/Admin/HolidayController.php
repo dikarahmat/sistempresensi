@@ -48,14 +48,31 @@ class HolidayController extends Controller
             $import = new HolidaysImport();
             Excel::import($import, $request->file('file_excel'));
 
-            $message = "Import selesai! {$import->getImportedCount()} hari libur berhasil diimpor.";
-            if ($import->getSkippedCount() > 0) {
-                $message .= " ({$import->getSkippedCount()} baris dilewati)";
+            $imported = $import->getImportedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
+
+            // 1) Semua baris berhasil -> notifikasi hijau (sukses)
+            if ($imported > 0 && $skipped === 0) {
+                return redirect()->route('admin.holidays.index')
+                    ->with('success', "Import berhasil: {$imported} hari libur diimpor.");
             }
 
+            // 2) Sebagian berhasil -> notifikasi kuning (peringatan)
+            if ($imported > 0) {
+                return redirect()->route('admin.holidays.index')
+                    ->with('warning', "Import sebagian berhasil: {$imported} diimpor, {$skipped} dilewati.")
+                    ->with('import_errors', $errors);
+            }
+
+            // 3) Tidak ada baris yang masuk -> notifikasi merah (gagal)
+            $reason = $skipped > 0
+                ? "{$skipped} baris dilewati karena format tidak sesuai."
+                : 'File tidak memiliki baris data.';
+
             return redirect()->route('admin.holidays.index')
-                ->with('success', $message)
-                ->with('import_errors', $import->getErrors());
+                ->with('error', "Import gagal: tidak ada data yang diimpor. {$reason} Periksa format file Excel.")
+                ->with('import_errors', $errors);
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.holidays.index')

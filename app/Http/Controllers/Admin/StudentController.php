@@ -39,7 +39,9 @@ class StudentController extends Controller
             $query->where('school_class_id', $request->class_id);
         }
 
-        $students = $query->orderBy('name', 'asc')->paginate(50)->withQueryString();
+        // 100 baris per halaman (sebelumnya 50). withQueryString() supaya
+        // search & filter kelas tetap melekat di link pagination.
+        $students = $query->orderBy('name', 'asc')->paginate(100)->withQueryString();
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('admin.students.index', compact('students', 'classes'));
@@ -53,31 +55,24 @@ class StudentController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'school_class_id' => 'required|exists:school_classes,id',
-            'name' => 'required|string|max:255',
-            'nis' => 'required|regex:/^[a-zA-Z0-9\/\.\-]+$/|min:4|max:20|unique:students,nis',
-            'nisn' => 'nullable|regex:/^[0-9]{10}$/|unique:students,nisn',
-            'gender' => 'required|in:Laki-laki,Perempuan',
-            'birth_place' => 'nullable|string|max:100',
-            'birth_date' => 'nullable|date',
-            'address' => 'nullable|string',
-            'phone' => 'nullable|regex:/^[0-9]{10,14}$/',
-            'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'nullable|regex:/^[0-9]{10,14}$/',
-        ], [
-            'nis.regex' => 'NIS harus berupa kombinasi huruf/angka/simbol 4-20 karakter.',
-            'nisn.regex' => 'NISN harus berupa angka 10 digit.',
-            'phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
-            'parent_phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
-        ]);
+        // Aturan validasi Data Siswa (server) + pesan berbahasa Indonesia.
+        // Batas kolom DB: nis varchar(30), nisn varchar(30),
+        // phone/parent_phone varchar(20) -> aturan aplikasi 4-30 / 10 / 10-15 digit.
+        $validated = $request->validate($this->studentRules(null), $this->studentMessages(), $this->studentAttributes());
 
         $validated['qr_token'] = (string) Str::uuid();
         $validated['status'] = 'Aktif';
 
-        Student::create($validated);
+        try {
+            $student = Student::create($validated);
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('admin.students.index')
+                ->with('error', 'Gagal menyimpan data siswa. Coba lagi.');
+        }
 
-        return redirect()->route('admin.students.index')->with('success', 'Data siswa berhasil ditambahkan!');
+        return redirect()->route('admin.students.index')
+            ->with('success', "Siswa {$student->name} berhasil ditambahkan.");
     }
 
     public function show(Student $student): View
@@ -94,32 +89,99 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student): RedirectResponse
     {
-        $validated = $request->validate([
-            'school_class_id' => 'required|exists:school_classes,id',
-            'name' => 'required|string|max:255',
-            'nis' => 'required|regex:/^[a-zA-Z0-9\/\.\-]+$/|min:4|max:20|unique:students,nis,' . $student->id,
-            'nisn' => 'nullable|regex:/^[0-9]{10}$/|unique:students,nisn,' . $student->id,
-            'gender' => 'required|in:Laki-laki,Perempuan',
-            'birth_place' => 'nullable|string|max:100',
-            'birth_date' => 'nullable|date',
-            'address' => 'nullable|string',
-            'phone' => 'nullable|regex:/^[0-9]{10,14}$/',
-            'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'nullable|regex:/^[0-9]{10,14}$/',
-        ], [
-            'nis.regex' => 'NIS harus berupa kombinasi huruf/angka/simbol 4-20 karakter.',
-            'nisn.regex' => 'NISN harus berupa angka 10 digit.',
-            'phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
-            'parent_phone.regex' => 'Nomor HP harus berupa angka 10-14 digit.',
-        ]);
+        $validated = $request->validate($this->studentRules($student), $this->studentMessages(), $this->studentAttributes());
 
         if (empty($student->qr_token)) {
             $validated['qr_token'] = (string) Str::uuid();
         }
 
-        $student->update($validated);
+        try {
+            $student->update($validated);
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('admin.students.edit', $student->id)
+                ->with('error', 'Gagal menyimpan data siswa. Coba lagi.');
+        }
 
-        return redirect()->route('admin.students.show', $student->id)->with('success', 'Data siswa berhasil diperbarui!');
+        return redirect()->route('admin.students.show', $student->id)
+            ->with('success', "Siswa {$student->name} berhasil diperbarui.");
+    }
+
+    /**
+     * Aturan validasi Data Siswa (dipakai form Tambah & Edit agar identik).
+     *
+     * - NIS    : wajib, hanya angka, 4-30 digit (batas kolom students.nis varchar(30)), unik.
+     * - NISN   : opsional, jika diisi harus tepat 10 digit angka, unik.
+     * - Phone / Parent Phone (No. WhatsApp): opsional, hanya angka, 10-15 digit.
+     * - Nama, Kelas, Jenis Kelamin tetap wajib.
+     *
+     * @param  Student|null  $student  Diisi saat proses Edit (unique mengabaikan id sendiri).
+     */
+    private function studentRules(?Student $student = null): array
+    {
+        $nisUnique = 'unique:students,nis' . ($student ? ',' . $student->id : '');
+        $nisnUnique = 'unique:students,nisn' . ($student ? ',' . $student->id : '');
+
+        return [
+            'school_class_id' => 'required|exists:school_classes,id',
+            'name' => 'required|string|max:255',
+            'nis' => 'required|regex:/^[0-9]+$/|digits_between:4,30|' . $nisUnique,
+            'nisn' => 'nullable|digits:10|' . $nisnUnique,
+            'gender' => 'required|in:Laki-laki,Perempuan',
+            'birth_place' => 'nullable|string|max:100',
+            'birth_date' => 'nullable|date',
+            'address' => 'nullable|string',
+            'phone' => 'nullable|digits_between:10,15',
+            'parent_name' => 'nullable|string|max:255',
+            'parent_phone' => 'nullable|digits_between:10,15',
+        ];
+    }
+
+    /**
+     * Semua pesan validasi Data Siswa dalam Bahasa Indonesia
+     * (tanpa membuat file lang baru, ditulis langsung di validator).
+     */
+    private function studentMessages(): array
+    {
+        return [
+            'school_class_id.required' => 'Kelas wajib dipilih.',
+            'school_class_id.exists' => 'Kelas tidak ditemukan.',
+            'name.required' => 'Nama siswa wajib diisi.',
+            'name.max' => 'Nama siswa maksimal 255 karakter.',
+            'nis.required' => 'NIS wajib diisi.',
+            'nis.regex' => 'NIS hanya boleh berisi angka.',
+            'nis.digits_between' => 'NIS harus berisi angka saja, minimal 4 dan maksimal 30 digit.',
+            'nis.unique' => 'NIS sudah terdaftar.',
+            'nisn.digits' => 'NISN harus 10 digit angka.',
+            'nisn.unique' => 'NISN sudah terdaftar.',
+            'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'gender.in' => 'Jenis kelamin tidak valid.',
+            'birth_place.max' => 'Tempat lahir maksimal 100 karakter.',
+            'birth_date.date' => 'Tanggal lahir tidak valid.',
+            'phone.digits_between' => 'Nomor WhatsApp harus 10-15 digit angka.',
+            'parent_name.max' => 'Nama orang tua/wali maksimal 255 karakter.',
+            'parent_phone.digits_between' => 'Nomor WhatsApp harus 10-15 digit angka.',
+        ];
+    }
+
+    /**
+     * Nama attribute berbahasa Indonesia (dipakai bila pesan default tetap muncul).
+     */
+    private function studentAttributes(): array
+    {
+        return [
+            'school_class_id' => 'kelas',
+            'name' => 'nama siswa',
+            'nis' => 'NIS',
+            'nisn' => 'NISN',
+            'gender' => 'jenis kelamin',
+            'birth_place' => 'tempat lahir',
+            'birth_date' => 'tanggal lahir',
+            'address' => 'alamat',
+            'phone' => 'nomor WhatsApp',
+            'parent_name' => 'nama orang tua/wali',
+            'parent_phone' => 'nomor WhatsApp orang tua/wali',
+        ];
     }
 
     /**
@@ -274,6 +336,10 @@ class StudentController extends Controller
     {
         $request->validate([
             'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ], [
+            'file_excel.required' => 'Pilih file Excel siswa yang akan diunggah.',
+            'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
+            'file_excel.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         try {
@@ -284,12 +350,24 @@ class StudentController extends Controller
             $skipped = $import->getSkippedCount();
             $errors = $import->getErrors();
 
-            $msg = "Berhasil memproses Excel: {$count} data siswa berhasil diimpor/diperbarui.";
-            if ($skipped > 0) {
-                $msg .= " ({$skipped} baris dilewati karena format tidak sesuai).";
+            // Notifikasi import dibedakan menjadi 3 status:
+            // 1. Semua baris masuk      -> hijau
+            // 2. Sebagian masuk         -> kuning (peringatan)
+            // 3. Tidak ada yang masuk   -> merah
+            if ($count > 0 && $skipped === 0) {
+                $redirect = redirect()->route('admin.students.index')
+                    ->with('success', "Import berhasil: {$count} siswa diimpor.");
+            } elseif ($count > 0) {
+                $msg = "Import sebagian berhasil: {$count} diimpor, {$skipped} dilewati.";
+                if (!empty($errors)) {
+                    $msg .= ' Alasan: ' . Str::limit((string) $errors[0], 140);
+                }
+                $redirect = redirect()->route('admin.students.index')->with('warning', $msg);
+            } else {
+                $redirect = redirect()->route('admin.students.index')
+                    ->with('error', "Import gagal: tidak ada data yang diimpor. {$skipped} baris dilewati karena format tidak sesuai. Periksa format file Excel.");
             }
 
-            $redirect = redirect()->route('admin.students.index')->with('success', $msg);
             if (!empty($errors)) {
                 $redirect->with('import_errors', $errors);
             }
@@ -324,29 +402,48 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('admin.students.index')
-            ->with('success', "Data siswa {$studentName} berhasil diarsipkan! Anda dapat memulihkannya dari halaman Arsip.");
+            ->with('success', "Siswa {$studentName} berhasil diarsipkan. Anda dapat memulihkannya dari halaman Arsip.");
     }
 
     /**
-     * Menghapus seluruh data siswa secara massal dengan proteksi transaksi.
+     * Menghapus permanen SELURUH isi Arsip siswa dengan proteksi transaksi.
+     *
+     * Cakupan (dikonfirmasi pemilik sistem): HANYA siswa yang ada di arsip
+     * (soft delete) beserta riwayat presensi milik siswa tersebut.
+     * Siswa AKTIF tidak disentuh dan tabel users TIDAK disentuh sama sekali.
      */
-    public function destroyAll(): RedirectResponse
+    public function destroyAll(Request $request): RedirectResponse
     {
+        // Dua pernyataan konfirmasi wajib dicentang; divalidasi juga di server
+        // sehingga request tanpa tanda konfirmasi akan ditolak.
+        $request->validate([
+            'confirm_permanent' => 'accepted',
+            'confirm_all' => 'accepted',
+        ], [
+            'confirm_permanent.accepted' => 'Centang pernyataan "Saya memahami data yang dihapus permanen tidak dapat dikembalikan."',
+            'confirm_all.accepted' => 'Centang pernyataan "Saya yakin ingin menghapus semua data siswa di arsip."',
+        ]);
+
         DB::beginTransaction();
         try {
-            // Hapus seluruh riwayat presensi terlebih dahulu guna mencegah foreign key constraint violation
-            \App\Models\Attendance::query()->delete();
+            $archivedIds = Student::onlyTrashed()->pluck('id');
+            $total = $archivedIds->count();
 
-            // Hapus permanen seluruh data siswa, termasuk yang masih berada di arsip
-            // (tombol "Hapus Semua Siswa (Permanen)" pada halaman Arsip).
-            Student::withTrashed()->forceDelete();
+            if ($total > 0) {
+                // Riwayat presensi siswa terarsip dihapus lebih dulu (mencegah
+                // pelanggaran foreign key), lalu siswa dihapus permanen.
+                \App\Models\Attendance::whereIn('student_id', $archivedIds)->delete();
+                Student::withTrashed()->whereIn('id', $archivedIds)->forceDelete();
+            }
 
             DB::commit();
-            return redirect()->route('admin.students.index')->with('success', 'Seluruh data siswa beserta riwayat presensi berhasil dibersihkan!');
+            return redirect()->route('admin.students.trash')
+                ->with('success', "Berhasil menghapus permanen {$total} siswa di arsip.");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.students.index')->with('error', 'Gagal menghapus semua data siswa. Silakan coba lagi atau hubungi admin.');
+            return redirect()->route('admin.students.trash')
+                ->with('error', 'Gagal menghapus semua data siswa di arsip. Coba lagi.');
         }
     }
 
@@ -362,7 +459,10 @@ class StudentController extends Controller
 
         $classes = SchoolClass::orderBy('name')->get();
 
-        return view('admin.students.trash', compact('students', 'classes'));
+        // Jumlah data di arsip, dipakai modal konfirmasi "Hapus Semua (Permanen)".
+        $trashedCount = Student::onlyTrashed()->count();
+
+        return view('admin.students.trash', compact('students', 'classes', 'trashedCount'));
     }
 
     /**

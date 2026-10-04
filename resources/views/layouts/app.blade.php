@@ -75,11 +75,34 @@
          sama dengan lokal. --}}
     <link rel="stylesheet" href="{{ asset('css/presensi-tokens.css') }}?v={{ file_exists(public_path('css/presensi-tokens.css')) ? filemtime(public_path('css/presensi-tokens.css')) : config('app.version', '1') }}">
 
+    <!-- ===========================================================================
+         SIDEBAR COLLAPSE - TERAPAKAN SEBELUM RENDER PERTAMA (anti kedip)
+         Script ini WAJIB berada di <head> DAN sebelum <style> utama agar class
+         sudah menempel di <html> ketika browser mulai melukis. Kalau class baru
+         ditambahkan setelah DOM siap, sidebar akan berkedip (flash) dari kondisi
+         expanded ke collapsed setiap refresh / pindah halaman.
+         State disimpan di localStorage supaya pilihan user bertahan.
+         Hanya berlaku di desktop (>= 1024px); script ini sendiri hanya
+         menempelkan class, sedangkan seluruh aturan visualnya dikunci di
+         media query min-width: 1024px. ======================================== -->
+    <script>
+        (function () {
+            try {
+                if (window.localStorage.getItem('sidebarCollapsed') === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch (e) { /* localStorage diblokir - abaikan, sidebar tetap expanded */ }
+        })();
+    </script>
+
     @stack('styles')
 
     <style>
         :root {
             --sidebar-width: 238px;
+            /* Lebar sidebar saat collapsed (desktop). 76px comfortably berada
+               di rentang 72-80px yang diminta: cukup untuk ikon + highlight. */
+            --sidebar-width-collapsed: 76px;
             --sidebar-gap: 10px;
             --primary-blue: #3b62f6;
             --primary-blue-hover: #2563eb;
@@ -970,6 +993,90 @@
             }
         }
 
+        /* -------------------------------------------------------------------------- 
+           4.B TOMBOL GARIS TIGA DI DESKTOP (>= 1024px) - REUSE TOMBOL YANG SAMA
+
+           Tombol ini adalah elemen yang PERSIS SAMA dengan tombol mobile
+           (class .mobile-top-hamburger + ikon <i class='bx bx-menu'>), bukan
+           tombol tambahan. only perilaku yang berbeda:
+             - < 1024px : buka/tutup DRAWER (persis seperti sebelumnya)
+             - >= 1024px: toggle COLLAPSE sidebar (state di localStorage)
+
+           Semua ukuran, ketebalan garis, warna, dan jarak ke teks sengaja
+           menyalin nilai dari blok mobile di atas supaya visualnya identik.
+           PURE ICON: tanpa background, border, shadow, maupun kotak melingkar
+           pada keadaan normal, hover, maupun focus.
+           -------------------------------------------------------------------------- */
+        @media (min-width: 1024px) {
+            .mobile-top-hamburger {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                /* PURE ICON - semua lapisan visual dihapus */
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: #0f172a !important;
+                cursor: pointer !important;
+                touch-action: manipulation !important;
+                -webkit-tap-highlight-color: transparent !important;
+                transition: color 0.15s ease, transform 0.12s cubic-bezier(0.32, 0.72, 0, 1) !important;
+                /* 40x40 & flex:0 0 40px mengunci lebar tombol, sehingga posisi
+                   hamburger TIDAK bergeser meski judul halaman tiap halaman
+                   berbeda panjang. */
+                flex: 0 0 40px !important;
+                width: 40px !important;
+                min-width: 40px !important;
+                max-width: 40px !important;
+                height: 40px !important;
+                min-height: 40px !important;
+                max-height: 40px !important;
+                line-height: 1 !important;
+                align-self: center !important;
+            }
+
+            /* Hover hanya mengubah warna ikon - tidak ada background/border. */
+            .mobile-top-hamburger:hover {
+                color: #2563eb !important;
+                background: transparent !important;
+            }
+
+            .mobile-top-hamburger:active {
+                transform: scale(0.92) !important;
+                color: #1d4ed8 !important;
+            }
+
+            /* Ukuran ikon identik dengan versi mobile. */
+            .mobile-top-hamburger i {
+                font-size: 1.5rem !important;
+                line-height: 1 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            /* Fokus keyboard: outline TIPIS pada IKON SAJA, container bersih. */
+            .mobile-top-hamburger:focus {
+                outline: none !important;
+                background: transparent !important;
+            }
+
+            .mobile-top-hamburger:focus-visible {
+                outline: none !important;
+                background: transparent !important;
+            }
+
+            .mobile-top-hamburger:focus-visible i {
+                outline: 2px solid #2563eb !important;
+                outline-offset: 2px !important;
+                border-radius: 3px !important;
+            }
+        }
+
         /* Header UTAMA: melekat permanen di puncak scroll container.
            - position:sticky + top:0  -> tidak pernah ikut ter-scroll atau menyusut
            - flex-shrink:0             -> terkunci pada tinggi normal walau konten panjang
@@ -1116,12 +1223,15 @@
             border-radius: 12px !important;
         }
 
-        .table-responsive,
+        /* .no-scrollbar dipakai SENGaja pada elemen yang memang tidak boleh
+           menampilkan scrollbar (chip filter horizontal di Presensi Hari Ini).
+           Setiap tabel data memakai .table-responsive, dan untuk TABEL scrollbar
+           justru dibuat TERLIHAT lewat blok "TABEL DATA: SCROLL..." di bawah.
+          (rule ini HANYA untuk elemen .no-scrollbar, bukan tabel). -->
         .no-scrollbar {
             scrollbar-width: none !important;
             -ms-overflow-style: none !important;
         }
-        .table-responsive::-webkit-scrollbar,
         .no-scrollbar::-webkit-scrollbar {
             display: none !important;
             width: 0 !important;
@@ -1265,7 +1375,202 @@
            -------------------------------------------------------------------------- */
         .app-sidebar-drawer .nav-link {
             margin: 0 0.75rem 16px 0.75rem !important;
+            /* Pengaman box model: padding TIDAK menambah lebar di luar margin,
+               sehingga tidak ada elemen yang bisa melewati batas sidebar. */
+            box-sizing: border-box !important;
         }
+
+        /* ==========================================================================
+           MODE COLLAPSED - DESKTOP SAJA (>= 1024px)
+
+           Seluruh blok ini dikunci di media query min-width: 1024px dengan begitu
+           tampilan MOBILE (< 1024px) tidak tersentuh sama sekali - drawer, margin
+           0.75rem, dan lebar 238px tetap persis seperti sebelumnya.
+
+           State berasal dari class `sidebar-collapsed` pada elemen <html>, yang
+           sudah dipasang oleh script anti-kedip di <head> sebelum render pertama.
+           ========================================================================== */
+        @media (min-width: 1024px) {
+
+            /* --- 1. LEBAR SIDEBAR ------------------------------------------------ */
+            html.sidebar-collapsed .app-sidebar-drawer {
+                width: var(--sidebar-width-collapsed) !important;
+                min-width: var(--sidebar-width-collapsed) !important;
+                max-width: var(--sidebar-width-collapsed) !important;
+            }
+
+            /* Transisi halus pada lebar sidebar (200-300ms). Hanya width yang
+               beranimasi supaya konten utama ikut melebar/mempempit tanpa
+               layout melompat. */
+            html .app-sidebar-drawer {
+                transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease !important;
+                overflow-x: hidden !important;
+            }
+
+            /* --- 2. ATAS SIDEBAR: HANYA LOGO, DIPUSATKAN ----------------------- */
+            /* Padding SAMA PERSIS dengan mode expanded (lihat blok "BLOK ATAS
+               SIDEBAR" di bawah). Expanded & collapsed harus memakai nilai
+               yang sama supaya posisi vertikal logo TIDAK lompat ketika
+               sidebar di-collapse / di-expand. */
+            html.sidebar-collapsed .sidebar-brand {
+                padding: 1rem 0.75rem 1rem 0.75rem !important;
+            }
+
+            html.sidebar-collapsed .sidebar-brand > div {
+                justify-content: center !important;
+                align-items: center !important;
+                min-height: 46px !important;
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                width: 100% !important;
+            }
+
+            /* Nama sekolah disembunyikan - bagian atas hanya berisi logo. */
+            html.sidebar-collapsed .sidebar-brand-text {
+                display: none !important;
+            }
+
+            /* Logo versi kecil & dipusatkan horizontal. */
+            html.sidebar-collapsed .sidebar-brand-logo {
+                width: 40px !important;
+                height: 40px !important;
+                margin: 0 auto !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* --- 3. ITEM MENU: HANYA IKON, DIPUSATKAN ------------------------- */
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link {
+                /* Margin diperkecil & dipusatkan: semua item berukuran sama
+                   sehingga semua ikon berada di sumbu tengah sidebar. */
+                margin: 0 auto 16px auto !important;
+                width: 48px !important;
+                min-width: 48px !important;
+                max-width: 48px !important;
+                height: 44px !important;
+                padding: 0 !important;
+                justify-content: center !important;
+                gap: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            /* Label teks disembunyikan; ikon tetap dengan ukuran & warna sama. */
+            html.sidebar-collapsed .sidebar-nav-label {
+                display: none !important;
+            }
+
+            /* Garis pembatas ikut memendek & tetap terpusat. */
+            html.sidebar-collapsed .app-sidebar-drawer .nav-item:has(> .border-bottom) {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+
+            /* --- 4. HIGHLIGHT MENU AKTIF ---------------------------------------- */
+            /* Kotak rounded di sekitar ikon, ukuran PERSIS sama untuk semua item
+               karena .nav-link collapsed dikunci ke 48x44px di atas. */
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link.active {
+                border-radius: 12px !important;
+                box-shadow: none !important;
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link i {
+                /* Ikon sedikit diperbesar agar tetap terbaca di sidebar sempit,
+                   namun tetap satu visual dengan versi expanded. */
+                font-size: 1.35rem !important;
+                margin: 0 auto !important;
+            }
+
+            /* --- 5. TOOLTIP NAMA MENU (collapsed) ------------------------------- */
+            /* Tooltip memakai position: FIXED, bukan absolute. Alasannya: <aside>
+               memakai overflow:hidden, sehingga tooltip yang diposisikan relatif
+               terhadap ikon akan TERPOTONG tepi sidebar. Dengan position:fixed
+               plus koordinat yang dihitung JS dari boundingClientRect, tooltip
+               selalu tampil utuh di luar sidebar. */
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link[data-label]::after {
+                content: attr(data-label);
+                position: fixed;
+                /* Diisi oleh JS lewat custom property (lihat initTooltipPositioning).
+                   Nilai awal disembunyikan di luar layar agar tidak berkedip
+                   sebelum JS sempat menghitung koordinat. */
+                left: var(--tt-left, -9999px);
+                top: var(--tt-top, -9999px);
+                transform: translateY(-50%);
+                /* Di atas sidebar (z-index 40 desktop / 1045 drawer mobile),
+                   tapi DI BAWAH modal Bootstrap (1055) supaya tooltip tidak
+                   pernah muncul di atas jendela konfirmasi Log Out. */
+                z-index: 1046;
+                padding: 0.4rem 0.7rem;
+                border-radius: 8px;
+                background: #0f172a;
+                color: #ffffff;
+                font-size: 0.72rem;
+                font-weight: 600;
+                line-height: 1.2;
+                letter-spacing: 0.03em;
+                text-transform: uppercase;
+                white-space: nowrap;
+                pointer-events: none;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.15s ease, visibility 0.15s ease;
+                box-shadow: 0 6px 18px -6px rgba(15, 23, 42, 0.55);
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link[data-label]:hover::after,
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link[data-label]:focus-visible::after {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            /* Fokus keyboard: outline tipis pada ikon saja. */
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link:focus-visible {
+                outline: 2px solid #ffffff !important;
+                outline-offset: -2px !important;
+            }
+            html.sidebar-collapsed .app-sidebar-drawer .nav-link:focus-visible i {
+                outline: none !important;
+            }
+
+            /* --- 6. TOMBOL LOG OUT SAAT COLLAPSED ------------------------------ */
+            /* Tombol ikon saja: ukuran & lebar SAMA dengan highlight menu aktif
+               (48x44px), tetap merah, dan tetap memicu modal konfirmasi yang
+               sudah ada karena atribut data-bs-* tidak diubah. */
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link {
+                width: 48px !important;
+                min-width: 48px !important;
+                max-width: 48px !important;
+                height: 44px !important;
+                margin: 0 auto 16px auto !important;
+                padding: 0 !important;
+                justify-content: center !important;
+                gap: 0 !important;
+                border-radius: 12px !important;
+                box-sizing: border-box !important;
+                color: #fecaca !important;
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link i {
+                font-size: 1.35rem !important;
+                color: #fecaca !important;
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link:hover,
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link:focus-visible {
+                background-color: #dc2626 !important;
+                color: #ffffff !important;
+                outline: none !important;
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link:hover i,
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-logout-link:focus-visible i {
+                color: #ffffff !important;
+            }
+
+            /* Toast native browser (title="Log Out") sengaja tetap ada sebagai
+               cadangan saat collapsed. */
+        }
+
+        /* --------------------------------------------------------------------------
 
         .sidebar-brand {
             padding: 1.25rem 1rem 0.75rem 1rem !important;
@@ -1288,6 +1593,227 @@
             .sidebar-brand {
                 padding: 1rem 1rem 0.75rem 1rem !important;
             }
+        }
+
+        /* --------------------------------------------------------------------------
+           BLOK ATAS SIDEBAR (LOGO + NAMA SEKOLAH) - HANYA DESKTOP (>= 1024px)
+
+           SEMUA aturan di bawah ini sengaja dikunci di min-width: 1024px. Nilai
+           mobile (1rem 1rem 0.75rem 1rem di blok media query di atas) maupun
+           utility class pada markup TIDAK DISENTUH, sehingga tampilan mobile
+           benar-benar tidak berubah.
+
+           Driver masalah "logo mepet ke pojok kiri-atas":
+             - padding kiri blok brand (1rem = 16px) TIDAK sama dengan margin kiri
+               item menu (0.75rem = 12px)  -> logo tidak sejajar dengan kartu menu;
+             - garis pembatas brand ikut lebih pendek dari garis pembatas di atas
+               tombol Log Out;
+             - padding atas (1.25rem) dan bawah (0.75rem) tidak seimbang, dan
+               utility pb-3 pada baris logo bikin jarak ke menu pertama berlebihan.
+
+           Perbaikan:
+             - padding kiri = margin kiri item menu (0.75rem)  -> logo sejajar
+               dengan sisi kiri kartu menu, dan garis pembatas brand lebarnya
+               sama persis dengan garis pembatas di atas tombol Log Out;
+             - padding atas = bawah (1rem) -> tidak menempel tepi atas dan tidak
+               ada ruang kosong berlebih sebelum menu pertama;
+             - min-height yang sama (46px) dipakai expanded & collapsed -> tinggi
+               blok header sidebar konsisten, logo tidak lompat vertikal.
+           -------------------------------------------------------------------------- */
+        @media (min-width: 1024px) {
+            .sidebar-brand {
+                padding: 1rem 0.75rem 1rem 0.75rem !important;
+            }
+
+            /* Baris logo + nama sekolah: tinggi pas, logo & teks sejajar vertikal.
+               pb-3 (1rem) dihapus di sini supaya jarak ke garis pembatas dan ke
+               menu pertama tidak dobel. */
+            .sidebar-brand > .sidebar-brand-row {
+                align-items: center !important;
+                justify-content: flex-start !important;
+                min-height: 46px !important;
+                width: 100% !important;
+                padding-bottom: 0 !important;
+            }
+
+            /* Nama sekolah boleh turun ke baris berikutnya, tidak terpotong dan
+               tidak keluar dari batas sidebar. */
+            .sidebar-brand-text {
+                min-width: 0 !important;
+                white-space: normal !important;
+                overflow-wrap: break-word !important;
+                overflow: hidden !important;
+            }
+        }
+
+        /* ==========================================================================
+           TABEL DATA: SCROLL VERTIKAL DI SISI KANAN + HEADER STICKY
+           SATU-SATUNYA sumber gaya ini (letak di layout bersama), dipakai SEMUA
+           halaman yang tabelnya dibungkus .table-responsive:
+           Presensi Hari Ini, Presensi Kelas, Kehadiran, Rekap, Siswa, Guru,
+           Kelas, Tahun Ajaran, Hari Libur, Arsip, Peran, dsb.
+           Cara ini dipakai agar tidak ada copy-paste CSS per halaman.
+
+           Catatan: .table-responsive memakai max-height (bukan tinggi tetap),
+           sehingga tabel yang isinya sedikit (mis. 3 baris di modal) tetap
+           tampil utuh tanpa memunculkan scrollbar yang tidak perlu.
+           ========================================================================== */
+        .table-responsive {
+            /* Area scroll tabel: tinggi maksimal + scrollbar di sisi kanan */
+            overflow-y: auto !important;
+            overflow-x: auto !important;
+            max-height: 65vh !important;
+            /* Izinkan tabel lebar bergeser ke samping tanpa merusak layout. */
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior: contain !important;
+        }
+
+        /* Header tabel menempel di atas area scroll.
+           Sticky dipasang pada <thead> (bukan <th>) supaya warna background
+           milik setiap halaman (bg-light / bg-slate-50) tetap utuh - tidak ada
+           warna, font, atau gaya header yang berubah. */
+        .table-responsive > table > thead {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 2 !important;
+        }
+
+        /* <thead> tanpa class background (3 tabel) diberi warna netral yang
+           sama dengan .bg-light Bootstrap, agar isi tabel tidak terlihat
+           menembus header saat digulir. */
+        .table-responsive > table > thead:not([class]) {
+            background-color: #f8f9fa !important;
+        }
+
+        /* Scrollbar yang SELALU terlihat (bukan overlay yang menghilang).
+           Warna memakai warna teks abu-abu yang sudah dipakai di tabel. */
+        .table-responsive {
+            scrollbar-width: auto !important;
+            -ms-overflow-style: scrollbar !important;
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            width: 10px !important;
+            height: 10px !important;
+            display: block !important;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background-color: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 8px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+
+        /* ==========================================================================
+           PAGINASI TEKS MURNI BERSAMA (Single Source of Truth)
+           Susunan "‹ Sebelumnya  1 2 3 4 5  Berikutnya ›" + info "Menampilkan ...".
+           Tanpa container/border/shadow/pill; halaman aktif biru tebal bergaris
+           bawah tipis; "Sebelumnya/Berikutnya" redup di ujung.
+
+           Blok ini adalah SUMBER BERSAMA untuk halaman yang paginasinya berada
+           DI DALAM area scroll tabel: Catatan Kehadiran, Rekap, dan Data Siswa.
+           Catatan Kehadiran & Rekap masih membawa salinan nilai yang sama di
+           @push('styles') masing-masing (keduanya identik, jadi tidak ada gaya
+           yang berubah); Data Siswa memakai blok bersama ini tanpa salinan.
+           ========================================================================== */
+        .kehadiran-pagination {
+            /* Berada DI DALAM area scroll: padding atas/bawah lega supaya tidak
+               menempel baris terakhir dan tidak terpotong tepi bawah layar. */
+            padding: 1.25rem 0.5rem 1.5rem;
+            margin: 0;
+            text-align: center;
+            border-top: 1px solid #f1f5f9;
+            background-color: #ffffff;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .kehadiran-pagination-list {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.15rem 1.1rem;
+            list-style: none;
+            margin: 0 0 0.35rem;
+            padding: 0;
+        }
+
+        .kehadiran-pagination-step,
+        .kehadiran-pagination-page {
+            display: inline-block;
+            padding: 0.45rem 0.3rem;
+            font-size: 0.95rem;
+            font-weight: 400;
+            line-height: 1.2;
+            text-decoration: none;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        /* Halaman aktif: biru tema, tebal, garis bawah tipis. */
+        .kehadiran-pagination-page.is-active {
+            color: #2563eb !important;
+            font-weight: 700;
+            border-bottom: 2px solid #2563eb !important;
+            cursor: default;
+        }
+
+        /* Hover: hanya warna teks, tanpa bentuk muncul. */
+        .kehadiran-pagination-step:hover,
+        .kehadiran-pagination-page:hover {
+            color: #2563eb !important;
+            text-decoration: underline;
+        }
+
+        /* Fokus keyboard: outline tipis pada TEKS saja. */
+        .kehadiran-pagination-step:focus-visible,
+        .kehadiran-pagination-page:focus-visible {
+            outline: 2px solid #2563eb !important;
+            outline-offset: 1px;
+            border-radius: 0 !important;
+        }
+
+        /* Redup + tidak bisa diklik di halaman pertama / terakhir. */
+        .kehadiran-pagination-step.is-disabled {
+            color: #cbd5e1;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .kehadiran-pagination-step.is-disabled:hover {
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+
+        .kehadiran-pagination-ellipsis {
+            display: inline-block;
+            padding: 0.45rem 0.1rem;
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.2;
+        }
+
+        .kehadiran-pagination-info {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #64748b;
+            letter-spacing: 0.02em;
         }
 
         /* --------------------------------------------------------------------------
@@ -1560,6 +2086,97 @@
             color: #ffffff !important;
         }
 
+        /* =========================================================================
+           MODAL KONFIRMASI LOG OUT - PEMUSATAN DI TENGAH VIEWPORT
+           -------------------------------------------------------------------------
+           AKAR MASALAH (bukan gejalanya):
+           Markup lama menaruh <form> LANGSUNG sebagai anak dari
+           .modal-dialog-centered. Bootstrap mendefinisikan:
+               .modal-dialog          { position:relative; width:auto;
+                                        margin:var(--bs-modal-margin);
+                                        pointer-events:none }
+               .modal-dialog          { max-width:var(--bs-modal-width)/*500px*/;
+                                        margin-left:auto; margin-right:auto }
+               .modal-dialog-centered { display:flex; align-items:center;
+                                        min-height:calc(100% - margin*2) }
+           Perhatikan: .modal-dialog-centered hanya mengatur align-items (sumbu
+           LINTANG/vertikal). justify-content TIDAK pernah di-set, sehingga sumbu
+           horizontal (main axis) memakai nilai default flex-start.
+           Akibatnya <form> - yang menjadi flex item dengan width:auto - ikut
+           shrink-wrap sesuai lebar kontennya dan menempel di sisi KIRI dialog
+           500px, bukan memenuhi lebar dialog. Kotak modal karena itu tampak
+           bergeser ke kiri dari tengah layar (vertikal tetap pas karena
+           align-items:center bekerja normal).
+
+           PERBAIKAN (di akar masalah, tanpa margin/negative offset):
+           1) .modal-content dipindahkan menjadi anak langsung .modal-dialog
+              (struktur resmi Bootstrap), sedangkan <form> diletakkan DI DALAM
+              .modal-content. Akibatnya yang jadi flex item adalah
+              .modal-content yang punya width:100%, sehingga tidak lagi
+              shrink-wrap dan ikut ter-align dengan benar.
+           2) Aturan di bawah memaksa area gelap menutupi viewport penuh dan
+              .modal-dialog benar-benar terpusat di kedua sumbu, dengan lebar
+              wajar max 400px + margin samping pada layar kecil.
+           Markup modal diletakkan sebagai anak langsung <body> (tepat sebelum
+           </body>), yaitu DI LUAS <aside> sidebar. Ini penting: <aside> memakai
+           transform: translate3d(...) + will-change: transform, yang akan
+           membuat position:fixed dihitung relatif terhadap aside, bukan viewport.
+           ------------------------------------------------------------------------- */
+        #logoutConfirmModal {
+            /* Bootstrap memberi position:fixed; top/left:0; width/height:100%.
+               Dipertegas menjadi inset:0 agar area gelap selalu 1:1 viewport. */
+            inset: 0;
+        }
+
+        /* Saat tampil, area gelap menjadi flex container sehingga .modal-dialog
+           (flex item) terpusat horizontal DAN vertikal otomatis. */
+        #logoutConfirmModal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #logoutConfirmModal .modal-dialog {
+            /* min-height di-reset: pemusatan vertikal ditangani oleh
+               align-items:center pada overlay, bukan oleh min-height. */
+            min-height: 0;
+            width: calc(100% - 2rem);
+            max-width: 400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #logoutConfirmModal .modal-content {
+            width: 100%;
+            max-width: 400px;
+            pointer-events: auto;
+        }
+
+        /* Isi modal: judul + tombol X tetap di atas (kiri-kanan),
+           teks pertanyaan dan tombol aksi dibuat rata tengah & seimbang. */
+        #logoutConfirmModal .modal-body {
+            text-align: center;
+        }
+
+        #logoutConfirmModal .modal-footer {
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        /* Netralkan margin default Bootstrap pada anak footer supaya jarak
+           antara kedua tombol benar-benar sama, lalu samakan lebar tombol. */
+        #logoutConfirmModal .modal-footer > * {
+            margin: 0 !important;
+            flex: 0 0 auto;
+        }
+
+        #logoutConfirmModal .modal-footer .btn {
+            min-width: 8.5rem;
+        }
+
     </style>
 </head>
 <!-- Catatan: utility arbitrary-value Tailwind untuk warna kanvas (hex 044ABA)
@@ -1592,12 +2209,22 @@
             <!-- HEADER UTAMA DENGAN TOMBOL GARIS TIGA DI POJOK KIRI ATAS UNTUK MOBILE/TABLET/IPAD -->
             <div class="app-header-bar d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2.5 sm:gap-3 mb-3 sm:mb-4 w-100">
                 <div class="app-header-left d-flex align-items-start gap-2 sm:gap-2.5 min-w-0">
-                    <!-- Tombol Garis Tiga Pure Icon (Khusus HP, Tablet & iPad < 1024px) -->
-                    <button @click="sidebarOpen = !sidebarOpen" 
+                    <!-- TOMBOL GARIS TIGA (SATUR ELEMEN UNTUK MOBILE & DESKTOP)
+                     Elemen yang SAMA melayani dua breakpoint, sehingga tidak
+                     mungkin ada dua hamburger tampil bersamaan:
+                       - < 1024px : sidebarOpen = !sidebarOpen (drawer, TIDAK BERUBAH)
+                       - >= 1024px: toggle collapse sidebar (localStorage)
+                     Ikon <i class='bx bx-menu'> dipakai ulang, tidak ada ikon baru,
+                     dan tidak ada hamburger di area sidebar.
+
+                     Pencabangan breakpoint dilakukan DI DALAM ekspresi Alpine
+                     supaya cabang mobile tetap menjalankan statement asli
+                     `sidebarOpen = !sidebarOpen` apa adanya. -->
+                    <button @click="window.matchMedia('(min-width: 1024px)').matches ? (window.__presensiToggleSidebar && window.__presensiToggleSidebar()) : (sidebarOpen = !sidebarOpen)"
                             type="button"
-                            class="mobile-top-hamburger lg:hidden flex-shrink-0" 
-                            title="Buka Menu Sidebar"
-                            aria-label="Buka Menu Sidebar">
+                            class="mobile-top-hamburger flex-shrink-0" 
+                            title="Buka/Tutup sidebar"
+                            aria-label="Buka/Tutup sidebar">
                         <i class='bx bx-menu'></i>
                     </button>
                     <!-- Wadah Blok Teks Header Solid (Judul & Subjudul Sejajar Vertikal Presisi) -->
@@ -1747,6 +2374,53 @@
      style="display: none;">
 </div>
 
+<!-- ========================================================================= -->
+<!-- 4. MODAL KONFIRMASI LOG OUT (Bersama untuk semua halaman sidebar)        -->
+<!-- Tombol "Log Out" di sidebar TIDAK lagi langsung mengeluarkan user.        -->
+<!-- Kliknya hanya membuka modal ini; logout baru dijalankan setelah user      -->
+<!-- menekan tombol "Ya, Log Out" (POST + @csrf, jadi tetap aman).            -->
+<!--                                                                       -->
+<!-- POSISI MARKUP (penting, jangan diubah):                                 -->
+<!-- Modal ini adalah anak LANGSUNG <body>, tepat sebelum </body>, dan        -->
+<!-- berada DI LUAS <aside> sidebar. <aside> memakai transform:              -->
+<!-- translate3d(...) + will-change: transform, yang membuat position:fixed   -->
+<!-- dihitung relatif terhadap aside, bukan terhadap viewport - dan itu akan  -->
+<!-- membuat modal tampak bergeser. Karena markup-nya di luar aside, overlay   -->
+<!-- gelap & modal terpusat aman di semua breakpoint dan di semua halaman      -->
+<!-- yang memakai layout ini (admin maupun guru).                             -->
+<!--                                                                       -->
+<!-- STRUKTUR (penting, jangan diubah):                                      -->
+<!-- .modal-content HARUS jadi anak langsung .modal-dialog (struktur resmi   -->
+<!-- Bootstrap), sedangkan <form> berada DI DALAM .modal-content.            -->
+<!-- Bila <form> diletakkan langsung di .modal-dialog, form menjadi flex     -->
+<!-- item dengan justify-content default (flex-start) sehingga kotak modal    -->
+<!-- menempel ke kiri dan tidak terpusat. Lihat blok CSS "#logoutConfirmModal" -->
+<!-- di dalam <head> untuk penjelasan lengkap.                              -->
+<!--                                                                       -->
+<!-- Penutupan modal: tombol "Batal", tombol "X", klik area overlay gelap,    -->
+<!-- dan tombol Esc semuanya sudah difasilitasi Bootstrap 5 secara bawaan.  -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form action="{{ route('logout') }}" method="POST" class="d-flex flex-column">
+                @csrf
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-dark fs-5 mb-0" id="logoutConfirmModalLabel">Log Out</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body py-3 px-4">
+                    <p class="mb-0 text-secondary">Apakah Anda yakin untuk Log Out?</p>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger rounded-3 px-3 fw-semibold">Ya, Log Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('js/instant-download.js') }}?v={{ file_exists(public_path('js/instant-download.js')) ? filemtime(public_path('js/instant-download.js')) : config('app.version', '1') }}"></script>
@@ -1793,6 +2467,232 @@
             return result;
         });
     };
+</script>
+
+<!-- ==========================================================================
+     SIDEBAR COLLAPSIBLE - DESKTOP (>= 1024px)
+     Script ini HANYA mengatur state collapse & posisi tooltip. Seluruh
+     tampilan (lebar, ikon, warna, tooltip) dikerjakan oleh CSS.
+     Périlaku mobile TIDAK diubah: di bawah 1024px tombol ini tidak melakukan
+     apa-apa dan Alpine @click yang Handles drawer berjalan seperti semula.
+     ========================================================================== -->
+<script>
+(function () {
+    'use strict';
+
+    var STORAGE_KEY = 'sidebarCollapsed';
+    var DESKTOP_QUERY = window.matchMedia('(min-width: 1024px)');
+
+    function isDesktop() {
+        return DESKTOP_QUERY.matches;
+    }
+
+    /**
+     * Toggle sidebar desktop + simpan state.
+     * Dijadikan window.__presensiToggleSidebar supaya bisa dipanggil dari
+     * atribut @click Alpine pada tombol hamburger.
+     */
+    window.__presensiToggleSidebar = function (event) {
+        // Di bawah breakpoint desktop: serahkan sepenuhnya ke Alpine drawer.
+        if (!isDesktop()) {
+            return false;
+        }
+
+        if (event && typeof event.preventDefault === 'function') {
+            event.preventDefault();
+        }
+
+        var root = document.documentElement;
+        var collapsed = root.classList.toggle('sidebar-collapsed');
+
+        try {
+            window.localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
+        } catch (e) { /* localStorage diblokir: state tetap berlaku sesi ini */ }
+
+        return true;
+    };
+
+    /**
+     * Tooltip memakai ::after dengan position:fixed. Alasannya <aside> memakai
+     * overflow:hidden, sehingga tooltip yang diposisikan relatif terhadap ikon
+     * akan TERPOTONG tepi sidebar. Koordinat left/top tidak bisa dihitung CSS,
+     * jadi di sini diisi lewat custom property --tt-left / --tt-top yang
+     * kemudian dipakai rules ::after. Diperbarui tiap hover, focus, scroll,
+     * dan resize supaya posisinya selalu tepat.
+     */
+    function initTooltipPositioning() {
+        var SIDEBAR_GAP = 12;   // jarak tooltip dari tepi kanan sidebar
+        var EDGE_PAD = 8;      // jarak minimum dari tepi jendela
+
+        function place(link) {
+            var rect = link.getBoundingClientRect();
+            if (!rect.width) {
+                return;
+            }
+
+            // Perkiraan lebar tooltip (elemen pseudo tidak bisa diukur dari JS).
+            // Dipakai hanya untuk menjaga tooltip tidak keluar jendela.
+            var estimatedWidth = (link.getAttribute('data-label') || '').length * 7.2 + 22;
+
+            var left = rect.right + SIDEBAR_GAP;
+            var maxLeft = window.innerWidth - estimatedWidth - EDGE_PAD;
+            if (left > maxLeft) {
+                left = Math.max(EDGE_PAD, maxLeft);
+            }
+
+            link.style.setProperty('--tt-left', left + 'px');
+            link.style.setProperty('--tt-top', (rect.top + rect.height / 2) + 'px');
+        }
+
+        function placeAll() {
+            // Hanya perlu diposisikan saat sidebar benar-benar collapsed.
+            if (!document.documentElement.classList.contains('sidebar-collapsed')) {
+                return;
+            }
+            var links = document.querySelectorAll('.app-sidebar-drawer .nav-link[data-label]');
+            Array.prototype.forEach.call(links, place);
+        }
+
+        var links = document.querySelectorAll('.app-sidebar-drawer .nav-link[data-label]');
+        Array.prototype.forEach.call(links, function (link) {
+            link.addEventListener('mouseenter', function () { place(link); });
+            link.addEventListener('focus', function () { place(link); });
+        });
+
+        window.addEventListener('scroll', placeAll, true);
+        window.addEventListener('resize', placeAll);
+    }
+
+    /**
+     * Saat pindah dari desktop -> mobile, class sidebar-collapsed DILETAKAN
+     * dari <html> supaya tidak ada state sisa yang mengganggu drawer mobile.
+     * Nilai localStorage sengaja TIDAK dihapus, sehingga saat user kembali ke
+     * desktop, sidebar kembali ke modecollapsed yang mereka pilih.
+     */
+    function syncOnResize() {
+        if (!isDesktop()) {
+            document.documentElement.classList.remove('sidebar-collapsed');
+        } else {
+            try {
+                if (window.localStorage.getItem(STORAGE_KEY) === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch (e) { /* abaikan */ }
+        }
+    }
+
+    // Jalankan setelah DOM siap.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            syncOnResize();
+            initTooltipPositioning();
+        });
+    } else {
+        syncOnResize();
+        initTooltipPositioning();
+    }
+
+    window.addEventListener('resize', syncOnResize);
+})();
+</script>
+
+<script>
+/* Auto-filter bersama: pencarian otomatis (debounce 400ms), tombol "x" kecil
+   di dalam input, fokus kursor dipertahankan setelah muat ulang, dan submit
+   GET filter tidak menampilkan overlay loading penuh (form diberi
+   data-no-loader agar pola loading yang ada tidak menutup input). */
+(function () {
+    'use strict';
+
+    document.querySelectorAll('form[method="GET"] input[name="search"], form[method="get"] input[name="search"]').forEach(function (input) {
+        var form = input.form;
+        if (!form) return;
+        if (!input.id) {
+            input.id = 'auto-filter-search-' + Math.random().toString(36).slice(2, 7);
+        }
+
+        // 1) Pencarian otomatis saat mengetik (debounce 400ms). Enter tetap
+        //    bisa: event submit pada form ikut membersihkan timer debounce.
+        var timer = null;
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () { input.form.submit(); }, 400);
+        });
+        form.addEventListener('submit', function () { clearTimeout(timer); });
+
+        // 2) Tombol "x" kecil di dalam input (bukan tombol reset terpisah):
+        //    hanya muncul saat ada teks, mengosongkan & memuat ulang sekali klik.
+        var group = input.closest('.input-group') || input.parentElement;
+        if (group && !group.querySelector('.search-clear-x')) {
+            if (!group.style.position) group.style.position = 'relative';
+            var clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'search-clear-x';
+            clearBtn.setAttribute('aria-label', 'Kosongkan pencarian');
+            clearBtn.innerHTML = '&times;';
+            clearBtn.style.cssText = 'position:absolute; top:50%; transform:translateY(-50%); right:40px; z-index:5; width:18px; height:18px; padding:0; line-height:1; border:none; background:transparent; color:#94a3b8; font-size:16px; display:none; cursor:pointer;';
+            var searchBtn = group.querySelector('button:not(.search-clear-x)');
+            if (searchBtn && searchBtn.offsetWidth) {
+                clearBtn.style.right = (searchBtn.offsetWidth + 10) + 'px';
+            }
+            group.appendChild(clearBtn);
+            input.style.paddingRight = '28px';
+
+            var syncClear = function () {
+                clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
+            };
+            input.addEventListener('input', syncClear);
+            syncClear();
+
+            clearBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+            clearBtn.addEventListener('click', function () {
+                clearTimeout(timer);
+                input.value = '';
+                syncClear();
+                input.focus();
+                try {
+                    window.sessionStorage.setItem('__filterFocus', JSON.stringify({ id: input.id, path: window.location.pathname }));
+                } catch (e) { /* abaikan */ }
+                form.submit();
+            });
+        }
+
+        // 3) Jangan tampilkan overlay loading penuh saat filter otomatis mengetik.
+        form.setAttribute('data-no-loader', '');
+    });
+
+    // Semua form GET yang berisi select/date: beri data-no-loader agar overlay
+    // loading penuh tidak menutup halaman saat ganti dropdown/tanggal.
+    document.querySelectorAll('form[method="GET"], form[method="get"]').forEach(function (form) {
+        if (form.querySelector('input[name="search"], select, input[type="date"]')) {
+            form.setAttribute('data-no-loader', '');
+        }
+    });
+
+    // 4) Fokus kursor & posisi akhir teks dipertahankan setelah muat ulang penuh.
+    try {
+        var saved = JSON.parse(window.sessionStorage.getItem('__filterFocus') || 'null');
+        if (saved && saved.path === window.location.pathname && saved.id) {
+            window.sessionStorage.removeItem('__filterFocus');
+            var el = document.getElementById(saved.id);
+            if (el) {
+                el.focus();
+                if (el.tagName === 'INPUT' && el.setSelectionRange && typeof el.value === 'string') {
+                    try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) { /* abaikan */ }
+                }
+            }
+        }
+    } catch (e) { /* abaikan */ }
+
+    window.addEventListener('beforeunload', function () {
+        var el = document.activeElement;
+        if (el && el.id && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) {
+            try {
+                window.sessionStorage.setItem('__filterFocus', JSON.stringify({ id: el.id, path: window.location.pathname }));
+            } catch (e) { /* abaikan */ }
+        }
+    });
+})();
 </script>
 @yield('scripts')
 @stack('scripts')

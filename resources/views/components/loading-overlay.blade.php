@@ -1,8 +1,10 @@
 <div id="smart-page-loader" class="loader-overlay" style="display: none;">
-    <div class="loader"></div>
+    <div class="app-loader" role="status" aria-label="Memuat"></div>
 </div>
 
 <style>
+    /* Overlay loading penuh layar: HITAM transparan (alpha 0.50) sehingga halaman
+       di belakang masih samar terlihat tanpa tint biru dari loader itu sendiri. */
     .loader-overlay {
         position: fixed;
         inset: 0;
@@ -13,36 +15,48 @@
         display: none;
         align-items: center;
         justify-content: center;
-        background: rgba(15, 23, 42, 0.24);
+        background: rgba(0, 0, 0, 0.50);
         pointer-events: auto;
+        opacity: 1;
+        transition: opacity 250ms ease;
     }
 
-    .loader {
+    .loader-overlay.is-hiding {
+        opacity: 0;
+    }
+
+    /* Cincin spinner (hanya animasi transform -> murah). */
+    .app-loader {
         width: 50px;
+        padding: 8px;
         aspect-ratio: 1;
-        --c: no-repeat radial-gradient(farthest-side, #ffffff 92%, #0000);
-        background:
-            var(--c) 50% 0,
-            var(--c) 50% 100%,
-            var(--c) 100% 50%,
-            var(--c) 0 50%;
-        background-size: 10px 10px;
-        animation: l18 1s infinite;
-        position: relative;
-    }
-
-    .loader::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        margin: 3px;
-        background: repeating-conic-gradient(#0000 0 35deg, #ffffff 0 90deg);
-        -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 3px), #000 0);
         border-radius: 50%;
+        background: #ffffff;
+        --_m:
+            conic-gradient(#0000 10%, #000),
+            linear-gradient(#000 0 0) content-box;
+        -webkit-mask: var(--_m);
+        mask: var(--_m);
+        -webkit-mask-composite: source-out;
+        mask-composite: subtract;
+        animation: app-spin 1s infinite linear;
     }
 
-    @keyframes l18 {
-        100% { transform: rotate(.5turn); }
+    /* Varian kecil (dalam tombol/area sempit): lebar & padding dikecilkan. */
+    .app-loader--sm {
+        width: 22px;
+        padding: 3px;
+    }
+
+    @keyframes app-spin {
+        to { transform: rotate(1turn); }
+    }
+
+    /* Reduced motion: animasi diperlambat sangat pelan, indikator TETAP tampil. */
+    @media (prefers-reduced-motion: reduce) {
+        .app-loader {
+            animation-duration: 5s;
+        }
     }
 </style>
 
@@ -51,7 +65,12 @@
     'use strict';
 
     let loaderTimeout = null;
+    let fadeTimeout = null;
+    let safetyTimeout = null;
     const DELAY_MS = 100;
+    const FADE_MS = 250;
+    // Jaringan/macet total: paksa sembunyikan agar overlay tidak pernah menutupi halaman.
+    const SAFETY_MS = 15000;
 
     function getLoader() {
         return document.getElementById('smart-page-loader');
@@ -64,7 +83,17 @@
         loaderTimeout = setTimeout(function() {
             const loader = getLoader();
             if (loader) {
+                if (fadeTimeout) {
+                    clearTimeout(fadeTimeout);
+                    fadeTimeout = null;
+                }
+                loader.classList.remove('is-hiding');
                 loader.style.display = 'flex';
+
+                if (safetyTimeout) {
+                    clearTimeout(safetyTimeout);
+                }
+                safetyTimeout = setTimeout(hideLoader, SAFETY_MS);
             }
         }, DELAY_MS);
     }
@@ -74,10 +103,24 @@
             clearTimeout(loaderTimeout);
             loaderTimeout = null;
         }
-        const loader = getLoader();
-        if (loader) {
-            loader.style.display = 'none';
+        if (safetyTimeout) {
+            clearTimeout(safetyTimeout);
+            safetyTimeout = null;
         }
+        const loader = getLoader();
+        if (!loader || loader.style.display === 'none') {
+            return;
+        }
+        // Fade out halus 250ms sebelum overlay dilepas.
+        loader.classList.add('is-hiding');
+        if (fadeTimeout) {
+            clearTimeout(fadeTimeout);
+        }
+        fadeTimeout = setTimeout(function() {
+            loader.style.display = 'none';
+            loader.classList.remove('is-hiding');
+            fadeTimeout = null;
+        }, FADE_MS);
     }
 
     function isDownloadDestination(href) {

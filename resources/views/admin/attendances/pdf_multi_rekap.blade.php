@@ -71,6 +71,13 @@
             text-transform: uppercase;
             font-size: 7.5pt;
         }
+        /* Judul kolom DIULANG di setiap halaman saat tabel terpecah. */
+        .data-table thead {
+            display: table-header-group;
+        }
+        .data-table tr {
+            page-break-inside: avoid;
+        }
         .data-table tr:nth-child(even) td {
             background-color: #f8fafc;
         }
@@ -84,15 +91,29 @@
         .badge-a { color: #e11d48; font-weight: bold; }
         .badge-l { color: #94a3b8; }
 
+        /* Legenda + tanda tangan per kelas: tidak boleh terpisah halaman. */
+        .section-footer {
+            page-break-inside: avoid;
+            page-break-before: avoid;
+        }
+        .pdf-legend {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background-color: #f8fafc;
+        }
         .signature-table {
             width: 100%;
             margin-top: 24px;
             page-break-inside: avoid;
         }
         .signature-table td {
-            text-align: center;
+            text-align: left;
             font-size: 8.5pt;
-            width: 50%;
+            width: 33.33%;
+            vertical-align: top;
         }
     </style>
 </head>
@@ -109,7 +130,19 @@
     }
     $npsn = \App\Models\Setting::get('school_npsn', '20102030');
     $resolvedActiveYear = $activeYear ?? \App\Models\AcademicYear::getActive();
+    $signPlaceholder = \App\Exports\MultiPeriodAttendanceExport::NAME_PLACEHOLDER;
+    $legendLines = \App\Exports\MultiPeriodAttendanceExport::legendLines();
+    $printedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i');
+    $signedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y');
+    // Satu blok = satu kelas. Blok pertama langsung menyusul blok sebelumnya,
+    // blok berikutnya DIMULAI DI HALAMAN BARU (kop + judul ikut diulang).
+    $sections = $sections ?: [];
 @endphp
+
+@foreach($sections as $section)
+    @if(!$loop->first)
+        <div class="page-break" style="page-break-after: always;"></div>
+    @endif
 
     <!-- KOP SEKOLAH -->
     <table class="header-table">
@@ -127,13 +160,13 @@
             </td>
             <td style="text-align: right; font-size: 8pt; color: #64748b;">
                 Dicetak pada:<br>
-                <strong>{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i') }} WIB</strong>
+                <strong>{{ $printedAt }} WIB</strong>
             </td>
         </tr>
     </table>
 
-    <div class="report-title">{{ $reportHeading }}</div>
-    <div class="report-subtitle">{{ $reportSubheading }}</div>
+    <div class="report-title">{{ $section['heading'] }}</div>
+    <div class="report-subtitle">{{ $section['subtitle'] }}</div>
 
     <!-- TABEL DATA LAPORAN -->
     @if($type === 'harian')
@@ -152,9 +185,9 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($dataRows as $idx => $row)
+            @forelse($section['rows'] as $row)
             <tr>
-                <td>{{ $idx + 1 }}</td>
+                <td>{{ $row['no'] }}</td>
                 <td>{{ $row['student']->nis }}</td>
                 <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
@@ -187,16 +220,7 @@
     </table>
 
     @elseif($type === 'mingguan')
-    @php
-        $groupedClasses = collect($dataRows)->groupBy(fn($r) => $r['student']->schoolClass?->name ?? 'Lainnya');
-    @endphp
-    @foreach($groupedClasses as $classNameGroup => $classRows)
-    @if(count($groupedClasses) > 1)
-        <div style="font-size: 10pt; font-weight: bold; margin-top: 8px; margin-bottom: 4px; color: #1d4ed8;">
-            Kelas: {{ $classNameGroup }}
-        </div>
-    @endif
-    <table class="data-table" style="margin-bottom: 12px;">
+    <table class="data-table">
         <thead>
             <tr>
                 <th style="width: 25px;">No</th>
@@ -216,15 +240,15 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($classRows as $idx => $row)
+            @forelse($section['rows'] as $row)
             <tr>
-                <td>{{ $idx + 1 }}</td>
+                <td>{{ $row['no'] }}</td>
                 <td>{{ $row['student']->nis }}</td>
                 <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td>{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @foreach($dateColumns as $d)
-                    @php 
+                    @php
                         $code = $row['days'][$d['date']] ?? '-';
                         $cls = match($code) {
                             'H' => 'badge-h',
@@ -252,23 +276,10 @@
             @endforelse
         </tbody>
     </table>
-    @if(!$loop->last)
-        <div style="page-break-after: always;"></div>
-    @endif
-    @endforeach
 
     @else
     <!-- BULANAN -->
-    @php
-        $groupedClasses = collect($dataRows)->groupBy(fn($r) => $r['student']->schoolClass?->name ?? 'Lainnya');
-    @endphp
-    @foreach($groupedClasses as $classNameGroup => $classRows)
-    @if(count($groupedClasses) > 1)
-        <div style="font-size: 10pt; font-weight: bold; margin-top: 8px; margin-bottom: 4px; color: #1d4ed8;">
-            Kelas: {{ $classNameGroup }}
-        </div>
-    @endif
-    <table class="data-table" style="margin-bottom: 12px;">
+    <table class="data-table">
         <thead>
             <tr>
                 <th style="width: 22px;">No</th>
@@ -288,15 +299,15 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($classRows as $idx => $row)
+            @forelse($section['rows'] as $row)
             <tr>
-                <td>{{ $idx + 1 }}</td>
+                <td>{{ $row['no'] }}</td>
                 <td>{{ $row['student']->nis }}</td>
                 <td class="text-left" style="font-size: 7pt;"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td>{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)
-                    @php 
+                    @php
                         $code = $row['days'][$d] ?? '-';
                         $cls = match($code) {
                             'H' => 'badge-h',
@@ -323,31 +334,48 @@
             @endforelse
         </tbody>
     </table>
-    @if(!$loop->last)
-        <div style="page-break-after: always;"></div>
-    @endif
-    @endforeach
     @endif
 
-    <!-- TANDA TANGAN -->
-    <table class="signature-table">
-        <tr>
-            <td>
-                Mengetahui,<br>
-                Kepala Sekolah
-                <div style="height: 50px;"></div>
-                <strong><u>{{ $headmasterName ?? \App\Models\Setting::getHeadmasterName() }}</u></strong><br>
-                NIP. {{ $headmasterNip ?? \App\Models\Setting::getHeadmasterNip() }}
-            </td>
-            <td>
-                Parung Panjang, {{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y') }}<br>
-                {{ $rightSignatoryTitle ?? (!empty($teacherName) ? 'Guru Kelas' : 'Petugas Presensi') }}
-                <div style="height: 50px;"></div>
-                <strong><u>{{ $teacherName ?? '( .................................................. )' }}</u></strong><br>
-                NIP. {{ $teacherNip ?? '-' }}
-            </td>
-        </tr>
-    </table>
+    <!-- LEGENDA + TANDA TANGAN KELAS INI
+         Dibungkus satu blok supaya legenda dan tanda tangan tidak terpisah
+         halaman. Isi, urutan baris, dan teksnya SAMA dengan ekspor Excel. -->
+    <div class="section-footer">
+        <div class="pdf-legend">
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] }}</div>
+            <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
+                {{ $legendLines[1] }}
+            </div>
+            <div style="font-size: 8pt; color: #64748b; line-height: 1.5; margin-top: 2px;">
+                {{ $legendLines[2] }}
+            </div>
+        </div>
+
+        <table class="signature-table">
+            <tr>
+                <td>
+                    Mengetahui,<br>
+                    Kepala Sekolah
+                    <div style="height: 50px;"></div>
+                    <strong><u>{{ $headmasterName ?: $signPlaceholder }}</u></strong><br>
+                    NIP. {{ $headmasterNip ?: '-' }}
+                </td>
+                <td>
+                    Wali Kelas
+                    <div style="height: 50px;"></div>
+                    <strong><u>{{ $section['waliName'] ?: $signPlaceholder }}</u></strong><br>
+                    NIP. {{ $section['waliNip'] ?: '-' }}
+                </td>
+                <td>
+                    Parung Panjang, {{ $signedAt }}<br>
+                    Petugas Presensi
+                    <div style="height: 50px;"></div>
+                    <strong><u>{{ $signPlaceholder }}</u></strong><br>
+                    NIP. -
+                </td>
+            </tr>
+        </table>
+    </div>
+@endforeach
 
 </body>
 </html>

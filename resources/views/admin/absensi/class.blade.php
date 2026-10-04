@@ -350,6 +350,103 @@
             font-size: 2.25rem !important;
         }
     }
+
+    /* ==========================================================================
+       RAPIRAN TABEL PRESENSI KELAS
+       Semua aturan di bawah HANYA berlaku di halaman ini (blok styles milik
+       view ini), jadi halaman lain tidak ikut berubah.
+
+       Warna status TIDAK dibuat baru - semuanya warna teks yang sudah dipakai
+       di public/css/presensi-tokens.css (baris .presensi-badge.*), ditambah
+       #1d4ed8 yang sudah dipakai di sistem sebagai biru tua. Dipilih versi
+       GELAP supaya kontrasnya tetap terbaca di proyektor / layar terang.
+       ========================================================================== */
+
+    /* --- 1. KOLOM NAMA SISWA --------------------------------------------- */
+    /* Nama tidak bold, satu baris, uppercase. Label kelas ("7A") dihapus dari
+       markup (tidak lagi dirender di bawah nama). */
+    .presensi-student-cell {
+        gap: 0;
+    }
+
+    .presensi-student-cell .student-name {
+        font-weight: 400 !important;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* --- 2. KOLOM STATUS: TEKS MURNI, TANPA CONTAINER -------------------- */
+    /* Hanya teks berwarna: tanpa background, border, padding kotak, shadow. */
+    .presensi-badge {
+        background: none !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        min-width: 0 !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .presensi-badge.hadir     { color: #065f46 !important; } /* hijau tua  */
+    .presensi-badge.terlambat { color: #92400e !important; } /* oranye    */
+    .presensi-badge.sakit     { color: #1d4ed8 !important; } /* biru tua  */
+    .presensi-badge.izin      { color: #5b21b6 !important; } /* ungu      */
+    .presensi-badge.alfa      { color: #991b1b !important; } /* merah     */
+    .presensi-badge.belum     { color: #475569 !important; } /* abu-abu   */
+    .presensi-badge.libur     { color: #475569 !important; } /* abu-abu   */
+
+    /* --- 3. UPPERCASE UNTUK SEMUA DATA TABEL ------------------------------ */
+    /* Hanya <tbody>: header kolom (thead) dibiarkan persis seperti sekarang. */
+    .table-enterprise tbody td {
+        text-transform: uppercase;
+    }
+
+    /* Isi dropdown Aksi juga uppercase (label, bukan nilai tersimpan). */
+    .select-quick-status,
+    .select-quick-status option {
+        text-transform: uppercase;
+    }
+
+    /* --- 4. TABEL MENGISI SAMPAI BAWAH, SCROLL HANYA DI DALAM TABEL ------- */
+    /* Rantai flex: kolom -> card -> .table-responsive. .table-responsive
+       memakai flex:1 + min-height:0 supaya jadi tempat scroll, sedangkan kartu
+       ringkasan & tombol di atasnya tetap diam (tidak ikut scroll).
+       Tinggi kolom memakai dvh (ikut address bar browser) dikurangi offset
+       rem untuk header + ringkasan + padding halaman. */
+    #tableColumn {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 12rem);
+        min-height: 20rem;
+    }
+
+    #tableColumn > .card {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* max-height bawaan layout (65vh) dilepas supaya tinggi mengikuti flex,
+       sehingga tabel benar-benar mentok ke bawah tanpa ruang kosong. */
+    #tableColumn .table-responsive {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
+    }
+
+    /* Di layar kecil header layout lebih tinggi (sticky + safe-area) dan kartu
+       ringkasan jadi 3 kolom, jadi offset-nya diperbesar. */
+    @media (max-width: 767.98px) {
+        #tableColumn {
+            height: calc(100dvh - 22rem);
+        }
+    }
 </style>
 @endpush
 
@@ -485,7 +582,6 @@
                                 <td>
                                     <div class="presensi-student-cell">
                                         <div class="student-name">{{ $student->name ?? '-' }}</div>
-                                        <div class="student-class">{{ $selectedClass->name ?? ($student->schoolClass->name ?? '') }}</div>
                                     </div>
                                 </td>
                                 <td class="text-center text-secondary font-monospace">
@@ -500,6 +596,7 @@
                                             'sakit' => 'sakit',
                                             'izin' => 'izin',
                                             'alfa', 'alpha' => 'alfa',
+                                            'libur' => 'libur',
                                             default => 'belum',
                                         };
                                     @endphp
