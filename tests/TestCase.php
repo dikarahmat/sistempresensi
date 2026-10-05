@@ -20,6 +20,21 @@ abstract class TestCase extends BaseTestCase
      */
     protected function setUp(): void
     {
+        // Jaring level 1 (pra-boot): gugurkan SEBELUM parent::setUp()
+        // menjalankan RefreshDatabase (= migrate:fresh). Pengecekan config()
+        // setelah parent::setUp() TERLAMBAT: migrate sudah jalan duluan.
+        // Satu-satunya kondisi yang bisa membelokkan koneksi dari sqlite
+        // adalah file cache config basi — deteksi langsung keberadaannya.
+        $cachedConfig = __DIR__ . '/../bootstrap/cache/config.php';
+        if (file_exists($cachedConfig)) {
+            $this->fail(
+                'TES DIBATALKAN: bootstrap/cache/config.php masih ada. '
+                .'Hapus dulu dengan "php artisan config:clear" agar test '
+                .'tidak me-reset database MySQL. File TIDAK dihapus otomatis '
+                .'demi keamanan.'
+            );
+        }
+
         parent::setUp();
 
         $connection = config('database.default');

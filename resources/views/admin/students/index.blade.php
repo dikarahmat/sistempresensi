@@ -106,6 +106,7 @@
         }
     }
 
+    /* Header tabel Data Siswa: nilai DESKTOP (>= 1024px) tidak berubah. */
     .table-zebra-custom thead th {
         color: #475569 !important;
         font-size: 0.72rem !important;
@@ -116,6 +117,18 @@
         padding: 0.75rem 0.75rem;
         font-family: 'Poppins', 'Roboto', sans-serif;
         text-transform: uppercase;
+    }
+
+    /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
+       semibold + SATU garis tipis (sebelumnya latar abu #f8fafc sehingga
+       header terlihat "kotor" di atas baris zebra). Desktop >= 1024px
+       sengaja TIDAK disentuh, sesuai batas yang diminta. */
+    @media (max-width: 1023.98px) {
+        .table-zebra-custom thead th {
+            background-color: #ffffff !important;
+            color: var(--clean-ink) !important;
+            border-bottom: 1px solid var(--clean-line) !important;
+        }
     }
 
     /* ===== Action Bar Layout =====
@@ -216,7 +229,7 @@
         text-align: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important; /* token radius bersama (6px) */
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -257,7 +270,7 @@
         justify-content: center;
         gap: 0.3rem;
         border: none;
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important;
         padding: 0.32rem 0.7rem;
         font-size: 0.78rem;
         font-weight: 600;
@@ -282,15 +295,15 @@
     .search-filter-group input.form-control,
     .search-filter-group select.form-select,
     .search-filter-group .btn {
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important;
     }
     .search-input-wrap .input-group input.form-control,
     .search-filter-group .input-group input.form-control {
-        border-radius: 6px 0 0 6px !important;
+        border-radius: var(--clean-radius) 0 0 var(--clean-radius) !important;
     }
     .search-input-wrap .input-group button.btn,
     .search-filter-group .input-group button.btn {
-        border-radius: 0 6px 6px 0 !important;
+        border-radius: 0 var(--clean-radius) var(--clean-radius) 0 !important;
     }
 
     /* ==========================================================================
@@ -303,47 +316,12 @@
        - margin-bottom kartu dipaksa 0 supaya tidak ada ruang kosong di bawah.
        ========================================================================== */
     #daftar-siswa {
-        display: flex;
-        flex-direction: column;
-        /* Tinggi kartu = sisa tinggi layar, jadi kartu MENTOK ke bawah
-           (tanpa ruang kosong) dan hanya .table-responsive yang men-scroll.
-           Angka offset dihitung dari tata letak layout bersama:
-             wrapper padding (10+10, hanya >=768)
-           + padding main atas/bawah
-           + tinggi header halaman + margin bawah header
-           + padding bawah kontainer isi (.flex-1 = 1rem, aturan bersama
-             "JARAK BAWAH KONTEN SERAGAM" di layouts/app.blade.php)
-           Offset >=1024 :
-             10+24+45+16+16+24        = 145.6px = 9.1rem
-           Fallback di bawah 1024px (tabel tampil sebagai kartu, tinggi
-           kartu dipaksa `auto` oleh aturan layout bersama):
-             768-1023: 10+24+72+16+96   = 228px = 14.25rem
-             640-767 : 0+0+68+16+96      = 180px = 11.25rem
-             <640    : 0+0+68+10+96      = 174px = 10.9rem
-           (96 = padding bawah main di layar kecil: bottom-nav 56 + 40.)
-           Pola & tujuan sama dengan #daftar-kehadiran (13rem) dan
-           #daftar-rekap (17rem) - cuma angkanya menyesuaikan isi halaman ini. */
-        height: calc(100dvh - 9.1rem);
-        min-height: 20rem;
+        display: block;
+        /* MODEL SATU AREA SCROLL: kartu mengikuti isi, tanpa tinggi paksa
+           calc(100dvh - ...) dan tanpa scroll vertikal sendiri. */
+        height: auto;
+        min-height: 0;
         margin-bottom: 0 !important;   /* tidak ada ruang kosong di bawah card */
-    }
-
-    @media (max-width: 1023.98px) {
-        #daftar-siswa {
-            height: calc(100dvh - 14.25rem);
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        #daftar-siswa {
-            height: calc(100dvh - 11.25rem);
-        }
-    }
-
-    @media (max-width: 639.98px) {
-        #daftar-siswa {
-            height: calc(100dvh - 10.9rem);
-        }
     }
 
     /* Bar aksi (pencarian + tombol) TIDAK ikut mengecil/terpotong: berada di
@@ -353,19 +331,25 @@
     }
 
     #daftar-siswa .table-responsive {
-        flex: 1 1 auto;
-        min-height: 0;
-        /* lepas max-height bawaan layout (65vh) supaya tinggi ikut flex */
+        /* MODEL SATU AREA SCROLL: tanpa scroll vertikal sendiri. */
         max-height: none !important;
+        overflow-y: visible !important;
     }
 
-    /* Header sticky - bersih, baris tidak menimpa / tidak bocor melewatinya. */
+    /* Header sticky - bersih, baris tidak menimpa / tidak bocor melewatinya.
+       Latarnya mengikuti header tabel: putih khusus tablet/HP (>= 1024px
+       tetap #f8fafc seperti desktop pada umumnya). */
     #daftar-siswa .table-responsive > table > thead { z-index: 5 !important; }
     #daftar-siswa .table-responsive > table > thead th {
         position: sticky !important;
         top: 0 !important;
         z-index: 5 !important;
         background-color: #f8fafc !important;
+    }
+    @media (max-width: 1023.98px) {
+        #daftar-siswa .table-responsive > table > thead th {
+            background-color: #ffffff !important;
+        }
     }
 
     /* Baris data selalu berlapis di bawah header. */
@@ -469,13 +453,13 @@
                         <input type="text" 
                                name="search" 
                                id="studentSearchInput"
-                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3" 
+                               class="form-control shadow-none" 
                                placeholder="Cari nama atau NIS..." 
                                value="{{ request('search') }}"
                                aria-label="Cari nama atau NIS"
                                autocomplete="off"
                                style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
+                        <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
@@ -572,8 +556,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="7" class="text-center py-5 text-muted empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_id'))
                                 Tidak ada data siswa yang cocok dengan pencarian.
                             @else
@@ -698,13 +682,13 @@
                         </select>
                     </div>
 
-                    <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-0" id="printInfoBox">
-                        <i class='bx bx-info-circle me-1'></i> Kartu akan digenerate dengan QR Code presensi siswa secara otomatis (tanpa pas foto).
+                    <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2" id="printInfoBox">
+                        <i class='bx bx-info-circle me-1'></i> Kartu akan digenerate dengan QR Code presensi siswa secara otomatis.
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-blue px-4" data-download>Generate &amp; Unduh PDF Kartu</button>
+                    <button type="submit" class="btn-download-blue px-4" data-download>Generate &amp; Unduh</button>
                 </div>
             </form>
         </div>
@@ -808,7 +792,7 @@
 <!-- MODAL IMPORT EXCEL -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header border-bottom-0">
                 <h5 class="fw-bold mb-0">Import Data Siswa Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -822,7 +806,7 @@
                     </div>
                     @endif
 
-                    <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
+                    <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             Format kolom file Excel: <strong>NIS, NISN, Nama Lengkap, Kelas, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, Alamat, Nama Wali, No WhatsApp</strong> (.xlsx atau .csv)
                         </div>

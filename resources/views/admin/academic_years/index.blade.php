@@ -22,7 +22,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.88rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.45rem 1rem;
         display: inline-flex;
         align-items: center;
@@ -309,8 +309,8 @@
 
                     @empty
                     <tr class="text-nowrap">
-                        <td colspan="6" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="6" class="text-center py-5 text-muted text-nowrap empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             Belum ada data tahun ajaran yang terdaftar.
                         </td>
                     </tr>

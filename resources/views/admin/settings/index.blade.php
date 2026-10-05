@@ -87,8 +87,10 @@
         align-items: center;
         gap: 0.75rem;
         margin-bottom: 1.25rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #f1f5f9;
+        /* REVISI CLEAN LOOK: garis pemisah dekoratif di bawah judul/subjudul
+           (padding-bottom 0.75rem + border-bottom 1px #f1f5f9) DIHAPUS.
+           Jarak judul -> isi sekarang hanya dari margin-bottom (20px desktop,
+           16px mobile). Teks judul, subjudul, dan ikon tidak diubah. */
     }
 
     .section-icon {
@@ -128,7 +130,8 @@
         .section-header {
             gap: 0.6rem;
             margin-bottom: 1rem;
-            padding-bottom: 0.6rem;
+            /* padding-bottom + border-bottom (garis dekoratif) dihapus, ikut
+               revisi clean look - lihat aturan .section-header di atas. */
         }
         .section-icon {
             width: 32px;
@@ -167,57 +170,61 @@
         }
     }
 
-    /* ===== Tombol "TAHUN AJARAN" (kuning) =====
-       HANYA teksnya yang diubah jadi PUTIH. Kuning Bootstrap (.btn-warning =
-       #ffc107) terlalu terang sehingga teks putih tidak terbaca, jadi
-       warnanya digelapkan sedikit ke #d99a00 (tetap kuning, ukuran & radius
-       tombol tidak berubah). Scope-nya dikunci ke
-       .pengaturan-modul-wrap .btn-warning, jadi tombol "HARI LIBUR" (hijau)
-       dan "TEMPAT SAMPAH" (merah) di sebelahnya TIDAK ikut tersentuh.
-       Tombol ini tidak memakai ikon, jadi tidak ada ikon yang perlu
-       ikut diubah. */
-    .pengaturan-modul-wrap .btn-warning {
-        background-color: #d99a00 !important;
-        border-color: #d99a00 !important;
-        color: #ffffff !important;
+    /* ===== SATU CLASS BERSAMA buat ketiga tombol Pengelolaan Sistem =====
+       TAHUN AJARAN (btn-primary / biru), HARI LIBUR (btn-success / hijau) dan
+       TEMPAT SAMPAH (btn-danger / merah) semuanya memakai
+       .pengaturan-modul-btn ini, jadi ukurannya ditulis SATU KALI dan dijamin
+       seragam: tinggi, padding, radius, bobot font, lebar, perataan teks, dan
+       satu baris (tidak patah). SATU-SATUNYA yang membedakan ketiganya adalah
+       class warna di markup.
+
+       Angka di bawah adalah nilai yang SELAMA INI memang tampil
+       (btn-sm px-3 py-2 + radius 12px bawaan layout .btn), jadi TIDAK ada
+       perubahan ukuran/font - hanya dikonsolidasi ke satu class, ditambah
+       lebar diseragamkan lewat min-width supaya ketiganya sama lebar.
+
+       Yang sengaja TIDAK disentuh: font-size (tetap bawaan .btn-sm +
+       override mobile layout), font-family, letter-spacing, dan text-transform
+       (semuanya datang dari layout bersama) -> teks tombol tidak berubah. */
+    .pengaturan-modul-wrap .pengaturan-modul-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        white-space: nowrap !important;   /* satu baris, tidak patah */
+        padding: 0.5rem 1rem !important;  /* = px-3 py-2 (ketiganya sama) */
+        border-radius: var(--clean-radius) !important; /* token radius bersama (6px) */
+        font-weight: 600 !important;      /* = fw-semibold (ketiganya sama) */
+        min-width: 12rem !important;      /* 192px: muat "TEMPAT SAMPAH" */
     }
 
-    .pengaturan-modul-wrap .btn-warning:hover,
-    .pengaturan-modul-wrap .btn-warning:focus,
-    .pengaturan-modul-wrap .btn-warning:active,
-    .pengaturan-modul-wrap .btn-warning:focus-visible {
-        background-color: #c28700 !important;
-        border-color: #c28700 !important;
-        color: #ffffff !important;
-    }
+    /* ===== WARNA "TAHUN AJARAN": biru primer yang sudah dipakai web ini =====
+       Tidak ada satu pun hex baru di sini. Warna diambil dari class
+       .btn-primary bawaan Bootstrap yang SUDAH dipakai aplikasi - antara lain
+       tombol "Simpan Pengaturan" di halaman ini sendiri, tombol "Tambah Tahun
+       Ajaran" di halaman Tahun Ajaran, tombol Dashboard, tombol Buka Scanner,
+       dan tombol form Simpan lainnya.
 
-    /* ===== Ikon pada tombol "TEMPAT SAMPAH" (Boxicons) =====
-       HANYA tombol ini yang memakai ikon; "TAHUN AJARAN" dan "HARI LIBUR"
-       tetap polos. Warna, ukuran, link, dan radius tombol tidak berubah.
+       Nilai class itu (Bootstrap 5.3.3 CDN, token --bs-btn-*):
+         base  #0d6efd (--bs-btn-bg)
+         hover #0b5ed7 (--bs-btn-hover-bg)
+         active #0a58ca (--bs-btn-active-bg)
+         cincin fokus rgba(13, 110, 253, ...) (--bs-btn-focus-*)
+       Karena hover/active/focus ikut class yang sama, pola gelap-saat-hover
+       PERSIS sepadan dengan tombol "HARI LIBUR" (.btn-success) dan "TEMPAT
+       SAMPAH" (.btn-danger) di sebelahnya yang juga murni bawaan Bootstrap -
+       tanpa override warna sama sekali. Teks tetap putih; kontras putih di
+       atas #0d6efd sekitar 4.5:1 (lolos ambang terbaca).
 
-       Selector-nya dikunci ke .pengaturan-modul-wrap (spesifikasi 2 kelas)
-       dengan !important, karena layout bersama punya aturan `.btn` mobile
-       (`font-size: 0.85rem !important`) yang menimpa `font-size` 1 kelas.
-       Tanpa ini ikon ikut mengecil di HP.
+       Karena TIDAK ditulis satupun aturan override warna, tidak ada selector
+       yang bisa mengenai elemen lain: tombol "Simpan Pengaturan" di halaman
+       ini (btn-primary juga, tapi di luar card ini), tombol biru di halaman
+       lain, serta tombol hijau & merah di sebelahnya semuanya tetap persis
+       seperti sekarang. Warna ketiga tombol murni dari class masing-masing.
 
-       Ukuran 17px (dalam rentang 16-18px) + line-height:1 dipilih supaya
-       line-box ikon (17px) TIDAK lebih besar daripada line-box teks tombol
-       (14px x 1.5 = 21px di desktop, 13.6px x 1.5 = 20.4px di mobile).
-       Akibatnya tinggi tombol TETAP sama persis dengan dua tombol lainnya,
-       trotz ikon. Jarak ke teks 8px, dan sejajar vertikal karena tombolnya
-       sudah `d-inline-flex align-items-center`. Warna ikon ikut warna teks
-       tombol (putih) - tidak ada color khusus. */
-    .pengaturan-modul-wrap .pengaturan-modul-icon {
-        font-size: 17px !important;
-        line-height: 1 !important;
-        width: 17px;
-        height: 17px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-        margin-right: 8px;
-    }
+       (Kalau suatu saat mau pakai biru tema --primary-blue #3b62f6 /
+       --primary-blue-hover #2563eb ala tombol "Lihat" Catatan Kehadiran,
+       cukup tambahkan override ter-scope di sini - tidak perlu ubah markup.) */
 </style>
 @endpush
 
@@ -265,22 +272,30 @@
     @endif
 
     <!-- PENGELOLAAN SISTEM: modul yang dikelola dari halaman Pengaturan.
-         Tombol memakai route() nama route yang SUDAH ADA (tidak route baru).
-         Warna tombol memakai kelas Bootstrap yang sudah dipakai di halaman lain:
-           Tahun Ajaran  -> btn-warning (kuning)   TANPA ikon
-           Hari Libur    -> btn-success (hijau)    TANPA ikon
-           Tempat Sampah -> btn-danger  (merah)    memakai ikon Boxicons "bx-trash"
+         Tombol memakai route() nama route yang SUDAH ADA (tidak route baru)
+         dan href/aksi tiap tombol tidak berubah.
+         Ukuran & perataan ketiga tombol dibawa SATU class bersama
+         .pengaturan-modul-btn (lihat CSS di atas); SATU-SATUNYA pembeda
+         adalah warna kelas Bootstrap:
+           Tahun Ajaran  -> btn-primary (biru primer)  TANPA ikon
+           Hari Libur    -> btn-success (hijau)        TANPA ikon
+           Tempat Sampah -> btn-danger  (merah)        TANPA ikon (ikon
+                           tong sampah sudah dihapus, tidak ada sisa margin)
          Susunan dalam satu array $pengaturanModules supaya mudah ditambah
-         tombol lain tanpa mengubah struktur. Key 'icon' opsional: hanya diisi
-         untuk modul yang memang perlu ikon. -->
+         tombol lain tanpa mengubah struktur. -->
     @php
         $pengaturanModules = [
-            ['route' => 'admin.academic-years.index', 'class' => 'btn-warning', 'label' => 'TAHUN AJARAN'],
+            ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => 'TAHUN AJARAN'],
             ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => 'HARI LIBUR'],
-            ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => 'TEMPAT SAMPAH', 'icon' => 'bx-trash'], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
+            ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => 'TEMPAT SAMPAH'], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
         ];
     @endphp
-    <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3">
+    {{-- DULU: <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3">
+         REVISI CLEAN LOOK: border/latar/shadow/radius kartu LUAR DIHAPUS, padding
+         dalam 12px -> 0 sehingga konten sejajar tepi kiri halaman, dan jarak
+         antar bagian memakai margin 24px (mb-5). Isi di dalam (judul, tombol,
+         input, kolom upload, kotak info) TIDAK diubah. --}}
+    <div class="mb-5">
         <div class="section-header">
             <div>
                 <h5 class="fw-bold mb-0" style="color: #0f172a;">Pengelolaan Sistem</h5>
@@ -289,13 +304,11 @@
         </div>
         <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">
             @foreach($pengaturanModules as $modul)
+            {{-- Satu class bersama .pengaturan-modul-btn untuk ukuran ketiganya;
+                 pembeda hanya class warna. Tidak ada ikon lagi (termasuk di
+                 TEMPAT SAMPAH), jadi tidak ada sisa gap/margin ikon. --}}
             <a href="{{ route($modul['route']) }}"
-               class="btn {{ $modul['class'] }} btn-sm rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center justify-content-center">
-                {{-- Ikon hanya untuk modul yang punya key 'icon' (Tempat Sampah);
-                     Tahun Ajaran & Hari Libur tetap polos. --}}
-                @if(!empty($modul['icon']))
-                <i class="bx {{ $modul['icon'] }} pengaturan-modul-icon" aria-hidden="true"></i>
-                @endif
+               class="btn btn-sm pengaturan-modul-btn {{ $modul['class'] }}">
                 {{ $modul['label'] }}
             </a>
             @endforeach
@@ -306,7 +319,8 @@
         @csrf
 
         <!-- Card 1: Identitas Sekolah -->
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3">
+        {{-- Kartu LUAR tanpa border/latar/shadow/radius/padding (lihat catatan di atas). --}}
+        <div class="mb-5">
             <div class="section-header">
                 <div>
                     <h5 class="fw-bold mb-0" style="color: #0f172a;">Identitas &amp; Logo Sekolah</h5>
@@ -380,6 +394,7 @@
                             @error('school_logo')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
+                            <div id="logoClientError" class="text-danger small mt-1" style="display:none;"></div>
                         </div>
                     </div>
                     <div id="logoFileInfo" class="small text-muted" style="display:none;">
@@ -396,7 +411,8 @@
         </div>
 
         <!-- Card 2: Pengaturan Waktu Presensi -->
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3"
+        {{-- Kartu LUAR tanpa border/latar/shadow/radius/padding (lihat catatan di atas). --}}
+        <div class="mb-5"
              x-data="{ 
                  checkIn: '{{ old('check_in_time', $settings['check_in_time'] ?? '06:45') }}', 
                  lateLimit: '{{ old('late_limit_time', $settings['late_limit_time'] ?? '07:15') }}' 
@@ -452,16 +468,39 @@
             });
         });
 
-        // 2. Preview logo baru + nama file sebelum disimpan.
+        // 2. Preview logo baru + nama file sebelum disimpan, sekaligus validasi
+        //    klien (format & 2MB, Bahasa Indonesia). Server tetap memvalidasi
+        //    ulang; ini hanya agar gagal cepat dengan pesan di dalam form.
         var logoInput = document.getElementById('school_logo');
         var fileInfo = document.getElementById('logoFileInfo');
         var fileName = document.getElementById('logoFileName');
         var previewWrap = document.getElementById('logoNewPreviewWrap');
         var previewImg = document.getElementById('logoNewPreview');
+        var logoErr = document.getElementById('logoClientError');
         if (logoInput) {
             logoInput.addEventListener('change', function () {
                 var file = logoInput.files && logoInput.files[0];
+                if (logoErr) { logoErr.style.display = 'none'; logoErr.textContent = ''; }
+                logoInput.classList.remove('is-invalid');
                 if (!file) {
+                    fileInfo.style.display = 'none';
+                    previewWrap.style.display = 'none';
+                    return;
+                }
+                var allowed = ['image/webp', 'image/png', 'image/jpeg'];
+                var extOk = /\.(webp|png|jpe?g)$/i.test(file.name || '');
+                if ((file.type && allowed.indexOf(file.type) === -1) || !extOk) {
+                    if (logoErr) { logoErr.textContent = 'Format logo harus .webp, .png, .jpg, atau .jpeg.'; logoErr.style.display = ''; }
+                    logoInput.classList.add('is-invalid');
+                    logoInput.value = '';
+                    fileInfo.style.display = 'none';
+                    previewWrap.style.display = 'none';
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    if (logoErr) { logoErr.textContent = 'Ukuran logo maksimal 2 MB.'; logoErr.style.display = ''; }
+                    logoInput.classList.add('is-invalid');
+                    logoInput.value = '';
                     fileInfo.style.display = 'none';
                     previewWrap.style.display = 'none';
                     return;

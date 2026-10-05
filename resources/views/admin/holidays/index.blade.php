@@ -43,7 +43,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.88rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.45rem 1rem;
         display: inline-flex;
         align-items: center;
@@ -63,7 +63,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.88rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.45rem 1rem;
         display: inline-flex;
         align-items: center;
@@ -373,8 +373,8 @@
 
                     @empty
                     <tr class="text-nowrap">
-                        <td colspan="6" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="6" class="text-center py-5 text-muted text-nowrap empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             Belum ada agenda hari libur yang terdaftar.
                         </td>
                     </tr>
@@ -446,7 +446,7 @@
 <!-- MODAL IMPORT EXCEL HARI LIBUR -->
 <div class="modal fade" id="importHolidayModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header border-bottom-0">
                 <h5 class="fw-bold mb-0">Import Data Hari Libur Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -454,7 +454,7 @@
             <form action="{{ panel_route('holidays.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
-                    <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
+                    <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             Format kolom file Excel: <strong>Tanggal, Keterangan</strong> (.xlsx atau .csv)
                         </div>

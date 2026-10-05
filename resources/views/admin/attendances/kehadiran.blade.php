@@ -204,7 +204,7 @@
         font-size: 0.8rem;
         font-weight: 500;
         padding: 0.42rem 0.85rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
@@ -228,7 +228,7 @@
         font-size: 0.8rem;
         font-weight: 500;
         padding: 0.42rem 0.85rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
@@ -257,56 +257,23 @@
          640-767 : 11.25rem  |  <640  : 10.9rem
        ========================================================================== */
     #daftar-kehadiran {
-        display: flex;
-        flex-direction: column;
-        /* PERBAIKAN (ruang kosong): tinggi TIDAK lagi dipaksa.
-           Sebelumnya `height: calc(100dvh - 13rem)` + toolbar di kartu
-           terpisah membuat halaman terlalu tinggi: kartu tabel tetap
-           setinggi layar meski isinya cuma beberapa baris, sehingga muncul
-           kotak putih kosong besar dan tabel terdorong jauh ke bawah.
-
-           Sekarang: `height: auto` (kartu mengikuti isinya) + `max-height`
-           sebagai batas. Baris banyak -> .table-responsive yang meng-scroll
-           di dalam kotak putih; baris sedikit -> kartu ikut mengecil dan
-           tidak ada lagi ruang kosong. */
+        display: block;
+        /* MODEL SATU AREA SCROLL: kartu mengikuti isi, tanpa batas tinggi
+           dan tanpa scroll vertikal sendiri. */
         height: auto !important;
-        max-height: calc(100dvh - 9.1rem);
+        max-height: none !important;
         min-height: 0 !important;
         margin-bottom: 0 !important;   /* paginasi sudah di dasar layar */
     }
 
-    /* Toolbar di dalam kartu tabel: tinggi ikut isi, tidak pernah diremas
-       oleh flex, dan tidak pernah ikut melar mengikuti tinggi kartu. */
+    /* Toolbar di dalam kartu tabel: tinggi ikut isi. */
     #daftar-kehadiran > .p-3 {
-        flex: 0 0 auto;
         height: auto;
     }
 
     #daftar-kehadiran .table-responsive {
-        flex: 1 1 auto;
-        min-height: 0;
-        /* lepas max-height bawaan layout (65vh) supaya tinggi ikut flex */
         max-height: none !important;
-    }
-
-    /* Offset lebih besar di layar kecil: header layout lebih tinggi (sticky +
-       safe-area), tabel tampil sebagai kartu, dan ada bottom-nav. */
-    @media (max-width: 1023.98px) {
-        #daftar-kehadiran {
-            max-height: calc(100dvh - 14.25rem);
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        #daftar-kehadiran {
-            max-height: calc(100dvh - 11.25rem);
-        }
-    }
-
-    @media (max-width: 639.98px) {
-        #daftar-kehadiran {
-            max-height: calc(100dvh - 10.9rem);
-        }
+        overflow-y: visible !important;
     }
 
     /* ==========================================================================
@@ -506,13 +473,13 @@
                     <input type="text"
                            name="search"
                            id="filterSearch"
-                           class="form-control border-secondary-subtle border-end-0 shadow-none ps-3"
+                           class="form-control shadow-none"
                            placeholder="Cari nama atau NIS..."
                            value="{{ $search }}"
                            aria-label="Cari nama atau NIS"
                            autocomplete="off"
                            style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                    <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
+                    <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
                         <i class='bx bx-search fs-6'></i>
                     </button>
                 </div>
@@ -576,8 +543,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5 text-muted fw-normal">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="10" class="text-center py-5 text-muted fw-normal empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_filter'))
                                 TIDAK ADA DATA SISWA YANG COCOK DENGAN PENCARIAN/FILTER.
                             @else
@@ -678,12 +645,24 @@
             //    ditangani secara bersama oleh script auto-filter di
             //    layouts/app.blade.php - tidak diubah.
 
-            // 3. Fokus ke tabel saat datang dari paginasi.
+            // 3. Fokus ke tabel saat datang dari paginasi: scroll INSTAN di
+            //    dalam area scroll halaman (bukan smooth) supaya header sticky
+            //    dan address-bar mobile tidak ikut bergerak (anti kedip/lompat).
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('page')) {
                 const el = document.getElementById('daftar-kehadiran');
                 if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    var scroller = el.closest('main');
+                    scroller = scroller ? scroller.querySelector(':scope > .flex-1') : null;
+                    var header = document.querySelector('.app-header-bar');
+                    var offset = (header ? header.getBoundingClientRect().height : 0) + 12;
+                    if (scroller) {
+                        var rect = el.getBoundingClientRect();
+                        var srect = scroller.getBoundingClientRect();
+                        scroller.scrollTo({ top: scroller.scrollTop + (rect.top - srect.top) - offset, behavior: 'auto' });
+                    } else {
+                        el.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    }
                 }
             }
         });

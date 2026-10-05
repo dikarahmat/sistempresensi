@@ -101,7 +101,7 @@
     .select-quick-status {
         font-size: 0.8rem;
         font-weight: 600;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         padding: 0.3rem 0.5rem;
         border: 1px solid #cbd5e1;
         background-color: #ffffff;
@@ -111,7 +111,7 @@
         background-color: #2563eb;
         color: #ffffff;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         width: 32px;
         height: 32px;
         display: inline-flex;
@@ -126,7 +126,7 @@
         background-color: #f8fafc;
         color: #475569;
         border: 1px solid #cbd5e1;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         width: 32px;
         height: 32px;
         display: inline-flex;
@@ -226,6 +226,28 @@
         width: 100% !important;
         padding: 0.6rem 1rem !important;
         font-size: 0.82rem !important;
+    }
+
+    /* Tombol BUKA/TUTUP SCANNER: ikon & teks selalu sejajar tengah.
+       Ikon Boxicons membawa line-height bawaan yang menggeser baseline,
+       jadi dinetralkan: ikon jadi flex 1:1 proporsional terhadap teks. */
+    #btnToggleScanner {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.45rem !important;
+    }
+
+    #btnToggleScanner > i.bx,
+    #btnToggleScanner > svg {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        font-size: 1.15em !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 auto !important;
     }
 
     /* Scanner QR tetap full width, tidak ikut terpotong grid */
@@ -412,40 +434,25 @@
         text-transform: uppercase;
     }
 
-    /* --- 4. TABEL MENGISI SAMPAI BAWAH, SCROLL HANYA DI DALAM TABEL ------- */
-    /* Rantai flex: kolom -> card -> .table-responsive. .table-responsive
-       memakai flex:1 + min-height:0 supaya jadi tempat scroll, sedangkan kartu
-       ringkasan & tombol di atasnya tetap diam (tidak ikut scroll).
-       Tinggi kolom memakai dvh (ikut address bar browser) dikurangi offset
-       rem untuk header + ringkasan + padding halaman. */
+    /* --- 4. TABEL MENGIKUTI ISI, SCROLL DI AREA KONTEN HALAMAN ------------- */
+    /* MODEL SATU AREA SCROLL: kolom & kartu tumbuh alami mengikuti isi tabel.
+       Tidak ada tinggi calc(100dvh - ...) dan tidak ada scroll vertikal di
+       dalam tabel; yang scroll vertikal hanya area konten halaman (layout
+       bersama). Pagination berada di akhir area scroll. */
     #tableColumn {
-        display: flex;
-        flex-direction: column;
-        height: calc(100dvh - 12rem);
-        min-height: 20rem;
+        display: block;
+        height: auto;
+        min-height: 0;
     }
 
     #tableColumn > .card {
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
+        display: block;
     }
 
-    /* max-height bawaan layout (65vh) dilepas supaya tinggi mengikuti flex,
-       sehingga tabel benar-benar mentok ke bawah tanpa ruang kosong. */
+    /* Pastikan tidak ada sisa scroll vertikal di wrapper tabel. */
     #tableColumn .table-responsive {
-        flex: 1 1 auto;
-        min-height: 0;
         max-height: none !important;
-    }
-
-    /* Di layar kecil header layout lebih tinggi (sticky + safe-area) dan kartu
-       ringkasan jadi 3 kolom, jadi offset-nya diperbesar. */
-    @media (max-width: 767.98px) {
-        #tableColumn {
-            height: calc(100dvh - 22rem);
-        }
+        overflow-y: visible !important;
     }
 </style>
 @endpush
@@ -684,8 +691,8 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ is_admin() ? 6 : 5 }}" class="text-center py-4 text-secondary">
-                                    <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                                <td colspan="{{ is_admin() ? 6 : 5 }}" class="text-center py-4 text-secondary empty-state">
+                                    <i class='bx bx-error' aria-hidden='true'></i>
                                     BELUM ADA DATA SISWA DI KELAS INI.
                                 </td>
                             </tr>
@@ -714,37 +721,27 @@
     let resetTimer = null;
     let activeMode = 'camera';
 
-    // Suara Beep dari file audio/beep.mp3
+    // Beep = file audio/beep.mp3 via fungsi bersama di scanner.js (window.playBeep).
+    // SATU titik pusat umpan balik per halaman ini: dipanggil TEPAT SATU KALI
+    // per scan (respons diterima ATAU gagal jaringan). SEMUA hasil berbunyi beep
+    // dengan nada yang sama persis — termasuk kartu tidak dikenal, sudah absen,
+    // kode ngawur, error server, dan gagal jaringan. Hasil gagal ikut getar
+    // (getar lama tidak hilang), kode kosong dipanggil tanpa argumen (beep saja).
     function playClassBeep(success = true) {
-        const beep = document.getElementById('beepSound');
-        if (beep) {
-            beep.currentTime = 0;
-            beep.play().catch(() => playBrowserBeep(success));
+        if (typeof window.playBeep === 'function') {
+            window.playBeep();
         } else {
-            playBrowserBeep(success);
+            const beep = document.getElementById('beepSound');
+            if (beep) {
+                try {
+                    beep.currentTime = 0;
+                    const p = beep.play();
+                    if (p && typeof p.catch === 'function') { p.catch(() => {}); }
+                } catch (e) {}
+            }
         }
-    }
-
-    // Beep standar browser via WebAudio — fallback bila file audio tidak tersedia
-    function playBrowserBeep(success = true) {
-        try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            const ctx = new AudioCtx();
-            const oscillator = ctx.createOscillator();
-            const gain = ctx.createGain();
-            oscillator.connect(gain);
-            gain.connect(ctx.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.value = success ? 880 : 440;
-            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (success ? 0.25 : 0.5));
-            oscillator.start(ctx.currentTime);
-            oscillator.stop(ctx.currentTime + (success ? 0.25 : 0.5));
-            oscillator.onended = () => ctx.close();
-        } catch (e) {
-            // abaikan bila browser memblokir AudioContext
+        if (success === false && typeof window.vibrateOnScanFail === 'function') {
+            window.vibrateOnScanFail();
         }
     }
 
@@ -758,6 +755,11 @@
 
         if (isScannerOpen) {
             sessionStorage.setItem('class_scanner_open', '1');
+
+            // Buka kunci audio (gestur user) supaya beep scan diizinkan browser.
+            if (typeof window.unlockScannerAudio === 'function') {
+                window.unlockScannerAudio();
+            }
 
             if (scannerCol) scannerCol.style.display = 'block';
             if (tableCol) tableCol.className = 'col-12 col-lg-7 col-xl-8';
@@ -833,7 +835,12 @@
 
     function processCode(token) {
         const cleanToken = (token || '').trim();
-        if (!cleanToken || isProcessing) return;
+        if (!cleanToken) {
+            // KODE KOSONG: tetap satu beep (tanpa notifikasi & tanpa getar).
+            playClassBeep();
+            return;
+        }
+        if (isProcessing) return;
 
         const now = Date.now();
         if (cleanToken === lastClassScannedToken && (now - lastClassScannedTimestamp < 2500)) {

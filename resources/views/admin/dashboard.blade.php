@@ -363,7 +363,6 @@
                         Siswa terdaftar aktif di sekolah
                     </span>
                 </div>
-                <i class='bx bxs-user-pin text-primary' style="font-size: 2.5rem;"></i>
             </a>
         </div>
 
@@ -381,7 +380,6 @@
                         Rombel aktif terdata
                     </span>
                 </div>
-                <i class='bx bxs-building-house text-info' style="font-size: 2.5rem;"></i>
             </a>
         </div>
 
@@ -403,7 +401,6 @@
                         Tenaga pendidik terverifikasi
                     </span>
                 </div>
-                <i class='bx bxs-id-card text-success' style="font-size: 2.5rem;"></i>
             @if(is_admin())
             </a>
             @else
@@ -424,7 +421,6 @@
                         Sakit, izin, atau alpha
                     </span>
                 </div>
-                <i class='bx bx-user-x text-danger' style="font-size: 2.5rem;"></i>
             </a>
         </div>
 
@@ -439,14 +435,11 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
+                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off">
                         <div class="d-flex align-items-center gap-2.5">
                             <i class='bx bx-zap text-warning fs-4'></i>
                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">Pintasan Cepat</span>
                         </div>
-                        <span class="badge bg-light text-secondary rounded-pill px-3 py-1.5 fw-semibold" style="font-size: 0.72rem;">
-                            Akses Cepat Modul
-                        </span>
                     </div>
 
                     <!-- Grid 8 Pintasan Cepat (App Drawer Style) -->
@@ -556,10 +549,6 @@
 
                     </div>
                 </div>
-
-                <div class="mt-3 text-center">
-                    <span class="text-secondary fw-medium" style="font-size: 0.74rem;">Semua tautan terhubung langsung ke modul administrasi</span>
-                </div>
             </div>
         </div>
     </div>
@@ -571,7 +560,6 @@
         <div class="card-body p-3.5">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <i class='bx bx-filter-alt text-primary fs-3'></i>
                     <div>
                         <h6 class="fw-bold text-dark mb-0.5" style="font-size: 0.98rem;">Monitoring &amp; Analitik Presensi</h6>
                         <p class="text-secondary small mb-0" style="font-size: 0.76rem;">
@@ -584,11 +572,11 @@
                      (tabel presensi) dan menu Presensi di sidebar, supaya user
                      tidak bisa terpental langsung ke kamera dari header analitik.
                      Dua tombol di bawah tetap, styling & posisinya tidak diubah. --}}
-                <div class="d-flex align-items-center gap-2.5 flex-wrap">
-                    <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
+                <div class="d-flex align-items-center gap-2.5 flex-wrap monitoring-actions">
+                    <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth btn-monitoring" style="font-size: 0.68rem; padding: 0.42rem 0.8rem; min-height: 36px;">
                         <span>Presensi Hari Ini</span>
                     </a>
-                    <a href="{{ panel_route('rekap') }}" class="btn btn-primary rounded-3 shadow-sm px-4 py-2 fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth" style="font-size: 0.82rem;">
+                    <a href="{{ panel_route('rekap') }}" class="btn btn-primary rounded-3 shadow-sm fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth btn-monitoring" style="font-size: 0.68rem; padding: 0.42rem 0.8rem; min-height: 36px;">
                         <span>Rekap Lengkap</span>
                     </a>
                 </div>
@@ -607,7 +595,6 @@
                 <div>
                     <div class="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom border-light-subtle mb-3">
                         <div class="d-flex align-items-center gap-2 min-w-0">
-                            <i class='bx bx-line-chart text-primary fs-4 flex-shrink-0'></i>
                             <span class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">{{ $chartTitle ?? 'Grafik Garis Kehadiran Mingguan' }}</span>
                         </div>
 
@@ -636,8 +623,8 @@
                                 <canvas id="attendanceLineChart"></canvas>
                             </div>
                         @else
-                            <div class="w-100 py-12 text-center text-muted small">
-                                <i class='bx bx-line-chart fs-1 text-secondary opacity-50 d-block mb-1'></i>
+                            <div class="w-100 py-12 text-center text-muted small empty-state">
+                                <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ $chartEmptyText ?? 'Belum ada data kehadiran rombel pada minggu ini.' }}
                             </div>
                         @endif
@@ -647,7 +634,6 @@
                 <!-- Keterangan Garis Tren & Total (selalu satu baris, tidak bertumpuk) -->
                 <div class="mt-3 pt-2.5 border-top border-light-subtle d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted" style="font-size: 0.72rem;">
                     <div class="d-flex align-items-center gap-2 min-w-0 text-truncate">
-                        <span class="d-inline-block rounded-circle flex-shrink-0" style="width: 10px; height: 10px; background: #2563eb;"></span>
                         <span class="text-truncate"><strong class="text-dark">Garis Tren Kehadiran</strong> <span class="d-none d-sm-inline">({{ $chartScopeText ?? (($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C')) }})</span></span>
                     </div>
                     <span class="fw-semibold text-dark flex-shrink-0 text-nowrap">{{ $chartTotalText ?? ('Total: ' . count($classesAttendance ?? []) . ' Rombel') }}</span>
@@ -659,7 +645,7 @@
         <div class="col-12 col-lg-5">
             <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
+                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off">
                         <div>
                             <h6 class="fw-bold text-dark mb-0.5" style="font-size: 0.95rem;">Ketidakhadiran Hari Ini</h6>
                             <p class="text-secondary small mb-0" style="font-size: 0.74rem;">Siswa yang berhalangan hadir</p>
@@ -738,7 +724,7 @@
                 </div>
 
                 <!-- Tombol Menuju Tabel Presensi Harian -->
-                <div class="pt-3 mt-3 border-top border-light-subtle">
+                <div class="pt-3 mt-3 border-top border-light-subtle clean-line-off">
                     <a href="{{ panel_route('presensi.index', array_filter(['tanggal' => $dateString, 'status' => request('status')])) }}" 
                        class="btn btn-primary rounded-3 shadow-sm w-100 fw-bold py-2.5 d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth" 
                        style="font-size: 0.85rem;">
@@ -763,10 +749,10 @@
                 <div>
                     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
                         <div class="d-flex align-items-center gap-2.5">
-                            <i class='bx bx-time-five text-primary fs-4'></i>
                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">Jadwal Operasional Sekolah</span>
                         </div>
-                        <span class="fw-bold text-dark" style="font-size: 0.72rem;">
+                        <span class="fw-bold d-inline-flex align-items-center gap-1.5" style="font-size: 0.72rem; color: #16a34a;">
+                            <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background: #16a34a;"></span>
                             Aktif
                         </span>
                     </div>
@@ -782,7 +768,7 @@
                                 <strong class="text-dark mt-1.5 d-block font-monospace" style="font-size: 1.3rem; font-weight: 700;">
                                     {{ $checkInTime ?? '06:45' }}
                                 </strong>
-                                <span class="badge bg-white text-secondary rounded-2 px-2 py-0.5 shadow-2xs mt-1" style="font-size: 0.68rem;">WIB</span>
+                                <span class="d-block text-secondary mt-1" style="font-size: 0.68rem;">WIB</span>
                             @if(is_admin())
                             </a>
                             @else
@@ -799,7 +785,7 @@
                                 <strong class="text-amber-600 mt-1.5 d-block font-monospace" style="font-size: 1.3rem; font-weight: 700;">
                                     {{ $lateLimitTime ?? '07:15' }}
                                 </strong>
-                                <span class="badge bg-white text-secondary rounded-2 px-2 py-0.5 shadow-2xs mt-1" style="font-size: 0.68rem;">WIB</span>
+                                <span class="d-block text-secondary mt-1" style="font-size: 0.68rem;">WIB</span>
                             @if(is_admin())
                             </a>
                             @else

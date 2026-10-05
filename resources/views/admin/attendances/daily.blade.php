@@ -51,12 +51,21 @@
     .btn-action-header {
         font-size: 0.82rem;
         padding: 0.38rem 0.85rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         line-height: 1.25;
         white-space: nowrap;
     }
     .btn-action-header i {
         font-size: 1.15rem;
+        /* Samakan dengan Presensi Kelas: netralkan line-height bawaan ikon
+           supaya ikon & teks selalu sejajar tengah. */
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 auto !important;
     }
     @media (max-width: 767.98px) {
         .header-action-btns {
@@ -87,7 +96,7 @@
         gap: 0.35rem;
         width: 100%;
         padding: 0.42rem 0.65rem;
-        border-radius: 8px !important;
+        border-radius: var(--clean-radius) !important;
         font-size: 0.80rem;
         font-weight: 600;
         text-decoration: none !important;
@@ -103,6 +112,12 @@
         font-size: 0.8rem;
         line-height: 1;
         flex-shrink: 0;
+        /* Samakan dengan Presensi Kelas: ikon selalu sejajar tengah. */
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Touch target portal buttons (mobile): tetap ringkas namun mudah di-tap */
@@ -207,11 +222,13 @@
         }
     }
     
-    /* Badge Ringkasan Minimalis: Ikon di Kanan, Background Putih */
+    /* Badge Ringkasan Minimalis: LATAR PUTIH, TANPA IKON (ikon dihapus supaya
+       isinya murni teks angka + keterangan, dan teks bisa rata kiri dengan
+       padding simetris kiri-kanan). */
     .status-badge-pill {
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 0.45rem;
         padding: 0.32rem 0.65rem;
         border-radius: 8px !important;
@@ -363,7 +380,7 @@
         .btn-buka-kelas {
             padding: 0.30rem 0.65rem !important;
             font-size: 0.76rem !important;
-            border-radius: 7px !important;
+            border-radius: var(--clean-radius) !important;
         }
     }
 
@@ -376,7 +393,7 @@
         background-color: #3b62f6;
         color: #ffffff !important;
         border: 1px solid #3b62f6;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.32rem 0.75rem;
         font-size: 0.80rem;
         font-weight: 600;
@@ -509,42 +526,32 @@
         text-overflow: ellipsis;
     }
 
-    /* --- TABEL MENGISI SAMPAI BAWAH, SCROLL HANYA DI DALAM TABEL ---------- */
-    /* Rantai flex: kolom -> card -> .table-responsive, sama seperti Presensi
-       Kelas, supaya tabel mentok ke bawah dan tidak ada ruang kosong. Kartu
-       badge ringkasan & tombol Scanner di atas tetap tidak ikut scroll.
-       Offset lebih besar dari Presensi Kelas karena halaman ini punya satu blok
-       tambahan (kartu tombol Scanner / baris badge ringkasan). */
+    /* --- TABEL MENGIKUTI ISI, SCROLL DI AREA KONTEN HALAMAN ---------------- */
+    /* MODEL SATU AREA SCROLL: kolom & kartu tumbuh alami mengikuti isi tabel.
+       Tidak ada tinggi calc(100dvh - ...) dan tidak ada scroll vertikal di
+       dalam tabel; yang scroll vertikal hanya area konten halaman (layout
+       bersama). */
     .presensi-table-col {
-        display: flex;
-        flex-direction: column;
-        height: calc(100dvh - 15rem);
-        min-height: 20rem;
+        display: block;
+        height: auto;
+        min-height: 0;
     }
 
     .presensi-table-col > .card {
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
+        display: block;
     }
 
     .presensi-table-col .table-responsive {
-        flex: 1 1 auto;
-        min-height: 0;
         max-height: none !important;
-    }
-
-    @media (max-width: 767.98px) {
-        .presensi-table-col {
-            height: calc(100dvh - 25rem);
-        }
+        overflow-y: visible !important;
     }
 </style>
 @endpush
 
 @section('content')
-<div class="pt-0.5 sm:pt-1 space-y-2 sm:space-y-3">
+{{-- Padding atas konten DISAMAKAN dengan halaman Data Siswa/Guru/Kelas (tanpa
+     pt tambahan); jarak antar blok tetap memakai space-y. --}}
+<div class="space-y-2 sm:space-y-3">
 
     <!-- AMBIL DATA DARI CONTROLLER & HITUNG TOTAL OTOMATIS JIKA KOSONG -->
     @php
@@ -569,7 +576,12 @@
     <!-- 1. KONTEN KHUSUS MOBILE (< 768px): KARTU TOMBOL AKSI PRESENSI             -->
     <!-- ========================================================================= -->
     <div class="d-block d-md-none">
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 mb-3 bg-white">
+        {{-- DULU: <div class="card border border-light-subtle shadow-sm rounded-3 p-3 mb-3 bg-white">
+             REVISI CLEAN LOOK: kontainer/card pembungkus DIHAPUS (border, latar,
+             shadow, radius, padding kontener). Yang tersisa hanya dua tombol
+             langsung di kanvas putih, full width di mobile, jarak antar tombol
+             8px (gap-2) dari div pembungkus di bawah. Tombol & teks TIDAK diubah. --}}
+        <div class="mb-1">
             <div class="d-flex flex-column gap-2">
                 <!-- 1. Buka Scanner QR -->
                 <div class="w-100">
@@ -602,15 +614,12 @@
         <div class="badges-scroll-wrapper">
             <div class="status-badge-pill shadow-2xs">
                 <span><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> sudah presensi</span>
-                <i class='bx bx-check-circle icon-hadir'></i>
             </div>
             <div class="status-badge-pill shadow-2xs">
                 <span><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> belum presensi</span>
-                <i class='bx bx-minus-circle icon-belum'></i>
             </div>
             <div class="status-badge-pill shadow-2xs">
                 <span><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> total siswa</span>
-                <i class='bx bx-user icon-total'></i>
             </div>
         </div>
     </div>
@@ -755,8 +764,8 @@
                             </tr>
                             @empty
                             <tr class="text-nowrap">
-                                <td colspan="6" class="text-center py-3 text-secondary text-nowrap">
-                                    <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                                <td colspan="6" class="text-center py-3 text-secondary text-nowrap empty-state">
+                                    <i class='bx bx-error' aria-hidden='true'></i>
                                     BELUM ADA DATA SISWA BERSTATUS {{ strtoupper(request('status')) }} PADA TANGGAL INI.
                                 </td>
                             </tr>
@@ -852,7 +861,10 @@
                             </tr>
                             @empty
                             <tr class="text-nowrap">
-                                <td colspan="8" class="text-center py-3 text-secondary text-nowrap">Belum ada data kelas tersedia.</td>
+                                <td colspan="8" class="text-center py-3 text-secondary text-nowrap empty-state">
+                                    <i class='bx bx-error' aria-hidden='true'></i>
+                                    Belum ada data kelas tersedia.
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -880,12 +892,27 @@
     let resetTimer = null;
     let activeMode = 'camera';
 
-    // Suara Beep dari file audio/beep.mp3
-    function playDailyBeep() {
-        const beep = document.getElementById('beepSound');
-        if (beep) {
-            beep.currentTime = 0;
-            beep.play().catch(() => {});
+    // Beep = file audio/beep.mp3 via fungsi bersama di scanner.js (window.playBeep).
+    // SATU titik pusat umpan balik per halaman ini: dipanggil TEPAT SATU KALI
+    // per scan (respons diterima ATAU gagal jaringan). SEMUA hasil berbunyi beep
+    // dengan nada yang sama persis — termasuk kartu tidak dikenal, sudah absen,
+    // kode ngawur, error server, dan gagal jaringan. Hasil gagal ikut getar
+    // (getar lama tidak hilang), kode kosong dipanggil tanpa argumen (beep saja).
+    function playDailyBeep(success = true) {
+        if (typeof window.playBeep === 'function') {
+            window.playBeep();
+        } else {
+            const beep = document.getElementById('beepSound');
+            if (beep) {
+                try {
+                    beep.currentTime = 0;
+                    const p = beep.play();
+                    if (p && typeof p.catch === 'function') { p.catch(() => {}); }
+                } catch (e) {}
+            }
+        }
+        if (success === false && typeof window.vibrateOnScanFail === 'function') {
+            window.vibrateOnScanFail();
         }
     }
 
@@ -903,6 +930,11 @@
 
         if (isScannerOpen) {
             sessionStorage.setItem('daily_scanner_open', '1');
+
+            // Buka kunci audio (gestur user) supaya beep scan diizinkan browser.
+            if (typeof window.unlockScannerAudio === 'function') {
+                window.unlockScannerAudio();
+            }
 
             if (scannerCol) scannerCol.style.display = 'block';
             if (tableCol) tableCol.className = 'col-12 col-lg-7 col-xl-8';
@@ -980,7 +1012,12 @@
 
     function processCode(token) {
         const cleanToken = (token || '').trim();
-        if (!cleanToken || isProcessing) return;
+        if (!cleanToken) {
+            // KODE KOSONG: tetap satu beep (tanpa notifikasi & tanpa getar).
+            playDailyBeep();
+            return;
+        }
+        if (isProcessing) return;
 
         const now = Date.now();
         if (cleanToken === lastDailyScannedToken && (now - lastDailyScannedTimestamp < 2500)) {
@@ -1004,14 +1041,14 @@
         })
         .then(res => res.json().then(data => ({ status: res.status, body: data })))
         .then(({ status, body }) => {
-            playDailyBeep();
+            playDailyBeep(status === 200 && body && body.success);
             if (typeof handleScanResult === 'function') {
                 handleScanResult(status, body);
             }
         })
         .catch(err => {
             console.error('[daily-scanner] Fetch error:', err);
-            playDailyBeep();
+            playDailyBeep(false);
             if (typeof handleScanResult === 'function') {
                 handleScanResult(500, {
                     success: false,

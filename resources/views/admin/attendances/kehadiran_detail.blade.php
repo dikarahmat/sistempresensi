@@ -113,8 +113,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted fw-normal">
-                            <i class='bx bx-user-x fs-1 d-block mb-2 text-slate-400'></i>
+                        <td colspan="9" class="text-center py-5 text-muted fw-normal empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             Tidak ada siswa yang terdaftar di kelas ini.
                         </td>
                     </tr>

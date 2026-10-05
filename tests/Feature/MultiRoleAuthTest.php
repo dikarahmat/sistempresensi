@@ -213,11 +213,11 @@ class MultiRoleAuthTest extends TestCase
         $this->assertStringContainsString('display: flex !important;', $html);
         $this->assertStringContainsString('justify-content: center;', $html);
 
-        // 4. Modal punya lebar wajar (max 380px sesuai spesifikasi terbaru) dan
-        //    margin samping minimal 16px di layar kecil.
-        $this->assertStringContainsString('max-width: 380px', $html);
-        $this->assertStringContainsString('width: calc(100% - 32px)', $html);
-        $this->assertStringContainsString('margin: 16px auto', $html);
+        // 4. Modal seragam (desktop 440px, mobile min(100vw-44px, 400px))
+        //    dan margin samping 22px di layar kecil.
+        $this->assertStringContainsString('max-width: 440px', $html);
+        $this->assertStringContainsString('width: min(calc(100vw - 44px), 400px)', $html);
+        $this->assertStringContainsString('margin: 22px auto', $html);
 
         // 5. Overlay menutupi viewport penuh dan TIDAK memakai trik offset.
         $this->assertStringContainsString('#logoutConfirmModal {', $html);

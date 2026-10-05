@@ -21,7 +21,7 @@
         font-weight: 600;
         font-size: 0.88rem;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.5rem 1.25rem;
         display: inline-flex;
         align-items: center;
@@ -36,7 +36,7 @@
         border: 1px solid #cbd5e1;
         font-weight: 600;
         font-size: 0.88rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.5rem 1.25rem;
         display: inline-flex;
         align-items: center;
@@ -79,7 +79,7 @@
         color: #ffffff;
         font-weight: 600;
         font-size: 0.9rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         border: none;
         padding: 0.65rem 1rem;
         display: flex;
@@ -97,7 +97,7 @@
         color: #ffffff;
         font-weight: 600;
         font-size: 0.9rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         border: none;
         padding: 0.65rem 1rem;
         display: flex;

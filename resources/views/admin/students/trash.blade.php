@@ -54,7 +54,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.78rem;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         padding: 0.32rem 0.7rem;
         display: inline-flex;
         align-items: center;
@@ -68,7 +68,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.78rem;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         padding: 0.32rem 0.7rem;
         display: inline-flex;
         align-items: center;
@@ -235,8 +235,8 @@
                     </tr>
                     @empty
                     <tr class="align-middle">
-                        <td colspan="6" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="6" class="text-center py-5 text-muted text-nowrap empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             Tempat Sampah kosong. Tidak ada data siswa yang dihapus.
                         </td>
                     </tr>

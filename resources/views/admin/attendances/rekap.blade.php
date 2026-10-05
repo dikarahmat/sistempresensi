@@ -17,21 +17,12 @@
         .recap-mobile-filters { order: 1; }
         .recap-mobile-actions { order: 2; flex-direction: column; gap: 0.5rem; }
         .recap-mobile-divider { display: none; }
-        .recap-mobile-submit {
-            width: 56px; height: 40px; padding: 0;
-            display: inline-flex; align-items: center; justify-content: center;
-            color: #475569 !important; background: #ffffff !important;
-            border: 1px solid #cbd5e1 !important; box-shadow: none !important;
-            border-radius: 0 8px 8px 0 !important;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
         .recap-mobile-period .form-select,
         .recap-mobile-filters .form-control,
         .recap-mobile-filters .form-select {
             height: 36px; padding: 0.35rem 0.65rem; font-size: 0.84rem;
             color: #334155; background-color: #ffffff;
-            border: 1px solid #d7dee8 !important; border-radius: 8px !important;
+            border: 1px solid #d7dee8 !important; border-radius: var(--clean-radius) !important;
             box-shadow: none !important;
         }
         .recap-mobile-card .form-label {
@@ -44,7 +35,7 @@
         }
         .app-header-left { flex: 1 1 auto; min-width: 0; }
         .header-main-title {
-            font-size: 0.95rem !important; white-space: nowrap !important;
+            white-space: nowrap !important;
             overflow: hidden !important; text-overflow: ellipsis !important;
         }
         .header-main-subtitle { display: none !important; }
@@ -54,7 +45,7 @@
     /* Buttons Export Responsif */
     .btn-green-excel {
         background-color: #059669; color: #ffffff !important;
-        font-size: 0.82rem; font-weight: 600; border: none; border-radius: 8px;
+        font-size: 0.82rem; font-weight: 600; border: none; border-radius: var(--clean-radius);
         min-width: 160px; height: 40px; padding: 0 1.25rem; display: inline-flex;
         align-items: center; justify-content: center; text-decoration: none;
         white-space: nowrap; box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
@@ -65,7 +56,7 @@
 
     .btn-red-pdf {
         background-color: #ef4444; color: #ffffff !important;
-        font-size: 0.82rem; font-weight: 600; border: none; border-radius: 8px;
+        font-size: 0.82rem; font-weight: 600; border: none; border-radius: var(--clean-radius);
         min-width: 160px; height: 40px; padding: 0 1.25rem; display: inline-flex;
         align-items: center; justify-content: center; text-decoration: none;
         white-space: nowrap; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.2);
@@ -99,16 +90,28 @@
     }
 
     .filter-card { background: transparent !important; border: none !important; margin-bottom: 1.25rem !important; }
+
+    /* ===== REVISI CLEAN LOOK: jarak antar field filter =====
+       - Desktop: form memakai utilitas .gap-2 (8px); dinaikkan jadi 10px
+         supaya rapat tapi tidak rapat sekali (target 10-12px).
+       - Mobile: kelompok field memakai utilitas .mb-2 (8px); dinaikkan 10px.
+       Hanya JARAK yang diubah - urutan field, label, border, dan fungsinya
+       (onchange submit) tidak disentuh. */
+    .filter-card > form {
+        gap: 0.625rem !important;
+    }
+    .recap-mobile-card .mb-2 {
+        margin-bottom: 0.625rem !important;
+    }
+
     .filter-label { font-size: 0.74rem; font-weight: 600; color: #64748b; margin-bottom: 0.25rem; display: block; }
     .filter-input {
-        height: 40px; font-size: 0.82rem; border-radius: 8px; border-color: #cbd5e1;
+        height: 40px; font-size: 0.82rem; border-radius: var(--clean-radius); border-color: #cbd5e1;
         background-color: #ffffff; padding: 0.35rem 0.65rem; transition: all 0.15s ease-in-out;
         border: 1px solid #cbd5e1;
     }
     .filter-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15); }
-    .input-group .filter-input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-    .input-group .recap-mobile-submit { border-top-left-radius: 0; border-bottom-left-radius: 0; }
-    .filter-btn { height: 36px; font-size: 0.82rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-weight: 600; }
+    .filter-btn { height: 36px; font-size: 0.82rem; border-radius: var(--clean-radius); display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-weight: 600; }
 
     /* Tables */
     .table-responsive { -webkit-overflow-scrolling: touch; overflow-x: auto; width: 100%; }
@@ -134,24 +137,20 @@
     .cell-holiday { color: #64748b !important; font-weight: 600; }
     .cell-future { color: #cbd5e1 !important; font-weight: 400; }
 
+    /* ===== LEGENDA/KETERANGAN: ringkas tapi tetap jelas =====
+       Nilai disatukan dari dua blok lama (dasar + "poin 2: diperbesar") karena
+       di HP 390px legenda melipat jadi 4-5 baris & terlihat gemuk. Yang dijaga:
+       warna, border putus-putus, latar, huruf Keterangan tetap sama; hanya
+       padding, gap, dan ukuran huruf diturunkan sedikit supaya muat 2-3 baris. */
     .rekap-legend {
-        display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.5rem;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.5rem;
         padding: 0.4rem 0.6rem; border: 1px dashed #e2e8f0; border-radius: 10px;
-        background-color: #f8fafc; color: #64748b; font-size: 0.72rem;
+        background-color: #f8fafc; color: #64748b; font-size: 0.78rem;
     }
-    .rekap-legend-label { font-weight: 700; color: #475569; text-transform: uppercase; font-size: 0.64rem; }
-    .rekap-legend-items { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.55rem; }
-    .rekap-legend-item { display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; }
-
-    /* ===== LABEL KETERANGAN (poin 2): diperbesar & lebih jelas ===== */
-    .rekap-legend {
-        padding: 0.6rem 0.85rem;
-        font-size: 0.92rem;
-    }
-    .rekap-legend-label { font-size: 0.85rem; }
-    .rekap-legend-items { gap: 0.35rem 0.85rem; }
-    .rekap-legend-item { font-size: 0.92rem; }
-    .rekap-legend-item strong { font-size: 1rem; font-weight: 700; }
+    .rekap-legend-label { font-weight: 700; color: #475569; text-transform: uppercase; font-size: 0.7rem; }
+    .rekap-legend-items { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.6rem; }
+    .rekap-legend-item { display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; font-size: 0.82rem; }
+    .rekap-legend-item strong { font-size: 0.9rem; font-weight: 700; }
 
     /* ===== JK (poin 1): warna cerah, huruf medium (bukan bold) =====
        L = biru cerah (#3B82F6), P = merah cerah (#EF4444),
@@ -181,35 +180,6 @@
         font-weight: 500 !important;
     }
 
-    /* ===== IKON SEARCH / TOMBOL FILTER (poin 3): lebih besar & tebal =====
-       Tinggi 40px disamakan dengan .filter-input & dropdown Pilih Kelas
-       supaya sejajar satu baris. */
-    .recap-mobile-submit i,
-    .rekap-filter-submit i {
-        font-size: 1.5rem;
-        line-height: 1;
-    }
-
-    .rekap-filter-submit {
-        width: 56px;
-        height: 40px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #475569 !important;
-        background: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        box-shadow: none !important;
-        border-radius: 0 8px 8px 0 !important;
-        flex-shrink: 0;
-        cursor: pointer;
-    }
-    .rekap-filter-submit:hover {
-        color: #1d4ed8 !important;
-        background: #f8fafc !important;
-    }
-
     /* ======================================================================
        LAYOUT KARTU REKAP (poin 7)
        Pola sama dengan Presensi & Catatan Kehadiran: kartu tabel mengisi sisa
@@ -218,23 +188,15 @@
        di bawah baris ke-100.
        ====================================================================== */
     #daftar-rekap {
-        display: flex;
-        flex-direction: column;
-        height: calc(100dvh - 17rem);
-        min-height: 20rem;
+        display: block;
+        height: auto;
+        min-height: 0;
         margin-bottom: 0 !important;
     }
 
     #daftar-rekap .table-responsive {
-        flex: 1 1 auto;
-        min-height: 0;
         max-height: none !important;
-    }
-
-    @media (max-width: 767.98px) {
-        #daftar-rekap {
-            height: calc(100dvh - 26rem);
-        }
+        overflow-y: visible !important;
     }
 
     /* Header sticky bersih: latar pekat & selalu di atas baris data. */
@@ -377,7 +339,13 @@
 
     <!-- 1. MOBILE VIEW -->
     <div class="d-block d-md-none mb-3">
-        <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white recap-mobile-card">
+        {{-- DULU: <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white recap-mobile-card">
+             REVISI CLEAN LOOK: kontainer/card pembungkus filter DIHAPUS (border,
+             latar, shadow, radius, padding). Filter kini menempel langsung di
+             kanvas putih tanpa indent bekas kontainer - persis pola filter di
+             halaman Data Siswa/Guru/Kelas. Border INPUT/DROPDOWN/TOMBOL sendiri
+             tetap. class .recap-mobile-card dipertahankan sebagai jangkar CSS. --}}
+        <div class="recap-mobile-card">
             <form method="GET" action="{{ panel_route('rekap') }}" class="recap-mobile-period mb-2">
                 @foreach(request()->except(['type', 'page']) as $key => $value)
                     @if(is_scalar($value))
@@ -385,7 +353,7 @@
                     @endif
                 @endforeach
                 <label for="mobileRecapType" class="form-label text-muted small fw-semibold mb-1">Periode</label>
-                <select id="mobileRecapType" name="type" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3" onchange="this.form.submit()">
+                <select id="mobileRecapType" name="type" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3" onchange="debounceRekapFilterSubmit(this.form)">
                     <option value="harian" {{ $type === 'harian' ? 'selected' : '' }}>Harian</option>
                     <option value="mingguan" {{ $type === 'mingguan' ? 'selected' : '' }}>Mingguan</option>
                     <option value="bulanan" {{ $type === 'bulanan' ? 'selected' : '' }}>Bulanan</option>
@@ -410,48 +378,42 @@
                 @if($type === 'harian')
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Tanggal Presensi</label>
-                        <input type="date" name="date" id="mobileRekapDate" onchange="this.form.submit()" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $date ?? date('Y-m-d') }}">
+                        <input type="date" name="date" id="mobileRekapDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
-                        <div class="input-group">
-                            <select name="class_id" id="mobileRekapClassId" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
-                                <option value="">Semua Kelas</option>
-                                @foreach($classes as $c)
-                                    <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data"><i class='bx bx-search'></i></button>
-                        </div>
+                        <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <option value="">Semua Kelas</option>
+                            @foreach($classes as $c)
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 @elseif($type === 'mingguan')
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Tanggal Mulai</label>
-                            <input type="date" name="start_date" id="mobileRekapStartDate" onchange="this.form.submit()" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $startDate }}">
+                            <input type="date" name="start_date" id="mobileRekapStartDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $startDate }}">
                         </div>
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Tanggal Selesai</label>
-                            <input type="date" name="end_date" id="mobileRekapEndDate" onchange="this.form.submit()" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $endDate }}">
+                            <input type="date" name="end_date" id="mobileRekapEndDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $endDate }}">
                         </div>
                     </div>
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
-                        <div class="input-group">
-                            <select name="class_id" id="mobileRekapClassId" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
-                                <option value="">Semua Kelas</option>
-                                @foreach($classes as $c)
-                                    <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data"><i class='bx bx-search'></i></button>
-                        </div>
+                        <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <option value="">Semua Kelas</option>
+                            @foreach($classes as $c)
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 @else
                     <div class="row g-2 mb-2">
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Bulan</label>
-                            <select name="month" id="mobileRekapMonth" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <select name="month" id="mobileRekapMonth" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                                 @for($m = 1; $m <= 12; $m++)
                                     <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate($year, $m, 1)->translatedFormat('F') }}</option>
                                 @endfor
@@ -459,7 +421,7 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label text-muted small fw-semibold mb-1">Tahun</label>
-                            <select name="year" id="mobileRekapYear" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <select name="year" id="mobileRekapYear" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                                 @for($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                     <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                 @endfor
@@ -468,15 +430,12 @@
                     </div>
                     <div class="mb-2">
                         <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
-                        <div class="input-group">
-                            <select name="class_id" id="mobileRekapClassId" onchange="this.form.submit()" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-start-3">
-                                <option value="">Semua Kelas</option>
-                                @foreach($classes as $c)
-                                    <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn btn-sm recap-mobile-submit rounded-end-3" title="Tampilkan data"><i class='bx bx-search'></i></button>
-                        </div>
+                        <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
+                            <option value="">Semua Kelas</option>
+                            @foreach($classes as $c)
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 @endif
             </form>
@@ -505,21 +464,21 @@
                 @if($type === 'harian')
                     <div class="d-flex flex-column" style="width: 180px;">
                         <label class="filter-label">Tanggal Presensi</label>
-                        <input type="date" name="date" id="rekapDate" onchange="this.form.submit()" class="form-control form-control-sm filter-input" value="{{ $date ?? date('Y-m-d') }}">
+                        <input type="date" name="date" id="rekapDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                 @elseif($type === 'mingguan')
                     <div class="d-flex flex-column" style="width: 160px;">
                         <label class="filter-label">Tanggal Mulai</label>
-                        <input type="date" name="start_date" id="rekapStartDate" onchange="this.form.submit()" class="form-control form-control-sm filter-input" value="{{ $startDate }}">
+                        <input type="date" name="start_date" id="rekapStartDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $startDate }}">
                     </div>
                     <div class="d-flex flex-column" style="width: 160px;">
                         <label class="filter-label">Tanggal Selesai</label>
-                        <input type="date" name="end_date" id="rekapEndDate" onchange="this.form.submit()" class="form-control form-control-sm filter-input" value="{{ $endDate }}">
+                        <input type="date" name="end_date" id="rekapEndDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $endDate }}">
                     </div>
                 @else
                     <div class="d-flex flex-column" style="width: 140px;">
                         <label class="filter-label">Bulan</label>
-                        <select name="month" id="rekapMonth" onchange="this.form.submit()" class="form-select form-select-sm filter-input">
+                        <select name="month" id="rekapMonth" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input">
                             @for($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate($year, $m, 1)->translatedFormat('F') }}</option>
                             @endfor
@@ -527,7 +486,7 @@
                     </div>
                     <div class="d-flex flex-column" style="width: 100px;">
                         <label class="filter-label">Tahun</label>
-                        <select name="year" id="rekapYear" onchange="this.form.submit()" class="form-select form-select-sm filter-input">
+                        <select name="year" id="rekapYear" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input">
                             @for($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
@@ -536,15 +495,12 @@
                 @endif
                 <div class="d-flex flex-column" style="min-width: 200px; flex: 1;">
                     <label class="filter-label">Pilih Kelas</label>
-                    <div class="input-group">
-                        <select name="class_id" id="rekapClassId" onchange="this.form.submit()" class="form-select form-select-sm filter-input rounded-start-3">
-                            <option value="">Semua Kelas</option>
-                            @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" class="btn btn-sm rekap-filter-submit" title="Tampilkan data"><i class='bx bx-search'></i></button>
-                    </div>
+                    <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3">
+                        <option value="">Semua Kelas</option>
+                        @foreach($classes as $c)
+                            <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto" style="margin-top: 22px;">
                     <a href="{{ panel_route('rekap.export-excel', $exportParams) }}" class="btn-green-excel" title="Export Excel (.xlsx)" aria-label="Export Excel (.xlsx)" data-download>
@@ -651,8 +607,9 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-secondary">
-                                <i class='bx bx-info-circle fs-2 d-block mb-2 text-muted'></i> Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.
+                            <td colspan="8" class="text-center py-5 text-secondary empty-state">
+                                <i class='bx bx-error' aria-hidden='true'></i>
+                                Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.
                             </td>
                         </tr>
                         @endforelse
@@ -717,7 +674,10 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="{{ 4 + count($dateColumns) + 6 }}" class="text-center py-5 text-secondary">Tidak ada data siswa untuk rentang tanggal dan kelas yang dipilih.</td>
+                            <td colspan="{{ 4 + count($dateColumns) + 6 }}" class="text-center py-5 text-secondary empty-state">
+                                <i class='bx bx-error' aria-hidden='true'></i>
+                                Tidak ada data siswa untuk rentang tanggal dan kelas yang dipilih.
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -789,7 +749,10 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="{{ 5 + $daysInMonth + 6 }}" class="text-center py-5 text-secondary">Tidak ada data siswa atau presensi untuk bulan dan kelas yang dipilih.</td>
+                            <td colspan="{{ 5 + $daysInMonth + 6 }}" class="text-center py-5 text-secondary empty-state">
+                                <i class='bx bx-error' aria-hidden='true'></i>
+                                Tidak ada data siswa atau presensi untuk bulan dan kelas yang dipilih.
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -860,12 +823,44 @@
 
     @push('scripts')
     <script>
+        /* Filter otomatis Rekap: debounce 250ms supaya ganti beberapa
+           dropdown berturut-turut hanya memicu SATU submit form GET yang
+           sama persis seperti tombol kaca pembesar sebelumnya (parameter
+           identik). Pakai event change (bukan input/keyup) sehingga navigasi
+           panah keyboard tidak memicu reload; submit hanya saat pilihan
+           dikomit (klik/Enter/blur). Loader global tampil otomatis. */
+        (function () {
+            var rekapFilterTimer = null;
+            window.debounceRekapFilterSubmit = function (form) {
+                if (!form || !form.submit) return;
+                if (rekapFilterTimer) { clearTimeout(rekapFilterTimer); }
+                rekapFilterTimer = setTimeout(function () {
+                    rekapFilterTimer = null;
+                    form.submit();
+                }, 250);
+            };
+        })();
+
         document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('page')) {
                 const el = document.getElementById('daftar-rekap');
                 if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Scroll INSTAN (tanpa animasi) di dalam area scroll halaman.
+                    // scrollIntoView smooth sebelumnya memicu animasi scroll yang
+                    // menggerakkan header sticky/address-bar mobile berulang
+                    // sehingga navbar tampak berkedip/lompat tiap ganti halaman.
+                    var scroller = el.closest('main');
+                    scroller = scroller ? scroller.querySelector(':scope > .flex-1') : null;
+                    var header = document.querySelector('.app-header-bar');
+                    var offset = (header ? header.getBoundingClientRect().height : 0) + 12;
+                    if (scroller) {
+                        var rect = el.getBoundingClientRect();
+                        var srect = scroller.getBoundingClientRect();
+                        scroller.scrollTo({ top: scroller.scrollTop + (rect.top - srect.top) - offset, behavior: 'auto' });
+                    } else {
+                        el.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    }
                 }
             }
         });

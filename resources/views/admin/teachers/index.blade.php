@@ -95,6 +95,7 @@
         }
     }
 
+    /* Header tabel Data Guru: nilai DESKTOP (>= 1024px) tidak berubah. */
     .table-zebra-custom thead th {
         color: #111827 !important;
         font-size: 0.75rem !important;
@@ -107,6 +108,17 @@
         border-bottom: 1px solid #f1f5f9 !important;
         background-color: #f8fafc !important;
         font-family: 'Poppins', 'Roboto', sans-serif;
+    }
+
+    /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
+       semibold + SATU garis tipis (sebelumnya latar abu #f8fafc). Desktop
+       >= 1024px sengaja TIDAK disentuh, sesuai batas yang diminta. */
+    @media (max-width: 1023.98px) {
+        .table-zebra-custom thead th {
+            background-color: #ffffff !important;
+            color: var(--clean-ink) !important;
+            border-bottom: 1px solid var(--clean-line) !important;
+        }
     }
 
     /* ===== Action bar: SATU BARIS RATA (pola sama dengan Data Siswa) ===== */
@@ -189,7 +201,7 @@
         justify-content: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: 6px !important; /* sama persis dengan .form-control */
+        border-radius: var(--clean-radius) !important; /* token radius bersama (6px), sama dengan .form-control */
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -235,7 +247,7 @@
         justify-content: center;
         gap: 0.3rem;
         border: none;
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important;
         padding: 0.32rem 0.7rem;
         font-size: 0.78rem;
         font-weight: 600;
@@ -258,15 +270,15 @@
     .search-input-wrap input.form-control,
     .search-filter-group input.form-control,
     .search-filter-group .btn {
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important;
     }
     .search-input-wrap .input-group input.form-control,
     .search-filter-group .input-group input.form-control {
-        border-radius: 6px 0 0 6px !important;
+        border-radius: var(--clean-radius) 0 0 var(--clean-radius) !important;
     }
     .search-input-wrap .input-group button.btn,
     .search-filter-group .input-group button.btn {
-        border-radius: 0 6px 6px 0 !important;
+        border-radius: 0 var(--clean-radius) var(--clean-radius) 0 !important;
     }
 </style>
 @endpush
@@ -355,7 +367,7 @@
     <!-- KARTU UTAMA DATA GURU: CLEAN ACTION BAR & TABEL TERPADU      -->
     <!-- (Layout & container disamakan persis dengan Data Siswa)                  -->
     <!-- ========================================================================= -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-guru">
 
         <!-- Action Bar & Search (Stretch Memanjang, Tombol Radius Konsisten) -->
         <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
@@ -367,13 +379,13 @@
                         <input type="text"
                                name="search"
                                id="teacherSearchInput"
-                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3"
+                               class="form-control shadow-none"
                                placeholder="Cari nama atau NIP..."
                                value="{{ request('search') }}"
                                aria-label="Cari nama atau NIP"
                                autocomplete="off"
                                style="height: 38px; font-size: 0.85rem;">
-                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
+                        <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
@@ -476,8 +488,8 @@
                     </tr>
                     @empty
                     <tr class="align-middle">
-                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 7 : 6 }}" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 7 : 6 }}" class="text-center py-5 text-muted text-nowrap empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search'))
                                 Tidak ada data guru yang cocok dengan pencarian.
                             @else
@@ -678,13 +690,13 @@
     <div class="modal fade" id="importTeacherModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="modal-header border-bottom-0 pb-0">
+                <div class="modal-header border-bottom-0">
                     <h5 class="fw-bold mb-0">Import Data Guru dari Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="{{ panel_route('guru.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-body py-3">
+                    <div class="modal-body">
                         @if(session('open_modal') === 'import' && $errors->any())
                         <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
                             <i class='bx bx-error-circle fs-6 me-1'></i> Import belum bisa diproses. Periksa isian yang bertanda merah.
@@ -704,7 +716,7 @@
                             <div class="text-muted mt-1" style="font-size: 0.72rem;">Maksimal ukuran file 5 MB.</div>
                         </div>
                     </div>
-                    <div class="modal-footer border-top-0 pt-0">
+                    <div class="modal-footer border-top-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn-download-green px-4" data-import>Mulai Import</button>
                     </div>

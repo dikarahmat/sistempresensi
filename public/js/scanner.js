@@ -60,37 +60,96 @@ function normalizeCameraError(err, tahap) {
     return { name, message };
 }
 
-/* ================= SUARA BEEP (audio/beep.mp3) ================= */
+/* ================= SUARA BEEP (audio/beep.mp3 milik sekolah) =================
+   SATU-SATUNYA beep yang dipakai semua scanner. Hanya file beep.mp3, tanpa
+   suara lain dalam bentuk apa pun (tanpa Web Audio/oscillator/cadangan). */
 function playBeep() {
     const beep = document.getElementById('beepSound');
-    if (beep) {
+    if (!beep) return;
+    try {
+        // Pastikan elemen tidak sedang terkunci senyap oleh proses unlock,
+        // supaya beep scan selalu terdengar (nada/durasi/volume tidak berubah).
+        if (beep.muted) beep.muted = false;
         beep.currentTime = 0;
-        beep.play().catch(() => playSyntheticBeep());
-        return;
-    }
-    playSyntheticBeep();
+        const p = beep.play();
+        if (p && typeof p.catch === 'function') {
+            p.catch(() => { /* autoplay ditolak: diam, tanpa suara pengganti */ });
+        }
+    } catch (e) { /* diam */ }
 }
 
-function playSyntheticBeep() {
+/* Buka kunci audio saat ada gestur user (klik/sentuh/tombol), supaya
+   beep berikutnya diizinkan browser (Chrome Android & iOS Safari). */
+let scannerAudioUnlocked = false;
+function unlockScannerAudio() {
+    if (scannerAudioUnlocked) return;
+    const beep = document.getElementById('beepSound');
+    if (!beep) return;
+    // Jangan ganggu beep scan yang sedang berbunyi; unlock dicoba lagi
+    // pada gestur user berikutnya (listener permanen di bawah).
+    if (!beep.paused && !beep.muted) return;
     try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 880;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.16);
-    } catch (e) {}
+        beep.muted = true;
+        const p = beep.play();
+        const done = () => {
+            // Hanya kunci ulang bila pemutaran senyap unlock masih berjalan.
+            // Bila di antaranya ada beep scan yang sudah berbunyi (muted sudah
+            // dilepas playBeep), JANGAN pause/reset agar bunyi scan tidak mati.
+            if (beep.muted) {
+                try { beep.pause(); beep.currentTime = 0; } catch (e) {}
+                beep.muted = false;
+            }
+            scannerAudioUnlocked = true;
+        };
+        if (p && typeof p.then === 'function') { p.then(done).catch(() => {}); }
+        else { done(); }
+    } catch (e) { /* diam */ }
+}
+
+/* Kunci audio dicoba pada SETIAP interaksi user sampai benar-benar berhasil
+   (percobaan pertama bisa ditolak browser), lalu listener melepas dirinya
+   sendiri. Berlaku di semua halaman scan (gerbang, presensi harian, detail
+   kelas) dan di desktop maupun mobile. */
+(function attachScannerAudioUnlock() {
+    const tryUnlock = function () {
+        unlockScannerAudio();
+        if (scannerAudioUnlocked) {
+            window.removeEventListener('pointerdown', tryUnlock);
+            window.removeEventListener('keydown', tryUnlock);
+        }
+    };
+    window.addEventListener('pointerdown', tryUnlock);
+    window.addEventListener('keydown', tryUnlock);
+})();
+
+/* Umpan balik scan GAGAL: getar singkat di mobile bila didukung, tanpa bunyi. */
+function vibrateOnScanFail() {
+    try {
+        if (navigator && typeof navigator.vibrate === 'function') {
+            navigator.vibrate(120);
+        }
+    } catch (e) { /* diam */ }
 }
 
 function playBeepSound() { playBeep(); }
+
+/* ============== SATU TITIK PUSAT UMpan BALIK PER SCAN ==============
+   Dipanggil TEPAT SATU KALI untuk tiap kali user memindai:
+     - hasil diterima dari server: Hadir, Terlambat, Presensi Pulang,
+       sudah absen, kartu tidak dikenal, kode ngawur, error 4xx/5xx;
+     - gagal jaringan / timeout / respons bukan JSON (blok catch);
+     - kode kosong (status null -> tanpa notifikasi & tanpa getar).
+   SEMUA hasil berbunyi beep dengan nada yang sama persis (audio/beep.mp3):
+   tidak ada nada baru, tidak ada perubahan frekuensi/durasi/volume, dan
+   tidak ada bunyi ganda (satu pemanggilan per scan).
+   Hasil non-sukses tetap mendapat getar seperti sebelumnya.
+   Dipanggil SEBELUM render hasil, sehingga bunyi keluar bersamaan notifikasi. */
+function feedbackScan(status, body) {
+    playBeep();
+    if (status === null || status === undefined) return; // kode kosong: beep saja
+    if (status === 200 && body && body.success) return;  // sukses: tanpa getar
+    vibrateOnScanFail();
+}
 
 /* ================= DETEKSI PERANGKAT ================= */
 function isIOSDevice() {
@@ -169,7 +228,13 @@ function isUnrecognizedQrMessage(msg) {
 
 function processCode(token) {
     const cleanToken = (token || '').trim();
-    if (!cleanToken || scanner.isProcessingScan) return;
+    if (!cleanToken) {
+        // KODE KOSONG: tetap SATU beep supaya scan tidak hilang tanpa bunyi.
+        // Tanpa notifikasi & tanpa getar (tampilan hasil tidak berubah).
+        feedbackScan(null, null);
+        return;
+    }
+    if (scanner.isProcessingScan) return;
 
     const now = Date.now();
     if (cleanToken === lastScannedToken && (now - lastScannedTimestamp < SAME_CODE_DEBOUNCE_MS)) {
@@ -201,17 +266,21 @@ function processCode(token) {
     })
     .then(res => res.json().then(data => ({ status: res.status, body: data })))
     .then(({ status, body }) => {
-        playBeep();
+        // SATU beep per scan untuk SEMUA hasil (Hadir, Terlambat, sudah absen,
+        // kartu tidak dikenal, kode ngawur, error server) — bersamaan notifikasi.
+        feedbackScan(status, body);
         handleScanResult(status, body);
     })
     .catch((err) => {
         console.error('[kiosk-scanner] Fetch error:', err);
-        playBeep();
-        // HASIL 5: Error server/jaringan -> Lingkaran MERAH + TANDA SERU (!) putih
-        handleScanResult(500, {
+        const failBody = {
             success: false,
             message: 'Terjadi kendala koneksi ke server, coba lagi'
-        });
+        };
+        // SATU beep per scan (gagal jaringan/timeout/respons tak terbaca) + getar.
+        feedbackScan(500, failBody);
+        // HASIL 5: Error server/jaringan -> Lingkaran MERAH + TANDA SERU (!) putih
+        handleScanResult(500, failBody);
     });
 }
 
@@ -724,6 +793,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Buka kunci audio sekali saat interaksi pertama (penting untuk halaman
+    // kiosk yang auto-start kamera tanpa tombol buka).
+    const unlockOnce = function() { unlockScannerAudio(); };
+    window.addEventListener('pointerdown', unlockOnce, { once: true });
+    window.addEventListener('keydown', unlockOnce, { once: true });
+
     console.log('[kiosk-camera] Starting camera...');
     runCamera(async () => {
         await startCameraKiosk();
@@ -749,6 +824,8 @@ window.showOverlayError = showOverlayError;
 window.resetOverlayState = resetOverlayState;
 window.playBeep = playBeep;
 window.playBeepSound = playBeepSound;
+window.unlockScannerAudio = unlockScannerAudio;
+window.vibrateOnScanFail = vibrateOnScanFail;
 
 // 2. Fungsi tombol interaktif khusus halaman Mode Gerbang & Presensi Gerbang (.kiosk-main)
 if (document.querySelector('.kiosk-main') || document.body.classList.contains('kiosk-body')) {

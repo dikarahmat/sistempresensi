@@ -360,7 +360,12 @@ class SystemAuditAndPerformanceTest extends TestCase
         $response->assertViewIs('admin.absensi.class');
         $response->assertSee('Presensi Kelas 8B');
         $response->assertSee('id="scanResultOverlay"', false);
-        $response->assertSee('playBrowserBeep', false);
+        // Beep hanya file beep.mp3 via fungsi bersama; tanpa Web Audio/pengganti.
+        $response->assertSee('id="beepSound"', false);
+        $response->assertSee('window.playBeep', false);
+        $response->assertDontSee('playBrowserBeep', false);
+        $response->assertDontSee('AudioContext', false);
+        $response->assertDontSee('oscillator', false);
         $response->assertSee('class_scanner_open', false);
     }
 }

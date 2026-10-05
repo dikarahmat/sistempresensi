@@ -53,7 +53,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.78rem;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         padding: 0.32rem 0.7rem;
         display: inline-flex;
         align-items: center;
@@ -67,7 +67,7 @@
         border: none;
         font-weight: 600;
         font-size: 0.78rem;
-        border-radius: 6px;
+        border-radius: var(--clean-radius);
         padding: 0.32rem 0.7rem;
         display: inline-flex;
         align-items: center;
@@ -220,8 +220,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class='bx bx-inbox fs-1 d-block mb-2 opacity-50'></i>
+                        <td colspan="7" class="text-center py-5 text-muted empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             Tidak ada data kelas di Tempat Sampah
                         </td>
                     </tr>

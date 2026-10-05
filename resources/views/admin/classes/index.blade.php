@@ -82,6 +82,7 @@
         }
     }
 
+    /* Header tabel Data Kelas: nilai DESKTOP (>= 1024px) tidak berubah. */
     .table-zebra-custom thead th {
         color: #111827 !important;
         font-size: 0.75rem !important;
@@ -94,6 +95,17 @@
         border-bottom: 1px solid #f1f5f9 !important;
         background-color: #f8fafc !important;
         font-family: 'Poppins', 'Roboto', sans-serif;
+    }
+
+    /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
+       semibold + SATU garis tipis (sebelumnya latar abu #f8fafc). Desktop
+       >= 1024px sengaja TIDAK disentuh, sesuai batas yang diminta. */
+    @media (max-width: 1023.98px) {
+        .table-zebra-custom thead th {
+            background-color: #ffffff !important;
+            color: var(--clean-ink) !important;
+            border-bottom: 1px solid var(--clean-line) !important;
+        }
     }
 
     /* ===== Action Bar: SATU BARIS RATA (pola sama persis dengan Data Siswa & Data Guru) =====
@@ -210,7 +222,7 @@
         justify-content: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: 6px !important; /* sama persis dengan .form-select */
+        border-radius: var(--clean-radius) !important; /* token radius bersama (6px), sama dengan .form-select */
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -253,7 +265,7 @@
         justify-content: center;
         gap: 0.3rem;
         border: none;
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important;
         padding: 0.32rem 0.7rem;
         font-size: 0.78rem;
         font-weight: 600;
@@ -272,7 +284,7 @@
     /* Dropdown filter disamakan bentuknya (kotak sudut tumpul) */
     .filter-select-wrap select.form-select,
     .search-filter-group select.form-select {
-        border-radius: 6px !important;
+        border-radius: var(--clean-radius) !important;
         height: 38px;
         font-size: 0.85rem;
     }
@@ -385,7 +397,7 @@
     <!-- KARTU UTAMA MASTER DATA KELAS: CLEAN ACTION BAR & TABEL TERPADU           -->
     <!-- (Layout & container disamakan persis dengan Data Guru & Data Siswa)      -->
     <!-- ========================================================================= -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-kelas">
 
         <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
@@ -398,13 +410,13 @@
                         <input type="text" 
                                name="search" 
                                id="classSearchInput"
-                               class="form-control border-secondary-subtle border-end-0 shadow-none ps-3" 
+                               class="form-control shadow-none" 
                                placeholder="Cari nama kelas..." 
                                value="{{ request('search') }}"
                                aria-label="Cari nama kelas"
                                autocomplete="off"
                                style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                        <button class="btn bg-white border border-secondary-subtle border-start-0 shadow-none text-secondary px-3" type="submit" title="Cari" aria-label="Cari" style="height: 38px;">
+                        <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
@@ -499,8 +511,8 @@
                     </tr>
                     @empty
                     <tr class="align-middle">
-                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted text-nowrap">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted text-nowrap empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('grade'))
                                 Tidak ada data kelas yang cocok dengan pencarian/filter.
                             @else
@@ -614,7 +626,7 @@
 <!-- MODAL IMPORT EXCEL KELAS -->
 <div class="modal fade" id="importClassModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header border-bottom-0">
                 <h5 class="fw-bold mb-0">Import Data Kelas Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -622,7 +634,7 @@
             <form action="{{ panel_route('classes.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
-                    <div class="p-3 bg-light rounded-3 small text-secondary mb-3">
+                    <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             Format kolom file Excel: <strong>Nama Kelas, Tingkat (7/8/9)</strong> (.xlsx atau .csv)
                         </div>

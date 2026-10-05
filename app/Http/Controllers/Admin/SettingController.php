@@ -19,19 +19,40 @@ class SettingController extends Controller
             'app_title' => Setting::get('app_title', 'Sistem Presensi Sekolah'),
             'school_logo' => Setting::get('school_logo'),
             'school_address' => Setting::get('school_address', 'Jl. Pendidikan No. 45, Kota Pelajar'),
-            'school_phone' => Setting::get('school_phone', '(021) 555-1234'),
+            // Default string kosong (bukan contoh berisi simbol): nilai contoh
+            // lama '(021) 555-1234' / '-' justru GAGAL pada regex wajib
+            // (10-15 digit / 18 digit) sehingga penyimpanan pertama mustahil.
+            'school_phone' => Setting::get('school_phone', ''),
             'headmaster_name' => Setting::get('headmaster_name', 'Drs. H. Ahmad Sudrajat, M.Pd'),
-            'headmaster_nip' => Setting::get('headmaster_nip', '-'),
+            'headmaster_nip' => Setting::get('headmaster_nip', ''),
             'check_in_time' => Setting::get('check_in_time', '06:45'),
             'late_limit_time' => Setting::get('late_limit_time', '07:15'),
             'check_out_time' => Setting::get('check_out_time', '14:30'),
         ];
+
+        // Data lama yang tersimpan sebelum regex (mis. '(021) 555-1234' / '-')
+        // ditampilkan sebagai kosong supaya tidak memblokir penyimpanan;
+        // database TIDAK diubah di sini.
+        if (!preg_match('/^[0-9]{10,15}$/', (string) $settings['school_phone'])) {
+            $settings['school_phone'] = '';
+        }
+        if (!preg_match('/^[0-9]{18}$/', (string) $settings['headmaster_nip'])) {
+            $settings['headmaster_nip'] = '';
+        }
 
         return view('admin.settings.index', compact('settings'));
     }
 
     public function update(Request $request): RedirectResponse
     {
+        // Kolom opsional yang dikosongkan dinormalkan ke null SEBELUM validasi:
+        // string kosong '' selalu gagal regex digit, padahal field-nya opsional.
+        foreach (['school_phone', 'headmaster_nip'] as $optionalDigit) {
+            if (trim((string) $request->input($optionalDigit, '')) === '') {
+                $request->merge([$optionalDigit => null]);
+            }
+        }
+
         $request->validate([
             'school_name' => ['required', 'string', 'max:255'],
             'app_title' => ['nullable', 'string', 'max:255'],

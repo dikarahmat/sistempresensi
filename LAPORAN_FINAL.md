@@ -1,8 +1,13 @@
 # LAPORAN FINAL AUDIT SISTEM PRESENSI
-- Tanggal mulai: 2026-10-04 11:30 WIB | Update akhir: 2026-10-04 13:30 WIB (Asia/Jakarta, nyata)
+- Tanggal mulai: 2026-10-04 11:30 WIB | Update akhir: 2026-10-05 (sesi 10 revisi, Asia/Jakarta, nyata)
 - Branch: main | Commit awal (sebelum-audit): 5978d80 | Commit akhir: (lihat git log)
 - Database uji: sqlite :memory: via php artisan test + MySQL lokal hanya migrate:status/route:list (data existing tidak dihapus; file .env.bak sementara sudah dihapus lagi)
 - KEPUTUSAN PEMILIK 2026-10-04 13:15: poin 5 TIDAK (tanpa Reset Filter), poin 8 TIDAK (tetap 2-klik), poin 25 SABTU+MINGGU LIBUR (diimplementasikan), poin 42 ADMIN+GURU MENGAJAR login, poin 47 PERTAHANKAN Judul, poin 48b SKIP, poin 53 = 500-600 orang scan tiap pagi, poin 14 TIDAK (tombol Kembali dibatalkan/revert).
+- SESI 10 REVISI 2026-10-05: beep file-only + 1 area scroll + ikon center + logo + pintasan + monitoring + alert + backdrop logout + rekap stabil. Suite: 60 lulus / 0 gagal (374 assertions). Tanpa file baru, route/migrasi/audio tak tersentuh.
+- HOTFIX LOGIN 2026-10-05: tabel users kosong (DB belum di-seed) → admin/admin123 & guru/guru123 gagal. Dijalankan php artisan db:seed (idempotent, tanpa hapus data); Hash::check keduanya true.
+- SESI MODAL-PADAT 2026-10-05: desktop 440px / mobile min(100vw-44px,400px); ikon tanpa blok; teks gelap; suite 60/60. Tanpa file baru, route/migrasi/audio/users tak tersentuh; teks Cetak Kartu ikut sesi lalu.
+- SESI SEARCH 2026-10-05: ikon menyatu dalam input via .search-box-wrap (lepas class konflik 4 view) + focus ring + cursor; suite 60/60. Tanpa file baru, route/fungsi/teks/users tak tersentuh.
+- SESI REKAP-FILTER 2026-10-05: tombol kaca dihapus (4), filter otomatis debounce 250ms; suite 60/60. Tanpa file baru, route/teks/fungsi/users tak tersentuh.
 
 ## Ringkasan eksekutif (maks 10 baris)
 - Audit 53 poin: 46 SUDAH, 3 SEBAGIAN; keputusan pemilik 2026-10-04 sudah diimplementasikan (Sabtu libur; tanpa Reset Filter; tetap 2-klik; tanpa tombol Kembali; Judul dipertahankan; check-out skip; login admin+guru mengajar).

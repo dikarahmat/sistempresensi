@@ -240,8 +240,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-secondary">
-                            <i class='bx bx-info-circle fs-2 d-block mb-2'></i>
+                        <td colspan="6" class="text-center py-5 text-secondary empty-state">
+                            <i class='bx bx-error' aria-hidden='true'></i>
                             BELUM ADA DATA PRESENSI UNTUK PERIODE INI.
                         </td>
                     </tr>

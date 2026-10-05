@@ -237,7 +237,7 @@
             padding: 0.45rem 0.85rem;
             font-size: 0.8rem;
             font-weight: 500;
-            border-radius: 10px;
+            border-radius: var(--clean-radius);
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;

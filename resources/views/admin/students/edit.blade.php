@@ -30,7 +30,7 @@
     }
 
     .form-control, .form-select {
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         border: 1px solid #cbd5e1;
         padding: 0.65rem 0.9rem;
         font-size: 0.9rem;
@@ -47,7 +47,7 @@
         color: #ffffff;
         font-weight: 600;
         font-size: 0.9rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         border: none;
         padding: 0.6rem 1.5rem;
     }
@@ -59,7 +59,7 @@
         border: 1px solid #cbd5e1;
         font-weight: 600;
         font-size: 0.9rem;
-        border-radius: 8px;
+        border-radius: var(--clean-radius);
         padding: 0.6rem 1.5rem;
         text-decoration: none;
     }
