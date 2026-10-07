@@ -21,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set locale Indonesia global untuk Carbon (nama hari/bulan Bahasa Indonesia)
+        \Carbon\Carbon::setLocale('id');
+
         \Illuminate\Http\Request::macro('isMobile', function () {
             return is_mobile_request($this);
         });

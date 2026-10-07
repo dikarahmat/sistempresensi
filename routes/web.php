@@ -17,16 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root ke dashboard sesuai role (admin/guru), atau ke login
-Route::get('/', function () {
-    if (Auth::check()) {
-        return match (Auth::user()->role) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'guru' => redirect()->route('guru.dashboard'),
-            default => redirect()->route('login'),
-        };
-    }
-    return redirect()->route('login');
-});
+Route::get('/', [AuthController::class, 'redirectRoot']);
 
 // Autentikasi
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

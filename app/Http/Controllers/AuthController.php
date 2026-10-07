@@ -13,6 +13,22 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     /**
+     * Redirect root ke dashboard sesuai role (admin/guru), atau ke login.
+     * Dipisah dari closure supaya route:cache bisa berjalan.
+     */
+    public function redirectRoot(Request $request)
+    {
+        if (Auth::check()) {
+            return match (Auth::user()->role) {
+                'admin' => redirect()->route('admin.dashboard'),
+                'guru' => redirect()->route('guru.dashboard'),
+                default => redirect()->route('login'),
+            };
+        }
+        return redirect()->route('login');
+    }
+
+    /**
      * Tampilkan form login universal (tanpa tab role terpisah).
      */
     public function showLoginForm(Request $request)
