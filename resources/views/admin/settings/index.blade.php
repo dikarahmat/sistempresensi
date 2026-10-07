@@ -170,6 +170,72 @@
         }
     }
 
+    /* ===== GRID IDENTITAS & LOGO SEKOLAH: 3 kolom konsisten (hanya desktop) =====
+       Penyebab celah kosong: tiap .identitas-field masih membawa class
+       Bootstrap col-md-6 yang di >=768px memaksa width:50%. Di dalam grid
+       1fr 1fr, tiap field hanya selebar setengah sel grid (~285px) sehingga
+       input (yang sudah width:100% dari wrapper-nya) tidak pernah penuh dan
+       ada celah besar sebelum kolom Logo. Perbaikan: netralkan width/padding
+       kolom Bootstrap di breakpoint desktop saja + nol-kan gutter .row agar
+       tepi kiri/kanan lurus. Markup mobile, name/id/label/value tidak diubah. */
+    @media (min-width: 768px) {
+        .identitas-grid {
+            display: flex !important;
+            align-items: stretch !important;
+            column-gap: 1.5rem !important; /* gap-x-6 (24px) */
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        .identitas-grid > .identitas-main {
+            flex: 0 0 calc((100% - 1.5rem) * 2 / 3) !important;
+            max-width: calc((100% - 1.5rem) * 2 / 3) !important;
+            min-width: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            column-gap: 1.5rem !important; /* kolom 1 & 2 sama persis */
+            row-gap: 1rem !important;
+            align-items: start !important;
+            align-content: start !important;
+        }
+        .identitas-grid > .identitas-main > .identitas-field {
+            width: 100% !important; /* timpa width:50% bawaan col-md-6 */
+            max-width: 100% !important;
+            flex: 0 0 auto !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            min-width: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        .identitas-grid > .identitas-logo {
+            flex: 0 0 calc((100% - 1.5rem) / 3) !important;
+            max-width: calc((100% - 1.5rem) / 3) !important;
+            min-width: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .identitas-grid .form-control {
+            width: 100% !important;
+            height: 38px !important; /* tinggi seragam semua input */
+            font-size: 0.875rem !important;
+        }
+        .identitas-logo-stack {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+            margin-bottom: 0 !important;
+        }
+        .identitas-logo-stack .logo-preview-box {
+            width: 100% !important;
+            max-width: 120px !important;
+            height: 90px !important;
+        }
+    }
+
     /* ===== SATU CLASS BERSAMA buat ketiga tombol Pengelolaan Sistem =====
        TAHUN AJARAN (btn-primary / biru), HARI LIBUR (btn-success / hijau) dan
        TEMPAT SAMPAH (btn-danger / merah) semuanya memakai
@@ -196,6 +262,16 @@
         border-radius: var(--clean-radius) !important; /* token radius bersama (6px) */
         font-weight: 600 !important;      /* = fw-semibold (ketiganya sama) */
         min-width: 12rem !important;      /* 192px: muat "TEMPAT SAMPAH" */
+    }
+
+    /* ===== Ikon di dalam tombol Pengelolaan Sistem =====
+       Ikon tong sampah di tombol TEMPAT SAMPAH: ukuran 18px, rata tengah,
+       dengan margin-right 8px dari teks. */
+    .pengaturan-modul-wrap .pengaturan-modul-btn > svg {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        flex-shrink: 0;
+        margin-right: 8px;
     }
 
     /* ===== WARNA "TAHUN AJARAN": biru primer yang sudah dipakai web ini =====
@@ -305,10 +381,11 @@
         <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">
             @foreach($pengaturanModules as $modul)
             {{-- Satu class bersama .pengaturan-modul-btn untuk ukuran ketiganya;
-                 pembeda hanya class warna. Tidak ada ikon lagi (termasuk di
-                 TEMPAT SAMPAH), jadi tidak ada sisa gap/margin ikon. --}}
+                 TEMPAT SAMPAH memakai varian ikon saja (kotak 40px, ikon trash),
+                 dua lainnya tetap teks. Route/href tidak diubah. --}}
             <a href="{{ route($modul['route']) }}"
-               class="btn btn-sm pengaturan-modul-btn {{ $modul['class'] }}">
+               class="btn btn-sm pengaturan-modul-btn {{ $modul['class'] }}"
+               title="{{ ucwords(strtolower($modul['label'])) }}" aria-label="{{ ucwords(strtolower($modul['label'])) }}">
                 {{ $modul['label'] }}
             </a>
             @endforeach
@@ -328,33 +405,30 @@
                 </div>
             </div>
 
-            <div class="row g-4">
-                <div class="col-12 col-md-8">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+            <div class="row g-4 identitas-grid">
+                <div class="col-12 col-md-8 identitas-main">
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">Nama Sekolah Resmi</label>
                             <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name']) }}" required placeholder="Contoh: SMP Presensi PGRI">
                             @error('school_name')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">Judul Aplikasi / Tab Browser</label>
                             <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title']) }}" placeholder="Contoh: Sistem Presensi Sekolah">
                             @error('app_title')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-7">
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">Alamat Sekolah</label>
                             <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address']) }}" placeholder="Jl. Raya Pendidikan...">
                             @error('school_address')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">No. Telepon / Kontak</label>
                             <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone']) }}" placeholder="10-15 digit angka, tanpa spasi">
                             @error('school_phone')
@@ -362,16 +436,14 @@
                             @enderror
                             <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">Nomor telepon harus 10-15 digit angka.</div>
                         </div>
-                    </div>
-                    <div class="row g-3 mt-1">
-                        <div class="col-md-7">
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">Nama Kepala Sekolah</label>
                             <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name']) }}" placeholder="Contoh: Drs. H. Ahmad Sudrajat, M.Pd">
                             @error('headmaster_name')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">NIP Kepala Sekolah</label>
                             <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip']) }}" placeholder="18 digit angka tanpa spasi">
                             @error('headmaster_nip')
@@ -379,17 +451,15 @@
                             @enderror
                             <div id="nipClientError" class="text-danger small mt-1" style="display:none;">NIP harus 18 digit angka.</div>
                         </div>
-                    </div>
                 </div>
-
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-4 identitas-logo">
                     <label class="form-label small fw-semibold">Logo Sekolah (.webp, .png, .jpg, .jpeg)</label>
-                    <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="d-flex align-items-center gap-3 mb-2 identitas-logo-stack">
                         <div class="logo-preview-box">
                             <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="Logo">
                         </div>
-                        <div class="flex-grow-1">
-                            <input type="file" name="school_logo" id="school_logo" class="form-control rounded-3 form-control-sm @error('school_logo') is-invalid @enderror" accept=".webp,.png,.jpg,.jpeg">
+                        <div class="flex-grow-1 w-100">
+                            <input type="file" name="school_logo" id="school_logo" class="form-control rounded-3 w-100 @error('school_logo') is-invalid @enderror" accept=".webp,.png,.jpg,.jpeg">
                             <span class="text-muted" style="font-size: 11px;">Ukuran rasio 1:1 disarankan. Maksimal 2MB.</span>
                             @error('school_logo')
                             <div class="text-danger small mt-1">{{ $message }}</div>

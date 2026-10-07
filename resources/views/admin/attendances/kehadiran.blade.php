@@ -243,6 +243,31 @@
         transform: translateY(-1px);
         box-shadow: 0 3px 6px rgba(59, 130, 246, 0.3);
     }
+    /* Tombol ikon di kolom AKSI: ukuran seragam 40x34px, ikon di tengah, rounded 10px */
+    .btn-action-lihat {
+        width: 40px;
+        height: 34px;
+        padding: 0;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+    .btn-action-lihat svg {
+        display: block;
+        margin: 0;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+    }
+    @media (max-width: 767.98px) {
+        .btn-action-lihat {
+            width: 36px;
+            height: 32px;
+        }
+        .btn-action-lihat svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
 
     /* ==========================================================================
        LAYOUT KARTU CATATAN KEHADIRAN
@@ -536,8 +561,8 @@
                         <td class="text-center fw-normal" style="color: #7e22ce;">{{ $item->izin }}</td>
                         <td class="text-center fw-normal" style="color: #ef4444;">{{ $item->alfa }}</td>
                         <td class="text-center text-nowrap">
-                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="Lihat Riwayat {{ $item->name }}">
-                                Lihat
+                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="Lihat" aria-label="Lihat">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                             </a>
                         </td>
                     </tr>

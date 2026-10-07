@@ -852,9 +852,8 @@
                                 </td>
                                 <td class="text-center align-middle col-td-aksi text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
-                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap">
+                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap" title="Buka Kelas" aria-label="Buka Kelas">
                                             <i class='bx bx-door-open fs-6'></i>
-                                            <span>Buka Kelas</span>
                                         </a>
                                     </div>
                                 </td>

@@ -228,43 +228,9 @@
         font-size: 0.82rem !important;
     }
 
-    /* Tombol BUKA/TUTUP SCANNER: ikon & teks selalu sejajar tengah.
-       Ikon Boxicons membawa line-height bawaan yang menggeser baseline,
-       jadi dinetralkan: ikon jadi flex 1:1 proporsional terhadap teks. */
-    #btnToggleScanner {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.45rem !important;
-    }
-
-    #btnToggleScanner > i.bx,
-    #btnToggleScanner > svg {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        line-height: 1 !important;
-        font-size: 1.15em !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        flex: 0 0 auto !important;
-    }
-
-    /* Scanner QR tetap full width, tidak ikut terpotong grid */
-    .status-summary-grid .class-attendance-scan {
-        grid-column: 1 / -1;
-        width: 100% !important;
-        padding: 0.6rem 1rem !important;
-        font-size: 0.82rem !important;
-    }
-
-    /* Scanner QR tetap full width, tidak ikut terpotong grid */
-    .status-summary-grid .class-attendance-scan {
-        grid-column: 1 / -1;
-        width: 100% !important;
-        padding: 0.6rem 1rem !important;
-        font-size: 0.82rem !important;
-    }
+    /* (Tombol BUKA SCANNER QR dihapus dari halaman ini — scanner inline
+       beserta fungsi JS toggleInlineScanner tetap dipertahankan untuk
+       kompatibilitas.) */
 
     .status-summary-grid .status-badge-pill {
         width: 100%;
@@ -460,12 +426,8 @@
 @section('content')
 <div class="pt-1 space-y-3">
 
-    <!-- RINGKASAN STATUS + SCANNER: satu container -->
+    <!-- RINGKASAN STATUS -->
     <div class="status-summary-grid mb-3">
-        <button type="button" id="btnToggleScanner" class="btn btn-primary fw-semibold py-1.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs w-100 class-attendance-scan" style="font-size: 0.82rem;" onclick="toggleInlineScanner()">
-            <i class='bx bx-camera fs-5' id="toggleScannerIcon"></i>
-            <span id="toggleScannerText" class="text-nowrap">Buka Scanner QR</span>
-        </button>
         <div class="status-badge-pill shadow-2xs">
             <span><strong>{{ $countHadir ?? 0 }}</strong> Hadir</span>
         </div>
@@ -749,9 +711,6 @@
         isScannerOpen = !isScannerOpen;
         const scannerCol = document.getElementById('scannerColumn');
         const tableCol = document.getElementById('tableColumn');
-        const btnToggle = document.getElementById('btnToggleScanner');
-        const iconToggle = document.getElementById('toggleScannerIcon');
-        const textToggle = document.getElementById('toggleScannerText');
 
         if (isScannerOpen) {
             sessionStorage.setItem('class_scanner_open', '1');
@@ -764,32 +723,12 @@
             if (scannerCol) scannerCol.style.display = 'block';
             if (tableCol) tableCol.className = 'col-12 col-lg-7 col-xl-8';
 
-            if (btnToggle) {
-                btnToggle.className = 'btn btn-danger fw-semibold btn-sm px-2 px-sm-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1 shadow-2xs class-attendance-scan';
-            }
-            if (iconToggle) {
-                iconToggle.className = 'bx bx-camera-off fs-5';
-            }
-            if (textToggle) {
-                textToggle.innerText = 'Tutup Scanner';
-            }
-
             switchMode(activeMode);
         } else {
             sessionStorage.removeItem('class_scanner_open');
 
             if (scannerCol) scannerCol.style.display = 'none';
             if (tableCol) tableCol.className = 'col-12';
-
-            if (btnToggle) {
-                btnToggle.className = 'btn btn-primary fw-semibold btn-sm px-2 px-sm-3.5 py-1.5 rounded-3 d-inline-flex align-items-center gap-1 shadow-2xs class-attendance-scan';
-            }
-            if (iconToggle) {
-                iconToggle.className = 'bx bx-camera fs-5';
-            }
-            if (textToggle) {
-                textToggle.innerText = 'Buka Scanner QR';
-            }
 
             stopCamera();
         }

@@ -259,6 +259,31 @@
         letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
     }
+    /* Tombol ikon di kolom AKSI: ukuran seragam 40x34px, ikon di tengah, rounded 10px */
+    .btn-row-action {
+        width: 40px;
+        height: 34px;
+        padding: 0;
+        font-size: 16px;
+        border-radius: 10px !important;
+    }
+    .btn-row-action svg {
+        display: block;
+        margin: 0;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+    }
+    @media (max-width: 767.98px) {
+        .btn-row-action {
+            width: 36px;
+            height: 32px;
+        }
+        .btn-row-action svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
     .btn-row-action:hover {
         filter: brightness(0.94);
         color: #ffffff;
@@ -459,6 +484,7 @@
                                 <!-- 1. Tombol Edit Guru -->
                                 <button type="button" class="btn-row-action action-edit"
                                         title="Edit Data Guru"
+                                        aria-label="Edit Data Guru"
                                         onclick="openEditModal({
                                             id: '{{ $teacher->id }}',
                                             name: '{{ addslashes($teacher->name) }}',
@@ -469,14 +495,15 @@
                                             phone: '{{ $teacher->phone_number ?? $teacher->phone ?? '' }}',
                                             class_id: '{{ $assignedClass?->id ?? '' }}'
                                         })">
-                                    Edit
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </button>
 
                                 <!-- 2. Tombol Hapus Guru -->
                                 <button type="button" class="btn-row-action action-delete"
                                         title="Hapus Data Guru"
+                                        aria-label="Hapus Data Guru"
                                         onclick="confirmDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
-                                    Hapus
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
                                 <form id="deleteTeacherForm-{{ $teacher->id }}" action="{{ panel_route('guru.destroy', $teacher->id) }}" method="POST" class="d-none">
                                     @csrf
