@@ -231,7 +231,8 @@
         border-radius: var(--clean-radius);
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        justify-content: center;
+        gap: 0;
         text-decoration: none;
         white-space: nowrap;
         transition: all 0.15s ease-in-out;
