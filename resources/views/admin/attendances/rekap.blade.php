@@ -360,17 +360,6 @@
                 </select>
             </form>
 
-            <div class="d-flex flex-column gap-2 recap-mobile-actions">
-                <a href="{{ panel_route('rekap.export-excel', $exportParams) }}"
-                   class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-download>
-                    <span class="text-nowrap" style="font-size: 0.8rem;">Ekspor Excel</span>
-                </a>
-                <a href="{{ panel_route('rekap.export-pdf', $exportParams) }}"
-                   class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-download>
-                    <span class="text-nowrap" style="font-size: 0.8rem;">PDF Report</span>
-                </a>
-            </div>
-
             <hr class="border-secondary-subtle my-3 recap-mobile-divider">
 
             <form method="GET" action="{{ panel_route('rekap') }}" class="m-0 recap-mobile-filters">
@@ -439,6 +428,17 @@
                     </div>
                 @endif
             </form>
+
+            <div class="d-flex flex-column gap-2 recap-mobile-actions mt-1">
+                <a href="{{ panel_route('rekap.export-excel', $exportParams) }}"
+                   class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-download>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">Ekspor Excel</span>
+                </a>
+                <a href="{{ panel_route('rekap.export-pdf', $exportParams) }}"
+                   class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-download>
+                    <span class="text-nowrap" style="font-size: 0.8rem;">PDF Report</span>
+                </a>
+            </div>
         </div>
     </div>
 
