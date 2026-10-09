@@ -94,8 +94,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $student = Student::create([
             'school_class_id' => $class->id,
             'name' => 'Budi Pratama',
-            'nis' => '1001',
-            'nisn' => '001001',
+            'nisn' => '0000010011',
             'gender' => 'Laki-laki',
             'status' => 'Aktif',
             'qr_token' => 'QR-BUDI-1001',
@@ -139,8 +138,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $student = Student::create([
             'school_class_id' => $class->id,
             'name' => 'Siti Aminah',
-            'nis' => '2001',
-            'nisn' => '002001',
+            'nisn' => '0000020011',
             'gender' => 'Perempuan',
             'status' => 'Aktif',
             'qr_token' => 'QR-SITI-2001',
@@ -181,8 +179,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $student = Student::create([
             'school_class_id' => $class->id,
             'name' => 'Rian Pratama',
-            'nis' => '3001',
-            'nisn' => '003001',
+            'nisn' => '0000030011',
             'gender' => 'Laki-laki',
             'status' => 'Aktif',
             'qr_token' => 'QR-RIAN-3001',
@@ -307,8 +304,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $onTimeStudent = Student::create([
             'school_class_id' => $class->id,
             'name' => 'Siswa Tepat Waktu',
-            'nis' => '7001',
-            'nisn' => '7001001',
+            'nisn' => '0007001001',
             'gender' => 'Laki-laki',
             'status' => 'Aktif',
             'qr_token' => 'QR-7001',
@@ -316,8 +312,7 @@ class SystemAuditAndPerformanceTest extends TestCase
         $lateStudent = Student::create([
             'school_class_id' => $class->id,
             'name' => 'Siswa Terlambat',
-            'nis' => '7002',
-            'nisn' => '7001002',
+            'nisn' => '0007001002',
             'gender' => 'Perempuan',
             'status' => 'Aktif',
             'qr_token' => 'QR-7002',

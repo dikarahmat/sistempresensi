@@ -43,7 +43,7 @@ Legenda: [DIBACA-KODE] = bukti dari kode, belum request/browser. [DIUJI-JALAN] h
 | 17 | Filter Harian/Mingguan/Bulanan kehadiran menyaring benar | SUDAH [DIBACA-KODE] | `AttendanceController.php:645-680`; `kehadiran/student-history.blade.php:181-197` | whereBetween per periode; tiap mode rentang berbeda. |
 | 18 | Ukuran tanggal diperbesar | SUDAH [DIBACA-KODE] | `student-history.blade.php:59-74,130-131` | Input 46px/1rem, mobile 40px; isi tabel 1rem. |
 | 19 | Kolom KETERANGAN: sumber jelas, bisa terisi + tampil | SUDAH [DIBACA-KODE] | `student-history.blade.php:220,239`; `class.blade.php:663-666`; `AttendanceController.php:899`; `rekap.blade.php:600,644-649` | Sumber: textarea notes saat override; tampil di riwayat + rekap. |
-| 20 | Pencarian Nama/NIS di Semua Kelas tanpa pilih kelas | SUDAH [DIBACA-KODE] | `kehadiran.blade.php:506-515`; `AttendanceController.php:548-549,570-576` | where nama/NIS tanpa syarat kelas. |
+| 20 | Pencarian Nama/NISN di Semua Kelas tanpa pilih kelas | SUDAH [DIBACA-KODE] | `kehadiran.blade.php:506-515`; `AttendanceController.php:548-549,570-576` | where nama/NISN tanpa syarat kelas. |
 | 21 | Dropdown kelas tidak hilang setelah Enter | SUDAH [DIBACA-KODE] | `AttendanceController.php:437-442,542-568`; `kehadiran.blade.php:521-532,670-675` | Dropdown selalu penuh; search tidak filter kelas. |
 | 22 | Kolom JK warna jelas (biru/merah, tidak bold) | SUDAH [DIBACA-KODE] | `rekap.blade.php:170-182,764-769`; `pdf_multi_rekap.blade.php:97-98`; `MultiPeriodAttendanceExport.php:828-842` | #3B82F6/#EF4444, weight 500, konsisten web+Excel+PDF. |
 | 23 | Legend H/T/S/I/A/L/- besar mudah dibaca | SUDAH [DIBACA-KODE] | `rekap.blade.php:137-154,571-583` | 0.92rem/1rem; harian tanpa legend matriks by-design. |
@@ -56,7 +56,7 @@ Legenda: [DIBACA-KODE] = bukti dari kode, belum request/browser. [DIUJI-JALAN] h
 | 30 | Tombol X notifikasi center vertikal (semua notif) | SUDAH [DIBACA-KODE] | `holidays/index.blade.php:165-219`; `layouts/app.blade.php:319-398` | alert-dismissible + btn-close + CSS flex center global. |
 | 31 | Import 0 data = GAGAL merah/kuning jujur (SEMUA import) | SUDAH [DIBACA-KODE] | `StudentController.php:353-381`; `TeacherController.php:276-300`; `SchoolClassController.php:348-373`; `HolidayController.php:55-75` | Pola 3 cabang identik: sukses hijau / sebagian kuning + alasan / 0 merah. |
 | 32 | Import Siswa jujur (rinci) | SUDAH [DIBACA-KODE] | `StudentController.php:353-381`; `students/index.blade.php:412-443` | Sama dgn 31 + daftar alasan per baris. |
-| 33 | Regex NIS/NISN/WA server+client, Edit + Import | SUDAH [DIBACA-KODE] | `StudentController.php:128-136,161,163`; `students/index.blade.php:740,745,789`; `edit.blade.php:130,144,186`; `StudentsImport.php:46-47` | NIS angka 4-30, NISN 10 digit opsional, WA 10-15; server kuat + client filter; import tolak/lewati jujur. |
+| 33 | Regex NISN/WA server+client, Edit + Import | SUDAH [DIBACA-KODE] | `StudentController.php:128-136,161,163`; `students/index.blade.php:740,745,789`; `edit.blade.php:130,144,186`; `StudentsImport.php:46-47` | NISN wajib 10 digit angka & unik, WA 10-15; server kuat + client filter; import tolak/lewati jujur. |
 | 34 | Tambah Siswa: error di dalam form + notif selalu muncul | SUDAH [DIBACA-KODE] | `students/index.blade.php` + `create.blade.php:39`; `StudentController.php:144-185` | @error per field + pesan Indonesia + flash sukses/gagal. |
 | 35 | Semua validasi Bahasa Indonesia | SEBAGIAN [DIBACA-KODE] | `Student/TeacherController` messages ID; `HolidayController.php:88-92` tanpa messages; `lang/` kosong; `.env APP_LOCALE=id`; `config/app.php:81-85` default en | Siswa/Guru ID penuh; Hari Libur fallback locale (risiko Inggris). Saran: default config id + tambah messages. |
 | 36 | Hapus Semua: 2 checkbox, tombol aktif bila keduanya dicentang | SUDAH (Siswa penuh; Guru/Kelas arsip hanya client) [DIBACA-KODE] | `StudentController.php:452-462`; `students/index.blade.php:449-456,891-906`; `teachers/index.blade.php:861-876`; `TeacherController.php:202` | Siswa server accepted+client; guru-massal-aktif & arsip hanya konfirm client. |
@@ -91,7 +91,7 @@ Legenda: [DIBACA-KODE] = bukti dari kode, belum request/browser. [DIUJI-JALAN] h
 | Hari libur | Minggu+nasional = L; Sabtu = hari kerja | LULUS dgn CATATAN [DIUJI-JALAN] | Perlu keputusan Sabtu (poin 25) |
 | Kehadiran | filter 3 periode, search semua kelas, dropdown utuh | LULUS [DIUJI-JALAN] | Suite + audit kode |
 | Rekap | 3 tipe, legend Excel+PDF, keterlambatan manusiawi | LULUS [DIUJI-JALAN] | Export 200 + legendLines; body PDF tak terbaca di harness (dicatat jujur) |
-| CRUD+regex | NIS huruf ditolak, NISN 10, NIP 18, telp 10-15, import 0 = error | LULUS [DIUJI-JALAN] | AuditTahap2VerificationTest 7/7 |
+| CRUD+regex | NISN huruf dan duplikat ditolak, NIP 18, telp 10-15, import 0 = error | LULUS [DIUJI-JALAN] | AuditTahap2VerificationTest 7/7 |
 | Relasi | hapus kelas berisi siswa ditolak; hapus guru lepas wali; restore konflik ditangani | LULUS [DIUJI-JALAN] | Test diperbarui ke perilaku aman |
 | TA | aktif tak bisa dihapus; toggle transaksi; pesan jelas | LULUS [DIUJI-JALAN] | Suite + AuditTahap2 |
 | Pengaturan | regex NIP/telp, logo tolak exe + >2MB | LULUS [DIUJI-JALAN] | AuditTahap2; logo valid→tampil belum diuji browser |

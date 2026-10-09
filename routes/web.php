@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Admin\TeacherController;
 
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root ke dashboard sesuai role (admin/guru), atau ke login

@@ -8,13 +8,10 @@ use App\Models\AcademicYear;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -30,7 +27,6 @@ class StudentController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('nis', 'like', "%{$search}%")
                   ->orWhere('nisn', 'like', "%{$search}%");
             });
         }
@@ -56,8 +52,8 @@ class StudentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // Aturan validasi Data Siswa (server) + pesan berbahasa Indonesia.
-        // Batas kolom DB: nis varchar(30), nisn varchar(30),
-        // phone/parent_phone varchar(20) -> aturan aplikasi 4-30 / 10 / 10-15 digit.
+        // Data siswa hanya 4 kolom: NISN (wajib, 10 digit angka, unik),
+        // Nama Lengkap, Kelas, dan Jenis Kelamin.
         $validated = $request->validate($this->studentRules(null), $this->studentMessages(), $this->studentAttributes());
 
         $validated['qr_token'] = (string) Str::uuid();
@@ -110,30 +106,21 @@ class StudentController extends Controller
     /**
      * Aturan validasi Data Siswa (dipakai form Tambah & Edit agar identik).
      *
-     * - NIS    : wajib, hanya angka, 4-30 digit (batas kolom students.nis varchar(30)), unik.
-     * - NISN   : opsional, jika diisi harus tepat 10 digit angka, unik.
-     * - Phone / Parent Phone (No. WhatsApp): opsional, hanya angka, 10-15 digit.
-     * - Nama, Kelas, Jenis Kelamin tetap wajib.
+     * Data siswa yang dipakai aplikasi hanya 4 kolom:
+     * - NISN : wajib, tepat 10 digit angka, unik (identitas tunggal siswa).
+     * - Nama Lengkap, Kelas, Jenis Kelamin: wajib.
      *
      * @param  Student|null  $student  Diisi saat proses Edit (unique mengabaikan id sendiri).
      */
     private function studentRules(?Student $student = null): array
     {
-        $nisUnique = 'unique:students,nis' . ($student ? ',' . $student->id : '');
         $nisnUnique = 'unique:students,nisn' . ($student ? ',' . $student->id : '');
 
         return [
             'school_class_id' => 'required|exists:school_classes,id',
             'name' => 'required|string|max:255',
-            'nis' => 'required|regex:/^[0-9]+$/|digits_between:4,30|' . $nisUnique,
-            'nisn' => 'nullable|digits:10|' . $nisnUnique,
+            'nisn' => 'required|digits:10|' . $nisnUnique,
             'gender' => 'required|in:Laki-laki,Perempuan',
-            'birth_place' => 'nullable|string|max:100',
-            'birth_date' => 'nullable|date',
-            'address' => 'nullable|string',
-            'phone' => 'nullable|digits_between:10,15',
-            'parent_name' => 'nullable|string|max:255',
-            'parent_phone' => 'nullable|digits_between:10,15',
         ];
     }
 
@@ -148,19 +135,11 @@ class StudentController extends Controller
             'school_class_id.exists' => 'Kelas tidak ditemukan.',
             'name.required' => 'Nama siswa wajib diisi.',
             'name.max' => 'Nama siswa maksimal 255 karakter.',
-            'nis.required' => 'NIS wajib diisi.',
-            'nis.regex' => 'NIS hanya boleh berisi angka.',
-            'nis.digits_between' => 'NIS harus berisi angka saja, minimal 4 dan maksimal 30 digit.',
-            'nis.unique' => 'NIS sudah terdaftar.',
+            'nisn.required' => 'NISN wajib diisi.',
             'nisn.digits' => 'NISN harus 10 digit angka.',
             'nisn.unique' => 'NISN sudah terdaftar.',
             'gender.required' => 'Jenis kelamin wajib dipilih.',
             'gender.in' => 'Jenis kelamin tidak valid.',
-            'birth_place.max' => 'Tempat lahir maksimal 100 karakter.',
-            'birth_date.date' => 'Tanggal lahir tidak valid.',
-            'phone.digits_between' => 'Nomor WhatsApp harus 10-15 digit angka.',
-            'parent_name.max' => 'Nama orang tua/wali maksimal 255 karakter.',
-            'parent_phone.digits_between' => 'Nomor WhatsApp harus 10-15 digit angka.',
         ];
     }
 
@@ -172,15 +151,8 @@ class StudentController extends Controller
         return [
             'school_class_id' => 'kelas',
             'name' => 'nama siswa',
-            'nis' => 'NIS',
             'nisn' => 'NISN',
             'gender' => 'jenis kelamin',
-            'birth_place' => 'tempat lahir',
-            'birth_date' => 'tanggal lahir',
-            'address' => 'alamat',
-            'phone' => 'nomor WhatsApp',
-            'parent_name' => 'nama orang tua/wali',
-            'parent_phone' => 'nomor WhatsApp orang tua/wali',
         ];
     }
 
@@ -218,7 +190,7 @@ class StudentController extends Controller
         $students = collect();
         $query->orderBy('school_class_id')->orderBy('name')->chunk(100, function ($chunk) use ($students) {
             foreach ($chunk as $student) {
-                $token = $student->qr_token ?? $student->nis;
+                $token = $student->nisn ?: $student->qr_token;
                 try {
                     $svg = QrCode::size(140)->margin(0)->generate($token);
                     $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
@@ -276,7 +248,7 @@ class StudentController extends Controller
         }
 
         foreach ($students as $student) {
-            $token = $student->qr_token ?? $student->nis;
+            $token = $student->nisn ?: $student->qr_token;
             $svg = QrCode::size(140)->margin(0)->generate($token);
             $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
 

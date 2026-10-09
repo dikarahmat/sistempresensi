@@ -90,7 +90,7 @@ class DownloadCacheService
             $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.png";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-            $downloadFileName = 'Kartu_Presensi_' . $student->nis . '_' . Str::slug($student->name) . '.png';
+            $downloadFileName = 'Kartu_Presensi_' . $student->nisn . '_' . Str::slug($student->name) . '.png';
 
             // Bersihkan file cache jika ada file 0-byte atau rusak
             if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
@@ -305,7 +305,7 @@ class DownloadCacheService
         imagettftext($img, $classFontSize, 0, $classX, $classY, $dark, $fontBold, $className);
 
         // 10. Render QR Code (Matrix BaconQrCode, Tajam & Presisi)
-        $token = $student->qr_token ?: $student->nis;
+        $token = $student->nisn ?: $student->qr_token;
         $qrMatrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::M())->getMatrix();
         $mW = $qrMatrix->getWidth();
         $mH = $qrMatrix->getHeight();
@@ -419,7 +419,7 @@ class DownloadCacheService
             $students = collect();
             $query->orderBy('school_class_id')->orderBy('name')->chunk(100, function ($chunk) use ($students) {
                 foreach ($chunk as $st) {
-                    $token = $st->qr_token ?? $st->nis;
+                    $token = $st->nisn ?: $st->qr_token;
                     try {
                         $svg = QrCode::size(140)->margin(0)->generate($token);
                         $st->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
@@ -460,8 +460,8 @@ class DownloadCacheService
     {
         self::initDirs();
 
-        $token = $student->qr_token ?? $student->nis;
-        $fileName = 'QR_' . $student->nis . '_' . Str::slug($student->name) . '.png';
+        $token = $student->nisn ?: $student->qr_token;
+        $fileName = 'QR_' . $student->nisn . '_' . Str::slug($student->name) . '.png';
         $cacheFilePath = self::$baseDir . '/qrs/' . "qr_single_{$student->id}_" . md5($token) . '_500.png';
 
         if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {

@@ -180,7 +180,7 @@
         <thead>
             <tr>
                 <th style="width: 30px;">No</th>
-                <th style="width: 70px;">NIS</th>
+                <th style="width: 70px;">NISN</th>
                 <th style="text-align: left;">Nama Siswa</th>
                 <th style="width: 60px;">Kelas</th>
                 <th style="width: 30px;">JK</th>
@@ -194,7 +194,7 @@
             @forelse($section['rows'] as $row)
             <tr>
                 <td>{{ $row['no'] }}</td>
-                <td>{{ $row['student']->nis }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
                 <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
@@ -230,7 +230,7 @@
         <thead>
             <tr>
                 <th style="width: 25px;">No</th>
-                <th style="width: 65px;">NIS</th>
+                <th style="width: 65px;">NISN</th>
                 <th style="text-align: left; width: 140px;">Nama Siswa</th>
                 <th style="width: 50px;">Kelas</th>
                 <th style="width: 25px;">JK</th>
@@ -249,7 +249,7 @@
             @forelse($section['rows'] as $row)
             <tr>
                 <td>{{ $row['no'] }}</td>
-                <td>{{ $row['student']->nis }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
                 <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
@@ -289,7 +289,7 @@
         <thead>
             <tr>
                 <th style="width: 22px;">No</th>
-                <th style="width: 60px;">NIS</th>
+                <th style="width: 60px;">NISN</th>
                 <th style="text-align: left; width: 130px;">Nama Siswa</th>
                 <th style="width: 45px;">Kelas</th>
                 <th style="width: 20px;">JK</th>
@@ -308,7 +308,7 @@
             @forelse($section['rows'] as $row)
             <tr>
                 <td>{{ $row['no'] }}</td>
-                <td>{{ $row['student']->nis }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
                 <td class="text-left" style="font-size: 7pt;"><strong>{{ $row['student']->name }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>

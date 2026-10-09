@@ -63,7 +63,7 @@ class MonthlyAttendanceExport implements FromArray, ShouldAutoSize, WithStyles
         $output[] = []; // Baris kosong
 
         // Header Kolom Tabel
-        $headerRow = ['No', 'NIS', 'Nama Siswa', 'JK'];
+        $headerRow = ['No', 'NISN', 'Nama Siswa', 'JK'];
         for ($d = 1; $d <= $this->daysInMonth; $d++) {
             $headerRow[] = (string) $d;
         }
@@ -104,7 +104,7 @@ class MonthlyAttendanceExport implements FromArray, ShouldAutoSize, WithStyles
 
             $row = [
                 $rowIndex++,
-                $student->nis,
+                $student->nisn ?: '-',
                 $student->name,
                 $student->gender == 'Perempuan' ? 'P' : 'L',
             ];
@@ -214,7 +214,7 @@ class MonthlyAttendanceExport implements FromArray, ShouldAutoSize, WithStyles
                 ],
             ]);
 
-            // Tengahkan kolom nomor, NIS, JK, tanggal 1-31, dan summary
+            // Tengahkan kolom nomor, NISN, JK, tanggal 1-31, dan summary
             $sheet->getStyle("A5:A{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle("B5:B{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle("D5:{$highestColumn}{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);

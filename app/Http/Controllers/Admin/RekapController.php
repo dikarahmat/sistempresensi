@@ -11,12 +11,10 @@ use App\Models\Holiday;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
-use App\Models\Teacher;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -343,7 +341,7 @@ class RekapController extends Controller
             // JANGAN menimpa dataRows dengan $paginator (koleksi model Student):
             // view rekap (admin & guru) membaca $row['student'], sehingga bila item
             // berupa model Student maka $row['student'] selalu null dan halaman
-            // rekap error 500 ("Attempt to read property 'nis' on null").
+            // rekap error 500 ("Attempt to read property 'nisn' on null").
             $paginator->setCollection(collect($recap['dataRows'] ?? [])->values());
             $recap['dataRows'] = $paginator;
         }

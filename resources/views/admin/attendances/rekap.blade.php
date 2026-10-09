@@ -547,7 +547,7 @@
                     <thead>
                         <tr class="align-middle">
                             <th style="width: 45px;">NO</th>
-                            <th style="width: 85px;">NIS</th>
+                            <th style="width: 85px;">NISN</th>
                             <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
                             <th style="width: 80px;">Kelas</th>
                             <th style="width: 100px;">Jam Masuk</th>
@@ -572,7 +572,7 @@
                         @if($st)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ $st->nis }}</td>
+                            <td>{{ $st->nisn ?: '-' }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ panel_route('students.show', $st->id) }}" class="text-decoration-none text-dark">{{ $st->name }}</a>
                             </td>
@@ -621,7 +621,7 @@
                     <thead>
                         <tr class="align-middle">
                             <th style="width: 45px;">NO</th>
-                            <th style="width: 85px;">NIS</th>
+                            <th style="width: 85px;">NISN</th>
                             <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
                             <th style="width: 80px;">Kelas</th>
                             @foreach($dateColumns as $col)
@@ -647,7 +647,7 @@
                         @if($student)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ $student->nis }}</td>
+                            <td>{{ $student->nisn ?: '-' }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
                             </td>
@@ -688,7 +688,7 @@
                     <thead>
                         <tr class="align-middle">
                             <th style="width: 45px;">NO</th>
-                            <th style="width: 85px;">NIS</th>
+                            <th style="width: 85px;">NISN</th>
                             <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
                             <th style="width: 80px;">Kelas</th>
                             <th style="width: 35px;">JK</th>
@@ -716,7 +716,7 @@
                         @if($student)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ $student->nis }}</td>
+                            <td>{{ $student->nisn ?: '-' }}</td>
                             <td class="text-start text-truncate" style="max-width: 200px;">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="text-decoration-none text-dark">{{ $student->name }}</a>
                             </td>

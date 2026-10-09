@@ -118,47 +118,25 @@
                 @error('school_class_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
 
-            <!-- Nama & NIS -->
+            <!-- Nama Siswa -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-6">
                     <label class="form-label">Nama Siswa</label>
                     <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $student->name) }}" required>
                     @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">NIS</label>
-                    <input type="text" name="nis" class="form-control @error('nis') is-invalid @enderror" value="{{ old('nis', $student->nis) }}" required inputmode="numeric" pattern="[0-9]*" maxlength="30" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                    @error('nis')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                </div>
             </div>
 
-            <!-- NISN & No. HP Siswa -->
+            <!-- NISN -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-6">
-                    <label class="form-label">NISN (Opsional)</label>
-                    <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" value="{{ old('nisn', $student->nisn) }}" placeholder="10 digit angka" maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <label class="form-label">NISN</label>
+                    <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" value="{{ old('nisn', $student->nisn) }}" placeholder="Contoh: 0081234567" required maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                     @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Nomor WhatsApp Siswa (Opsional)</label>
-                    <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $student->phone) }}" placeholder="10-15 digit angka" maxlength="15" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                    @error('phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                </div>
             </div>
 
-            <!-- Tempat & Tanggal Lahir -->
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Tempat Lahir</label>
-                    <input type="text" name="birth_place" class="form-control" value="{{ old('birth_place', $student->birth_place) }}" placeholder="Contoh: Semarang">
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Tanggal Lahir</label>
-                    <input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $student->birth_date ? $student->birth_date->format('Y-m-d') : '') }}">
-                </div>
-            </div>
-
-            <!-- Jenis Kelamin & Alamat -->
+            <!-- Jenis Kelamin -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-6">
                     <label class="form-label">Jenis Kelamin</label>
@@ -167,24 +145,6 @@
                         <option value="Perempuan" {{ old('gender', $student->gender) == 'Perempuan' || old('gender', $student->gender) == 'P' ? 'selected' : '' }}>Perempuan</option>
                     </select>
                     @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Alamat</label>
-                    <input type="text" name="address" class="form-control" value="{{ old('address', $student->address) }}" placeholder="Contoh: Jl. Merdeka No. 83">
-                </div>
-            </div>
-
-            <!-- Nama Orang Tua & No HP Orang Tua -->
-            <div class="row g-3 mb-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Nama Orang Tua</label>
-                    <input type="text" name="parent_name" class="form-control @error('parent_name') is-invalid @enderror" value="{{ old('parent_name', $student->parent_name) }}" placeholder="Contoh: Bambang Susilo">
-                    @error('parent_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Nomor WhatsApp Orang Tua (Opsional)</label>
-                    <input type="text" name="parent_phone" class="form-control @error('parent_phone') is-invalid @enderror" value="{{ old('parent_phone', $student->parent_phone) }}" placeholder="10-15 digit angka" maxlength="15" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                    @error('parent_phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
             </div>
 

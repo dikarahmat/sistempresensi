@@ -133,7 +133,7 @@
 
     $qrSrc = $studentItem->qr_base64 ?? null;
     if (!$qrSrc && $studentItem) {
-        $token = $studentItem->qr_token ?? $studentItem->nis;
+        $token = $studentItem->nisn ?: $studentItem->qr_token;
         try {
             $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate($token);
             $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);

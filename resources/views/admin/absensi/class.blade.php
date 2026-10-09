@@ -605,7 +605,7 @@
                                                 </div>
                                                 <div class="presensi-modal-student-strip">
                                                     <div class="student-name">{{ $student->name }}</div>
-                                                    <div class="student-class">{{ $selectedClass->name ?? ($student->schoolClass->name ?? '-') }} &bull; NIS: {{ $student->nis }}</div>
+                                                    <div class="student-class">{{ $selectedClass->name ?? ($student->schoolClass->name ?? '-') }} &bull; NISN: {{ $student->nisn ?: '-' }}</div>
                                                 </div>
                                                 <form action="{{ panel_route('absensi.override') }}" method="POST" enctype="multipart/form-data">
                                                     @csrf

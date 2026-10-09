@@ -344,7 +344,7 @@ class MultiRoleAuthTest extends TestCase
             'name' => '7A', 'grade' => '7', 'academic_year_id' => $this->tahunUji()->id,
         ]);
         Student::create([
-            'school_class_id' => $class->id, 'name' => 'Siswa Uji', 'nis' => '7701',
+            'school_class_id' => $class->id, 'name' => 'Siswa Uji', 'nisn' => '0000007701',
             'gender' => 'Laki-laki', 'status' => 'Aktif',
         ]);
 
@@ -479,7 +479,7 @@ class MultiRoleAuthTest extends TestCase
             'name' => '7C', 'grade' => '7', 'academic_year_id' => $this->tahunUji()->id,
         ]);
         Student::create([
-            'school_class_id' => $class->id, 'name' => 'Siswa Tetap', 'nis' => '7702',
+            'school_class_id' => $class->id, 'name' => 'Siswa Tetap', 'nisn' => '0000007702',
             'gender' => 'Perempuan', 'status' => 'Aktif',
         ]);
         Teacher::create([
@@ -495,7 +495,7 @@ class MultiRoleAuthTest extends TestCase
         $this->seed(DatabaseOverhaulSeeder::class);
 
         // Data master TIDAK boleh hilang.
-        $this->assertDatabaseHas('students', ['nis' => '7702']);
+        $this->assertDatabaseHas('students', ['nisn' => '0000007702']);
         $this->assertDatabaseHas('teachers', ['nip' => '198001012010011011']);
         $this->assertDatabaseHas('school_classes', ['name' => '7C']);
         $this->assertDatabaseHas('academic_years', ['name' => '2025/2026']);

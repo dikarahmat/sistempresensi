@@ -35,13 +35,8 @@
 
         <div class="row g-3 mb-3">
             <div class="col-6">
-                <label class="form-label small fw-semibold">NIS</label>
-                <input type="text" name="nis" class="form-control @error('nis') is-invalid @enderror" required value="{{ old('nis') }}" placeholder="Contoh: 260001" inputmode="numeric" pattern="[0-9]*" maxlength="30" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                @error('nis')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-6">
-                <label class="form-label small fw-semibold">NISN (Opsional)</label>
-                <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" value="{{ old('nisn') }}" placeholder="10 digit angka" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                <label class="form-label small fw-semibold">NISN</label>
+                <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" required value="{{ old('nisn') }}" placeholder="Contoh: 0081234567" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                 @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
         </div>
@@ -65,25 +60,6 @@
                 </select>
                 @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-            <div class="col-6">
-                <label class="form-label small fw-semibold">Nama Orang Tua / Wali (Opsional)</label>
-                <input type="text" name="parent_name" class="form-control @error('parent_name') is-invalid @enderror" value="{{ old('parent_name') }}" placeholder="Contoh: Bambang Susilo">
-                @error('parent_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-6">
-                <label class="form-label small fw-semibold">Nomor HP Orang Tua (Opsional)</label>
-                <input type="text" name="parent_phone" class="form-control @error('parent_phone') is-invalid @enderror" value="{{ old('parent_phone') }}" placeholder="08xxxxxxxxxx" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                @error('parent_phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <label class="form-label small fw-semibold">Nomor WhatsApp Siswa (Opsional)</label>
-            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}" placeholder="08xxxxxxxxxx" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-            @error('phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
 
         <div class="d-flex justify-content-end gap-2">

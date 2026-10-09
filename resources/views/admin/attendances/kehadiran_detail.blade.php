@@ -97,7 +97,7 @@
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td class="text-center text-muted fw-normal">{{ $idx + 1 }}</td>
                         <td class="text-center text-nowrap">
-                            <span class="text-dark fw-normal">{{ $st->nisn ?: ($st->nis ?: '-') }}</span>
+                            <span class="text-dark fw-normal">{{ $st->nisn ?: '-' }}</span>
                         </td>
                         <td class="text-nowrap">
                             <span class="text-dark fw-normal">{{ $st->name ?? '-' }}</span>

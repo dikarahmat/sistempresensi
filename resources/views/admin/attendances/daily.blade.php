@@ -723,7 +723,7 @@
                             <tr class="text-nowrap">
                                 <th style="width: 5%;" class="text-nowrap">NO</th>
                                 <th style="width: 35%;" class="text-nowrap">Nama Siswa</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">NIS / NISN</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">NISN</th>
                                 <th class="text-center text-nowrap" style="width: 15%;">Kelas</th>
                                 <th class="text-center text-nowrap" style="width: 15%;">Status</th>
                                 <th class="text-center text-nowrap" style="width: 15%;">Keterangan</th>
@@ -737,7 +737,7 @@
                                     <div class="fw-bold text-dark text-nowrap presensi-hari-ini-nama">{{ $st->name }}</div>
                                 </td>
                                 <td class="text-center text-secondary font-monospace small text-nowrap">
-                                    {{ $st->nis ?? '-' }}
+                                    {{ $st->nisn ?: '-' }}
                                 </td>
                                 <td class="text-center text-nowrap">
                                     <span class="badge bg-light text-dark border text-nowrap">{{ $st->schoolClass->name ?? '-' }}</span>
@@ -759,7 +759,7 @@
                                     <span class="presensi-hari-ini-status {{ $statusColor }} text-nowrap">{{ $st->current_status }}</span>
                                 </td>
                                 <td class="text-center text-secondary small text-nowrap">
-                                    {{ $st->notes ?? '-' }}
+                                    {{ $st->attendance_notes ?? '-' }}
                                 </td>
                             </tr>
                             @empty

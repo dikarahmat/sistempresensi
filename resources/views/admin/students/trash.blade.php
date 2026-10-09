@@ -194,7 +194,7 @@
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">NO</th>
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">NIS</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">NISN</th>
                         <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA SISWA</th>
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">TANGGAL DIHAPUS</th>
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
@@ -205,7 +205,7 @@
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td data-label="No" class="text-center text-nowrap px-3">{{ $students->firstItem() + $loop->index }}</td>
                         <td data-label="Kelas" class="text-center text-nowrap px-3">{{ $student->schoolClass->name ?? '-' }}</td>
-                        <td data-label="NIS" class="text-center text-nowrap font-monospace px-3">{{ $student->nis }}</td>
+                        <td data-label="NISN" class="text-center text-nowrap font-monospace px-3">{{ $student->nisn ?: '-' }}</td>
                         <td data-label="Nama Siswa" class="text-start text-nowrap px-3">{{ $student->name }}</td>
                         <td data-label="Tanggal Dihapus" class="text-center text-nowrap px-3">
                             {{-- Tampilan tanggal hapus: dd MMM yyyy, HH:mm WIB

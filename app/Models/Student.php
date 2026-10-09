@@ -18,29 +18,24 @@ class Student extends Model
     public ?string $qr_base64 = null;
     public ?string $photo_base64 = null;
 
+    /**
+     * Data siswa yang dipakai aplikasi disederhanakan: NISN (identitas),
+     * Nama Lengkap, Kelas, dan Jenis Kelamin. Kolom KTP/GTK seperti tempat &
+     * tanggal lahir, alamat, nama wali, dan nomor WhatsApp tidak lagi dipakai
+     * di mana pun (form, import, laporan, maupun kartu), sehingga tidak
+     * dihulkam lewat mass assignment.
+     */
     protected $fillable = [
-        'nis',
         'nisn',
         'name',
         'gender',
-        'birth_date',
-        'birth_place',
-        'religion',
-        'address',
-        'phone',
-        'email',
         'school_class_id',
         'status',
         'photo',
         'qr_token',
-        'parent_name',
-        'parent_phone',
-        'parent_occupation',
-        'notes',
     ];
 
     protected $casts = [
-        'birth_date' => 'date',
         'deleted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -128,35 +123,5 @@ class Student extends Model
     public function setJenisKelaminAttribute($value): void
     {
         $this->attributes['gender'] = $value;
-    }
-
-    public function getNamaOrangTuaAttribute(): ?string
-    {
-        return $this->attributes['parent_name'] ?? null;
-    }
-
-    public function setNamaOrangTuaAttribute($value): void
-    {
-        $this->attributes['parent_name'] = $value;
-    }
-
-    public function getNamaWaliAttribute(): ?string
-    {
-        return $this->attributes['parent_name'] ?? null;
-    }
-
-    public function setNamaWaliAttribute($value): void
-    {
-        $this->attributes['parent_name'] = $value;
-    }
-
-    public function getNoHpWaliAttribute(): ?string
-    {
-        return $this->attributes['parent_phone'] ?? null;
-    }
-
-    public function setNoHpWaliAttribute($value): void
-    {
-        $this->attributes['parent_phone'] = $value;
     }
 }

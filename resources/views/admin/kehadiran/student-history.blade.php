@@ -139,7 +139,7 @@
     <div class="mb-3">
         <h5 class="mb-1" style="color: #0f172a; text-transform: uppercase; font-weight: 400;">{{ $student->name }}</h5>
         <p class="text-secondary mb-0" style="font-size: 0.85rem; text-transform: uppercase;">
-            NIS: {{ $student->nis }} &bull; Kelas: {{ $student->schoolClass->name ?? '-' }}
+            NISN: {{ $student->nisn ?: '-' }} &bull; Kelas: {{ $student->schoolClass->name ?? '-' }}
         </p>
     </div>
 

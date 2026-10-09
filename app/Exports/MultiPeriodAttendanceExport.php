@@ -273,12 +273,12 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $dataLines = [];
 
         if ($this->type === 'harian') {
-            $headerRow = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'JK', 'Jam Masuk', 'Keterlambatan', 'Status', 'Catatan'];
+            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK', 'Jam Masuk', 'Keterlambatan', 'Status', 'Catatan'];
 
             foreach ($rows as $row) {
                 $student = $row['student'];
                 $dataLines[] = array_merge([$row['no'] ?? 0], [
-                    $student->nis,
+                    $student->nisn ?: '-',
                     $student->name,
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
@@ -295,7 +295,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 fn (Carbon $d) => !($d->isWeekend() || Holiday::isHoliday($d->toDateString()))
             ));
 
-            $headerRow = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'JK'];
+            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK'];
             foreach ($dates as $d) {
                 $headerRow[] = $d->translatedFormat('D, d/m');
             }
@@ -309,7 +309,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             foreach ($rows as $row) {
                 $student = $row['student'];
                 $line = array_merge([$row['no'] ?? 0], [
-                    $student->nis,
+                    $student->nisn ?: '-',
                     $student->name,
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
@@ -341,7 +341,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             }
             $totalEffective = max(1, $daysInMonth - $holidayCount);
 
-            $headerRow = ['No', 'NIS', 'Nama Siswa', 'Kelas', 'JK'];
+            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK'];
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $headerRow[] = (string) $d;
             }
@@ -355,7 +355,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             foreach ($rows as $row) {
                 $student = $row['student'];
                 $line = array_merge([$row['no'] ?? 0], [
-                    $student->nis,
+                    $student->nisn ?: '-',
                     $student->name,
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',

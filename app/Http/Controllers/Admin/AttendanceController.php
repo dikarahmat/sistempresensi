@@ -10,7 +10,6 @@ use App\Models\Holiday;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +19,7 @@ use Illuminate\View\View;
 class AttendanceController extends Controller
 {
     /**
-     * Halaman Utama Absensi Harian (Support Inertia.js props, Blade view, dan REST API)
+     * Halaman Utama Absensi Harian (support Blade view dan respons JSON REST)
      */
     public function index(Request $request, DailyAttendanceSummary $dailyAttendanceSummary)
     {
@@ -138,7 +137,7 @@ class AttendanceController extends Controller
                 $student->late_minutes = $lateMinutes;
                 $student->check_in_time = $checkIn;
                 $student->check_out_time = $checkOut;
-                $student->notes = $notes;
+                $student->attendance_notes = $notes;
                 $student->proof_document = $proofDocument;
                 $student->attendance_id = $att?->id;
 
@@ -163,7 +162,7 @@ class AttendanceController extends Controller
 
         $selectedClass = $classId ? SchoolClass::find($classId) : null;
 
-        // Props terstruktur untuk Inertia.js maupun Blade view
+        // Props terstruktur untuk Blade view dan respons JSON
         $props = [
             'tanggal' => $tanggal,
             'hariIni' => $hariIni,
@@ -187,17 +186,12 @@ class AttendanceController extends Controller
             'processed_students' => $processedStudents,
         ];
 
-        // 1. Dukungan Inertia.js jika package terinstall
-        if (class_exists(\Inertia\Inertia::class)) {
-            return \Inertia\Inertia::render('Admin/Absensi/Index', $props);
-        }
-
-        // 2. Dukungan JSON jika request via REST / Vue API
+        // 1. Dukungan JSON jika request via REST / API
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json($props);
         }
 
-        // 3. Render Blade View Standar
+        // 2. Render Blade View Standar
         $classSummaries = $kelasList->map(function ($item) {
             return (object) [
                 'id' => $item['id'],
@@ -364,8 +358,7 @@ class AttendanceController extends Controller
             return (object) [
                 'id' => $student->id,
                 'name' => $student->name,
-                'nis' => $student->nis ?? '-',
-                'nisn' => $student->nisn ?? '-',
+                'nisn' => $student->nisn ?: '-',
                 'gender' => $student->gender ?? 'L',
                 'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                 'jam_masuk' => $checkIn ? (substr($checkIn, 0, 5) . ' WIB') : '—',
@@ -451,7 +444,7 @@ class AttendanceController extends Controller
 
         // Ambil data siswa aktif yang dipetakan per kelas
         $activeStudentsByClass = Student::where('status', 'Aktif')
-            ->select(['id', 'school_class_id', 'name', 'nis'])
+            ->select(['id', 'school_class_id', 'name', 'nisn'])
             ->get()
             ->groupBy('school_class_id');
 
@@ -550,7 +543,7 @@ class AttendanceController extends Controller
 
         $studentsQuery = Student::with('schoolClass')
             ->where('status', 'Aktif')
-            ->select(['id', 'school_class_id', 'name', 'nis']);
+            ->select(['id', 'school_class_id', 'name', 'nisn']);
 
         if ($selectedYearId && $request->has('academic_year_id')) {
             $studentsQuery->whereHas('schoolClass', function ($q) use ($selectedYearId) {
@@ -567,11 +560,11 @@ class AttendanceController extends Controller
             });
         }
 
-        // Pencarian nama / NIS berlaku di SEMUA kelas, termasuk saat "Semua Kelas".
+        // Pencarian nama / NISN berlaku di SEMUA kelas, termasuk saat "Semua Kelas".
         if ($search !== '') {
             $studentsQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('nis', 'like', "%{$search}%");
+                  ->orWhere('nisn', 'like', "%{$search}%");
             });
         }
 
@@ -587,7 +580,7 @@ class AttendanceController extends Controller
             $studentAtts = $attendancesByStudent->get($student->id, collect());
             $studentHistories->push((object) [
                 'id' => $student->id,
-                'nis' => $student->nis,
+                'nisn' => $student->nisn ?: '-',
                 'name' => $student->name ?? '-',
                 'class_name' => $student->schoolClass?->name ?? '-',
                 'hadir' => $studentAtts->where('status', 'Hadir')->filter(fn($a) => $a->time_remark !== 'Terlambat' && empty($a->is_late))->count(),
@@ -620,11 +613,6 @@ class AttendanceController extends Controller
             'totalSiswaSemua' => $totalSiswaSemua,
             'avgPersentase' => $avgPersentase,
         ];
-
-        // Inertia.js support
-        if (class_exists(\Inertia\Inertia::class)) {
-            return \Inertia\Inertia::render('Admin/Kehadiran/Index', $props);
-        }
 
         // REST API JSON support
         if ($request->wantsJson() || $request->ajax()) {
@@ -754,8 +742,7 @@ class AttendanceController extends Controller
 
             return (object) [
                 'id' => $student->id,
-                'nis' => $student->nis ?? '-',
-                'nisn' => $student->nisn ?? '-',
+                'nisn' => $student->nisn ?: '-',
                 'name' => $student->name,
                 'gender' => $student->gender ?? 'L',
                 'hadir' => $hadir,

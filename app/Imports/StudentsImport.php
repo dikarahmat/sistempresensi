@@ -4,12 +4,10 @@ namespace App\Imports;
 
 use App\Models\SchoolClass;
 use App\Models\Student;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class StudentsImport implements ToCollection, WithHeadingRow
 {
@@ -17,34 +15,88 @@ class StudentsImport implements ToCollection, WithHeadingRow
     protected int $skippedCount = 0;
     protected array $errors = [];
 
+    /**
+     *NISN selalu 10 digit angka. Bila Excel membaca sel angka (mis. 0081234567
+     * tersimpan sebagai 81234567) nol di depan hilang, sehingga nilainya
+     * dipad dengan nol di depan sampai 10 digit.
+     */
+    private function normalizeNisn($raw): string
+    {
+        $value = trim((string) $raw);
+
+        // Buang separator yang sering muncul dari Excel (. , spasi)
+        $value = str_replace([' ', '.', ',', "'"], '', $value);
+
+        // scientific notation dari Excel (mis. 8,1234567E+8)
+        if (stripos($value, 'e') !== false && is_numeric($value)) {
+            $value = sprintf('%.0f', (float) $value);
+        }
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (!ctype_digit($value)) {
+            return $value;
+        }
+
+        return str_pad($value, 10, '0', STR_PAD_LEFT);
+    }
+
     public function collection(Collection $rows)
     {
         $allClasses = SchoolClass::all();
         $rowIndex = 1; // Row 1 is header, data starts at row 2
 
+        // NISN yang sudah dipakai file ini (deteksi duplikat di dalam file) dan
+        // NISN yang sudah ada di database (deteksi duplikat terhadap data lama).
+        $seenNisnInFile = [];
+        $existingNisn = Student::withTrashed()->pluck('nisn')
+            ->filter(fn ($v) => $v !== null && $v !== '')
+            ->map(fn ($v) => (string) $v)
+            ->flip()
+            ->all();
+
         foreach ($rows as $row) {
             $rowIndex++;
 
-            // 1. Kolom NIS
-            $nis = trim((string) ($row['nis'] ?? $row['no_induk'] ?? $row['nomor_induk'] ?? ''));
+            // 1. Kolom NISN (identitas tunggal siswa)
+            $nisn = $this->normalizeNisn($row['nisn'] ?? '');
             // 2. Kolom Nama
             $name = trim((string) ($row['nama'] ?? $row['nama_siswa'] ?? $row['nama_lengkap'] ?? $row['name'] ?? ''));
 
-            if (empty($nis)) {
+            if ($nisn === '') {
                 $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: Kolom NIS wajib diisi (kosong).";
+                $this->errors[] = "Baris {$rowIndex}: Kolom NISN wajib diisi (kosong).";
+                continue;
+            }
+
+            if (!preg_match('/^[0-9]{10}$/', $nisn)) {
+                $this->skippedCount++;
+                $this->errors[] = "Baris {$rowIndex}: NISN harus 10 digit angka. Baris dilewati.";
+                continue;
+            }
+
+            if (isset($seenNisnInFile[$nisn])) {
+                $this->skippedCount++;
+                $this->errors[] = "Baris {$rowIndex}: NISN {$nisn} duplikat di dalam file (sudah dipakai baris {$seenNisnInFile[$nisn]}). Baris dilewati.";
+                continue;
+            }
+
+            if (isset($existingNisn[$nisn])) {
+                $this->skippedCount++;
+                $this->errors[] = "Baris {$rowIndex}: NISN sudah terdaftar. Baris dilewati.";
                 continue;
             }
 
             if (empty($name)) {
                 $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NIS {$nis}): Nama Siswa wajib diisi (kosong).";
+                $this->errors[] = "Baris {$rowIndex} (NISN {$nisn}): Nama Siswa wajib diisi (kosong).";
                 continue;
             }
 
-            // Kolom NISN opsional: set null jika kosong agar tidak melanggar unique constraint
-            $rawNisn = trim((string) ($row['nisn'] ?? ''));
-            $nisn = !empty($rawNisn) ? $rawNisn : null;
+            $seenNisnInFile[$nisn] = $rowIndex;
+            $existingNisn[$nisn] = true;
 
             // 3. Kolom Gender / Jenis Kelamin
             $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
@@ -102,66 +154,25 @@ class StudentsImport implements ToCollection, WithHeadingRow
 
             $classId = $class->id;
 
-            // 5. Tanggal Lahir (Mendukung Excel Serial & Format Tanggal Teks)
-            $rawBirthDate = $row['tanggal_lahir'] ?? $row['tgl_lahir'] ?? $row['birth_date'] ?? null;
-            $birthDate = null;
-
-            if (!empty($rawBirthDate)) {
-                try {
-                    if (is_numeric($rawBirthDate)) {
-                        $birthDate = ExcelDate::excelToDateTimeObject($rawBirthDate)->format('Y-m-d');
-                    } else {
-                        $birthDate = Carbon::parse(str_replace('/', '-', $rawBirthDate))->format('Y-m-d');
-                    }
-                } catch (\Throwable $e) {
-                    $birthDate = null;
-                }
-            }
-
-            // 6. Data Pelengkap
-            $birthPlace = trim((string) ($row['tempat_lahir'] ?? $row['birth_place'] ?? ''));
-            $address = trim((string) ($row['alamat'] ?? $row['address'] ?? ''));
-            $parentName = trim((string) ($row['nama_orang_tua'] ?? $row['nama_wali'] ?? $row['wali'] ?? $row['parent_name'] ?? ''));
-            $parentPhone = trim((string) ($row['no_hp_orang_tua'] ?? $row['no_hp'] ?? $row['no_wa'] ?? $row['telepon'] ?? $row['parent_phone'] ?? ''));
-
-            // 7. Simpan atau Update Data Siswa
+            // 5. Simpan Data Siswa.
+            // Data siswa hanya 4 kolom (NISN, Nama, Kelas, Jenis Kelamin).
+            // Kolom lain di file Excel (tempat/tanggal lahir, alamat, nama
+            // wali, nomor WhatsApp) sengaja DIABAIKAN dan tidak disimpan lagi.
+            // NISN wajib & unik -> selalu create, bukan update.
             try {
-                $student = Student::where('nis', $nis)->first();
-
-                if ($student) {
-                    $student->update([
-                        'name' => $name,
-                        'nisn' => $nisn ?: $student->nisn,
-                        'school_class_id' => $classId,
-                        'gender' => $gender,
-                        'birth_place' => $birthPlace ?: $student->birth_place,
-                        'birth_date' => $birthDate ?: $student->birth_date,
-                        'address' => $address ?: $student->address,
-                        'parent_name' => $parentName ?: $student->parent_name,
-                        'parent_phone' => $parentPhone ?: $student->parent_phone,
-                        'status' => 'Aktif',
-                    ]);
-                } else {
-                    Student::create([
-                        'nis' => $nis,
-                        'nisn' => $nisn,
-                        'name' => $name,
-                        'school_class_id' => $classId,
-                        'gender' => $gender,
-                        'birth_place' => $birthPlace ?: null,
-                        'birth_date' => $birthDate ?: null,
-                        'address' => $address ?: null,
-                        'parent_name' => $parentName ?: null,
-                        'parent_phone' => $parentPhone ?: null,
-                        'status' => 'Aktif',
-                        'qr_token' => (string) Str::uuid(),
-                    ]);
-                }
+                Student::create([
+                    'nisn' => $nisn,
+                    'name' => $name,
+                    'school_class_id' => $classId,
+                    'gender' => $gender,
+                    'status' => 'Aktif',
+                    'qr_token' => (string) Str::uuid(),
+                ]);
 
                 $this->importedCount++;
             } catch (\Throwable $e) {
                 $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NIS {$nis}): " . $e->getMessage();
+                $this->errors[] = "Baris {$rowIndex} (NISN {$nisn}): " . $e->getMessage();
             }
         }
     }

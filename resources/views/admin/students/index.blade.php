@@ -54,8 +54,8 @@
     .table-zebra-custom {
         width: 100%;
         /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
-           kolom-kolomnya dipipihkan. Semua kolom (termasuk Jenis Kelamin &
-           Nama Wali) ikut dihitung; nilai desktop tidak berubah karena tabel
+           kolom-kolomnya dipipihkan. Semua kolom (termasuk Jenis Kelamin)
+           ikut dihitung; nilai desktop tidak berubah karena tabel
            selalu lebih lebar dari ini. */
         min-width: 860px;
         margin-bottom: 0;
@@ -479,9 +479,9 @@
                                name="search" 
                                id="studentSearchInput"
                                class="form-control shadow-none" 
-                               placeholder="Cari nama atau NIS..." 
+                               placeholder="Cari nama atau NISN..." 
                                value="{{ request('search') }}"
-                               aria-label="Cari nama atau NIS"
+                               aria-label="Cari nama atau NISN"
                                autocomplete="off"
                                style="font-size: 0.85rem; letter-spacing: 0.03em;">
                         <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
@@ -539,10 +539,9 @@
                     <tr>
                         <th class="text-center" style="width: 45px;">No</th>
                         <th class="text-center" style="width: 80px;">Kelas</th>
-                        <th class="text-center">NIS</th>
+                        <th class="text-center">NISN</th>
                         <th class="text-start indent-nama">Nama Siswa</th>
                         <th class="text-start">Jenis Kelamin</th>
-                        <th class="text-start">Nama Wali</th>
                         <th class="text-center" style="min-width: 180px;">Aksi</th>
                     </tr>
                 </thead>
@@ -555,10 +554,9 @@
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td data-label="No" class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
                         <td data-label="Kelas" class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
-                        <td data-label="NIS" class="text-center font-monospace">{{ $student->nis }}</td>
+                        <td data-label="NISN" class="text-center font-monospace">{{ $student->nisn ?: '-' }}</td>
                         <td data-label="Nama Siswa" class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
                         <td data-label="Jenis Kelamin" class="text-start">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
-                        <td data-label="Nama Wali" class="text-start text-secondary">{{ $student->nama_orang_tua ?? $student->nama_wali ?? '-' }}</td>
                         <td data-label="Aksi" class="text-center">
                             <div class="crud-center-wrapper">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail" aria-label="Detail">
@@ -581,7 +579,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted empty-state">
+                        <td colspan="6" class="text-center py-5 text-muted empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_id'))
                                 Tidak ada data siswa yang cocok dengan pencarian.
@@ -744,14 +742,9 @@
                         @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">NIS <span class="text-danger">*</span></label>
-                            <input type="text" name="nis" class="form-control rounded-3 @error('nis') is-invalid @enderror" placeholder="Nomor Induk Siswa" value="{{ old('nis') }}" inputmode="numeric" pattern="[0-9]*" maxlength="30" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
-                            @error('nis')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">NISN <span class="text-muted">(Opsional)</span></label>
-                            <input type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="10 digit angka" value="{{ old('nisn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">NISN <span class="text-danger">*</span></label>
+                            <input type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="Contoh: 0081234567" value="{{ old('nisn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
                             @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
@@ -774,35 +767,6 @@
                             </select>
                             @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Tempat Lahir</label>
-                            <input type="text" name="birth_place" class="form-control rounded-3 @error('birth_place') is-invalid @enderror" placeholder="Contoh: Bandung" value="{{ old('birth_place') }}">
-                            @error('birth_place')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Tanggal Lahir</label>
-                            <input type="date" name="birth_date" class="form-control rounded-3 @error('birth_date') is-invalid @enderror" value="{{ old('birth_date') }}">
-                            @error('birth_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">Nama Orang Tua / Wali</label>
-                            <input type="text" name="parent_name" class="form-control rounded-3 @error('parent_name') is-invalid @enderror" placeholder="Nama Orang Tua" value="{{ old('parent_name') }}">
-                            @error('parent_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">No. WhatsApp / HP</label>
-                            <input type="text" name="parent_phone" class="form-control rounded-3 @error('parent_phone') is-invalid @enderror" placeholder="08xxxxxxxxxx" value="{{ old('parent_phone') }}" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            @error('parent_phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label small fw-semibold">Alamat Lengkap</label>
-                        <textarea name="address" class="form-control rounded-3 @error('address') is-invalid @enderror" rows="2" placeholder="Alamat tempat tinggal siswa">{{ old('address') }}</textarea>
-                        @error('address')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
@@ -833,7 +797,7 @@
 
                     <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
-                            Format kolom file Excel: <strong>NIS, NISN, Nama Lengkap, Kelas, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, Alamat, Nama Wali, No WhatsApp</strong> (.xlsx atau .csv)
+                            Format kolom file Excel: <strong>NISN, Nama Lengkap, Kelas, Jenis Kelamin</strong> (.xlsx atau .csv)
                         </div>
                         <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
                     </div>

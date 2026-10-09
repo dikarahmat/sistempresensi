@@ -148,23 +148,14 @@
                 <div class="info-label">Kelas</div>
                 <div class="info-value">Kelas {{ $student->schoolClass->name ?? '-' }}</div>
 
-                <div class="info-label">NIS</div>
-                <div class="info-value">{{ $student->nis }}</div>
+                <div class="info-label">NISN</div>
+                <div class="info-value">{{ $student->nisn ?: '-' }}</div>
 
                 <div class="info-label">Nama Lengkap</div>
                 <div class="info-value">{{ $student->name }}</div>
 
                 <div class="info-label">Jenis Kelamin</div>
                 <div class="info-value">{{ $student->gender ?? 'Laki-laki' }}</div>
-
-                <div class="info-label">Tanggal Lahir</div>
-                <div class="info-value">{{ $student->birth_date ? \Carbon\Carbon::parse($student->birth_date)->format('Y–m–d') : '-' }}</div>
-
-                <div class="info-label">Tempat Lahir</div>
-                <div class="info-value">{{ $student->birth_place ?? '-' }}</div>
-
-                <div class="info-label">Alamat</div>
-                <div class="info-value">{{ $student->address ?? '-' }}</div>
             </div>
         </div>
 
@@ -174,7 +165,7 @@
                 <h5 class="fw-bold mb-3" style="color: #0f172a;">QR Code Siswa</h5>
 
                 <div class="qr-display-box d-flex justify-content-center align-items-center p-3 mb-3 bg-light rounded-3" style="border: 1px dashed #cbd5e1;">
-                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($student->qr_token ?? $student->nis) !!}
+                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($student->nisn ?: $student->qr_token) !!}
                 </div>
 
                 <!-- Tombol Download QR Saja (Tanpa Ikon) -->

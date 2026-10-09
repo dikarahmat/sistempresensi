@@ -5,17 +5,12 @@ namespace Tests\Feature;
 use App\Imports\TeachersImport;
 use App\Jobs\SendWhatsAppAttendanceNotificationJob;
 use App\Models\AcademicYear;
-use App\Models\Attendance;
 use App\Models\SchoolClass;
-use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class SecurityAuditFixesTest extends TestCase
@@ -85,7 +80,7 @@ class SecurityAuditFixesTest extends TestCase
         Student::create([
             'school_class_id' => $this->classA->id,
             'name' => 'Siswa Kelas A',
-            'nis' => '770001',
+            'nisn' => '0007700011',
             'gender' => 'Laki-laki',
             'status' => 'Aktif',
         ]);
@@ -93,7 +88,7 @@ class SecurityAuditFixesTest extends TestCase
         $this->studentId = (int) Student::create([
             'school_class_id' => $this->classB->id,
             'name' => 'Siswa Kelas B',
-            'nis' => '770002',
+            'nisn' => '0007700022',
             'gender' => 'Perempuan',
             'status' => 'Aktif',
         ])->id;
@@ -148,11 +143,11 @@ class SecurityAuditFixesTest extends TestCase
 
         // Server-side enforcement: request mutasi (POST/PUT/DELETE) -> 403
         $this->actingAs($this->guruUser)
-            ->post('/admin/students', ['name' => 'Hacker', 'nis' => '123456', 'school_class_id' => $this->classA->id, 'gender' => 'Laki-laki'])
+            ->post('/admin/students', ['name' => 'Hacker', 'nisn' => '0001234567', 'school_class_id' => $this->classA->id, 'gender' => 'Laki-laki'])
             ->assertStatus(403);
 
         $this->actingAs($this->guruUser)
-            ->put('/admin/students/' . $this->studentId, ['name' => 'Hacked', 'nis' => '770002', 'school_class_id' => $this->classB->id, 'gender' => 'Perempuan'])
+            ->put('/admin/students/' . $this->studentId, ['name' => 'Hacked', 'nisn' => '0007700022', 'school_class_id' => $this->classB->id, 'gender' => 'Perempuan'])
             ->assertStatus(403);
 
         $this->actingAs($this->guruUser)

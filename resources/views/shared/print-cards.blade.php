@@ -218,7 +218,7 @@
                             // Resolusi QR Code Base64 (token/isi sama seperti sebelumnya)
                             $qrSrc = $item->qr_base64 ?? null;
                             if (!$qrSrc) {
-                                $token = $item->qr_token ?? $item->nis;
+                                $token = $item->nisn ?: $item->qr_token;
                                 try {
                                     $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(120)->margin(0)->generate($token);
                                     $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
@@ -239,7 +239,6 @@
                                 'schoolName' => $schoolName,
                                 'activeYear' => $activeYear,
                                 'studentName' => $item->name ?? $item->nama ?? '-',
-                                'studentNis' => $item->nis ?? '-',
                                 'studentNisn' => $item->nisn ?? '-',
                                 'studentClass' => $className,
                                 'studentGender' => $genderVal,

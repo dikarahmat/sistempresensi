@@ -101,11 +101,12 @@ class ScannerController extends Controller
 
         $cleanToken = trim($request->qr_token);
 
+        // Kartu QR memuat qr_token; kode angka yang dipindai dicari HANYA
+        // berdasarkan NISN (tanpa fallback ke kolom lain).
         $student = Student::with('schoolClass')
             ->where(function ($query) use ($cleanToken) {
                 $query->where('qr_token', $cleanToken)
-                      ->orWhere('nisn', $cleanToken)
-                      ->orWhere('nis', $cleanToken);
+                      ->orWhere('nisn', $cleanToken);
             })
             ->first();
 
@@ -134,7 +135,7 @@ class ScannerController extends Controller
                 'message' => 'Siswa atas nama ' . $student->name . ' sudah melakukan presensi hari ini.',
                 'student' => [
                     'name' => $student->name,
-                    'nis' => $student->nis,
+                    'nisn' => $student->nisn,
                     'class' => $student->schoolClass ? $student->schoolClass->name : '-',
                     'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                 ],
@@ -199,7 +200,7 @@ class ScannerController extends Controller
                         'late_minutes' => $lateMinutes,
                         'student' => [
                             'name' => $student->name,
-                            'nis' => $student->nis,
+                            'nisn' => $student->nisn,
                             'class' => $student->schoolClass ? $student->schoolClass->name : '-',
                             'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                         ],
@@ -221,7 +222,7 @@ class ScannerController extends Controller
                             'message' => "Siswa baru saja melakukan presensi masuk pada " . substr($attendance->check_in, 0, 5) . " WIB. Harap tunggu beberapa saat.",
                             'student' => [
                                 'name' => $student->name,
-                                'nis' => $student->nis,
+                                'nisn' => $student->nisn,
                                 'class' => $student->schoolClass ? $student->schoolClass->name : '-',
                                 'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                             ],
@@ -249,7 +250,7 @@ class ScannerController extends Controller
                         'late_minutes' => 0,
                         'student' => [
                             'name' => $student->name,
-                            'nis' => $student->nis,
+                            'nisn' => $student->nisn,
                             'class' => $student->schoolClass ? $student->schoolClass->name : '-',
                             'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                         ],
@@ -266,7 +267,7 @@ class ScannerController extends Controller
                     'message' => "Siswa sudah menyelesaikan presensi Masuk (" . substr($attendance->check_in, 0, 5) . " WIB) dan Pulang (" . substr($attendance->check_out, 0, 5) . " WIB) hari ini.",
                     'student' => [
                         'name' => $student->name,
-                        'nis' => $student->nis,
+                        'nisn' => $student->nisn,
                         'class' => $student->schoolClass ? $student->schoolClass->name : '-',
                         'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                     ],

@@ -500,9 +500,9 @@
                            name="search"
                            id="filterSearch"
                            class="form-control shadow-none"
-                           placeholder="Cari nama atau NIS..."
+                           placeholder="Cari nama atau NISN..."
                            value="{{ $search }}"
-                           aria-label="Cari nama atau NIS"
+                           aria-label="Cari nama atau NISN"
                            autocomplete="off"
                            style="font-size: 0.85rem; letter-spacing: 0.03em;">
                     <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
@@ -533,7 +533,7 @@
                 <thead class="bg-light">
                     <tr class="small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
                         <th class="text-center py-3" style="width: 5%;">NO</th>
-                        <th class="text-center py-3" style="width: 10%;">NIS</th>
+                        <th class="text-center py-3" style="width: 10%;">NISN</th>
                         <th class="text-start py-3" style="width: 25%;">NAMA SISWA</th>
                         <th class="text-center py-3" style="width: 10%;">KELAS</th>
                         <th class="text-center py-3" style="width: 8%;">HADIR</th>
@@ -553,7 +553,7 @@
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td class="text-center text-muted fw-normal">{{ $rowNumber }}</td>
-                        <td class="text-center text-nowrap fw-normal">{{ $item->nis }}</td>
+                        <td class="text-center text-nowrap fw-normal">{{ $item->nisn ?: '-' }}</td>
                         <td class="text-start text-nowrap fw-normal">{{ $item->name }}</td>
                         <td class="text-center text-nowrap fw-normal">{{ $item->class_name }}</td>
                         <td class="text-center fw-normal" style="color: #16a34a;">{{ $item->hadir }}</td>

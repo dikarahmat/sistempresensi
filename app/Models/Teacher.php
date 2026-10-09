@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,12 +14,10 @@ class Teacher extends Model
 
     protected $fillable = [
         'nip',
-        'nuptk',
         'name',
         'gender',
         'birth_date',
         'birth_place',
-        'religion',
         'address',
         'phone',
         'email',
@@ -28,8 +25,6 @@ class Teacher extends Model
         'status',
         'photo',
         'qr_token',
-        'subject',
-        'notes',
     ];
 
     protected $casts = [

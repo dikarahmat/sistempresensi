@@ -101,40 +101,6 @@
     box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
 }
 
-.btn-presensi-accent {
-    background-color: var(--presensi-accent) !important;
-    color: #ffffff !important;
-    border: 1px solid var(--presensi-accent) !important;
-    border-radius: var(--presensi-radius-md);
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-}
-.btn-presensi-accent:hover,
-.btn-presensi-accent:focus {
-    background-color: var(--presensi-accent-hover) !important;
-    border-color: var(--presensi-accent-hover) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-}
-
-.btn-presensi-outline {
-    background-color: #ffffff !important;
-    color: var(--presensi-text) !important;
-    border: 1px solid var(--presensi-border) !important;
-    border-radius: var(--presensi-radius-md);
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-.btn-presensi-outline:hover {
-    background-color: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
-    color: var(--presensi-primary) !important;
-}
-
 /* ==========================================================================
    KOMPONEN BERSAMA: HIERARKI DATA SISWA (IDENTIK DENGAN KARTU PRESENSI)
    Aturan: Nama di Atas (Bold, Gelap), Kelas Langsung di Bawahnya (Bold, Gelap)
@@ -159,12 +125,6 @@
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--presensi-text);
-}
-
-.presensi-student-cell .student-nis {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--presensi-muted);
 }
 
 /* ==========================================================================
@@ -218,47 +178,6 @@
     background-color: var(--presensi-belum-bg);
     color: #475569;
     border: 1px solid var(--presensi-belum-border);
-}
-
-/* Versi Solid untuk visibilitas tinggi */
-.presensi-badge-solid {
-    padding: 0.32rem 0.75rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    border-radius: var(--presensi-radius-sm);
-    color: #ffffff;
-    display: inline-block;
-}
-.presensi-badge-solid.hadir { background-color: var(--presensi-hadir); }
-.presensi-badge-solid.terlambat { background-color: var(--presensi-terlambat); }
-.presensi-badge-solid.sakit { background-color: var(--presensi-sakit); }
-.presensi-badge-solid.izin { background-color: var(--presensi-izin); }
-.presensi-badge-solid.alfa { background-color: var(--presensi-alfa); }
-.presensi-badge-solid.belum { background-color: var(--presensi-belum); }
-
-/* ==========================================================================
-   KOMPONEN BERSAMA: CARD & HEADER KONSISTEN DENGAN AKSEN ORANYE
-   ========================================================================== */
-.presensi-card {
-    background: var(--presensi-bg-card);
-    border: 1px solid var(--presensi-border);
-    border-radius: var(--presensi-radius-lg);
-    box-shadow: var(--presensi-shadow-sm);
-    position: relative;
-    overflow: hidden;
-}
-
-.presensi-card-header-accent {
-    position: relative;
-}
-.presensi-card-header-accent::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background-color: var(--presensi-accent);
 }
 
 /* ==========================================================================
@@ -397,8 +316,7 @@
 /* ==========================================================================
    TOMBOL DOWNLOAD & EXPORT SOLID TANPA BORDER (IDENTIK DENGAN DOWNLOAD QR CODE)
    ========================================================================== */
-.btn-download-blue,
-.btn-download-primary {
+.btn-download-blue {
     background-color: #3b82f6 !important;
     color: #ffffff !important;
     font-weight: 600 !important;
@@ -415,8 +333,7 @@
     cursor: pointer !important;
     transition: background-color 0.2s ease, opacity 0.2s ease !important;
 }
-.btn-download-blue:hover,
-.btn-download-primary:hover {
+.btn-download-blue:hover {
     background-color: #2563eb !important;
     color: #ffffff !important;
     border: none !important;
@@ -424,8 +341,7 @@
     box-shadow: none !important;
 }
 
-.btn-download-green,
-.btn-download-success {
+.btn-download-green {
     background-color: #059669 !important;
     color: #ffffff !important;
     font-weight: 600 !important;
@@ -442,8 +358,7 @@
     cursor: pointer !important;
     transition: background-color 0.2s ease, opacity 0.2s ease !important;
 }
-.btn-download-green:hover,
-.btn-download-success:hover {
+.btn-download-green:hover {
     background-color: #047857 !important;
     color: #ffffff !important;
     border: none !important;
@@ -456,8 +371,6 @@
 [data-import],
 .btn-download-blue,
 .btn-download-green,
-.btn-download-primary,
-.btn-download-success,
 .btn-green-excel,
 .btn-red-pdf,
 .dl-btn-relative {
@@ -630,18 +543,15 @@
 }
 
 /* 1. Warna Lingkaran: Hijau, Oranye, Merah (Memakai Token Sistem) */
-.scan-result-overlay.circle-green .scan-result-circle,
-.scan-result-overlay.success .scan-result-circle {
+.scan-result-overlay.circle-green .scan-result-circle {
     stroke: var(--presensi-hadir, #10b981) !important;
 }
 
-.scan-result-overlay.circle-orange .scan-result-circle,
-.scan-result-overlay.warning .scan-result-circle {
+.scan-result-overlay.circle-orange .scan-result-circle {
     stroke: var(--presensi-terlambat, #f59e0b) !important;
 }
 
-.scan-result-overlay.circle-red .scan-result-circle,
-.scan-result-overlay.error .scan-result-circle {
+.scan-result-overlay.circle-red .scan-result-circle {
     stroke: var(--presensi-alfa, #ef4444) !important;
 }
 
@@ -688,9 +598,7 @@
 }
 
 /* Efek Getar / Shake saat Terjadi Peringatan atau Error */
-.scan-result-overlay.shake .scan-result-svg,
-.scan-result-overlay.error .scan-result-svg,
-.scan-result-overlay.warning .scan-result-svg {
+.scan-result-overlay.shake .scan-result-svg {
     animation: scanShake 0.35s ease-in-out 0.5s;
 }
 
@@ -812,10 +720,6 @@
     .scan-result-text {
         animation: none !important;
         opacity: 1 !important;
-    }
-    .scan-result-overlay.error .scan-result-svg,
-    .scan-result-overlay.warning .scan-result-svg {
-        animation: none !important;
     }
 }
 

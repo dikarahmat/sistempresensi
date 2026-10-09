@@ -144,7 +144,7 @@
         /* ==========================================================================
            STANDARISASI TIPOGRAFI ENTERPRISE
            - Font Poppins/Robot untuk seluruh UI
-           - Data dinamis (NIS, nama, status, kode) = UPPERCASE
+           - Data dinamis (NISN, nama, status, kode) = UPPERCASE
            - Teks normal (judul, label, deskripsi) = normal/sentence case
            ========================================================================== */
 
@@ -3817,7 +3817,7 @@
                 border-radius: var(--clean-radius) !important;
             }
 
-            /* Textarea Alamat: pendek (~2-3 baris), tidak memanjangkan form. */
+            /* Textarea di modal: pendek (~2-3 baris), tidak memanjangkan form. */
             .modal-content textarea.form-control {
                 height: auto !important;
                 min-height: 64px !important;

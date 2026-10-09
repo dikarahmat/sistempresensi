@@ -62,7 +62,7 @@ class ProductionReadinessSmokeTest extends TestCase
 
         $this->student = Student::create([
             'school_class_id' => $this->schoolClass->id,
-            'name' => 'Siswa Smoke', 'nis' => '990001', 'nisn' => '0099000111',
+            'name' => 'Siswa Smoke', 'nisn' => '0099000111',
             'gender' => 'Laki-laki', 'status' => 'Aktif',
         ]);
     }

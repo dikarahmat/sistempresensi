@@ -62,13 +62,12 @@ class TrashArchiveTest extends TestCase
         ]);
     }
 
-    private function buatSiswa(string $nama = 'Siswa Arsip', string $nis = '900001'): Student
+    private function buatSiswa(string $nama = 'Siswa Arsip', string $nisn = '0000900001'): Student
     {
         return Student::create([
             'school_class_id' => $this->buatKelas()->id,
             'name' => $nama,
-            'nis' => $nis,
-            'nisn' => 'NISN' . $nis,
+            'nisn' => $nisn,
             'gender' => 'Laki-laki',
             'status' => 'Aktif',
         ]);
@@ -89,8 +88,8 @@ class TrashArchiveTest extends TestCase
 
     public function test_halaman_arsip_siswa_menampilkan_hanya_siswa_yang_diarsipkan(): void
     {
-        $aktif = $this->buatSiswa('Siswa Masih Aktif', '900002');
-        $arsip = $this->buatSiswa('Siswa Sudah Diarsipkan', '900003');
+        $aktif = $this->buatSiswa('Siswa Masih Aktif', '0000900002');
+        $arsip = $this->buatSiswa('Siswa Sudah Diarsipkan', '0000900003');
         $arsip->delete();
 
         $response = $this->actingAs($this->admin)->get(route('admin.students.trash'));
@@ -104,7 +103,7 @@ class TrashArchiveTest extends TestCase
 
     public function test_admin_dapat_memulihkan_siswa_dari_arsip(): void
     {
-        $student = $this->buatSiswa('Siswa Untuk Dipulihkan', '900004');
+        $student = $this->buatSiswa('Siswa Untuk Dipulihkan', '0000900004');
         $student->delete();
         $this->assertSoftDeleted('students', ['id' => $student->id]);
 
@@ -118,7 +117,7 @@ class TrashArchiveTest extends TestCase
 
     public function test_admin_dapat_menghapus_permanen_siswa_dari_arsip(): void
     {
-        $student = $this->buatSiswa('Siswa Untuk Dihapus Permanen', '900005');
+        $student = $this->buatSiswa('Siswa Untuk Dihapus Permanen', '0000900005');
         $student->delete();
         $this->assertSoftDeleted('students', ['id' => $student->id]);
 
@@ -131,7 +130,7 @@ class TrashArchiveTest extends TestCase
 
     public function test_hanya_siswa_di_arsip_yang_bisa_dipulihkan_atau_dihapus_permanen(): void
     {
-        $aktif = $this->buatSiswa('Siswa Masih Aktif', '900006');
+        $aktif = $this->buatSiswa('Siswa Masih Aktif', '0000900006');
 
         // ID tidak dikenal -> 404 (bukan error 500)
         $this->actingAs($this->admin)->post(route('admin.students.restore', 999999))->assertNotFound();
@@ -146,8 +145,8 @@ class TrashArchiveTest extends TestCase
 
     public function test_hapus_semua_siswa_menghapus_data_aktif_dan_arsip_secara_permanen(): void
     {
-        $aktif = $this->buatSiswa('Siswa Aktif Biasa', '900007');
-        $arsip = $this->buatSiswa('Siswa Berada Di Arsip', '900008');
+        $aktif = $this->buatSiswa('Siswa Aktif Biasa', '0000900007');
+        $arsip = $this->buatSiswa('Siswa Berada Di Arsip', '0000900008');
         $arsip->delete();
 
         // destroy-all mengosongkan TEMPAT SAMPAH saja (arsip -> permanen),

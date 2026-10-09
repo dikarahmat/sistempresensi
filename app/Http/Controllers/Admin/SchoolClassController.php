@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Exports\SchoolClassTemplateExport;
 use App\Imports\SchoolClassesImport;
 use App\Models\SchoolClass;
-use App\Models\Setting;
 use App\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
