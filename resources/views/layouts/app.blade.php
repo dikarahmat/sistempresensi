@@ -95,6 +95,51 @@
         })();
     </script>
 
+    <!-- Skala Otomatis berdasarkan patokan 1920x1080 -->
+    <script>
+        (function() {
+            'use strict';
+
+            function applyAutoScale() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                // 1. MOBILE / TABLET (< 1024px):
+                //    zoom = 1 (TIDAK BOLEH ada perubahan sama sekali pada tampilan seluler).
+                if (width < 1024) {
+                    document.documentElement.style.zoom = '1';
+                    return;
+                }
+
+                // 2. LAPTOP / DESKTOP STANDAR (1024px s.d. 1920px):
+                //    zoom = 1 (Dikunci tetap 100% untuk mencegah efek menyusut/rusak
+                //    akibat Windows Display Scaling).
+                if (width <= 1920) {
+                    document.documentElement.style.zoom = '1';
+                    return;
+                }
+
+                // 3. LAYAR SANGAT BESAR (> 1920px / IFP 4K 3840x2160):
+                //    Skala dihitung dinamis: min(window.innerWidth / 1920, window.innerHeight / 1080)
+                //    dibatasi antara 1 hingga 2.2.
+                //    - 1280x720: tidak aktif (terkunci di level 2 sebelumnya)
+                //    - 1920x1080: tidak aktif (terkunci di level 2 sebelumnya)
+                //    - 3840x2160 (4K): skala 2.0x (200%), proporsional & mudah dibaca 3 meter
+                const scale = Math.min(width / 1920, height / 1080);
+                const clamped = Math.max(1, Math.min(2.2, scale));
+
+                document.documentElement.style.zoom = clamped;
+            }
+
+            // Jalankan saat DOMContentLoaded dan setiap resize
+            document.addEventListener('DOMContentLoaded', applyAutoScale);
+            window.addEventListener('resize', applyAutoScale);
+
+            // Jalankan sekali awal
+            applyAutoScale();
+        })();
+    </script>
+
     @stack('styles')
 
     <style>
@@ -1279,6 +1324,17 @@
             }
         }
 
+        /* Batas maksimal lebar konten di layar raksa sangat besar (>= 2200px).
+           Pada skala 100% artinya max-width ~1800px; skala otomatis akan
+       memperbesar/kecilkan proporsional. */
+        @media (min-width: 2200px) {
+            .content-scroll-wrapper > main > .flex-1 > .container,
+            .content-scroll-wrapper > main > .container {
+                max-width: 1800px !important;
+                margin: 0 auto !important;
+            }
+        }
+
         /* --------------------------------------------------------------------------
            4. TOMBOL GARIS TIGA & UNIVERSAL HEADER (SEJAJAR VERTIKAL PRESISI)
            -------------------------------------------------------------------------- */
@@ -1522,9 +1578,9 @@
             margin-top: 2px !important;
             padding: 0 !important;
             letter-spacing: 0.02em;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
             max-width: 100% !important;
             display: block !important;
         }
@@ -5658,6 +5714,8 @@
 })();
 </script>
 @yield('scripts')
+{{-- Komponen bersama: progres persen di dalam tombol unduhan (satu tempat). --}}
+@include('partials.download-progress')
 @stack('scripts')
 </body>
 </html>

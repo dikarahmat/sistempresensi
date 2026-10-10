@@ -458,7 +458,7 @@
                         <div class="mb-2">
                             Format kolom file Excel: <strong>Tanggal, Keterangan</strong> (.xlsx atau .csv)
                         </div>
-                        <a href="{{ panel_route('holidays.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
+                        <a href="{{ panel_route('holidays.template') }}" class="btn-download-green btn-progress w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
                     </div>
                     <label class="form-label small fw-semibold">Pilih File Excel</label>
                     <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>

@@ -185,6 +185,7 @@
         'qrSrc' => $qrSrc,
         'schoolName' => $schoolName,
         'studentName' => $studentName,
+        'studentNisn' => $studentItem->nisn ?? null,
         'studentClass' => $studentClass,
     ])
 

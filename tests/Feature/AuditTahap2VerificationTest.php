@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AcademicYear;
+use App\Models\Attendance;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
@@ -337,5 +338,434 @@ class AuditTahap2VerificationTest extends TestCase
                 "Kolom di luar 4 kolom resmi harus diabaikan: {$diabaikan}"
             );
         }
+    }
+
+    public function test_rekap_print_per_kelas_pdf(): void
+    {
+        $k = $this->kelas('7A');
+        Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Kelas A',
+            'nisn' => '0099990001', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => Student::first()->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'harian',
+            'print_mode' => 'class',
+            'class_id' => $k->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+    }
+
+    public function test_rekap_print_per_kelas_excel(): void
+    {
+        $k = $this->kelas('7B');
+        Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Kelas B',
+            'nisn' => '0099990002', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => Student::first()->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'excel',
+            'type' => 'harian',
+            'print_mode' => 'class',
+            'class_id' => $k->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type'));
+    }
+
+    public function test_rekap_print_per_siswa_pdf(): void
+    {
+        $k = $this->kelas('7C');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Profil',
+            'nisn' => '0099990003', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'check_out' => '14:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+    }
+
+    public function test_rekap_print_per_siswa_excel(): void
+    {
+        $k = $this->kelas('7D');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Profil Excel',
+            'nisn' => '0099990004', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'check_out' => '14:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'excel',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type'));
+    }
+
+    // =====================================================================
+    // TEST KOMPREHENSIF: Semua kombinasi scope dan periode
+    // =====================================================================
+
+    public function test_rekap_print_per_siswa_single_harian(): void
+    {
+        $k = $this->kelas('7E');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Single Harian',
+            'nisn' => '0099990005', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+
+        // Get content from cache file (BinaryFileResponse streams from file)
+        $content = file_get_contents($response->getFile()->getPathname());
+        $this->assertStringStartsWith('%PDF', $content, 'PDF harus diawali %PDF');
+        $this->assertGreaterThan(1024, strlen($content), 'PDF harus > 1KB');
+    }
+
+    public function test_rekap_print_per_siswa_single_mingguan(): void
+    {
+        $k = $this->kelas('7F');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Single Mingguan',
+            'nisn' => '0099990006', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-07-28',
+            'check_in' => '07:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'mingguan',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'mingguan',
+            'period_start_date' => '2025-07-28',
+            'period_end_date' => '2025-08-03',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+
+        // Get content from cache file (BinaryFileResponse streams from file)
+        $content = file_get_contents($response->getFile()->getPathname());
+        $this->assertStringStartsWith('%PDF', $content, 'PDF harus diawali %PDF');
+        $this->assertGreaterThan(1024, strlen($content), 'PDF harus > 1KB');
+    }
+
+    public function test_rekap_print_per_siswa_single_bulanan(): void
+    {
+        $k = $this->kelas('7G');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Single Bulanan',
+            'nisn' => '0099990007', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'bulanan',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'bulanan',
+            'period_month' => 8,
+            'period_year' => 2025,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+
+        // Get content from cache file (BinaryFileResponse streams from file)
+        $content = file_get_contents($response->getFile()->getPathname());
+        $this->assertStringStartsWith('%PDF', $content, 'PDF harus diawali %PDF');
+        $this->assertGreaterThan(1024, strlen($content), 'PDF harus > 1KB');
+    }
+
+    public function test_rekap_print_per_siswa_class_harian(): void
+    {
+        $k = $this->kelas('7H');
+        Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Class Harian 1',
+            'nisn' => '0099990008', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Class Harian 2',
+            'nisn' => '0099990009', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'class',
+            'scope_class_id' => $k->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+
+        // Get content from cache file (BinaryFileResponse streams from file)
+        $content = file_get_contents($response->getFile()->getPathname());
+        $this->assertStringStartsWith('%PDF', $content, 'PDF harus diawali %PDF');
+        $this->assertGreaterThan(1024, strlen($content), 'PDF harus > 1KB');
+    }
+
+    public function test_rekap_print_per_siswa_class_bulanan(): void
+    {
+        $k = $this->kelas('7I');
+        Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Class Bulanan 1',
+            'nisn' => '0099990010', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Class Bulanan 2',
+            'nisn' => '0099990011', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'excel',
+            'type' => 'bulanan',
+            'print_mode' => 'student',
+            'student_scope' => 'class',
+            'scope_class_id' => $k->id,
+            'period_type' => 'bulanan',
+            'period_month' => 8,
+            'period_year' => 2025,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type'));
+    }
+
+    public function test_rekap_print_per_siswa_all_harian(): void
+    {
+        $k1 = $this->kelas('7J');
+        $k2 = $this->kelas('8A');
+        Student::create([
+            'school_class_id' => $k1->id, 'name' => 'Siswa All Harian 1',
+            'nisn' => '0099990012', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Student::create([
+            'school_class_id' => $k2->id, 'name' => 'Siswa All Harian 2',
+            'nisn' => '0099990013', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'all',
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+
+        // Get content from cache file (BinaryFileResponse streams from file)
+        $content = file_get_contents($response->getFile()->getPathname());
+        $this->assertStringStartsWith('%PDF', $content, 'PDF harus diawali %PDF');
+        $this->assertGreaterThan(1024, strlen($content), 'PDF harus > 1KB');
+    }
+
+    public function test_rekap_print_per_siswa_all_bulanan(): void
+    {
+        $k1 = $this->kelas('7K');
+        $k2 = $this->kelas('8B');
+        Student::create([
+            'school_class_id' => $k1->id, 'name' => 'Siswa All Bulanan 1',
+            'nisn' => '0099990014', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Student::create([
+            'school_class_id' => $k2->id, 'name' => 'Siswa All Bulanan 2',
+            'nisn' => '0099990015', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'excel',
+            'type' => 'bulanan',
+            'print_mode' => 'student',
+            'student_scope' => 'all',
+            'period_type' => 'bulanan',
+            'period_month' => 8,
+            'period_year' => 2025,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type'));
+    }
+
+    public function test_rekap_print_per_siswa_tanpa_presensi(): void
+    {
+        // Siswa tanpa data presensi harus tetap bisa dicetak
+        $k = $this->kelas('7L');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Tanpa Presensi',
+            'nisn' => '0099990016', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        // TIDAK membuat attendance - siswa ini tidak punya data presensi
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'pdf',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('pdf', strtolower($response->headers->get('Content-Type')));
+
+        // Get content from cache file (BinaryFileResponse streams from file)
+        $content = file_get_contents($response->getFile()->getPathname());
+        $this->assertStringStartsWith('%PDF', $content, 'PDF harus diawali %PDF');
+        $this->assertGreaterThan(1024, strlen($content), 'PDF harus > 1KB');
+    }
+
+    public function test_rekap_print_per_siswa_excel_valid_header(): void
+    {
+        $k = $this->kelas('7M');
+        $student = Student::create([
+            'school_class_id' => $k->id, 'name' => 'Siswa Excel Valid',
+            'nisn' => '0099990017', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        Attendance::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $this->tahun->id,
+            'date' => '2025-08-01',
+            'check_in' => '07:00:00',
+            'status' => 'Hadir',
+            'time_remark' => 'Tepat Waktu',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.rekap.print'), [
+            'format' => 'excel',
+            'type' => 'harian',
+            'print_mode' => 'student',
+            'student_scope' => 'single',
+            'student_id' => $student->id,
+            'period_type' => 'harian',
+            'period_date' => '2025-08-01',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type'));
+
+        // Save to temp file and validate with IOFactory
+        // Use response()->download() file path for Excel (BinaryFileResponse)
+        $tempFile = $response->getFile()->getPathname();
+
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::load($tempFile);
+        $sheet = $reader->getActiveSheet();
+
+        // Check header row contains expected columns
+        $headerRow = null;
+        for ($row = 1; $row <= 30; $row++) {
+            $cellValue = $sheet->getCell('A' . $row)->getValue();
+            if ($cellValue === 'No') {
+                $headerRow = $row;
+                break;
+            }
+        }
+
+        $this->assertNotNull($headerRow, 'Header row dengan "No" harus ditemukan');
+        $this->assertSame('No', $sheet->getCell('A' . $headerRow)->getValue());
+        $this->assertSame('Tanggal', $sheet->getCell('B' . $headerRow)->getValue());
+        $this->assertSame('Hari', $sheet->getCell('C' . $headerRow)->getValue());
+        $this->assertSame('Jam Masuk', $sheet->getCell('D' . $headerRow)->getValue());
     }
 }

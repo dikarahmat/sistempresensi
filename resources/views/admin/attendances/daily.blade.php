@@ -1130,11 +1130,9 @@
                     const v = document.querySelector('#scannerColumn #reader video');
                     if (v) { v.style.scale = ''; v.classList.remove('mirror-front'); }
                 } catch (e) {}
-                console.log('Camera started successfully');
             } else {
                 const msg = CameraSelect.errorMessageFor(result && result.error);
                 console.error(msg, result && result.error);
-                showCameraError(msg);
                 if (placeholder) placeholder.style.display = 'flex';
             }
         });

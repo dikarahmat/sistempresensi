@@ -169,12 +169,12 @@
                 </div>
 
                 <!-- Tombol Download QR Saja (Tanpa Ikon) -->
-                <a href="{{ panel_route('students.download-qr', $student->id) }}" class="btn-download-blue" data-download>
+                <a href="{{ panel_route('students.download-qr', $student->id) }}" class="btn-download-blue btn-progress" data-download data-no-download data-dl-progress>
                     Download QR Code
                 </a>
 
                 <!-- Tombol Download Kartu Presensi PDF (Tanpa Ikon) -->
-                <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green" id="btnDownloadCard" style="text-decoration: none;" data-download>
+                <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green btn-progress" id="btnDownloadCard" style="text-decoration: none;" data-download data-no-download data-dl-progress>
                     Download Kartu Presensi
                 </a>
             </div>

@@ -1,10 +1,10 @@
 <div id="smart-page-loader" class="loader-overlay" style="display: none;">
-    <div class="app-loader" role="status" aria-label="Memuat"></div>
+    <div class="loader"></div>
 </div>
 
 <style>
     /* Overlay loading penuh layar: HITAM transparan (alpha 0.50) sehingga halaman
-       di belakang masih samar terlihat tanpa tint biru dari loader itu sendiri. */
+       di belakang masih samar terlihat. Warna overlay INI TIDAK DIUBAH. */
     .loader-overlay {
         position: fixed;
         inset: 0;
@@ -25,36 +25,32 @@
         opacity: 0;
     }
 
-    /* Cincin spinner (hanya animasi transform -> murah). */
-    .app-loader {
+    /* Cincin loading halaman (satu CSS bersama untuk SEMUA layout: admin,
+       guru, dan gerbang semuanya lewat satu include di layouts/app.blade.php).
+       Warna background: BIRU TEMA, bukan teal #25b09b.
+       --primary-blue = #3b62f6, persis warna tombol utama aplikasi
+       (tombol "Buka Scanner QR" / tombol submit login). Tidak ada variabel
+       --primary di project ini, jadi memakai variabel biru yang sudah ada. */
+    .loader {
         width: 50px;
         padding: 8px;
         aspect-ratio: 1;
         border-radius: 50%;
-        background: #ffffff;
+        background: var(--primary-blue, #3b62f6);   /* biru tema, bukan #25b09b */
         --_m:
-            conic-gradient(#0000 10%, #000),
+            conic-gradient(#0000 10%,#000),
             linear-gradient(#000 0 0) content-box;
         -webkit-mask: var(--_m);
-        mask: var(--_m);
+                mask: var(--_m);
         -webkit-mask-composite: source-out;
-        mask-composite: subtract;
-        animation: app-spin 1s infinite linear;
+                mask-composite: subtract;
+        animation: l3 1s infinite linear;
     }
-
-    /* Varian kecil (dalam tombol/area sempit): lebar & padding dikecilkan. */
-    .app-loader--sm {
-        width: 22px;
-        padding: 3px;
-    }
-
-    @keyframes app-spin {
-        to { transform: rotate(1turn); }
-    }
+    @keyframes l3 { to { transform: rotate(1turn); } }
 
     /* Reduced motion: animasi diperlambat sangat pelan, indikator TETAP tampil. */
     @media (prefers-reduced-motion: reduce) {
-        .app-loader {
+        .loader {
             animation-duration: 5s;
         }
     }

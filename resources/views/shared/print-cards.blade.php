@@ -239,7 +239,7 @@
                                 'schoolName' => $schoolName,
                                 'activeYear' => $activeYear,
                                 'studentName' => $item->name ?? $item->nama ?? '-',
-                                'studentNisn' => $item->nisn ?? '-',
+                                'studentNisn' => $item->nisn ?? null,
                                 'studentClass' => $className,
                                 'studentGender' => $genderVal,
                             ])

@@ -47,6 +47,8 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
+    Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
     // Scanner & Mode Gerbang / Kiosk Absensi
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
@@ -188,6 +190,8 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
+    Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
 
     // SISWA - identik admin, READ-ONLY (detail + cetak kartu & unduh QR)
     Route::get('/siswa', [AdminStudentController::class, 'index'])->name('students.index');

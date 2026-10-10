@@ -731,7 +731,7 @@
                         @endif
 
                         <div class="mb-3">
-                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green w-100" data-download>Unduh Template Excel</a>
+                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green btn-progress w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
                         </div>
 
                         <div class="mb-3">

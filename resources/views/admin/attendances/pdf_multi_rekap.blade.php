@@ -53,9 +53,12 @@
 
 
 
-        /* Data Table */
+        /* Data Table — width 100% + table-layout: fixed supaya lebar tabel
+           PERSIS SAMA dengan lebar garis bawah kop surat (.header-table),
+           tidak melar ke kanan bahkan untuk tabel bulanan (kolom tanggal 1-31). */
         .data-table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
             font-size: 8pt;
         }
@@ -110,6 +113,10 @@
             border-radius: 4px;
             background-color: #f8fafc;
         }
+        /* Tanda tangan: 2 KOLOM PENUH (tanpa border) sesuai standar resmi nasional —
+           Kepala Sekolah rata KIRI, Wali Kelas rata KANAN. Kolom "Petugas Presensi"
+           dihapus total, kolom kanan tidak lagi memakai padding-left 30% (tidak ada
+           jarak mengambang di tengah). */
         .signature-table {
             width: 100%;
             margin-top: 24px;
@@ -118,9 +125,21 @@
         .signature-table td {
             text-align: left;
             font-size: 8.5pt;
-            width: 33.33%;
+            width: 50%;
             vertical-align: top;
         }
+        .signature-table td.sig-right {
+            text-align: right;
+        }
+        /* Isi kolom kanan rata KIRI, tapi bloknya tetap di kanan halaman:
+           text-align:right pada td memposisikan blok inline-block, lalu di
+           dalam blok semua baris rata kiri sehingga "Wali Kelas" dan NIP
+           sejajar tepat di bawah huruf pertama "Parung Panjang". */
+        .signature-table td.sig-right .sig-inline {
+            display: inline-block;
+            text-align: left;
+        }
+        .signature-space { height: 50px; }
     </style>
 </head>
 <body>
@@ -179,15 +198,15 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 30px;">No</th>
-                <th style="width: 70px;">NISN</th>
-                <th style="text-align: left;">Nama Siswa</th>
-                <th style="width: 60px;">Kelas</th>
-                <th style="width: 30px;">JK</th>
-                <th style="width: 70px;">Jam Masuk</th>
-                <th style="width: 90px;">Keterlambatan</th>
-                <th style="width: 70px;">Status</th>
-                <th style="text-align: left;">Catatan</th>
+                <th style="width: 3%;">No</th>
+                <th style="width: 9%;">NISN</th>
+                <th style="text-align: left; width: 21%;">Nama Siswa</th>
+                <th style="width: 6%;">Kelas</th>
+                <th style="width: 2.5%;">JK</th>
+                <th style="width: 9.5%;">Jam Masuk</th>
+                <th style="width: 12%;">Keterlambatan</th>
+                <th style="width: 8%;">Status</th>
+                <th style="text-align: left; width: 29%;">Catatan</th>
             </tr>
         </thead>
         <tbody>
@@ -226,23 +245,30 @@
     </table>
 
     @elseif($type === 'mingguan')
+    {{-- Lebar kolom tanggal dihitung dari sisa lebar agar total tabel = 100%
+         (sama persis dengan garis bawah kop surat) pada berapa pun jumlah kolom. --}}
+    @php
+        $wMingguanTetap = 3 + 9 + 21 + 6 + 2.5;   // No, NISN, Nama, Kelas, JK
+        $wRingkasan = (2.6 * 5) + 4;             // H, T, S, I, A + %
+        $wKolomTanggalMingguan = (100 - $wMingguanTetap - $wRingkasan) / max(1, count($dateColumns));
+    @endphp
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 25px;">No</th>
-                <th style="width: 65px;">NISN</th>
-                <th style="text-align: left; width: 140px;">Nama Siswa</th>
-                <th style="width: 50px;">Kelas</th>
-                <th style="width: 25px;">JK</th>
+                <th style="width: 3%;">No</th>
+                <th style="width: 9%;">NISN</th>
+                <th style="text-align: left; width: 21%;">Nama Siswa</th>
+                <th style="width: 6%;">Kelas</th>
+                <th style="width: 2.5%;">JK</th>
                 @foreach($dateColumns as $d)
-                    <th>{{ $d['label'] }}</th>
+                    <th style="width: {{ $wKolomTanggalMingguan }}%;">{{ $d['label'] }}</th>
                 @endforeach
-                <th style="width: 24px; background-color: #059669;">H</th>
-                <th style="width: 24px; background-color: #d97706;">T</th>
-                <th style="width: 24px; background-color: #2563eb;">S</th>
-                <th style="width: 24px; background-color: #0d9488;">I</th>
-                <th style="width: 24px; background-color: #e11d48;">A</th>
-                <th style="width: 38px;">%</th>
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #d97706;">T</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #0d9488;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4%;">%</th>
             </tr>
         </thead>
         <tbody>
@@ -284,24 +310,31 @@
     </table>
 
     @else
-    <!-- BULANAN -->
+    {{-- BULANAN: lebar kolom tanggal 1..31 dihitung dari sisa lebar agar
+         total tabel = 100% (sama persis dengan garis bawah kop surat) dan
+         TIDAK melar keluar kertas pada bulan 31 hari. --}}
+    @php
+        $wBulananTetap = 2.6 + 8 + 19 + 5 + 2.4; // No, NISN, Nama, Kelas, JK
+        $wRingkasanBulanan = (2.6 * 5) + 4.4;    // H, T, S, I, A + %
+        $wKolomTanggalBulanan = (100 - $wBulananTetap - $wRingkasanBulanan) / max(1, (int) $daysInMonth);
+    @endphp
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 22px;">No</th>
-                <th style="width: 60px;">NISN</th>
-                <th style="text-align: left; width: 130px;">Nama Siswa</th>
-                <th style="width: 45px;">Kelas</th>
-                <th style="width: 20px;">JK</th>
+                <th style="width: 2.6%;">No</th>
+                <th style="width: 8%;">NISN</th>
+                <th style="text-align: left; width: 19%;">Nama Siswa</th>
+                <th style="width: 5%;">Kelas</th>
+                <th style="width: 2.4%;">JK</th>
                 @for($d = 1; $d <= $daysInMonth; $d++)
-                    <th style="padding: 2px 1px; width: 14px;">{{ $d }}</th>
+                    <th style="padding: 2px 1px; width: {{ $wKolomTanggalBulanan }}%;">{{ $d }}</th>
                 @endfor
-                <th style="width: 20px; background-color: #059669;">H</th>
-                <th style="width: 20px; background-color: #d97706;">T</th>
-                <th style="width: 20px; background-color: #2563eb;">S</th>
-                <th style="width: 20px; background-color: #0d9488;">I</th>
-                <th style="width: 20px; background-color: #e11d48;">A</th>
-                <th style="width: 32px;">%</th>
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #d97706;">T</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #0d9488;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4.4%;">%</th>
             </tr>
         </thead>
         <tbody>
@@ -356,27 +389,30 @@
             </div>
         </div>
 
+        <!-- TANDA TANGAN: 2 KOLOM SAJA (Kiri: Kepala Sekolah, Kanan: Wali Kelas).
+             Kolom "Petugas Presensi" dihapus total. NIP Wali Kelas diambil dinamis
+             dari relasi kelas/guru penanggung jawab section ini. -->
         <table class="signature-table">
             <tr>
                 <td>
                     Mengetahui,<br>
                     Kepala Sekolah
-                    <div style="height: 50px;"></div>
+                    <div class="signature-space"></div>
                     <strong><u>{{ $headmasterName ?: $signPlaceholder }}</u></strong><br>
                     NIP. {{ $headmasterNip ?: '-' }}
                 </td>
-                <td>
-                    Wali Kelas
-                    <div style="height: 50px;"></div>
-                    <strong><u>{{ $section['waliName'] ?: $signPlaceholder }}</u></strong><br>
-                    NIP. {{ $section['waliNip'] ?: '-' }}
-                </td>
-                <td>
-                    Parung Panjang, {{ $signedAt }}<br>
-                    Petugas Presensi
-                    <div style="height: 50px;"></div>
-                    <strong><u>{{ $signPlaceholder }}</u></strong><br>
-                    NIP. -
+                <td class="sig-right">
+                    {{-- Blok kanan diposisikan ke kanan oleh text-align:right pada td,
+                         sedangkan isi teksnya sendiri rata KIRI lewat wrapper
+                         inline-block: supaya "Wali Kelas" lurus di bawah huruf pertama
+                         "Parung Panjang" dan NIP-nya juga sejajar. --}}
+                    <div class="sig-inline">
+                        Parung Panjang, {{ $signedAt }}<br>
+                        Wali Kelas
+                        <div class="signature-space"></div>
+                        <strong><u>{{ $section['waliName'] ?: $signPlaceholder }}</u></strong><br>
+                        NIP. {{ $section['waliNip'] ?: '-' }}
+                    </div>
                 </td>
             </tr>
         </table>

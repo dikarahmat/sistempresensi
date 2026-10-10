@@ -8,22 +8,34 @@
 | Urutan Elemen (Atas ke Bawah):
 |   1. HEADER: Logo sekolah + SMP PGRI PARUNGPANJANG + KARTU PRESENSI DIGITAL
 |      Garis oranye (#f59e0b) tepat di bawah header
-|   2. NAMA SISWA: Center, langsung di bawah header, TANPA label "NAMA :",
-|      kapital, bold, ukuran besar, teks wrap jika panjang dan tetap center.
-|   3. KELAS: Tepat di bawah nama, center, TANPA label "KELAS :",
-|      hanya teks kelas (misal "9B"), bold, warna & ukuran gelap (#0f172a).
-|   4. QR CODE: Center, di bawah kelas, ukuran optimal & tajam dapat di-scan.
-|   5. TEKS "SCAN PRESENSI": Tepat di bawah QR, center, bold, kecil (#0f172a).
-|   6. FOOTER: Teks "Tunjukkan kartu saat presensi masuk", center, italic,
+|   2. NAMA SISWA: UKURAN TETAP 7pt (sama untuk semua kartu, tidak dikecilkan
+|      berdasarkan panjang nama), langsung di bawah header, TANPA label "NAMA :",
+|      kapital, bold, hitam (#0f172a), SATU BARIS (nowrap; nama terpanjang tetap muat).
+|   3. NISN: Tepat di bawah nama, center, TANPA label "NISN :",
+|      ukuran tetap 6,8pt, bold, hitam (#0f172a),
+|      teks polos 10 digit (angka 0 di depan tetap tampil).
+|      Baris disembunyikan bila NISN kosong.
+|   4. KELAS: Tepat di bawah NISN, center, TANPA label "KELAS :",
+|      hanya teks kelas (misal "9B"), bold, ukuran 8pt & warna sama (#0f172a).
+|
+| Jarak antar baris rapat & merata: line-height 1.2 + margin-top 2px (0,53 mm),
+| tanpa padding lain di antaranya. Blok 18 mm dijaga agar posisi QR tidak bergeser.
+|   5. QR CODE: Center, di bawah kelas, ukuran optimal & tajam dapat di-scan.
+|   6. TEKS "SCAN PRESENSI": Tepat di bawah QR, center, bold, kecil (#0f172a).
+|   7. FOOTER: Teks "Tunjukkan kartu saat presensi masuk", center, italic,
 |      warna abu-abu kebiruan (#64748b). Tanpa teks tahun ajaran.
+|
+| Jarak antar baris (Nama > NISN > Kelas) rapat: 0,6 mm (~2,3 px).
 |
 | Tinggi Kartu Total = 85,6 mm:
 |   - Header  : 11,2 mm navy (#1e3a8a)
-|   - Accent  : 0,8 mm garis oranye (#f59e0b)
-|   - Nama & Kelas : 18,0 mm putih (#ffffff)
+|   - Accent  : 0,8 mm garis oranje (#f59e0b)
+|   - Nama, NISN & Kelas : 18,0 mm putih (#ffffff)
 |   - Area QR : 49,0 mm putih (#ffffff) (QR 34 mm + Teks 5 mm + spacing)
 |   - Footer  : 6,6 mm abu-abu muda (#f8fafc)
 |   Jumlah    : 11.2 + 0.8 + 18.0 + 49.0 + 6.6 = 85,6 mm
+| Ketiga baris (nama/nisn/kelas) muat di blok 18 mm dengan vertical-align
+| middle, sehingga posisi tengah kartu & QR code tidak bergeser.
 |
 | Kompatibilitas DomPDF & Web:
 |   - Menggunakan <table> & inline styles mm/pt murni.
@@ -37,22 +49,24 @@
     $studentName  = $studentName  ?? ($studentItem->name ?? $studentItem->nama ?? '-');
     $studentClass = $studentClass ?? ($studentItem->schoolClass->name ?? $studentItem->kelas ?? '-');
 
-    // Font size adaptif untuk nama siswa agar nama panjang ("ANNISA SARI NOVITASARI", dsb)
-    // dapat wrap 2 baris dengan rapi, tetap center, dan tidak pernah terpotong atau keluar kartu.
-    $nameLength = mb_strlen(trim((string) $studentName));
-    if ($nameLength > 30) {
-        $nameFontSize = '5.5pt';
-        $nameLineHeight = '1.1';
-    } elseif ($nameLength > 22) {
-        $nameFontSize = '6.2pt';
-        $nameLineHeight = '1.15';
-    } elseif ($nameLength > 16) {
-        $nameFontSize = '7.2pt';
-        $nameLineHeight = '1.2';
-    } else {
-        $nameFontSize = '8pt';
-        $nameLineHeight = '1.2';
+    // NISN ditampilkan apa adanya sebagai TEKS 10 digit (angka 0 di depan tetap muncul).
+    // Bila kosong, baris NISN disembunyikan supaya tidak menyisakan ruang kosong.
+    $studentNisn = trim((string) ($studentItem->nisn ?? ($studentNisn ?? '')));
+    if ($studentNisn === '-' || $studentNisn === 'null') {
+        $studentNisn = '';
     }
+
+    // UKURAN TETAP — sama untuk semua kartu (tidak ada lagi font mengecil
+    // berdasarkan panjang nama). Nama tampil SATU BARIS (nowrap + overflow hidden).
+    // Ukuran nama diturunkan dari 8pt menjadi 7pt (tetap untuk SEMUA kartu) supaya
+    // nama terpanjang di data siswa tetap muat satu baris tanpa terpotong:
+    // "KURNIAWAN RAHMAWATI NOVITASARI" pada 7pt Helvetica-Bold = 134,93 pt
+    // vs lebar teks kartu 138,84 pt (53,98mm - 2 x 2,5mm padding).
+    // Ukuran NISN (6,8pt) dan kelas (8pt) tetap seperti sebelumnya.
+    $nameFontSize  = '7pt';
+    $nisnFontSize  = '6.8pt';
+    $classFontSize = '8pt';
+    $lineGap       = '0.53mm'; // 2px antar baris
 
     // Resolusi logo fallback jika belum dikirimkan
     $logoSrc = $logoSrc ?? null;
@@ -118,21 +132,27 @@
         <td style="height: 0.8mm; padding: 0; background-color: #f59e0b; line-height: 0.8mm; font-size: 0;"></td>
     </tr>
 
-    <!-- 2. NAMA SISWA & KELAS (18,0 mm, center, tanpa label "NAMA" maupun "KELAS") -->
+    <!-- 2. NAMA SISWA, NISN & KELAS (18,0 mm, center, tanpa label "NAMA"/"NISN"/"KELAS") -->
     <tr>
-        <td style="height: 18mm; padding: 1.8mm 2.5mm 1mm 2.5mm; vertical-align: middle; text-align: center; background-color: #ffffff;">
-            <!-- NAMA SISWA: Center, bold, kapital, gelap -->
-            <div style="font-size: {{ $nameFontSize }}; font-weight: bold; text-transform: uppercase; color: #0f172a; line-height: {{ $nameLineHeight }}; word-wrap: break-word; overflow-wrap: break-word; text-align: center; margin: 0 auto; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+        <td style="height: 18mm; padding: 1.5mm 2.5mm 1mm 2.5mm; vertical-align: middle; text-align: center; background-color: #ffffff; overflow: hidden;">
+            <!-- NAMA SISWA: ukuran TETAP, SATU BARIS, bold, kapital, hitam -->
+            <div style="font-size: {{ $nameFontSize }}; font-weight: bold; text-transform: uppercase; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: clip; text-align: center; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
                 {{ mb_strtoupper($studentName) }}
             </div>
-            <!-- KELAS: Tepat di bawah nama, center, bold, warna & gaya sama dengan nama (gelap) -->
-            <div style="font-size: {{ $nameFontSize }}; font-weight: bold; color: #0f172a; text-align: center; margin-top: 1mm; text-transform: uppercase; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+            <!-- NISN: Tepat di bawah nama (jarak 2px), tidak ada margin/padding lain di antaranya -->
+            @if($studentNisn !== '')
+                <div style="font-size: {{ $nisnFontSize }}; font-weight: bold; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: clip; text-align: center; margin: {{ $lineGap }} 0 0 0; padding: 0; letter-spacing: 0.4px; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+                    {{ $studentNisn }}
+                </div>
+            @endif
+            <!-- KELAS: Tepat di bawah NISN (jarak 2px), bold, ukuran & warna sama dengan nama -->
+            <div style="font-size: {{ $classFontSize }}; font-weight: bold; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: clip; text-align: center; margin: {{ $lineGap }} 0 0 0; padding: 0; text-transform: uppercase; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
                 {{ $studentClass }}
             </div>
         </td>
     </tr>
 
-    <!-- 3. QR CODE & TEKS "SCAN PRESENSI" (49,0 mm, center) -->
+    <!-- 4. QR CODE & TEKS "SCAN PRESENSI" (49,0 mm, center) -->
     <tr>
         <td style="height: 49mm; padding: 1mm 0 0 0; vertical-align: top; text-align: center; background-color: #ffffff;">
             <div class="qr-pure-white" style="width: 34mm; height: 34mm; margin: 0 auto; text-align: center; padding: 1mm; background-color: #ffffff;">
@@ -145,7 +165,7 @@
         </td>
     </tr>
 
-    <!-- 4. FOOTER (6,6 mm, hanya teks "Tunjukkan kartu saat presensi masuk", italic, abu-abu kebiruan) -->
+    <!-- 5. FOOTER (6,6 mm, hanya teks "Tunjukkan kartu saat presensi masuk", italic, abu-abu kebiruan) -->
     <tr>
         <td style="height: 6.6mm; background-color: #f8fafc; padding: 0 3mm; vertical-align: middle; text-align: center; border-bottom-left-radius: 3.18mm; border-bottom-right-radius: 3.18mm; border-top: 1px solid #e2e8f0;">
             <div style="font-size: 4.5pt; font-style: italic; color: #64748b; text-align: center; line-height: 1; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">

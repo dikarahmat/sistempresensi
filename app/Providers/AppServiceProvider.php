@@ -27,5 +27,20 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Http\Request::macro('isMobile', function () {
             return is_mobile_request($this);
         });
+
+        // ---------------------------------------------------------------
+        // Limiter khusus CETAK REKAP ("Semua Kelas").
+        //
+        // Cetak Per Siswa + cakupan "Semua Kelas" mengirim SATU request per
+        // kelas dari browser. Dengan ~18 kelas, throttle lama 5 request/menit
+        // langsung memblokir 13 kelas dengan HTTP 429 "Too Many Attempts".
+        // Karena itu rute cetak memakai limiter bernama yang longgar:
+        // 120 request per menit per user. Rute lain TIDAK diubah.
+        // ---------------------------------------------------------------
+        \Illuminate\Support\Facades\RateLimiter::for('rekap-print', function ($request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(120)->by(
+                optional($request->user())->id ?: $request->ip()
+            );
+        });
     }
 }
