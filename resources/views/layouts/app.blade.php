@@ -154,6 +154,18 @@
             --text-dark: #1e293b;
             --bg-canvas: #3b62f6;
             --bottom-nav-height: 56px;
+
+            /* ===== TOKEN UKURAN TOMBOL AKSI TOOLBAR (standar seragam) =====
+               Dipakai bersama oleh halaman Data Siswa, Data Guru, Data Kelas,
+               dan Rekap (Harian/Mingguan/Bulanan) - blok "TOOLBAR ACTION
+               BUTTONS" di bawah. Nilai DASAR ini = tier 641-999px; ditimpa
+               di @media (min-width: 1000px) dan @media (min-width: 1200px).
+               HP (<= 640px) tidak memakai token ini sama sekali. */
+            --tb-btn-w: 96px;      /* lebar SEMUA tombol aksi toolbar */
+            --tb-btn-h: 36px;      /* tinggi tombol = tinggi input di baris itu */
+            --tb-btn-font: 0.7rem;
+            --tb-btn-pad-x: 0.4rem;
+            --tb-field-w: 120px;   /* lebar kolom dropdown filter */
         }
 
         /* --------------------------------------------------------------------------
@@ -2538,6 +2550,198 @@
                 font-size: 14px !important;
                 font-weight: 600 !important;
                 border-radius: var(--clean-radius) !important;
+            }
+        }
+
+        /* ===== TOKEN TIER UKURAN TOMBOL TOOLBAR (lihat :root di atas) =====
+           >= 1200px : 120px | font .75rem | tinggi 40px | field 140px
+           1000-1199 : 108px | font .72rem | tinggi 38px | field 132px
+           641-999px :  96px | font .70rem | tinggi 36px | field 120px */
+        @media (min-width: 1000px) {
+            :root {
+                --tb-btn-w: 108px;
+                --tb-btn-h: 38px;
+                --tb-btn-font: 0.72rem;
+                --tb-btn-pad-x: 0.5rem;
+                --tb-field-w: 132px;
+            }
+        }
+        @media (min-width: 1200px) {
+            :root {
+                --tb-btn-w: 120px;
+                --tb-btn-h: 40px;
+                --tb-btn-font: 0.75rem;
+                --tb-btn-pad-x: 0.5rem;
+                --tb-field-w: 140px;
+            }
+        }
+
+        /* ==========================================================================
+           TOOLBAR ACTION BUTTONS - SATU STANDAR UKURAN UNTUK SEMUA HALAMAN
+           (Data Siswa, Data Guru, Data Kelas, Rekap Harian/Mingguan/Bulanan)
+
+           MASALAH YANG DISELESAIKAN: ukuran tombol tidak seragam antar halaman
+           (Hapus lebih sempit; Cetak PDF/Excel di Rekap 180px vs Import/Tambah
+           120px). Sekarang SEMUA tombol aksi toolbar memakai lebar, tinggi, font,
+           padding, dan radius yang sama, ditentukan oleh token --tb-btn-*.
+
+           HP (<= 640px): semua blok ini DI LUAR jangkauan - tampilan HP tetap
+           seperti semula (blok mobile max-width: 767.98px di atas).
+
+           UKURAN DIKUNCI OLEH CSS: tidak ada JS yang mengukur/mengubah
+           width-height tombol toolbar, jadi ukuran tidak bergeser saat
+           loading/selesai.
+
+           YANG SENGAJA TIDAK DISENTUH: warna tombol, tombol aksi baris tabel
+           (.btn-row-action), tombol di dalam modal, dan tampilan HP.
+           ========================================================================== */
+        @media (min-width: 641px) {
+            /* ---------- A. WADAH TOOLBAR: SATU BARIS, TANPA WRAP ----------
+               .action-bar-section dipakai HANYA oleh Data Siswa/Guru/Kelas,
+               .filter-card > form dipakai HANYA oleh Rekap. */
+            #daftar-siswa .action-bar-section,
+            #daftar-guru .action-bar-section,
+            #daftar-kelas .action-bar-section,
+            .filter-card > form {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+
+            /* ---------- B. KOLOM CARI (Siswa/Guru/Kelas) ---------- */
+            #daftar-siswa .action-search-form,
+            #daftar-guru .action-search-form,
+            #daftar-kelas .action-search-form {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+                flex: 1 1 0 !important;
+                width: auto !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Input cari + ikon cari = satu kesatuan; boleh mengecil,
+               placeholder boleh ellipsis, tinggi ikut tinggi tombol. */
+            #daftar-siswa .action-search-form .search-box-wrap,
+            #daftar-guru .action-search-form .search-box-wrap,
+            #daftar-kelas .action-search-form .search-box-wrap {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                align-items: stretch !important;
+                flex: 1 1 0 !important;
+                width: auto !important;
+                max-width: none !important;
+                min-width: 110px !important;
+                height: var(--tb-btn-h) !important;
+                margin-bottom: 0 !important;
+            }
+            #daftar-siswa .action-search-form .search-box-wrap input.form-control,
+            #daftar-guru .action-search-form .search-box-wrap input.form-control,
+            #daftar-kelas .action-search-form .search-box-wrap input.form-control {
+                flex: 1 1 auto !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                height: var(--tb-btn-h) !important;
+            }
+            #daftar-siswa .action-search-form .search-box-wrap > .btn,
+            #daftar-guru .action-search-form .search-box-wrap > .btn,
+            #daftar-kelas .action-search-form .search-box-wrap > .btn {
+                flex: 0 0 auto !important;
+                height: var(--tb-btn-h) !important;
+            }
+
+            /* ---------- C. DROPDOWN FILTER (Semua Kelas / Semua Tingkat) ---------- */
+            #daftar-siswa .action-search-form .filter-box-wrap,
+            #daftar-kelas .action-search-form .filter-box-wrap {
+                flex: 0 0 var(--tb-field-w) !important;
+                width: var(--tb-field-w) !important;
+                max-width: var(--tb-field-w) !important;
+                min-width: 0 !important;
+            }
+            #daftar-siswa .action-search-form .filter-box-wrap select.form-select,
+            #daftar-kelas .action-search-form .filter-box-wrap select.form-select {
+                width: 100% !important;
+                height: var(--tb-btn-h) !important;
+            }
+
+            /* ---------- D. DERETAN TOMBOL AKSI: SATU BARIS, RATA KANAN ---------- */
+            #daftar-siswa .action-buttons-wrap,
+            #daftar-guru .action-buttons-wrap,
+            #daftar-kelas .action-buttons-wrap {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                align-items: center !important;
+                justify-content: flex-end !important;
+                gap: 0.5rem !important;
+                flex: 0 0 auto !important;
+                width: auto !important;
+                max-width: none !important;
+                margin-left: auto !important;
+                margin-top: 0 !important;
+            }
+
+            /* ---------- E. STANDAR UKURAN TOMBOL (SEMUA HALAMAN) ----------
+               .btn-solid-pill = Cetak Kartu / Import Excel / Tambah / Hapus
+               (Siswa, Guru, Kelas); .btn-red-pdf + .btn-green-excel = Cetak
+               PDF / Cetak Excel (Rekap). Scoped ke dalam toolbar supaya tombol
+               sejenis di modal (mis. tombol Import di modal Hari Libur) tidak
+               ikut berubah. Lebar PAS untuk semua - termasuk HAPUS. */
+            #daftar-siswa .action-buttons-wrap .btn-solid-pill,
+            #daftar-guru .action-buttons-wrap .btn-solid-pill,
+            #daftar-kelas .action-buttons-wrap .btn-solid-pill,
+            .filter-card > form .btn-red-pdf,
+            .filter-card > form .btn-green-excel {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                flex: 0 0 var(--tb-btn-w) !important;
+                width: var(--tb-btn-w) !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: var(--tb-btn-h) !important;
+                min-height: var(--tb-btn-h) !important;
+                padding: 0 var(--tb-btn-pad-x) !important;
+                font-size: var(--tb-btn-font) !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.02em !important;
+                gap: 0.35rem !important;
+                white-space: nowrap !important;
+                border-radius: var(--clean-radius) !important;
+            }
+
+            /* ---------- F. REKAP: KOLOM TANGGAL/BULAN/TAHUN + PILIH KELAS ----------
+               Semua kolom field Rekap memakai class .d-flex.flex-column:
+               harian = 1 tanggal, mingguan = 2 tanggal, bulanan = bulan + tahun.
+               Kolom "Pilih Kelas" selalu kolom field TERAKHIR (tepat sebelum
+               div tombol cetak = anak terakhir form), jadi dipilih lewat
+               :nth-last-child(2); kolom itulah satu-satunya yang lentur. */
+            .filter-card > form > div.d-flex.flex-column {
+                flex: 0 1 var(--tb-field-w) !important;
+                width: auto !important;
+                min-width: 0 !important;
+            }
+            .filter-card > form > div.d-flex.flex-column:nth-last-child(2) {
+                flex: 1 1 0 !important;
+                width: auto !important;
+                min-width: 0 !important;
+            }
+            .filter-card > form > div:last-child {
+                flex: 0 0 auto !important;
+                margin-left: auto !important;
+                margin-top: 22px !important;   /* tetap sejajar baris input */
+            }
+            .filter-card > form .filter-input {
+                height: var(--tb-btn-h) !important;
             }
         }
 

@@ -42,11 +42,16 @@
         .app-header-right { flex: 0 0 auto; margin-left: auto; }
     }
 
-    /* Buttons Export Responsif */
+    /* Buttons Export Responsif
+       UKURAN (lebar/tinggi/font/padding) TIDAK ditulis di sini lagi: sekarang
+       ikut token toolbar bersama di layouts/app.blade.php (--tb-btn-w, --tb-btn-h,
+       --tb-btn-font, --tb-btn-pad-x) supaya CETAK PDF & CETAK EXCEL lebarnya
+       PERSIS SAMA dengan tombol Import Excel / Tambah / Hapus di halaman lain.
+       Yang tetap di halaman ini hanya warna, hover, dan efeknya. */
     .btn-green-excel {
         background-color: #059669; color: #ffffff !important;
         font-size: 0.82rem; font-weight: 600; border: none; border-radius: var(--clean-radius);
-        min-width: 160px; height: 40px; padding: 0 1.25rem; display: inline-flex;
+        display: inline-flex;
         align-items: center; justify-content: center; text-decoration: none;
         white-space: nowrap; box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
         transition: all 0.15s ease-in-out; flex-shrink: 0;
@@ -57,17 +62,13 @@
     .btn-red-pdf {
         background-color: #ef4444; color: #ffffff !important;
         font-size: 0.82rem; font-weight: 600; border: none; border-radius: var(--clean-radius);
-        min-width: 160px; height: 40px; padding: 0 1.25rem; display: inline-flex;
+        display: inline-flex;
         align-items: center; justify-content: center; text-decoration: none;
         white-space: nowrap; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.2);
         transition: all 0.15s ease-in-out; flex-shrink: 0;
         text-transform: uppercase; letter-spacing: 0.03em; font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-red-pdf:hover { background-color: #dc2626; color: #ffffff !important; transform: translateY(-1px); }
-
-    @media (min-width: 768px) {
-        .btn-green-excel, .btn-red-pdf { min-width: 180px; height: 40px; padding: 0 1.5rem; }
-    }
 
     /* Period Switcher Tabs */
     .period-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 0.75rem; }
