@@ -6,14 +6,38 @@
 
 @push('styles')
 <style>
-    /* Stat Items */
+    /* Statistik: baris ringkasan TANPA garis & tanpa kotak (revisi).
+       Tidak ada border atas/bawah, tidak ada sekat antar kolom, tidak ada
+       background, shadow, radius, atau padding kotak - hanya teks angka + label.
+       Jarak ke baris nama siswa (atas) dan ke tab periode (bawah) ~.75rem. */
+    .stat-summary {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: stretch;
+        gap: 0;
+        padding: 0.35rem 0;
+        margin-bottom: 0.75rem;
+    }
     .stat-item {
         text-align: center;
-        flex: 1;
+        flex: 1 1 0;
         min-width: 0;
     }
-    .stat-value { font-size: 0.75rem; font-weight: 400; line-height: 1.2; }
-    .stat-label { font-size: 0.6rem; color: #64748b; margin-top: 0; font-weight: 400; text-transform: uppercase; }
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+        margin-top: 0.125rem;
+    }
 
     /* Period Nav - full width bagi 3 */
     .period-nav {
@@ -120,8 +144,10 @@
 
     /* Mobile */
     @media (max-width: 767.98px) {
-        .stat-value { font-size: 0.68rem; }
-        .stat-label { font-size: 0.55rem; }
+        /* Susunan enam kolom tetap (tidak diubah); hanya ukuran angka & label
+           yang dikecilkan, dan tidak ada garis/kotak tambahan. */
+        .stat-value { font-size: 1rem; }
+        .stat-label { font-size: 0.62rem; }
         .table-history thead th { font-size: 0.72rem; padding: 0.5rem 0.35rem; }
         .table-history tbody td { font-size: 0.78rem; padding: 0.5rem 0.35rem; }
         .period-link { font-size: 0.78rem; padding: 0.3rem 0.4rem; }
@@ -135,8 +161,8 @@
 @endpush
 
 @section('content')
-    <!-- Info Siswa -->
-    <div class="mb-3">
+    <!-- Info Siswa (jarak ke baris statistik ~.75rem = mb-2) -->
+    <div class="mb-2">
         <h5 class="mb-1" style="color: #0f172a; text-transform: uppercase; font-weight: 400;">{{ $student->name }}</h5>
         <p class="text-secondary mb-0" style="font-size: 0.85rem; text-transform: uppercase;">
             NISN: {{ $student->nisn ?: '-' }} &bull; Kelas: {{ $student->schoolClass->name ?? '-' }}
@@ -148,8 +174,8 @@
         <form method="GET" action="{{ panel_route('kehadiran.student-history', $student->id) }}">
             <input type="hidden" name="period" value="{{ $period }}">
 
-            <!-- Statistik -->
-            <div class="d-flex flex-wrap justify-content-between gap-1 mb-2 pb-2" style="border-bottom: 1px solid #f1f5f9;">
+            <!-- Statistik (satu bar ringkasan: 6 kolom, sekat tipis antar kolom) -->
+            <div class="stat-summary">
                 <div class="stat-item">
                     <div class="stat-value" style="color: #16a34a;">{{ $stats['hadir'] }}</div>
                     <div class="stat-label">Hadir</div>
@@ -201,33 +227,6 @@
                 <button type="submit" class="btn btn-primary">Tampilkan</button>
             </div>
         </form>
-    </div>
-
-    <!-- Legenda Status & Format Keterlambatan -->
-    <div class="card border-0 shadow-sm rounded-4 p-3 mb-3 bg-white">
-        <div class="d-flex flex-sm-row flex-column gap-3">
-            <!-- Kolom Kiri: Status -->
-            <div>
-                <h6 class="mb-2" style="color: #0f172a; font-size: 0.85rem; text-transform: uppercase;">Legenda Status</h6>
-                <div class="d-flex gap-2" style="font-size: 0.8rem;">
-                    <span class="status-hadir me-2">H</span> Hadir &nbsp;
-                    <span class="status-terlambat me-2">T</span> Terlambat &nbsp;
-                    <span class="status-sakit me-2">S</span> Sakit &nbsp;
-                    <span class="status-izin me-2">I</span> Izin &nbsp;
-                    <span class="status-alfa me-2">A</span> Alfa &nbsp;
-                    <span class="status-libur me-2">L</span> Libur
-                </div>
-            </div>
-            <!-- Kolom Kanan: Format Keterlambatan -->
-            <div>
-                <h6 class="mb-2" style="color: #0f172a; font-size: 0.85rem; text-transform: uppercase;">Format Keterlambatan</h6>
-                <p class="mb-0" style="font-size: 0.8rem;">
-                    <span class="text-primary">kurang dari 60 menit</span> 15 MNT &nbsp;|&nbsp;
-                    <span class="text-primary">60 menit atau lebih</span> 1 JAM 5 MNT &nbsp;|&nbsp;
-                    <span class="text-muted">Tidak terlambat</span> -
-                </p>
-            </div>
-        </div>
     </div>
 
     <!-- Tabel Riwayat -->

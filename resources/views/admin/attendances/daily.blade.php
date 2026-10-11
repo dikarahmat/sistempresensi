@@ -7,25 +7,30 @@
         \Carbon\Carbon::setLocale('id');
         $tanggalStr = \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y');
     @endphp
-    <span class="d-inline-flex flex-column flex-md-row align-items-start align-items-md-center gap-1 gap-md-2">
-        <span class="d-none d-md-inline">Pindai QR code siswa atau gunakan mode gerbang untuk mencatat kehadiran hari ini</span>
-        <span>{{ $tanggalStr }}</span>
-    </span>
+    {{-- Subjudul HANYA tanggal hari ini, sama persis dengan versi mobile.
+         Sumber tanggal tetap $tanggal ?? now() (tidak di-hardcode), format
+         "l, d F Y" -> contoh: "Minggu, 11 Oktober 2026". Ukuran & warna font
+         tetap dari .header-main-subtitle di layout bersama, jadi tidak perlu
+         CSS tambahan dan tampilan HP tidak berubah. --}}
+    <span>{{ $tanggalStr }}</span>
 @endsection
 
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">
-    <!-- Tombol Mode Gerbang (Direct ke Kiosk / Scanner Gerbang) -->
+    <!-- Tombol Mode Gerbang (Direct ke Kiosk / Scanner Gerbang)
+         Warna hijau diambil dari class yang sama dengan tombol versi mobile
+         (.btn-portal-gate), sehingga desktop & mobile satu sumber warna. -->
     <a href="{{ panel_route('absensi.kiosk') }}" 
-       class="btn btn-action-header btn-outline-primary fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
+       class="btn btn-action-header btn-portal-gate fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
        title="Mode Gerbang">
         <i class='bx bx-scan'></i>
         <span>Mode Gerbang</span>
     </a>
 
-    <!-- Tombol Toggle Scanner (Desktop) -->
+    <!-- Tombol Toggle Scanner (Desktop)
+         Warna biru juga diambil dari class versi mobile (.btn-portal-scanner). -->
     <button type="button" id="btnToggleScannerDesktop" 
-            class="btn btn-action-header btn-primary fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
+            class="btn btn-action-header btn-portal-scanner fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
             onclick="toggleInlineScanner()"
             title="Buka Scanner QR">
         <i class='bx bx-camera' id="toggleScannerIconDesktop"></i>
@@ -126,6 +131,20 @@
             min-height: 40px;
             padding: 0.5rem 0.65rem;
         }
+
+        /* Ikon tombol HP = ICON TOMBOL DESKTOP (class & library sama:
+           "bx-camera" untuk Scanner QR dan "bx-scan" untuk Mode Gerbang).
+           Yang disamakan hanya UKURAN & JARAK, dibuat proporsional terhadap
+           tinggi tombol: versi desktop memakai ikon 1.15rem dengan font tombol
+           .82rem (rasio ~1.4); tombol HP berfont .8rem -> ikon ~1.1rem.
+           Jarak ikon-teks ikut disamakan dengan gap-1 (.25rem) milik tombol
+           desktop. Ukuran tombol sendiri tetap (min-height 40px, w-100). */
+        .btn-portal-action i {
+            font-size: 1.1rem !important;
+        }
+        .btn-portal-action {
+            gap: 0.25rem !important;
+        }
     }
 
     /* Mode Gerbang Button (Green) */
@@ -177,7 +196,7 @@
         box-shadow: 0 4px 8px rgba(239, 68, 68, 0.35);
     }
 
-    /* Wadah Badge Responsif: Horizontal Scroll di Mobile, Flex Wrap di Desktop */
+    /* Wadah Bar Statistik Responsif: Horizontal Scroll di Mobile, Bar di Desktop */
     .badges-scroll-container {
         width: 100%;
         overflow-x: auto;
@@ -191,16 +210,8 @@
         width: 0 !important;
         height: 0 !important;
     }
-    .badges-scroll-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: nowrap;
-        width: max-content;
-        min-width: 100%;
-    }
     @media (max-width: 767.98px) {
-        /* Hapus total badge statistik pada tampilan mobile */
+        /* Hapus total bar statistik pada tampilan mobile */
         .badges-scroll-container {
             display: none !important;
             visibility: hidden !important;
@@ -216,49 +227,63 @@
             overflow-x: visible;
             margin-bottom: 0.85rem;
         }
-        .badges-scroll-wrapper {
-            flex-wrap: wrap;
+    }
+
+    /* ==========================================================================
+       BAR STATISTIK (sudah / belum / total) - SATU bar panjang berbingkai.
+       - Satu bingkai luar: background putih, border 1px #e2e8f0 (warna yang
+         sama dengan chip sebelumnya), radius 8px (sama dengan chip sebelumnya).
+       - Tiga bagian berjajar tanpa gap, dipisah SEKAT vertikal 1px; tidak ada
+         border/radius sendiri per bagian.
+       - Padding, font, ketebalan, line-height, dan tinggi diambil dari chip
+         lama, jadi tinggi bar tetap sama dengan tinggi chip sebelumnya.
+       - Lebar ikut isi (inline-flex), bukan full width.
+       - Wadahnya tetap yang sama (d-none d-md-block, overflow visible), jadi
+         jarak vertikal ke judul & ke tabel tidak berubah dan HP tidak tersentuh.
+       ========================================================================== */
+    @media (min-width: 641px) {
+        .stats-bar {
+            display: inline-flex;
+            align-items: stretch;
             width: auto;
+            max-width: 100%;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .stats-bar__item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.32rem 0.65rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.2;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+        .stats-bar__item + .stats-bar__item {
+            border-left: 1px solid #e2e8f0;   /* sekat vertikal tipis */
         }
     }
-    
-    /* Badge Ringkasan Minimalis: LATAR PUTIH, TANPA IKON (ikon dihapus supaya
-       isinya murni teks angka + keterangan, dan teks bisa rata kiri dengan
-       padding simetris kiri-kanan). */
-    .status-badge-pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 0.45rem;
-        padding: 0.32rem 0.65rem;
-        border-radius: 8px !important;
-        font-size: 0.78rem;
-        font-weight: 600;
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        color: #1e293b;
-        white-space: nowrap;
-        flex-shrink: 0;
-        line-height: 1.2;
-    }
-    .status-badge-pill i {
-        font-size: 0.95rem;
-    }
-    @media (max-width: 639.98px) {
-        .status-badge-pill {
-            padding: 0.20rem 0.45rem !important;
-            font-size: 0.72rem !important;
-            border-radius: 6px !important;
-            gap: 0.3rem !important;
-            line-height: 1.15 !important;
-        }
-        .status-badge-pill i {
-            font-size: 0.85rem !important;
+
+    /* ==========================================================================
+       BAR STATISTIK: tepi kirinya sejajar dengan ikon HAMBURGER (garis tiga).
+       Tombol hamburger (.mobile-top-hamburger) berada di dalam main yang sama
+       dengan konten halaman, dan tombol itu TIDAK memakai padding internal
+       (padding: 0 dikunci layout, baik < 1024px maupun >= 1024px). Karena itu:
+         x ikon garis tiga = x tombol hamburger = x tepi kiri container konten
+       sehingga bar tidak lagi memakai offset ke judul. Nilai padding tombol
+       diambil lewat variabel di bawah supaya kompensasinya mengikuti struktur:
+       bila suatu saat tombol itu diberi padding, cukup ubah satu nilai ini.
+       ========================================================================== */
+    @media (min-width: 641px) {
+        .stats-bar {
+            --presensi-hamburger-pad: 0px;   /* = padding .mobile-top-hamburger */
+            margin-left: calc(-1 * var(--presensi-hamburger-pad));
         }
     }
-    .icon-hadir { color: #15803d; }
-    .icon-belum { color: #64748b; }
-    .icon-total { color: #2563eb; }
 
     /* Tabel Enterprise Standar & Roomy */
     .table-custom-card {
@@ -611,16 +636,10 @@
     <!-- 2. KONTEN KHUSUS DESKTOP (>= 768px): BADGE RINGKASAN STATUS HARIAN        -->
     <!-- ========================================================================= -->
     <div class="badges-scroll-container mb-3 no-scrollbar d-none d-md-block" style="scrollbar-width: none; -ms-overflow-style: none;">
-        <div class="badges-scroll-wrapper">
-            <div class="status-badge-pill shadow-2xs">
-                <span><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> sudah presensi</span>
-            </div>
-            <div class="status-badge-pill shadow-2xs">
-                <span><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> belum presensi</span>
-            </div>
-            <div class="status-badge-pill shadow-2xs">
-                <span><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> total siswa</span>
-            </div>
+        <div class="stats-bar">
+            <div class="stats-bar__item"><span><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> sudah presensi</span></div>
+            <div class="stats-bar__item"><span><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> belum presensi</span></div>
+            <div class="stats-bar__item"><span><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> total siswa</span></div>
         </div>
     </div>
 

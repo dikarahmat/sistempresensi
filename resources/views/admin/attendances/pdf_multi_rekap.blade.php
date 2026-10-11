@@ -114,9 +114,8 @@
             background-color: #f8fafc;
         }
         /* Tanda tangan: 2 KOLOM PENUH (tanpa border) sesuai standar resmi nasional —
-           Kepala Sekolah rata KIRI, Wali Kelas rata KANAN. Kolom "Petugas Presensi"
-           dihapus total, kolom kanan tidak lagi memakai padding-left 30% (tidak ada
-           jarak mengambang di tengah). */
+           Kepala Sekolah rata KIRI, Wali Kelas rata KANAN. Kolom kanan tidak memakai
+           padding-left 30% (tidak ada jarak mengambang di tengah). */
         .signature-table {
             width: 100%;
             margin-top: 24px;
@@ -390,8 +389,8 @@
         </div>
 
         <!-- TANDA TANGAN: 2 KOLOM SAJA (Kiri: Kepala Sekolah, Kanan: Wali Kelas).
-             Kolom "Petugas Presensi" dihapus total. NIP Wali Kelas diambil dinamis
-             dari relasi kelas/guru penanggung jawab section ini. -->
+             NIP Wali Kelas diambil dinamis dari relasi kelas/guru penanggung jawab
+             section ini. -->
         <table class="signature-table">
             <tr>
                 <td>

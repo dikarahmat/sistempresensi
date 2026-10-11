@@ -32,7 +32,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  *  - Nomor urut LANJUT antar kelas (tidak mulai dari 1 lagi di tiap kelas).
  *  - Kelas tanpa siswa DILEWATI.
  *  - Setiap sheet ditutup dengan legenda H/T/S/I/A/L dan blok tanda tangan
- *    3 kolom: Kepala Sekolah (Pengaturan) | Wali Kelas (Data Guru) | Petugas.
+ *    2 kolom: Kepala Sekolah (kiri) | Wali Kelas (kanan).
  *
  * Method statis buildSections(), buildHeading(), buildSubtitle() dipakai BERSAMA
  * oleh ekspor Excel (kelas ini) dan RekapController::exportPdf() supaya isi,
@@ -51,7 +51,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     protected int $legendRow = 0;
     protected int $signRow = 0;
 
-    /** Nama pengganti bila tidak ada wali kelas / petugas (sama dengan template PDF). */
+    /** Nama pengganti bila tidak ada wali kelas (sama dengan template PDF). */
     public const NAME_PLACEHOLDER = '( ................................. )';
 
     public function __construct(string $type, array $params = [], ?array $section = null)
@@ -210,12 +210,12 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         ];
     }
 
-    /** Tiga posisi kolom tanda tangan: kiri, tengah, kanan. */
+    /** Dua posisi kolom tanda tangan: kiri (Kepala Sekolah) dan kanan (Wali Kelas). */
     public static function signatureColumns(int $columnCount): array
     {
         $columnCount = max(3, $columnCount);
 
-        return [1, (int) ceil($columnCount / 2), $columnCount];
+        return [1, $columnCount];
     }
 
     // =====================================================================
@@ -397,7 +397,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $output[] = [$line];
         }
 
-        // ---- BLOK TANDA TANGAN 3 KOLOM (per kelas / per sheet) ----
+        // ---- BLOK TANDA TANGAN 2 KOLOM (per kelas / per sheet) ----
         $output[] = [''];
         $this->signRow = count($output) + 1;
         foreach ($this->signatureRows($section) as $line) {
@@ -408,12 +408,13 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     }
 
     /**
-     * Baris tanda tangan: Kepala Sekolah | Wali Kelas | Petugas Presensi.
+     * Baris tanda tangan: KIRI = Kepala Sekolah, KANAN = Wali Kelas.
+     * Kolom kanan: "Parung Panjang, <tanggal>" lalu "Wali Kelas".
      * Baris & isi yang sama dengan bagian tandatangan di PDF.
      */
     protected function signatureRows(array $section): array
     {
-        [$colLeft, $colMid, $colRight] = self::signatureColumns($this->columnCount);
+        [$colLeft, $colRight] = self::signatureColumns($this->columnCount);
 
         $blank = array_fill(0, $this->columnCount, '');
 
@@ -431,16 +432,15 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $waliNip = $section['waliNip'] ?? null;
 
         $rows = [];
-        // 1. Judul blok
+        // 1. Baris judul: kiri "Mengetahui," | kanan tempat + tanggal
         $rows[] = $make([
             $colLeft => 'Mengetahui,',
-            $colMid => 'Wali Kelas',
             $colRight => 'Parung Panjang, ' . Carbon::now('Asia/Jakarta')->translatedFormat('d F Y'),
         ]);
         // 2. Jabatan
         $rows[] = $make([
             $colLeft => 'Kepala Sekolah',
-            $colRight => 'Petugas Presensi',
+            $colRight => 'Wali Kelas',
         ]);
         // 3-4. Jarak tanda tangan
         $rows[] = $blank;
@@ -448,14 +448,12 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         // 5. Nama
         $rows[] = $make([
             $colLeft => $headmasterName ?: self::NAME_PLACEHOLDER,
-            $colMid => $waliName ?: self::NAME_PLACEHOLDER,
-            $colRight => self::NAME_PLACEHOLDER,
+            $colRight => $waliName ?: self::NAME_PLACEHOLDER,
         ]);
         // 6. NIP
         $rows[] = $make([
             $colLeft => 'NIP. ' . ($headmasterNip ?: '-'),
-            $colMid => 'NIP. ' . ($waliNip ?: '-'),
-            $colRight => 'NIP. -',
+            $colRight => 'NIP. ' . ($waliNip ?: '-'),
         ]);
 
         return $rows;
@@ -788,23 +786,20 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         if ($this->signRow > 0) {
             $signStart = $this->signRow;
             $signEnd = $signStart + 5;
-            [$colLeft, $colMid, $colRight] = self::signatureColumns($this->columnCount);
+            [$colLeft, $colRight] = self::signatureColumns($this->columnCount);
 
             $leftLetter = Coordinate::stringFromColumnIndex($colLeft);
-            $midLetter = Coordinate::stringFromColumnIndex($colMid);
             $rightLetter = Coordinate::stringFromColumnIndex($colRight);
 
             // Baris judul (1) dan nama (5)
             foreach ([$signStart, $signStart + 4] as $rowIndex) {
-                foreach ([$leftLetter, $midLetter, $rightLetter] as $letter) {
+                foreach ([$leftLetter, $rightLetter] as $letter) {
                     $sheet->getStyle($letter . $rowIndex)->getFont()->setBold(true);
                 }
             }
 
-            // Rata kiri untuk kolom kiri & tengah, rata kanan untuk kolom kanan
+            // Rata kiri untuk kedua kolom tanda tangan
             $sheet->getStyle($leftLetter . $signStart . ':' . $leftLetter . $signEnd)
-                ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-            $sheet->getStyle($midLetter . $signStart . ':' . $midLetter . $signEnd)
                 ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $sheet->getStyle($rightLetter . $signStart . ':' . $rightLetter . $signEnd)
                 ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
@@ -843,7 +838,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     }
 
     /**
-     * Hanya tiga kolom yang menyimpan teks tanda tangan yang lebar-nya dikunci
+     * Hanya dua kolom yang menyimpan teks tanda tangan yang lebar-nya dikunci
      * berdasarkan isi tabel, sehingga auto-size tidak melebarkan kolom "No"/
      * "JK"/kolom hari hanya karena teks tanda tangan.
      */

@@ -200,25 +200,25 @@ class StudentProfileExport implements FromArray, WithMultipleSheets, WithTitle, 
         $waliNip = $student->schoolClass?->teacher?->nip;
         $placeholder = '( ................................. )';
 
-        $output[] = ['Mengetahui,', '', '', 'Wali Kelas', '', 'Parung Panjang, ' . $signedAt];
-        $output[] = ['Kepala Sekolah', '', '', '', '', 'Petugas Presensi'];
+        $output[] = ['Mengetahui,', '', '', '', '', 'Parung Panjang, ' . $signedAt];
+        $output[] = ['Kepala Sekolah', '', '', '', '', 'Wali Kelas'];
         $output[] = [];
         $output[] = [];
         $output[] = [
             $headmasterName ?: '( ................................. )',
             '',
             '',
-            $waliName ?: '( ................................. )',
             '',
-            '( ................................. )'
+            '',
+            $waliName ?: '( ................................. )'
         ];
         $output[] = [
             'NIP. ' . ($headmasterNip ?: '-'),
             '',
             '',
-            'NIP. ' . ($waliNip ?: '-'),
             '',
-            'NIP. -'
+            '',
+            'NIP. ' . ($waliNip ?: '-')
         ];
 
         return $output;
@@ -306,7 +306,6 @@ class StudentProfileExport implements FromArray, WithMultipleSheets, WithTitle, 
         $row1 = $signStart + 1;
         $row4 = $signStart + 4;
         $sheet->getStyle("A{$signStart}")->getFont()->setBold(true);
-        $sheet->getStyle("D{$signStart}")->getFont()->setBold(true);
         $sheet->getStyle("F{$signStart}")->getFont()->setBold(true);
         $sheet->getStyle("A{$row1}")->getFont()->setBold(true);
         $sheet->getStyle("F{$row1}")->getFont()->setBold(true);

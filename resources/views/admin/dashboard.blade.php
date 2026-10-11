@@ -339,6 +339,357 @@
             transform: none;
         }
     }
+
+    /* Keterangan singkat "belum ada catatan" di bawah grafik (desktop). */
+    .chart-empty-note {
+        font-size: 0.72rem;
+    }
+
+    /* ==========================================================================
+       TATA LETAK DASHBOARD UNTUK LEBAR >= 641px (desktop & tablet)
+       Semua aturan visual baru DI DALAM @media (min-width: 641px), sehingga
+       tampilan HP (max-width: 640px) tidak berubah sama sekali.
+
+       TOKEN GAYA DASHBOARD (satu sumber nilai, scoped di .dashboard-section).
+       Nilainya diambil dari PATOKAN yang sudah dipakai project ini:
+         --dash-border-width  lebar garis kartu                    : 1px
+         --dash-border-color  warna garis kartu (= --clean-line)   : #e5e9f0
+         --dash-radius        radius kartu pintasan (rounded-4)    : 1rem
+         --dash-gap           gap grid kartu pintasan (row g-3)    : 1rem
+         --dash-title-size    judul "Pintasan Cepat"               : 0.95rem
+         --dash-title-weight  judul "Pintasan Cepat" (fw-bold)     : 700
+         --dash-title-color   judul "Pintasan Cepat" tidak punya aturan
+                              warna (class text-dark memang tidak ada di
+                              project ini) -> judul semua kotak memakai
+                              nilai yang sama, yaitu pewarisan warna    : inherit
+         --dash-sub-size      sub-judul kartu pintasan             : 0.7rem
+         --dash-pad-x         inset horizontal SEMUA blok, mengikuti
+                              padding p-3 / p-md-4 milik wrapper
+                              Pintasan Cepat, dipakai bersama oleh kartu
+                              statistik, grid pintasan, dan keempat kotak   : 1rem
+         --dash-box-pad       padding isi kotak                     : 1rem
+       ========================================================================== */
+    @media (min-width: 641px) {
+        .dashboard-section {
+            --dash-border-width: 1px;
+            --dash-border-color: #e5e9f0;   /* garis kartu = --clean-line */
+            --dash-radius: 1rem;
+            --dash-gap: 1rem;
+            --dash-title-size: 0.95rem;
+            --dash-title-weight: 700;
+            --dash-title-color: inherit;
+            --dash-sub-size: 0.7rem;
+            --dash-pad-x: 1rem;        /* inset horizontal SEMUA blok  */
+            --dash-box-pad: 1rem;      /* padding isi kotak            */
+            /* SATU CONTAINER BERSAMA: kartu statistik, grid pintasan,
+               Monitoring, Grafik, Ketidakhadiran, dan Jadwal memakai inset
+               kiri-kanan yang sama, sehingga tepi atas sampai bawah benar-benar
+               satu garis (margin row & padding col Bootstrap saling meniadakan). */
+            padding-left: var(--dash-pad-x);
+            padding-right: var(--dash-pad-x);
+            --bs-gutter-x: var(--dash-gap);
+            margin-bottom: var(--dash-gap) !important;
+        }
+
+        /* 1. TIGA KARTU STATISTIK: kartu lebih pendek, angka ~2rem. Batas
+           kiri/kanannya kini otomatis sama (ikut inset .dashboard-section). */
+        .dashboard-stat-row .stat-card-modern {
+            padding: 0.85rem 1rem !important;
+            min-height: 0 !important;
+        }
+        .dashboard-stat-row .stat-card-modern span.text-uppercase {
+            margin-bottom: 0.3rem !important;
+        }
+        .dashboard-stat-row .stat-card-modern h3 {
+            font-size: 1.9rem !important;
+            margin-bottom: 0.3rem !important;
+        }
+        .dashboard-stat-row .stat-card-modern span.small {
+            font-size: 0.74rem !important;
+        }
+
+        /* WRAPPER PUTIH YANG TIDAK PERLU (dipakai section Pintasan Cepat):
+           dibuat rata dengan latar - tanpa latar putih, garis, bayangan, dan
+           radius. Inset & jarak vertikal kini berasal dari .dashboard-section,
+           bukan dari padding wrapper. */
+        .dashboard-flat {
+            background-color: transparent !important;
+            background-image: none !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        /* Garis pemisah di bawah judul bagian ikut hilang; jarak tetap dijaga
+           oleh margin-bottom pada elemen judulnya. */
+        .dashboard-divider-off {
+            border-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* WRAPPER PINTASAN CEPAT
+           Padding wrapper dinolkan seluruhnya karena inset horizontalnya kini
+           datang dari .dashboard-section yang sama dengan semua blok lain.
+           Padding bawah nol membuat jarak ke section berikutnya cukup dari
+           margin section; judul tetap di tengah (atas = margin section,
+           bawah = mb-3 judul). */
+        .dashboard-shortcuts-flat {
+            padding: 0 !important;
+        }
+
+        /* 4. KOTAK TIPIS - satu gaya untuk keempat section:
+           Monitoring & Analitik, Grafik, Ketidakhadiran, Jadwal Operasional.
+           Border (lebar + warna) & radius diambil PERSIS dari kartu pintasan
+           lewat variabel, tanpa shadow, background putih (bg-white di markup).
+           !important HANYA untuk mengalahkan utility Bootstrap yang memang
+           !important (border-0, rounded-4, shadow-sm, p-3/p-md-4). */
+        .dashboard-box {
+            border: var(--dash-border-width) solid var(--dash-border-color) !important;
+            border-radius: var(--dash-radius) !important;
+            box-shadow: none !important;
+            padding: var(--dash-box-pad) !important;
+        }
+
+        /* Judul tiap kotak & sub-judulnya mengikuti judul "Pintasan Cepat"
+           dan sub-judul kartu pintasan lewat token yang sama. */
+        .dashboard-box-title {
+            font-size: var(--dash-title-size) !important;
+            font-weight: var(--dash-title-weight);
+            color: var(--dash-title-color);
+            margin-bottom: 0 !important;
+        }
+        .dashboard-box-sub {
+            font-size: var(--dash-sub-size) !important;
+            line-height: 1.25;
+        }
+
+        /* 5. KOTAK MONITORING: judul + periode di kiri, dua tombol di KANAN.
+           Kotak jadi kolom; baris di dalamnya (monitoring-inner) yang menyusun
+           judul ke kiri dan tombol ke kanan. Padding vertikal dikecilkan supaya
+           kotaknya tetap tipis. */
+        .dashboard-monitor-box {
+            display: flex;
+            flex-direction: column;
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+        }
+        .dashboard-monitor-box .monitoring-inner {
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 0.5rem !important;
+            width: 100%;
+        }
+        .dashboard-monitor-box .monitoring-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;          /* jarak dua tombol yang terpisah */
+            margin-left: auto;    /* tetap di ujung kanan kotak */
+        }
+        /* Dua tombol Monitoring berdiri sendiri (bukan satu kesatuan): kotak
+           biru solid kecil, radius kotak, lebar mengikuti teks, hover biru
+           lebih gelap. !important menimpa utility Bootstrap & style inline. */
+        .dashboard-monitor-box .monitoring-actions .monitoring-btn {
+            height: 30px !important;
+            min-height: 30px !important;
+            padding: 0 0.75rem !important;
+            width: auto !important;
+            border: 0 !important;
+            border-radius: var(--dash-control-radius) !important;
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            font-size: 0.65rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .dashboard-monitor-box .monitoring-actions .monitoring-btn:hover {
+            background-color: #1d4ed8 !important;
+            color: #ffffff !important;
+        }
+
+        /* 6. KARTU DI DALAM KOTAK (baris Sakit/Izin/Alpha & kartu jam):
+           tanpa border & tanpa shadow, hanya abu sangat tipis dengan radius
+           yang sama -> tidak ada lagi "kotak di dalam kotak". */
+        .dashboard-inner-card {
+            border: 0 !important;
+            box-shadow: none !important;
+            background-color: #f8fafc !important;
+            border-radius: var(--dash-radius) !important;
+            padding: 0.65rem 0.75rem !important;
+        }
+
+        /* 7. JADWAL OPERASIONAL: kartu jam & tombol dibuat proporsional.
+           Angka jam 1.75rem (bold, mono tetap), label & WIB .7rem, padding
+           kartu .75rem 1rem, tombol tinggi 36px dengan font .7rem. */
+        .dashboard-clock {
+            padding: 0.75rem 1rem !important;
+        }
+        .dashboard-clock .clock-label {
+            font-size: 0.7rem !important;
+        }
+        .dashboard-clock .clock-value {
+            font-size: 1.75rem !important;
+            margin-top: 0.15rem !important;
+        }
+        .dashboard-clock .clock-unit {
+            font-size: 0.7rem !important;
+            margin-top: 0.1rem !important;
+        }
+        .dashboard-schedule-btn {
+            min-height: 36px !important;
+            padding: 0 0.75rem !important;
+            margin-top: var(--dash-gap) !important;
+            font-size: 0.7rem !important;
+            border-radius: var(--dash-radius) !important;
+        }
+
+        /* 8. FOOTER GRAFIK (Garis Tren ... Total): teks biasa, tanpa garis
+           pemisah di atas dan tanpa padding kotak. Isi teks tidak berubah. */
+        .dashboard-trend-footer {
+            border-top: 0 !important;
+            padding-top: 0 !important;
+            margin-top: 0.5rem !important;
+        }
+    }
+
+    /* 9. KOMPONEN SEGMENTED (.dash-seg) - dipakai oleh KONTROL GRAFIK:
+          a) Harian | Mingguan | Bulanan
+       (Kotak Monitoring sudah tidak memakai komponen ini: kedua tombolnya
+       berdiri sendiri lewat .monitoring-btn di atas.)
+       Ciri: tombol menempel berjajar tanpa gap, satu bingkai luar 1px, radius
+       kotak kecil (bukan pill), pemisah 1px antar tombol, tinggi 30px,
+       font .65rem bold uppercase, lebar mengikuti teks, area klik penuh.
+       Di bawah 641px komponen ini TIDAK aktif, jadi tampilan HP tidak berubah. */
+    @media (min-width: 641px) {
+        .dashboard-section {
+            --dash-control-radius: 6px;   /* radius kontrol kecil (kotak, bukan pill) */
+        }
+        .dash-seg {
+            display: inline-flex;
+            align-items: stretch;
+            flex-wrap: nowrap;
+            gap: 0;
+            padding: 0;
+            background-color: #ffffff;
+            border: 1px solid var(--dash-border-color);
+            border-radius: var(--dash-control-radius);
+            box-shadow: none;
+            overflow: hidden;
+        }
+        .dash-seg .dash-seg__btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 30px;
+            min-height: 30px;
+            padding: 0 0.75rem;
+            margin: 0;
+            border: 0;
+            border-left: 1px solid var(--dash-border-color);  /* pemisah tipis */
+            border-radius: 0 !important;   /* menimpa rounded-3/pill tombol */
+            background-color: #ffffff;
+            color: #334155;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            text-decoration: none;
+            white-space: nowrap;
+            box-shadow: none !important;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .dash-seg .dash-seg__btn:first-child {
+            border-left: 0;
+        }
+        .dash-seg .dash-seg__btn:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        .dash-seg .dash-seg__btn.is-active,
+        .dash-seg .dash-seg__btn--solid {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+        .dash-seg .dash-seg__btn.is-active:hover,
+        .dash-seg .dash-seg__btn--solid:hover {
+            background-color: #1d4ed8;
+            color: #ffffff;
+        }
+
+        /* 10. TANGGAL PERIODE GRAFIK ("05 Okt - 11 Okt 2026") jadi teks biasa:
+            tanpa border, background, padding kotak, dan radius. !important
+            wajib karena utility Bootstrap (bg-light, rounded-pill, px-*, py-*)
+            memang !important. */
+        .dash-period {
+            background-color: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-left: 0;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* Jarak .75rem antara komponen segmented dan teks periode
+           (utility gap-2 pada markup digantikan di rentang ini). */
+        .chart-header-actions {
+            gap: 0.75rem !important;
+        }
+
+        /* 11. IKON STATUS (Sakit / Izin / Alpha): kotak & latar di belakang ikon
+            dihapus - tersisa ikon polos berwarna, ~1.25rem, rata tengah dengan
+            teks. Transisi/transform hover ikut dimatikan. Warna tiap ikon tetap
+            dari custom property yang sudah ada (--absence-icon-color). */
+        .dash-status-icon {
+            width: auto !important;
+            height: auto !important;
+            flex: 0 0 auto !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-size: 1.25rem !important;
+            line-height: 1;
+        }
+        .dash-status-icon i {
+            display: block;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        /* Semua animasi ikon dimatikan (tidak ada ping/pulse/keyframes) */
+        .dash-status-icon,
+        .dash-status-icon i,
+        .absence-row-interactive i {
+            transition: none !important;
+            animation: none !important;
+        }
+        .absence-row-interactive:hover .dash-status-icon,
+        .absence-row-interactive:active .dash-status-icon,
+        .absence-row-interactive:hover .absence-status-icon,
+        .absence-row-interactive:active .absence-status-icon {
+            transform: none !important;
+        }
+        /* Jarak ikon-teks tetap rapi setelah kotak ikon dilepas */
+        .absence-row-inner {
+            gap: 0.75rem !important;
+        }
+    }
+
+    /* Tier >= 768px: padding horizontal kotak & kartu statistik mengikuti
+       p-md-4 (1.5rem) milik wrapper Pintasan Cepat, supaya teks judul dalam
+       kotak tetap lurus dengan teks "Pintasan Cepat". */
+    @media (min-width: 768px) {
+        .dashboard-section {
+            --dash-pad-x: 1.5rem;
+        }
+    }
 </style>
 @endpush
 
@@ -347,7 +698,7 @@
     <!-- ========================================================================= -->
     <!-- 1. BARIS ATAS: 3 KARTU STATISTIK UTAMA (HOVER SCALE UP & SOFT SHADOW)    -->
     <!-- ========================================================================= -->
-    <div class="row g-2 g-md-3 mb-3 mb-md-4">
+    <div class="row g-2 g-md-3 mb-3 mb-md-4 dashboard-stat-row dashboard-section">
         
         <!-- Card 1: Total Siswa Aktif -->
         <div class="col-6 col-md-4">
@@ -431,11 +782,11 @@
     <!--     supaya modul cepat terlihat tanpa harus scroll. Isi & tampilan kartu  -->
     <!--     TIDAK diubah, hanya posisi & lebarnya.                                 -->
     <!-- ========================================================================= -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 dashboard-section">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-flat dashboard-shortcuts-flat">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off">
+                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off dashboard-divider-off">
                         <div class="d-flex align-items-center gap-2.5">
                             <i class='bx bx-zap text-warning fs-4'></i>
                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">Pintasan Cepat</span>
@@ -500,7 +851,7 @@
                         <!-- 5. Master Data Guru (ikon Guru/User Tie) - khusus admin -->
                         @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
-                            <a href="{{ panel_route('teachers.index') }}" 
+                            <a href="{{ route('admin.guru.index') }}" 
                                class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Data Guru">
                                 <i class='bx bx-user-pin text-purple fs-2 mb-2' style="color: #9333ea;"></i>
@@ -554,15 +905,16 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 3. AREA FILTER & KONTROL MONITORING (CARD UTAMA SHADOW-SM ROUNDED-4)     -->
+    <!-- 3. AREA FILTER & KONTROL MONITORING (KOTAK TIPIS: judul + periode +    -->
+    <!--     dua tombol jadi satu kesatuan; class-nya diatur di CSS >= 641px)    -->
     <!-- ========================================================================= -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
-        <div class="card-body p-3.5">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div class="dashboard-section">
+        <div class="dashboard-box dashboard-monitor-box">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 monitoring-inner">
                 <div class="d-flex align-items-center gap-3">
                     <div>
-                        <h6 class="fw-bold text-dark mb-0.5" style="font-size: 0.98rem;">Monitoring &amp; Analitik Presensi</h6>
-                        <p class="text-secondary small mb-0" style="font-size: 0.76rem;">
+                        <h6 class="fw-bold text-dark dashboard-box-title">Monitoring &amp; Analitik Presensi</h6>
+                        <p class="text-secondary small mb-0 dashboard-box-sub">
                             Periode Berjalan: {{ \Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y') }}
                         </p>
                     </div>
@@ -573,10 +925,10 @@
                      tidak bisa terpental langsung ke kamera dari header analitik.
                      Dua tombol di bawah tetap, styling & posisinya tidak diubah. --}}
                 <div class="d-flex align-items-center gap-2.5 flex-wrap monitoring-actions">
-                    <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth btn-monitoring" style="font-size: 0.68rem; padding: 0.42rem 0.8rem; min-height: 36px;">
+                    <a href="{{ panel_route('absensi.index', ['tanggal' => $dateString]) }}" class="btn btn-primary rounded-3 shadow-sm fw-semibold d-inline-flex align-items-center gap-2 btn-modern-smooth btn-monitoring monitoring-btn" style="font-size: 0.68rem; padding: 0.42rem 0.8rem; min-height: 36px;">
                         <span>Presensi Hari Ini</span>
                     </a>
-                    <a href="{{ panel_route('rekap') }}" class="btn btn-primary rounded-3 shadow-sm fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth btn-monitoring" style="font-size: 0.68rem; padding: 0.42rem 0.8rem; min-height: 36px;">
+                    <a href="{{ panel_route('rekap') }}" class="btn btn-primary rounded-3 shadow-sm fw-semibold text-white d-inline-flex align-items-center gap-2 btn-modern-smooth btn-monitoring monitoring-btn" style="font-size: 0.68rem; padding: 0.42rem 0.8rem; min-height: 36px;">
                         <span>Rekap Lengkap</span>
                     </a>
                 </div>
@@ -587,52 +939,62 @@
     <!-- ========================================================================= -->
     <!-- 4. SECTION TENGAH: GRAFIK GARIS (70%) & KETIDAKHADIRAN (30%)             -->
     <!-- ========================================================================= -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 dashboard-section">
         
         <!-- KOLOM KIRI (70%): CARD GRAFIK GARIS KEHADIRAN (mode: harian/mingguan/bulanan) -->
         <div class="col-12 col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
                     <div class="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom border-light-subtle mb-3">
                         <div class="d-flex align-items-center gap-2 min-w-0">
-                            <span class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">{{ $chartTitle ?? 'Grafik Garis Kehadiran Mingguan' }}</span>
+                            <span class="fw-bold text-dark text-truncate dashboard-box-title" style="font-size: 0.9rem;">{{ $chartTitle ?? 'Grafik Garis Kehadiran Mingguan' }}</span>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0 chart-header-actions">
                             {{-- TOGGLE MODE: Harian / Mingguan / Bulanan.
                                  Hanya tautan GET ke halaman yang sama dengan ?mode=...,
                                  jadi tidak ada endpoint atau JS tambahan. --}}
-                            <div class="chart-mode-toggle" role="group" aria-label="Mode grafik kehadiran">
+                            <div class="chart-mode-toggle dash-seg" role="group" aria-label="Mode grafik kehadiran">
                                 @foreach(['harian' => 'Harian', 'mingguan' => 'Mingguan', 'bulanan' => 'Bulanan'] as $modeKey => $modeLabel)
                                     <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $modeKey, 'status' => request('status')])) }}"
-                                       class="chart-mode-btn {{ ($chartMode ?? 'mingguan') === $modeKey ? 'active' : '' }}"
+                                       class="chart-mode-btn dash-seg__btn {{ ($chartMode ?? 'mingguan') === $modeKey ? 'active dash-seg__btn--solid' : '' }}"
                                        title="Tampilkan grafik {{ strtolower($modeLabel) }}">{{ $modeLabel }}</a>
                                 @endforeach
                             </div>
 
-                            <span class="badge bg-light text-secondary rounded-pill px-2 px-md-3 py-1 py-md-1.5 fw-semibold flex-shrink-0 text-nowrap" style="font-size: 0.68rem;">
+                            <span class="badge bg-light text-secondary rounded-pill px-2 px-md-3 py-1 py-md-1.5 fw-semibold flex-shrink-0 text-nowrap dash-period" style="font-size: 0.68rem;">
                                 {{ $chartPeriodLabel ?? (\Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') . ' - ' . \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y')) }}
                             </span>
                         </div>
                     </div>
 
-                    <!-- Canvas Line Chart Chart.js -->
+                    <!-- Area Grafik: canvas digambar begitu periodenya punya titik -
+                             mode Harian (7 hari), Mingguan (per rombel), maupun
+                             Bulanan (12 bulan) SELALU punya titik, sehingga ketiga
+                             mode benar-benar menggambar grafik. Status "belum ada
+                             catatan" hanya jadi keterangan singkat di bawah grafik,
+                             BUKAN ikon error (ikon bx-error sebelumnya membuat
+                             grafik yang isinya kosong terlihat seperti error). -->
                     <div class="pt-1 pb-1">
-                        @if(($totalChartPoints ?? 0) > 0 && ($chartHasData ?? false))
+                        @if(($totalChartPoints ?? 0) > 0)
                             <div style="position: relative; height: 240px; width: 100%;">
                                 <canvas id="attendanceLineChart"></canvas>
                             </div>
+                            @unless($chartHasData ?? false)
+                                <p class="chart-empty-note text-center text-muted mb-0 mt-1">
+                                    {{ $chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.' }}
+                                </p>
+                            @endunless
                         @else
-                            <div class="w-100 py-12 text-center text-muted small empty-state">
-                                <i class='bx bx-error' aria-hidden='true'></i>
-                                {{ $chartEmptyText ?? 'Belum ada data kehadiran rombel pada minggu ini.' }}
-                            </div>
+                            <p class="w-100 text-center text-muted small empty-state mb-0 py-4">
+                                {{ $chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.' }}
+                            </p>
                         @endif
                     </div>
                 </div>
 
                 <!-- Keterangan Garis Tren & Total (selalu satu baris, tidak bertumpuk) -->
-                <div class="mt-3 pt-2.5 border-top border-light-subtle d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted" style="font-size: 0.72rem;">
+                <div class="mt-3 pt-2.5 border-top border-light-subtle d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted dashboard-trend-footer" style="font-size: 0.72rem;">
                     <div class="d-flex align-items-center gap-2 min-w-0 text-truncate">
                         <span class="text-truncate"><strong class="text-dark">Garis Tren Kehadiran</strong> <span class="d-none d-sm-inline">({{ $chartScopeText ?? (($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C')) }})</span></span>
                     </div>
@@ -643,12 +1005,12 @@
 
         <!-- KOLOM KANAN (30%): CARD KETIDAKHADIRAN HARI INI (INTERAKTIF HOVER) -->
         <div class="col-12 col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
                     <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off">
                         <div>
-                            <h6 class="fw-bold text-dark mb-0.5" style="font-size: 0.95rem;">Ketidakhadiran Hari Ini</h6>
-                            <p class="text-secondary small mb-0" style="font-size: 0.74rem;">Siswa yang berhalangan hadir</p>
+                            <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">Ketidakhadiran Hari Ini</h6>
+                            <p class="text-secondary small mb-0 dashboard-box-sub">Siswa yang berhalangan hadir</p>
                         </div>
                         <span class="fw-bold text-dark" style="font-size: 0.76rem;">
                             {{ request('status') === 'Sakit' ? ($countSakit ?? 0) : (request('status') === 'Izin' ? ($countIzin ?? 0) : (request('status') === 'Alfa' ? ($countAlfa ?? 0) : ($totalKetidakhadiran ?? 0))) }} Siswa
@@ -659,12 +1021,19 @@
                     <div class="d-flex flex-column gap-2.5">
                         
                         <!-- 1. Sakit -->
-                        <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $chartMode ?? 'mingguan', 'status' => request('status') === 'Sakit' ? null : 'Sakit'])) }}" 
-                           class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}"
-                           title="Klik untuk menyaring siswa sakit hari ini; klik lagi untuk melepas">
-                            <div class="d-flex align-items-center gap-3">
-                                {{-- Ikon biru: plester (Boxicons yang sudah dipakai project) --}}
-                                <span class="absence-status-icon" style="--absence-icon-color: #2563eb; --absence-icon-bg: #dbeafe;" aria-hidden="true">
+                        {{-- Baris Absence -> REKAP HARIAN (tanggal yang sedang ditampilkan), BUKAN
+                             kembali ke dashboard. Halaman Rekap BELUM punya
+                             filter status (RekapController hanya membaca
+                             type/class_id/date/month/year), jadi parameter
+                             ?status= sengaja TIDAK ditambahkan - tidak ada
+                             backend yang diubah. --}}
+                        <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}" 
+                           class="absence-row-interactive dashboard-inner-card text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}"
+                           title="Buka Rekap Presensi harian untuk siswa sakit">
+                            <div class="d-flex align-items-center gap-3 absence-row-inner">
+                                {{-- Ikon biru: plester/band-aid (Boxicons, library yang
+                                     sudah dipakai project) --}}
+                                <span class="absence-status-icon dash-status-icon" style="--absence-icon-color: #2563eb; --absence-icon-bg: #dbeafe;" aria-hidden="true">
                                     <i class='bx bxs-band-aid'></i>
                                 </span>
                                 <div>
@@ -679,14 +1048,12 @@
                         </a>
 
                         <!-- 2. Izin -->
-                        <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $chartMode ?? 'mingguan', 'status' => request('status') === 'Izin' ? null : 'Izin'])) }}" 
-                           class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}"
-                           title="Klik untuk menyaring siswa izin hari ini; klik lagi untuk melepas">
-                            <div class="d-flex align-items-center gap-3">
-                                {{-- Ikon ungu: amplop/surat izin. Ikon lama (bx bx-envelope
-                                     tanpa kotak) diganti supaya ukurannya sama dengan
-                                     ikon Sakit & Alpha. --}}
-                                <span class="absence-status-icon" style="--absence-icon-color: #9333ea; --absence-icon-bg: #f3e8ff;" aria-hidden="true">
+                        <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}" 
+                           class="absence-row-interactive dashboard-inner-card text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}"
+                           title="Buka Rekap Presensi harian untuk siswa izin">
+                            <div class="d-flex align-items-center gap-3 absence-row-inner">
+                                {{-- Ikon ungu: amplop/surat izin (Boxicons solid) --}}
+                                <span class="absence-status-icon dash-status-icon" style="--absence-icon-color: #9333ea; --absence-icon-bg: #f3e8ff;" aria-hidden="true">
                                     <i class='bx bxs-envelope'></i>
                                 </span>
                                 <div>
@@ -701,13 +1068,14 @@
                         </a>
 
                         <!-- 3. Alpha -->
-                        <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $chartMode ?? 'mingguan', 'status' => request('status') === 'Alfa' ? null : 'Alfa'])) }}" 
-                           class="absence-row-interactive text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}"
-                           title="Klik untuk menyaring siswa alpha hari ini; klik lagi untuk melepas">
-                            <div class="d-flex align-items-center gap-3">
-                                {{-- Ikon merah: user-x (siswa tidak hadir) --}}
-                                <span class="absence-status-icon" style="--absence-icon-color: #dc2626; --absence-icon-bg: #fee2e2;" aria-hidden="true">
-                                    <i class='bx bxs-user-x'></i>
+                        <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}" 
+                           class="absence-row-interactive dashboard-inner-card text-decoration-none d-flex align-items-center justify-content-between {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}"
+                           title="Buka Rekap Presensi harian untuk siswa alpha">
+                            <div class="d-flex align-items-center gap-3 absence-row-inner">
+                                {{-- Ikon merah: lingkaran silang (Boxicons error-circle,
+                                     sudah dipakai di halaman lain project ini) --}}
+                                <span class="absence-status-icon dash-status-icon" style="--absence-icon-color: #dc2626; --absence-icon-bg: #fee2e2;" aria-hidden="true">
+                                    <i class='bx bx-error-circle'></i>
                                 </span>
                                 <div>
                                     <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Alpha @if(request('status') === 'Alfa')<span class="absence-row-active-badge">Aktif</span>@endif</span>
@@ -741,15 +1109,15 @@
     <!--     Lebar penuh karena Pintasan Cepat sudah dipindah ke atas, sehingga   -->
     <!--     tidak ada lagi kolom kosong di sebelah kanan. Isi & gaya kartu tetap. -->
     <!-- ========================================================================= -->
-    <div class="row g-3">
+    <div class="row g-3 dashboard-section">
         
         <!-- CARD JADWAL OPERASIONAL SEKOLAH -->
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3">
+                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 dashboard-divider-off">
                         <div class="d-flex align-items-center gap-2.5">
-                            <span class="fw-bold text-dark" style="font-size: 0.95rem;">Jadwal Operasional Sekolah</span>
+                            <span class="fw-bold text-dark dashboard-box-title">Jadwal Operasional Sekolah</span>
                         </div>
                         <span class="fw-bold d-inline-flex align-items-center gap-1.5" style="font-size: 0.72rem; color: #16a34a;">
                             <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background: #16a34a;"></span>
@@ -760,15 +1128,15 @@
                     <div class="row g-2.5">
                         <div class="col-6">
                             @if(is_admin())
-                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Ubah jam masuk">
+                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Ubah jam masuk">
                             @else
-                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Jam masuk sekolah">
+                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Jam masuk sekolah">
                             @endif
-                                <span class="text-uppercase fw-semibold text-secondary d-block" style="font-size: 0.7rem; letter-spacing: 0.04em;">Jam Masuk</span>
-                                <strong class="text-dark mt-1.5 d-block font-monospace" style="font-size: 1.3rem; font-weight: 700;">
+                                <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">Jam Masuk</span>
+                                <strong class="text-dark mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
                                     {{ $checkInTime ?? '06:45' }}
                                 </strong>
-                                <span class="d-block text-secondary mt-1" style="font-size: 0.68rem;">WIB</span>
+                                <span class="d-block text-secondary mt-1 clock-unit" style="font-size: 0.68rem;">WIB</span>
                             @if(is_admin())
                             </a>
                             @else
@@ -777,15 +1145,15 @@
                         </div>
                         <div class="col-6">
                             @if(is_admin())
-                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Ubah batas terlambat">
+                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Ubah batas terlambat">
                             @else
-                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive" title="Batas keterlambatan sekolah">
+                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Batas keterlambatan sekolah">
                             @endif
-                                <span class="text-uppercase fw-semibold text-secondary d-block" style="font-size: 0.7rem; letter-spacing: 0.04em;">Batas Terlambat</span>
-                                <strong class="text-amber-600 mt-1.5 d-block font-monospace" style="font-size: 1.3rem; font-weight: 700;">
+                                <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">Batas Terlambat</span>
+                                <strong class="text-amber-600 mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
                                     {{ $lateLimitTime ?? '07:15' }}
                                 </strong>
-                                <span class="d-block text-secondary mt-1" style="font-size: 0.68rem;">WIB</span>
+                                <span class="d-block text-secondary mt-1 clock-unit" style="font-size: 0.68rem;">WIB</span>
                             @if(is_admin())
                             </a>
                             @else
@@ -798,7 +1166,7 @@
                 @if(is_admin())
                 <!-- Tombol Ubah Pengaturan Jadwal (khusus admin) -->
                 <a href="{{ route('admin.pengaturan.jadwal') }}" 
-                   class="btn btn-primary rounded-3 shadow-sm w-100 mt-3 py-2.5 px-3 fw-semibold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth"
+                   class="btn btn-primary rounded-3 shadow-sm w-100 mt-3 py-2.5 px-3 fw-semibold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth dashboard-schedule-btn"
                    style="font-size: 0.85rem;">
                     <span>Ubah Pengaturan Jadwal</span>
                 </a>
@@ -867,6 +1235,20 @@
     document.addEventListener('DOMContentLoaded', function () {
         const ctx = document.getElementById('attendanceLineChart');
         if (!ctx) return;
+
+        // Guard: kalau CDN Chart.js gagal dimuat (offline / diblokir), jangan
+        // melempar ReferenceError yang membuat area grafik kosong tanpa
+        // penjelasan. Cukup tampilkan keterangan singkat yang sama seperti
+        // kondisi "belum ada catatan".
+        if (typeof Chart === 'undefined') {
+            const note = document.createElement('p');
+            note.className = 'chart-empty-note text-center text-muted mb-0 mt-1';
+            note.textContent = 'Grafik belum dapat dimuat (perpustakaan grafik gagal dimuat).';
+            if (ctx.parentNode) {
+                ctx.parentNode.insertAdjacentElement('afterend', note);
+            }
+            return;
+        }
 
         // Label & data sudah dihitung server-side sesuai mode aktif
         // (harian / mingguan / bulanan) - lihat AdminDashboardController.
