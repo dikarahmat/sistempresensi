@@ -803,7 +803,13 @@
         --m-gap: 0.5rem;      /* jarak vertikal antar kontrol / antar tombol */
         --m-ico: 0.9rem;      /* ikon di dalam tombol */
         --m-sec-gap: 1rem;    /* jarak vertikal antar section */
-        --bottom-nav-height: 52px;
+        --m-card-r: 8px;      /* radius kartu/kotak (semi-kotak, bukan pil) */
+        --m-btn-r: 6px;       /* radius tombol & segmented */
+        --set-sec-gap: 1.5rem;   /* Pengaturan: jarak antar section besar */
+        --set-field-gap: .75rem; /* Pengaturan: jarak antar field form */
+        --set-label-gap: .25rem; /* Pengaturan: label ke input */
+        --set-head-gap: .25rem;  /* Pengaturan: judul section ke deskripsi */
+        --set-btn-gap: .75rem;  /* Pengaturan: kotak info ke tombol Simpan */
     }
 
     /* ------------------------------------------------------------------
@@ -907,7 +913,13 @@
         gap: var(--m-gap) !important;
     }
     body .recap-mobile-actions .btn {
+        /* min-height WAJIB dikunci bareng height: tanpa ini aturan global
+           ".btn { min-height: 40px !important }" di layouts/app.blade.php
+           (blok <= 768px) tetap menang dan tombol jadi 40px - lebih tinggi
+           dari dropdown filter (34px) di halaman yang sama. Pola sama
+           dipakai .btn-solid-pill (Data Siswa) & select filter di atas. */
         height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
         font-size: var(--m-ctl-fs) !important;
         font-weight: 700 !important;
         padding: 0 0.75rem !important;
@@ -997,26 +1009,34 @@
        anak satu kolom dengan gap seragam --m-sec-gap (1rem), sehingga jarak
        Pintasan Cepat -> Grafik -> Ketidakhadiran -> Jadwal selalu sama.
        Total jorokan = --m-inset + padding <main> (16px), sama dengan
-       halaman Pengaturan mobile. Jarak header ke kartu statistik = --m-sec-gap. */
+       halaman Pengaturan mobile. Jarak header ke kartu statistik = --m-sec-gap.
+       padding-bottom 2.5rem = ruang napas 40px di BAWAH card terakhir
+       (Jadwal Operasional Sekolah), DI ATAS ruang bottom nav yang sudah ada
+       (spacer 3rem di <main>) -> tidak menimpa apa pun, dan hanya berlaku
+       untuk halaman Dashboard (scoped lewat main:has(#attendanceLineChart)). */
     body .content-scroll-wrapper > main:has(#attendanceLineChart) > .flex-1 {
         display: flex !important;
         flex-direction: column !important;
         gap: var(--m-sec-gap) !important;
         padding-left: var(--m-inset) !important;
         padding-right: var(--m-inset) !important;
+        padding-bottom: 2.5rem !important;
     }
     body .content-scroll-wrapper > main:has(#attendanceLineChart) > .app-header-bar {
         margin-bottom: var(--m-sec-gap) !important;
     }
 
-    /* (b) Token gaya dashboard mobile = nilai desktop (border 1px #e5e9f0,
-       radius 1rem, judul section .95rem, sub .7rem, radius kontrol 6px). */
+    /* (b) Token gaya dashboard mobile. Radius kartu/kotak = --m-card-r
+       (8px, semi-kotak); radius tombol & segmented = --m-btn-r (6px).
+       WARNA & BORDER TIDAK didefinisikan di sini — satu-satunya sumber
+       adalah blok "GAYA KARTU DASHBOARD" di resources/views/admin/
+       dashboard.blade.php (variabel --dash-card-bg / --dash-card-border),
+       dipakai desktop DAN mobile. */
     body .dashboard-section {
-        --dash-border-color: #e5e9f0;
-        --dash-radius: 1rem;
+        --dash-radius: var(--m-card-r);
         --dash-title-size: 0.95rem;
         --dash-sub-size: 0.7rem;
-        --dash-control-radius: 6px;
+        --dash-control-radius: var(--m-btn-r);
     }
 
     /* (c) SEMUA section tanpa margin (jarak antar blok dari gap flex column
@@ -1075,11 +1095,11 @@
         grid-column: auto !important;
     }
 
-    /* (d) KARTU STATISTIK (grid 2x2): border tipis, TANPA shadow,
-       padding .75rem, label .65rem uppercase, angka 1.5rem, sub .7rem. */
+    /* (d) KARTU STATISTIK (grid 2x2): padding .75rem, label .65rem
+       uppercase, angka 1.5rem, sub .7rem. Radius, WARNA & BORDER dari blok
+       GAYA KARTU DASHBOARD di dashboard.blade.php. */
     body .dashboard-stat-row .stat-card-modern {
         padding: 0.75rem !important;
-        border: 1px solid var(--dash-border-color) !important;
         border-radius: var(--dash-radius) !important;
         box-shadow: none !important;
         gap: 0.5rem !important;
@@ -1123,10 +1143,10 @@
     body .dashboard-shortcuts-flat .fw-bold {
         font-size: var(--dash-title-size) !important;
     }
-    /* Kartu pintasan: tipis, gaya sama dengan kartu statistik, tinggi sama */
+    /* Kartu pintasan: tipis, gaya sama dengan kartu statistik. Radius,
+       WARNA & BORDER dari blok GAYA KARTI DASHBOARD (dashboard.blade.php). */
     body .shortcut-card-interactive {
         padding: 0.625rem !important;
-        border: 1px solid var(--dash-border-color) !important;
         border-radius: var(--dash-radius) !important;
         box-shadow: none !important;
         gap: 0.25rem !important;
@@ -1147,10 +1167,10 @@
        menyisakan ruang kosong bekas margin/padding. */
     body .dashboard-section:has(> .dashboard-monitor-box) { display: none !important; }
 
-    /* (g) KOTAK TIPIS (grafik, ketidakhadiran, jadwal): border 1px, radius
-       sama, background putih, padding .75rem, tanpa shadow. */
+    /* (g) KOTAK LUAR (grafik, ketidakhadiran, jadwal): radius & padding
+       tetap; WARNA permukaan & penghapusan border dari blok SATU SUMBER
+       WARNA di dashboard.blade.php. */
     body .dashboard-box {
-        border: 1px solid var(--dash-border-color) !important;
         border-radius: var(--dash-radius) !important;
         box-shadow: none !important;
         padding: 0.75rem !important;
@@ -1219,17 +1239,15 @@
         min-width: 0 !important;
         width: 100% !important;
     }
-    /* Segmented Harian | Mingguan | Bulanan (kotak menyatu, bukan pill) */
+    /* Segmented Harian | Mingguan | Bulanan (kotak menyatu, bukan pill).
+       Radius LUAR = --m-btn-r (6px); antar item 0. */
     body .dash-seg {
         display: inline-flex !important;
         align-items: stretch;
         gap: 0;
         padding: 0;
-        background-color: #ffffff;
-        border: 1px solid var(--dash-border-color) !important;
-        border-radius: var(--dash-control-radius) !important;
+        border-radius: var(--m-btn-r) !important;
         box-shadow: none !important;
-        overflow: hidden;
     }
     body .dash-seg .dash-seg__btn {
         display: inline-flex;
@@ -1239,10 +1257,8 @@
         min-height: 30px;
         padding: 0 0.625rem;
         margin: 0;
-        border: 0;
-        border-left: 1px solid var(--dash-border-color);
-        border-radius: 0 !important;
-        background-color: #ffffff;
+        border: 0 !important;                     /* hapus pemisah antar item */
+        background-color: transparent;
         color: #334155;
         font-size: 0.65rem;
         font-weight: 700;
@@ -1252,8 +1268,9 @@
         white-space: nowrap;
         box-shadow: none !important;
     }
-    body .dash-seg .dash-seg__btn:first-child { border-left: 0; }
-    body .dash-seg .dash-seg__btn:hover { background-color: #f1f5f9; color: #0f172a; }
+    body .dash-seg .dash-seg__btn:first-child { border-left: 0 !important; }
+    /* Catatan: :hover segmented ada di blok @media (hover: hover) and
+       (pointer: fine) pada bagian (k) di bawah, agar tidak menempel di HP. */
     body .dash-seg .dash-seg__btn.is-active,
     body .dash-seg .dash-seg__btn--solid { background-color: #2563eb; color: #ffffff; }
     body .dash-seg .dash-seg__btn.is-active:hover,
@@ -1288,12 +1305,11 @@
         margin-top: 0.5rem !important;
     }
 
-    /* (i) KOTAK KETIDAKHADIRAN: baris latar abu tipis tanpa border, ikon POLOS
-       (tanpa kotak/lingkaran/background), padding .5rem .75rem. */
+    /* (i) KOTAK KETIDAKHADIRAN: padding .5rem .75rem, ikon POLOS (tanpa
+       kotak/lingkaran/background). WARNA & BORDER (putih + tipis) dari blok
+       GAYA KARTU di dashboard.blade.php. */
     body .absence-row-interactive,
     body .dashboard-inner-card {
-        background-color: #f8fafc !important;
-        border: 0 !important;
         border-radius: var(--dash-radius) !important;
         box-shadow: none !important;
         padding: 0.5rem 0.75rem !important;
@@ -1318,23 +1334,57 @@
     body .absence-row-interactive .small { font-size: 0.7rem !important; }
     body .absence-row-interactive .fs-4 { font-size: 1.1rem !important; }
     /* Jarak antar tiga baris = --m-gap (kartu & tombol Buka Tabel ikut lebar
-       penuh kotak dengan tinggi & font standar kontrol) */
-    body .dashboard-box .gap-2\.5 { gap: var(--m-gap) !important; }
+       penuh kotak dengan tinggi & font standar kontrol).
+       Container daftar TIDAK boleh memotong tepi bawah baris terakhir:
+       overflow visible, padding-bottom 2px, dan baris terakhir tanpa
+       margin-bottom negatif → stroke baris "Alpha" utuh di 4 sisi seperti
+       baris Sakit dan Izin (jarak antar baris tetap .5rem dari gap). */
+    body .dashboard-box .gap-2\.5 {
+        gap: var(--m-gap) !important;
+        overflow: visible !important;
+        padding-bottom: 2px !important;
+    }
+    body .dashboard-box .gap-2\.5 > :last-child {
+        margin-bottom: 0 !important;
+    }
+    /* KOTAK BERSTROKE di mobile (Grafik / Ketidakhadiran / Jadwal).
+       Sebelumnya tidak tampil: aturan umum `body .dashboard-box` memakai
+       specificity (0,2,0) + !important untuk box-shadow, dan tidak ada
+       aturan mobile yang memulihkan background/border/shadow kotak →
+       kotak tampak polos. Selector di bawah (0,3,0) + !important menang. */
+    body .dashboard-section .dashboard-box,
+    body .dashboard-section .dashboard-monitor-box {
+        background-color: var(--dash-card-bg) !important;
+        border: 1px solid var(--dash-stroke) !important;
+        box-shadow: var(--dash-card-shadow) !important;
+    }
+    /* JARAK JUDUL KOTAK JADWAL: kotak jam rapat ke judul.
+       Akar celah: header memakai class `pb-3` (padding-bottom .75rem) yang
+       dulu dipakai untuk garis pemisah — garis itu sudah dihapus, dan di
+       desktop `.dashboard-divider-off` memang sudah `padding-bottom: 0`.
+       Scope hanya ke kotak Jadwal (satu-satunya kotak ber-.dashboard-schedule-btn)
+       supaya jaraknya jadi margin .75rem saja (12px), sama seperti desktop. */
+    body .dashboard-box:has(.dashboard-schedule-btn) .dashboard-divider-off {
+        padding-bottom: 0 !important;
+    }
+    /* Catatan: tidak ada override margin-bottom khusus — memakai jarak
+       standar kotak Dashboard (margin .75rem = 12px) dari aturan
+       `body .dashboard-box .mb-3` di atas. Tombol "Ubah Pengaturan Jadwal"
+       memakai margin-top .75rem (12px) dari aturan .dashboard-schedule-btn. */
+    /* Tombol "Buka Tabel Presensi Hari Ini": standar kontrol mobile */
     body .dashboard-box .btn-primary {
         height: var(--m-ctl-h) !important;
         font-size: var(--m-ctl-fs) !important;
         font-weight: 700 !important;
         padding: 0 0.75rem !important;
-        border-radius: var(--m-ctl-r) !important;
+        border-radius: var(--m-btn-r) !important;
         box-sizing: border-box !important;
     }
 
     /* (j) KOTAK JADWAL OPERASIONAL: dua kartu jam berdampingan sama lebar,
-       latar abu tipis tanpa border, angka 1.4rem, label/WIB .65rem. */
+       angka 1.4rem, label/WIB .65rem. WARNA & BORDER dari blok GAYA KARTU. */
     body .dashboard-clock {
         padding: 0.625rem !important;
-        background-color: #f8fafc !important;
-        border: 0 !important;
         border-radius: var(--dash-radius) !important;
         box-shadow: none !important;
     }
@@ -1355,10 +1405,40 @@
         font-size: var(--m-ctl-fs) !important;
         font-weight: 700;
         padding: 0 0.75rem !important;
-        border-radius: var(--m-ctl-r) !important;
+        border-radius: var(--m-btn-r) !important;
         margin-top: 0.75rem !important;
         box-sizing: border-box !important;
     }
+
+    /* (k) SEAMLESS: HAPUS SEMUA SISA GARIS di dashboard mobile.
+       Sumber garis yang ditemukan & dinetralkan:
+       - border 1px var(--dash-border-color) pada kartu & kotak (aturan lama
+         bagian 5 di atas) -> kini background abu, border 0;
+       - utilitas Bootstrap "border-bottom border-light-subtle" pada header
+         kotak Grafik & Ketidakhadiran & Jadwal (pemisah judul);
+       - "border-top border-light-subtle" pada baris "Garis Tren Kehadiran";
+       - border luar + border-left pemisah pada segmented (sudah di atas);
+       - pseudo-element ::before/::after gambar garis: satu-satunya di
+         dashboard adalah indikator/spotlight bottom-nav (bukan kartu), dan
+         kotak pemberitahuan presensi — di luar dashboard-section, tidak
+         disentuh.
+       Pemisahan cukup memakai JARAK. */
+    body .dashboard-box .border-bottom,
+    body .dashboard-box .border-top,
+    body .dashboard-box .border-start,
+    body .dashboard-box .border-end {
+        border: 0 !important;
+    }
+    body .dashboard-trend-footer {
+        border-top: 0 !important;
+        padding-top: 0 !important;
+        margin-top: 0.5rem !important;
+    }
+    /* State hover/tekan kartu, baris, dan segmented dikelola penuh oleh blok
+       GAYA KARTI DASHBOARD (dashboard.blade.php): :hover hanya pada
+       @media (hover: hover) and (pointer: fine), sentuh memakai :active,
+       hover/tekan hanya mengubah border-color (--dash-card-border-hover).
+       Tidak ada aturan permukaan duplikat di sini. */
 
     /* ------------------------------------------------------------------
        6. HALAMAN LAIN — Hari Libur, Presensi Kelas (toolbar kembali/
@@ -1566,36 +1646,56 @@
     }
 
     /* ------------------------------------------------------------------
-       13. KERANGKA LAYOUT MOBILE — satu area scroll, tanpa celah di atas
-       bottom nav.
+       13. KERANGKA LAYOUT MOBILE — satu area scroll, konten terakhir selalu
+       terlihat penuh di atas bottom nav.
 
-       Penyebab celah: <main> memakai height:100dvh + padding-bottom
-       calc(56px + 2.5rem) -> konten berakhir 96px di atas tepi layar
-       (40px jalur putih + 56px navbar). Sekarang wrapper yang menahan
-       tinggi navbar, <main> mengisi sisa & menjadi SATU-satunya area
-       scroll, dan padding-bottom 1rem berada DI DALAM area scroll.
+       DIAGNOSIS (perbaikan dari laporan):
+       (a) Tinggi bottom nav = --bottom-nav-height (56px) + border-top +
+           safe-area. Sebelumnya ada DUA sumber: layout memakai
+           --bottom-nav-height, sementara ruang navbar dihitung dengan
+           variabel terpisah --m-nav-h yang di-hardcode 56px.
+       (b) Wrapper memakai "height:100vh; height:100dvh" TANPA @supports —
+           di browser tanpa dukungan dvh, 100vh lebih tinggi dari area
+           terlihat sehingga bagian bawah ikut tertutup navbar.
+       (c) Area scroll = <main> (display:flex; flex-direction:column),
+           overflow-y:auto. padding-bottom pada scroll container memang
+           ikut menambah area scroll, TAPI container flex membuat ekor
+           konten bisa tertimbun bila padding-nya kalah oleh aturan lama
+           -> dipakai padding-bottom 1.5rem + selector ber-"body".
+       (d) Ruang navbar kini dihitung di SATU tempat saja (padding-bottom
+           wrapper); sebelumnya layout juga menyimpan calc(nav + 2.5rem)
+           di padding-bottom <main> (dobel, tapi kalah oleh aturan ini).
        ------------------------------------------------------------------ */
     :root {
-        /* Tinggi bottom nav sebenarnya (--bottom-nav-height = 56px) */
-        --m-nav-h: 56px;
+        /* SATU SUMBER: --m-nav-h = tinggi nyata bottom nav (56px) */
+        --m-nav-h: var(--bottom-nav-height, 56px);
     }
 
     /* 2. Wrapper layout utama: satu layar penuh, flex column, overflow
-       hidden (tidak scroll sendiri). Padding-bottom = tinggi bottom nav
-       supaya kartu konten berakhir TEPAT di tepi atas navbar. */
+       hidden. Fallback 100vh hanya bila browser belum mendukung dvh. */
     body .content-scroll-wrapper {
         height: 100vh;
-        height: 100dvh;
         display: flex;
         flex-direction: column;
         padding-bottom: calc(var(--m-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
         margin-bottom: 0 !important;
         overflow: hidden !important;
     }
+    @supports (height: 100dvh) {
+        body .content-scroll-wrapper {
+            height: 100dvh;
+        }
+    }
 
-    /* 3. Kartu konten utama: mengisi sisa tinggi, scroll di dalam,
-       padding-bottom 1rem DI DALAM area scroll, radius bawah menyatu
-       dengan navbar, tanpa shadow bawah. */
+    /* 3. Kartu konten utama: mengisi sisa tinggi, scroll di dalam.
+       JARAK BAWAH DITANGANI SATU MEKANISME: spacer ::after tinggi 3rem di
+       akhir area scroll (bukan padding-bottom). Diagnosis: padding-bottom
+       pada <main> memang berlaku, tapi nilai 2rem sebelumnya terlalu kecil
+       (~8px terasa karena kotak Jadwal sudah punya padding internal .75rem
+       dan ruang navbar di wrapper = 56px, sehingga sisanya tinggal sedikit).
+       Spacer ::after deterministik: flex item terakhir di dalam <main>
+       (display:flex; flex-direction:column), `flex:none` + height tetap,
+       tidak bisa dinetralkan oleh aturan padding lain. */
     body .content-scroll-wrapper > main,
     body .content-scroll-wrapper > main.w-full {
         flex: 1 1 auto !important;
@@ -1606,11 +1706,18 @@
         overflow-x: hidden !important;
         overscroll-behavior-y: contain;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 1rem !important;
+        padding-bottom: 0 !important;
         margin-bottom: 0 !important;
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
         box-shadow: none !important;
+    }
+    /* Spacer ekor scroll: tepat 3rem, berlaku untuk SEMUA halaman admin. */
+    body .content-scroll-wrapper > main::after {
+        content: "";
+        display: block;
+        flex: none;
+        height: 3rem;
     }
 
     /* .flex-1 tidak lagi scroll sendiri (scroll utama kini di <main>) —
@@ -1657,18 +1764,202 @@
         max-width: 100% !important;
         box-sizing: border-box !important;
     }
-    /* Gutter horizontal .row dinetralkan supaya label & input tidak
-       menjorok 12px lebih dalam daripada judul seksi di atasnya.
-       --bs-gutter-x saja: jarak vertikal antar field TIDAK berubah.
-       Nilai yang sama sudah dipakai desktop (lihat CSS halaman). */
+    /* Gutter .row dinetralkan supaya label & input tidak menjorok 12px lebih
+       dalam daripada judul seksi di atasnya, DAN supaya gutter VERTIKAL kelas
+       g-3/g-4 tidak lagi menambah ruang kosong. Di Bootstrap 5 gutter-y
+       dipakai DUA tempat: margin-top negatif pada .row dan margin-top pada
+       .row > *. Karena itu yang dinul-kan --bs-gutter-y-nya di .row (bukan
+       margin-top anaknya satu per satu), supaya keduanya hilang bersamaan dan
+       jarak vertikal murni dari token --set-* + row-gap di bawah. Nilai yang
+       sama sudah dipakai desktop (lihat CSS halaman). */
     body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .row {
         --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 0 !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
     body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .row > * {
         padding-left: 0 !important;
         padding-right: 0 !important;
+    }
+
+    /* SISTEM JARAK PENGATURAN (semua lewat variabel, tanpa angka acak):
+       --set-sec-gap 1.5rem antar section besar; --set-field-gap .75rem
+       antar field; --set-label-gap .25rem label->input; --set-head-gap .25rem
+       judul->deskripsi; --set-btn-gap .75rem kotak info -> tombol Simpan. */
+    /* Section besar: "Pengelolaan Sistem", "Identitas & Logo Sekolah",
+       "Jadwal Presensi & Toleransi Keterlambatan" — satu sisi saja
+       (margin-bottom) agar tidak dobel dengan gap lain. */
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 > .mb-5,
+    body .pengaturan-no-scrollbar .settings-mobile-form > .mb-5 {
+        margin-top: 0 !important;
+        margin-bottom: var(--set-sec-gap) !important;
+    }
+    /* Kartu section TERAKHIR di dalam form ("Jadwal Presensi & Toleransi
+       Keterlambatan") tidak perlu jarak antar-section di bawahnya. Nilai
+       --set-sec-gap yang sama justru bertumpuk dengan margin-top tombol
+       Simpan (margin-kan-tumpuk = diambil yang paling besar), sehingga jarak
+       kotak info -> tombol Simpan jadi 24px, bukan 12px seperti sisa field.
+       Dinul-kan di sini supaya tombol Simpan terasa bagian dari section yang
+       sama. Ruang bawah tombol tetap ada lewat spacer akhir scroll di <main>. */
+    body .pengaturan-no-scrollbar .settings-mobile-form > .mb-5:has(.bg-light.mt-3) {
+        margin-bottom: 0 !important;
+    }
+    /* Judul section -> deskripsi (rapat) & deskripsi -> konten pertama */
+    body .pengaturan-no-scrollbar .section-header {
+        gap: var(--set-head-gap) !important;
+        margin-top: 0 !important;
+        margin-bottom: var(--set-field-gap) !important;
+        padding-bottom: 0 !important;
+    }
+    body .pengaturan-no-scrollbar .section-header > div {
+        gap: var(--set-head-gap) !important;
+    }
+    /* Jarak antar field form (Identitas) + label ke input */
+    body .pengaturan-no-scrollbar .identitas-field {
+        margin-top: 0 !important;
+        margin-bottom: var(--set-field-gap) !important;
+    }
+    /* Blok Logo (di mobile kolomnya menumpuk DI BAWAH field NIP): sedikit
+       lebih renggang dari jarak antar field biasa, jadi total dari field
+       "NIP Kepala Sekolah" ke label "Logo Sekolah" =
+       --set-field-gap (12px) + .5rem (8px) = 20px. d-flex mencegah margin
+       collapse, jadi jaraknya selalu persis itu (tidak dobel). */
+    body .pengaturan-no-scrollbar .identitas-logo {
+        margin-top: .5rem !important;
+        margin-bottom: 0 !important;
+    }
+    body .pengaturan-no-scrollbar .identitas-field .form-label {
+        margin-top: 0 !important;
+        margin-bottom: var(--set-label-gap) !important;
+    }
+    /* Blok Logo: preview + input file sejajar rata tengah vertikal (gap
+       field); teks ukuran tepat di bawah input (.25rem). Margin bawah di-NOL-kan:
+       satu-satunya elemen setelah baris ini (#logoFileInfo / #logoNewPreviewWrap)
+       memang disembunyikan dulu, jadi --set-field-gap lama jadi ruang kosong
+       sebelum judul "Jadwal Presensi & Toleransi Keterlambatan". Jaraknya
+       dipindah ke #logoFileInfo yang baru tampil setelah user memilih file. */
+    body .pengaturan-no-scrollbar .identitas-logo-stack {
+        gap: var(--set-field-gap) !important;
+        align-items: center !important;
+        margin-bottom: 0 !important;
+    }
+    body .pengaturan-no-scrollbar .identitas-logo-stack .flex-grow-1 > span {
+        display: block;
+        margin-top: var(--set-label-gap);
+    }
+    body .pengaturan-no-scrollbar #logoFileInfo {
+        margin-top: var(--set-label-gap);
+    }
+    /* INPUT FILE LOGO TEPAT DI TENGAH VERTIKAL: tinggi 34px, padding 0,
+       line-height normal; tombol bawaan (::file-selector-button) mengisi
+       tinggi penuh dan teks "Choose file"/"No file chosen" rata tengah
+       (jarak atas = jarak bawah). */
+    body .pengaturan-no-scrollbar input[type="file"].form-control {
+        height: var(--m-ctl-h);
+        padding: 0;
+        line-height: normal;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+    body .pengaturan-no-scrollbar input[type="file"].form-control::file-selector-button {
+        height: 100%;
+        margin: 0 0.75rem 0 0;
+        padding: 0 0.75rem;
+        border: 0;
+        display: inline-flex;
+        align-items: center;
+        pointer-events: none;
+    }
+    /* Dua field waktu: jarak antar field = --set-field-gap */
+    body .pengaturan-no-scrollbar .row {
+        row-gap: var(--set-field-gap) !important;
+    }
+    /* GRID IDENTITAS: row-gap di-NOL-kan (margin-top negatif Bootstrap sudah
+       dinetralkan lewat --bs-gutter-y di atas). WAJIB berada SETELAH aturan
+       generik .row di atas: specificity keduanya sama, jadi yang menentukan
+       urutan. Dengan row-gap 0, jarak di grid identitas murni dari
+       margin-bottom tiap .identitas-field (antar field 12px) + margin-top
+       .identitas-logo (8px), jadi tidak ada ruang kosong dobel sebelum label
+       "Logo Sekolah". */
+    body .pengaturan-no-scrollbar .identitas-grid {
+        row-gap: 0 !important;
+        margin-top: 0 !important;
+    }
+    /* Kotak info biru: jarak atas .75rem */
+    body .pengaturan-no-scrollbar .bg-light.mt-3,
+    body .pengaturan-no-scrollbar .settings-mobile-form .mt-3 {
+        margin-top: var(--set-field-gap) !important;
+    }
+    /* Tombol Simpan: jarak dari kotak info .75rem (sama dengan antar field);
+       margin bawah tidak perlu (ekor scroll sudah menangani jarak ke navbar) */
+    body .pengaturan-no-scrollbar .settings-mobile-form > .d-flex.justify-content-end {
+        margin-top: var(--set-btn-gap) !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* ------------------------------------------------------------------
+       15. PAGINATION MOBILE — SATU BARIS: "‹ Sebelumnya" di kiri (auto),
+       nomor halaman di tengah, "Berikutnya ›" di kanan (auto). Tidak boleh
+       wrap / turun baris, tidak boleh overflow horizontal.
+       Dipakai halaman yang memakai komponen class SAMA
+       (.kehadiran-pagination-list): Data Siswa, Catatan Kehadiran, Rekap.
+       Halaman Data Guru/Kelas memakai komponen panah terpisah
+       (.pagination-arrow-*) yang memang sudah satu baris.
+       ------------------------------------------------------------------ */
+    body .kehadiran-pagination-list {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100%;
+        gap: 0.25rem !important;
+        margin: 0 0 0.35rem !important;
+        padding: 0 !important;
+        list-style: none !important;
+        overflow: hidden;
+    }
+    body .kehadiran-pagination-list > li { flex: 0 0 auto; }
+    body .kehadiran-pagination-list > li:first-child { margin-right: auto !important; }
+    body .kehadiran-pagination-list > li:last-child { margin-left: auto !important; }
+    body .kehadiran-pagination-step,
+    body .kehadiran-pagination-page {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 30px;
+        padding: 0 0.4rem !important;
+        font-size: 0.75rem !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+        text-align: center;
+    }
+    body .kehadiran-pagination-ellipsis {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 30px;
+        padding: 0 0.15rem !important;
+        font-size: 0.75rem !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+    /* Ekor pagination dinetralkan — jarak bawah kini murni dari spacer 3rem
+       (Masalah 2), supaya tidak dobel. */
+    body .kehadiran-pagination {
+        padding-bottom: 0 !important;
+    }
+    body .pagination-arrow-container {
+        padding-bottom: 0 !important;
+    }
+    /* BONUS: nomor urut 3 digit ("100") di Kehadiran jangan pecah 2 baris */
+    body #daftar-kehadiran .table-enterprise thead th:first-child,
+    body #daftar-kehadiran .table-enterprise tbody td:first-child {
+        white-space: nowrap !important;
+        min-width: 3rem !important;
     }
 
     /* ------------------------------------------------------------------
@@ -1683,6 +1974,12 @@
         body .pengaturan-modul-wrap > .btn,
         body .modal .modal-footer .btn {
             font-size: 0.7rem !important;
+        }
+        /* Pagination sangat sempit: nomor mengecil, tetap satu baris */
+        body .kehadiran-pagination-step,
+        body .kehadiran-pagination-page {
+            min-width: 24px;
+            padding: 0 0.25rem !important;
         }
     }
 }

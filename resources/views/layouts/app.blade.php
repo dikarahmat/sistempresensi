@@ -3048,6 +3048,36 @@
             padding-bottom: 20px !important;
         }
 
+        /* --------------------------------------------------------------------------
+           KESEIMBANGAN JARAK VERTIKAL DAFTAR MENU DI DRAWER MOBILE (<= 640px)
+
+           PATOKAN = jarak bawah yang dianggap sudah pas:
+              PENGATURAN -> garis pemisah bawah = 12px
+              (margin-bottom item 0.25rem + padding list 0.5rem = 4px + 8px,
+               keduanya dari aturan drawer <= 640px di presensi-tokens.css).
+
+           SEBELUMNYA jarak atas = 20px:
+              padding-bottom .sidebar-brand 0.75rem (12px) + padding-top
+              kontainer menu 0.5rem dari utility `py-2` (8px),
+              sehingga 8px lebih jauh dari versi bawah - daftar menu terlihat
+              tidak simetris (atas lebar, bawah rapat).
+
+           PERBAIKAN: padding-top kontainer menu dinolkan HANYA di drawer
+           <= 640px, jadi jarak atas = 12px + 0 = 12px, SAMA dengan jarak bawah.
+           Di luar batas itu tidak ada yang berubah: rentang 641-1023px tetap
+           20px vs 24px seperti sebelumnya, dan desktop >= 1024px tetap
+           24px vs 24px (sudah seimbang). Ukuran item, warna, font, ikon,
+           state aktif, jarak antar item, header sekolah, tombol Log Out, dan
+           bottom navigation tidak disentuh.
+        -------------------------------------------------------------------------- */
+        @media (max-width: 640px) {
+            .sidebar-menu-wrapper,
+            .menu-container,
+            .sidebar-menu-scroll {
+                padding-top: 0 !important;
+            }
+        }
+
         .sidebar-menu-scroll::-webkit-scrollbar {
             width: 4px;
         }

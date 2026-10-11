@@ -64,46 +64,29 @@
         color: #9333ea !important;
     }
 
-    /* Efek Interaktif 3 Kartu Statistik Atas (Hover Transform, Scale Up, Shadow) */
+    /* Efek Interaktif Kartu Statistik: HANYA perubahan border-color (hover).
+       Transform & bayangan DIHAPUS dari sumbernya agar tidak "menempel" di
+       layar sentuh — lihat blok GAYA KARTI DASHBOARD di bawah. */
     .stat-card-modern {
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: border-color 0.15s ease;
         cursor: pointer;
-    }
-    .stat-card-modern:hover {
-        transform: translateY(-4px) scale(1.015);
-        box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03) !important;
-    }
-    .stat-card-modern:active {
-        transform: translateY(-1px) scale(0.99);
     }
 
     .stat-card-modern i {
-        transition: transform 0.25s ease;
         display: inline-block;
     }
-    .stat-card-modern:hover i {
-        transform: scale(1.12);
-    }
 
-    /* Area Ketidakhadiran Hari Ini Interaktif (Hover Background) */
+    /* Area Ketidakhadiran Hari Ini Interaktif: HANYA background. Transform,
+       bayangan, dan latar kebiruan DIHAPUS dari sumbernya (lihat blok SATU
+       SUMBER WARNA di bawah). */
     .absence-row-interactive {
-        background-color: #f8fafc;
         border-radius: 0.75rem;
         padding: 0.9rem 1.1rem;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: background-color 0.15s ease;
         cursor: pointer;
-    }
-    .absence-row-interactive:hover {
-        background-color: #eff6ff !important;
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-    }
-    .absence-row-interactive:active {
-        transform: scale(0.99);
     }
 
     .absence-row-interactive i {
-        transition: transform 0.2s ease;
         display: inline-block;
     }
 
@@ -127,21 +110,10 @@
         transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Hover: kotak ikon ikut membesar sedikit (bukan ikon di dalamnya), supaya
-       posisi ikon, judul, dan keterangan tidak terlihat bergeser. */
-    .absence-row-interactive:hover .absence-status-icon {
-        transform: scale(1.08);
-    }
-    .absence-row-interactive:active .absence-status-icon {
-        transform: scale(0.96);
-    }
+    /* Hover kotak ikon DIHAPUS (transform/scale) — ikon diam di semua state. */
 
-    /* Penanda jelas saat status ketidakhadiran sedang aktif sebagai filter */
-    .absence-row-interactive.absence-row-active {
-        background-color: #eff6ff !important;
-        box-shadow: 0 0 0 2px #2563eb inset;
-        transform: translateX(4px);
-    }
+    /* Penanda status aktif sebagai filter: hanya badge "Aktif"; latar &
+       bayangan biru pada baris dikendalikan blok GAYA KARTI DASHBOARD. */
     .absence-row-active-badge {
         display: inline-block;
         background: #2563eb;
@@ -155,36 +127,20 @@
         letter-spacing: 0.04em;
     }
 
-    /* Area Pintasan Cepat Card Mandiri Clickable (Hover Scale) */
+    /* Area Pintasan Cepat Card Mandiri Clickable: HANYA background (abu
+       hover). Transform & bayangan DIHAPUS dari sumbernya. */
     .shortcut-card-interactive {
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: background-color 0.15s ease;
         cursor: pointer;
-    }
-    .shortcut-card-interactive:hover {
-        background-color: #ffffff !important;
-        transform: translateY(-4px) scale(1.025);
-        box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04) !important;
-    }
-    .shortcut-card-interactive:active {
-        transform: scale(0.98);
     }
 
     .shortcut-card-interactive i {
-        transition: transform 0.2s ease;
         display: inline-block;
     }
-    .shortcut-card-interactive:hover i {
-        transform: scale(1.15);
-    }
 
-    /* Sub-card Jadwal Operasional Interaktif */
+    /* Sub-card Jadwal Operasional Interaktif: HANYA background. */
     .operasional-card-interactive {
-        transition: all 0.2s ease;
-    }
-    .operasional-card-interactive:hover {
-        background-color: #ffffff !important;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.06) !important;
+        transition: background-color 0.15s ease;
     }
 
     /* Tombol Modern Efek Hover Mulus */
@@ -690,6 +646,162 @@
             --dash-pad-x: 1.5rem;
         }
     }
+
+    /* ==========================================================================
+       GAYA KARTU DASHBOARD — PUTIH + STROKE ABU TIPIS + LAPISAN BIRU HOVER (patokan: kartu Pintasan Cepat)
+       Berlaku GLOBAL (tanpa media query) → desktop & mobile senada.
+
+       Patokan diambil dari nilai yang dipakai kartu/kotak dashboard project.
+       Radius TIDAK diubah
+       radius yang sekarang (desktop --dash-radius, mobile --m-card-r).
+
+       SEMUA selector berawalan ".dashboard-section" (specificity 0,2,0) agar
+       mengalahkan utilitas Bootstrap tanpa menumpuk !important.
+       ========================================================================== */
+    .dashboard-section {
+        --dash-card-bg: #ffffff;
+        --dash-stroke: #dfe3e8;
+        --dash-stroke-hover: #cfd5dd;
+        --dash-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+        --dash-accent: #2563eb;   /* biru tema tombol Dashboard (Langkah 0) */
+    }
+
+    /* A. KARTU LINK (kartu statistik + 8 kartu Pintasan Cepat):
+          putih + stroke tipis + shadow sangat tipis + lapisan biru hover. */
+    .dashboard-section .stat-card-modern,
+    .dashboard-section .shortcut-card-interactive {
+        position: relative;
+        isolation: isolate;
+        background-color: transparent;      /* putih dilukis ::after di bawah */
+        border: 1px solid var(--dash-stroke);
+        box-shadow: var(--dash-card-shadow);
+        outline: none;
+    }
+    /* Lapisan BIRU di belakang permukaan putih (mengintip saat miring) */
+    .dashboard-section .stat-card-modern::before,
+    .dashboard-section .shortcut-card-interactive::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: var(--dash-accent);
+        border-radius: inherit;
+        opacity: 0;
+        transform: rotate(0deg);
+        transition: transform 0.22s ease, opacity 0.22s ease;
+        pointer-events: none;
+    }
+    /* Permukaan PUTIH kartu */
+    .dashboard-section .stat-card-modern::after,
+    .dashboard-section .shortcut-card-interactive::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: var(--dash-card-bg);
+        border-radius: inherit;
+        pointer-events: none;
+    }
+    /* Isi kartu di atas permukaan putih */
+    .dashboard-section .stat-card-modern > *,
+    .dashboard-section .shortcut-card-interactive > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* B. KOTAK LUAR & ISI (Monitoring, Grafik, Ketidakhadiran, Jadwal,
+          baris Sakit/Izin/Alpha, kartu jam, track segmented):
+          putih + stroke tipis + shadow tipis. TANPA efek lapisan biru. */
+    .dashboard-section .dashboard-box,
+    .dashboard-section .dashboard-monitor-box,
+    .dashboard-section .dashboard-inner-card,
+    .dashboard-section .absence-row-interactive,
+    .dashboard-section .dashboard-clock,
+    .dashboard-section .dash-seg {
+        background-color: var(--dash-card-bg);
+        border: 1px solid var(--dash-stroke);
+        box-shadow: var(--dash-card-shadow);
+        outline: none;
+    }
+    /* Segmented: item tidak aktif transparan (mengikuti track putih), item
+       aktif tetap biru solid teks putih; border hanya di track. */
+    .dashboard-section .dash-seg .dash-seg__btn {
+        border: 0;
+        background-color: transparent;
+    }
+    .dashboard-section .dash-seg .dash-seg__btn.is-active,
+    .dashboard-section .dash-seg .dash-seg__btn--solid {
+        background-color: #2563eb;
+        color: #ffffff;
+    }
+
+    /* C. PENJAGA GARIS INTERNAL (pemisahan pakai jarak saja; utilitas
+       border-bottom/border-top pada markup sudah dihapus). */
+    .dashboard-section .dashboard-box .border-bottom,
+    .dashboard-section .dashboard-box .border-top,
+    .dashboard-section .dashboard-trend-footer {
+        border: 0;
+    }
+
+    /* D. BARIS KETIDAKHADIRAN: hover/active hanya STROKE berubah (tanpa
+       lapisan biru, tanpa transform). */
+    .dashboard-section .absence-row-interactive:hover,
+    .dashboard-section .absence-row-interactive:active,
+    .dashboard-section .absence-row-interactive:focus,
+    .dashboard-section .absence-row-interactive.absence-row-active {
+        background-color: var(--dash-card-bg);
+        border-color: var(--dash-stroke-hover);
+        box-shadow: var(--dash-card-shadow);
+        outline: none;
+        transform: none;
+    }
+    .dashboard-section .absence-row-interactive:hover .absence-status-icon,
+    .dashboard-section .absence-row-interactive:active .absence-status-icon,
+    .dashboard-section .absence-row-interactive:focus .absence-status-icon {
+        transform: none;
+    }
+
+    /* E. HOVER/TEKAN kartu link: lapisan biru muncul miring (-2.5deg) dan
+       mengintip di sudut kartu; kartu TIDAK bergerak; stroke sedikit lebih
+       gelap. :hover dibungkus agar tidak menempel di layar sentuh;
+       sentuh = :active (muncul sesaat saat ditekan). */
+    @media (hover: hover) and (pointer: fine) {
+        .dashboard-section .stat-card-modern:hover,
+        .dashboard-section .shortcut-card-interactive:hover {
+            border-color: var(--dash-stroke-hover);
+            box-shadow: var(--dash-card-shadow);
+            transform: none;
+        }
+        .dashboard-section .stat-card-modern:hover::before,
+        .dashboard-section .shortcut-card-interactive:hover::before {
+            opacity: 1;
+            transform: rotate(-2.5deg);
+        }
+    }
+    .dashboard-section .stat-card-modern:active,
+    .dashboard-section .shortcut-card-interactive:active {
+        border-color: var(--dash-stroke-hover);
+        box-shadow: var(--dash-card-shadow);
+        transform: none;
+    }
+    .dashboard-section .stat-card-modern:active::before,
+    .dashboard-section .shortcut-card-interactive:active::before {
+        opacity: 1;
+        transform: rotate(-2.5deg);
+    }
+    /* Fokus keyboard saja (bukan outline saat diklik mouse) */
+    .dashboard-section .stat-card-modern:focus-visible,
+    .dashboard-section .shortcut-card-interactive:focus-visible {
+        outline: 2px solid var(--dash-accent);
+        outline-offset: 2px;
+    }
+    /* Hormati preferensi kurangi animasi */
+    @media (prefers-reduced-motion: reduce) {
+        .dashboard-section .stat-card-modern::before,
+        .dashboard-section .shortcut-card-interactive::before {
+            transition: none;
+        }
+    }
 </style>
 @endpush
 
@@ -702,7 +814,7 @@
         
         <!-- Card 1: Total Siswa Aktif -->
         <div class="col-6 col-md-4">
-            <a href="{{ panel_route('students.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data siswa aktif">
+            <a href="{{ panel_route('students.index') }}" class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data siswa aktif">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Total Siswa Aktif
@@ -719,7 +831,7 @@
 
         <!-- Card 2: Total Rombongan Belajar -->
         <div class="col-6 col-md-4">
-            <a href="{{ panel_route('classes.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data rombongan belajar">
+            <a href="{{ panel_route('classes.index') }}" class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data rombongan belajar">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Total Rombongan Belajar
@@ -737,9 +849,9 @@
         <!-- Card 3: Total Guru Aktif -->
         <div class="col-6 col-md-4">
             @if(is_admin())
-            <a href="{{ route('admin.guru.index') }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data guru">
+            <a href="{{ route('admin.guru.index') }}" class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Buka data guru">
             @else
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Data guru">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Data guru">
             @endif
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
@@ -760,7 +872,7 @@
         </div>
 
         <div class="col-6 d-md-none">
-            <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Lihat ketidakhadiran hari ini">
+            <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="card border-0 rounded-4 p-3 h-100 d-flex flex-row align-items-center justify-content-between text-decoration-none stat-card-modern" title="Lihat ketidakhadiran hari ini">
                 <div>
                     <span class="text-secondary fw-semibold text-uppercase d-block mb-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                         Tidak Hadir Hari Ini
@@ -784,9 +896,9 @@
     <!-- ========================================================================= -->
     <div class="row g-3 mb-4 dashboard-section">
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-flat dashboard-shortcuts-flat">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-flat dashboard-shortcuts-flat">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off dashboard-divider-off">
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 clean-line-off dashboard-divider-off">
                         <div class="d-flex align-items-center gap-2.5">
                             <i class='bx bx-zap text-warning fs-4'></i>
                             <span class="fw-bold text-dark" style="font-size: 0.95rem;">Pintasan Cepat</span>
@@ -804,7 +916,7 @@
                              & "Mode Gerbang" tetap tersedia di halaman tujuan. -->
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('absensi.index') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Buka halaman Presensi (Scanner QR &amp; Mode Gerbang)">
                                 <i class='bx bx-qr-scan text-primary fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Presensi Hari Ini</span>
@@ -818,7 +930,7 @@
                              supaya tidak tumpang tindih dengan kartu 1. -->
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('kehadiran') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Lihat Log Kehadiran &amp; Presensi Harian">
                                 <i class='bx bx-list-check text-success fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Catatan Kehadiran</span>
@@ -829,7 +941,7 @@
                         <!-- 3. Rekapitulasi Presensi (ikon Laporan/PDF) -->
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('rekap') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Laporan Rekapitulasi & Ekspor Dokumen">
                                 <i class='bx bxs-file-pdf text-danger fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Rekap Presensi</span>
@@ -840,7 +952,7 @@
                         <!-- 4. Master Data Siswa (ikon User/Siswa) -->
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('students.index') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Master Data Siswa & Generate QR">
                                 <i class='bx bx-user text-info fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Data Siswa</span>
@@ -852,7 +964,7 @@
                         @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ route('admin.guru.index') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Data Guru">
                                 <i class='bx bx-user-pin text-purple fs-2 mb-2' style="color: #9333ea;"></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Data Guru</span>
@@ -864,7 +976,7 @@
                         <!-- 6. Master Data Kelas (ikon Gedung/Kelas) -->
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('classes.index') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Master Rombongan Belajar & Kelas">
                                 <i class='bx bx-buildings text-warning fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Data Kelas</span>
@@ -876,7 +988,7 @@
                         @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('holidays.index') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Kelola Kalender Hari Libur Nasional & Sekolah">
                                 <i class='bx bx-calendar-x text-danger fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Hari Libur</span>
@@ -889,7 +1001,7 @@
                         @if(is_admin())
                         <div class="col-6 col-md-4 col-xl-3">
                             <a href="{{ panel_route('settings.index') }}" 
-                               class="card border-0 shadow-sm rounded-4 bg-light p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
+                               class="card border-0 rounded-4 p-3 text-center d-flex flex-column align-items-center justify-content-center text-decoration-none h-100 shortcut-card-interactive"
                                title="Konfigurasi Profil Sekolah, Jam Masuk, & Sistem">
                                 <i class='bx bx-cog text-secondary fs-2 mb-2'></i>
                                 <span class="fw-bold text-dark d-block leading-tight" style="font-size: 0.83rem;">Pengaturan</span>
@@ -943,9 +1055,9 @@
         
         <!-- KOLOM KIRI (70%): CARD GRAFIK GARIS KEHADIRAN (mode: harian/mingguan/bulanan) -->
         <div class="col-12 col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom border-light-subtle mb-3">
+                    <div class="d-flex align-items-center justify-content-between gap-2 pb-3 mb-3">
                         <div class="d-flex align-items-center gap-2 min-w-0">
                             <span class="fw-bold text-dark text-truncate dashboard-box-title" style="font-size: 0.9rem;">{{ $chartTitle ?? 'Grafik Garis Kehadiran Mingguan' }}</span>
                         </div>
@@ -994,7 +1106,7 @@
                 </div>
 
                 <!-- Keterangan Garis Tren & Total (selalu satu baris, tidak bertumpuk) -->
-                <div class="mt-3 pt-2.5 border-top border-light-subtle d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted dashboard-trend-footer" style="font-size: 0.72rem;">
+                <div class="mt-3 pt-2.5 d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted dashboard-trend-footer" style="font-size: 0.72rem;">
                     <div class="d-flex align-items-center gap-2 min-w-0 text-truncate">
                         <span class="text-truncate"><strong class="text-dark">Garis Tren Kehadiran</strong> <span class="d-none d-sm-inline">({{ $chartScopeText ?? (($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C')) }})</span></span>
                     </div>
@@ -1005,9 +1117,9 @@
 
         <!-- KOLOM KANAN (30%): CARD KETIDAKHADIRAN HARI INI (INTERAKTIF HOVER) -->
         <div class="col-12 col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 clean-line-off">
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 clean-line-off">
                         <div>
                             <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">Ketidakhadiran Hari Ini</h6>
                             <p class="text-secondary small mb-0 dashboard-box-sub">Siswa yang berhalangan hadir</p>
@@ -1092,7 +1204,7 @@
                 </div>
 
                 <!-- Tombol Menuju Tabel Presensi Harian -->
-                <div class="pt-3 mt-3 border-top border-light-subtle clean-line-off">
+                <div class="pt-3 mt-3 clean-line-off">
                     <a href="{{ panel_route('presensi.index', array_filter(['tanggal' => $dateString, 'status' => request('status')])) }}" 
                        class="btn btn-primary rounded-3 shadow-sm w-100 fw-bold py-2.5 d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth" 
                        style="font-size: 0.85rem;">
@@ -1113,9 +1225,9 @@
         
         <!-- CARD JADWAL OPERASIONAL SEKOLAH -->
         <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom border-light-subtle mb-3 dashboard-divider-off">
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 dashboard-divider-off">
                         <div class="d-flex align-items-center gap-2.5">
                             <span class="fw-bold text-dark dashboard-box-title">Jadwal Operasional Sekolah</span>
                         </div>
@@ -1128,9 +1240,9 @@
                     <div class="row g-2.5">
                         <div class="col-6">
                             @if(is_admin())
-                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Ubah jam masuk">
+                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Ubah jam masuk">
                             @else
-                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Jam masuk sekolah">
+                            <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Jam masuk sekolah">
                             @endif
                                 <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">Jam Masuk</span>
                                 <strong class="text-dark mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
@@ -1145,9 +1257,9 @@
                         </div>
                         <div class="col-6">
                             @if(is_admin())
-                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Ubah batas terlambat">
+                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Ubah batas terlambat">
                             @else
-                            <div class="card border-0 shadow-sm rounded-3 bg-light p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Batas keterlambatan sekolah">
+                            <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock" title="Batas keterlambatan sekolah">
                             @endif
                                 <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">Batas Terlambat</span>
                                 <strong class="text-amber-600 mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
