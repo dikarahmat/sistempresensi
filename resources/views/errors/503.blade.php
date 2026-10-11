@@ -313,8 +313,8 @@
             <text x="384" y="296" text-anchor="middle" font-size="38" font-weight="500" fill="#fff">We'll Be Back Soon!</text>
 
             {{-- SLOT LOGO MOBILE: kiri = public/images/logo.webp, kanan = public/images/logo-unpam.webp --}}
-            <image class="logo" href="{{ asset('images/logo.webp') }}" x="52" y="30" width="170" height="68" preserveAspectRatio="xMinYMid meet" onerror="this.style.display='none'"/>
-            <image class="logo" href="{{ asset('images/logo-unpam.webp') }}" x="476" y="14" width="240" height="100" preserveAspectRatio="xMaxYMid meet" onerror="this.style.display='none'"/>
+            <image class="logo" href="{{ asset('images/logo.webp') }}" x="52" y="14" width="240" height="100" preserveAspectRatio="xMinYMid meet" onerror="this.style.display='none'"/>
+            <image class="logo" href="{{ asset('images/logo-unpam.webp') }}" x="476" y="4" width="240" height="120" preserveAspectRatio="xMaxYMid meet" onerror="this.style.display='none'"/>
 
             <rect x="-2000" y="1196" width="5000" height="400" fill="#dce8f6"/>
             <use href="#circ" x="200" y="1210" width="400" height="168" opacity=".9"/>
