@@ -582,6 +582,13 @@
             return;
         }
 
+        // MESIN PROGRES BERSAMA (partials/download-progress.blade.php) yang
+        // menangani elemen ini. Sapuan lama diapakai memutihkan tombol, jadi
+        // mesin lama ini MUSTIHL gracefully, tidak ikut berebut.
+        if (btn.closest('[data-dl-progress], [data-import]')) {
+            return;
+        }
+
         // Jangan tangani tombol submit form di sini (ditangani submit listener)
         if (btn.tagName === 'BUTTON' && btn.type === 'submit') {
             return;
@@ -615,6 +622,12 @@
         if (!(form instanceof HTMLFormElement)) return;
 
         if (form.hasAttribute('data-no-download') || form.hasAttribute('data-no-import')) {
+            return;
+        }
+
+        // Form yang tombolnya ditangani mesin progres bersama -> biarkan
+        // mesin itu yang mengirim, jangan double-submit di sini.
+        if (form.querySelector('[data-dl-progress], [data-import]')) {
             return;
         }
 

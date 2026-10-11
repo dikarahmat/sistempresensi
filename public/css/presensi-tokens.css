@@ -71,11 +71,9 @@
     --gerbang-camera-radius: 16px;
     --gerbang-scan-ratio: 70%;
 
-    /* Animasi Download Tokens */
-    --dl-swipe-direction: to right;  /* Arah sapuan: KIRI ke KANAN */
-    --dl-swipe-duration: 400ms;      /* Durasi minimal sapuan (0.4s) */
-    --dl-swipe-bg: #ffffff;          /* Warna sapuan solid (Putih penuh) */
-    --dl-swipe-dark-bg: #1e3a8a;     /* Warna sapuan untuk tombol terang */
+    /* Token unduhan: mesin progres bersama memakai --btn-progress-base /
+       --btn-progress-fill yang dipasang per tombol oleh JS (warnaDasar()).
+       Token sapuan putih yang lama sudah dihapus. */
 }
 
 /* ==========================================================================
@@ -249,69 +247,13 @@
     z-index: 1;
 }
 
-/* Track pembungkus lapisan sapuan */
-.dl-swipe-track {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: inherit !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
-    z-index: 5 !important;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-}
-
-.dl-swipe-track.active {
-    opacity: 1 !important;
-}
-
-/* Lapisan sapuan: solid (100% opacity), bergerak dari KIRI ke KANAN */
-.dl-swipe-fill {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    bottom: 0 !important;
-    height: 100% !important;
-    width: 0%;
-    overflow: hidden !important;
-    border-radius: inherit !important;
-    pointer-events: none !important;
-    background-color: var(--dl-swipe-bg, #ffffff) !important;
-    /* Feather halus 6-8px di tepi depan sisi kanan (lurus, tanpa ombak) */
-    box-shadow: 3px 0 8px -1px rgba(0, 0, 0, 0.16) !important;
-    transition: width 0.12s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: width;
-}
-
-/* Lapis atas: teks dan ikon dengan warna tombol asli, ter-clip mengikuti lebar sapuan */
-.dl-swipe-content {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    height: 100% !important;
-    box-sizing: border-box !important;
-    pointer-events: none !important;
-    white-space: nowrap !important;
-    color: var(--dl-btn-color, #1e3a8a) !important;
-}
-
-/* Pastikan seluruh elemen anak di lapis atas mewarisi warna tombol */
-.dl-swipe-content * {
-    color: inherit !important;
-    fill: currentColor !important;
-}
-
-/* Adaptasi untuk tombol yang dasarnya terang: sapuan Navy, teks putih */
-.dl-swipe-track.is-light-btn .dl-swipe-fill {
-    background-color: var(--dl-swipe-dark-bg, #1e3a8a) !important;
-    box-shadow: 3px 0 8px -1px rgba(30, 58, 138, 0.35) !important;
-}
-
-.dl-swipe-track.is-light-btn .dl-swipe-content {
-    color: #ffffff !important;
-}
+/* ==========================================================================
+   SAPUAN UNDUHAN LAMA (.dl-swipe-*)
+   SUDAH DIHAPUS. Mesin progres bersama (partials/download-progress.blade.php)
+   memakai .btn-progress / .btn-progress__fill / .btn-progress__label dengan
+   bar GELAP sesuai warna tombol. Aturan lama sengaja dihapus supaya tidak
+   pernah ada lapisan PUTIH menutupi tombol saat unduhan berjalan.
+   ========================================================================== */
 
 /* ==========================================================================
    TOMBOL DOWNLOAD & EXPORT SOLID TANPA BORDER (IDENTIK DENGAN DOWNLOAD QR CODE)

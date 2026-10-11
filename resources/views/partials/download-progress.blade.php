@@ -7,7 +7,7 @@
       - Unduh QR Code & Kartu di Detail Siswa
       - Popup Cetak Rekap Presensi (semua mode, kelas CSS yang sama)
 
-    Cara pakai — cukup tambahkan atribut data-dl-progress, markup tombol
+     Cara pakai - cukup tambahkan atribut data-dl-progress, markup tombol
     tidak perlu diubah (fill + label dibuat otomatis oleh JS):
       <a href="{{ route('x.template') }}" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
       <button type="submit" data-download data-dl-progress>Generate &amp; Unduh</button>
@@ -40,31 +40,30 @@
       dl-busy-end    -> detail { url, sukses, dibatalkan }
 --}}
 <style>
-    /* ----- VARIABEL WARNA PROGRES PER VARIAN TOMBOL ----- */
-/* Setiap varian tombol mendefinisikan --btn-progress-base (warna dasar) dan
-   --btn-progress-fill (isi bar gelap). Warna ini diasosiasikan melalui class
-   tombol yang sudah ada (btn-download-blue, btn-download-green, btn-download-red,
-   btn-primary, btn-success, btn-danger). */
-
-    /* Warna dasar per varian + fallback ke biru */
-    .btn-download-blue.btn-progress,   .btn-primary.btn-progress   { --btn-progress-base: #2563eb; } /* biru 600 */
-    .btn-download-green.btn-progress,  .btn-success.btn-progress   { --btn-progress-base: #059669; } /* hijau 500 */
-    .btn-download-red.btn-progress,    .btn-danger.btn-progress    { --btn-progress-base: #dc2626; } /* merah 600 */
-
-    /* Isi bar per varian (versi gelap dari warna dasar) */
-    .btn-download-blue.btn-progress,   .btn-primary.btn-progress   { --btn-progress-fill: #1e3a8a; } /* biru tua */
-    .btn-download-green.btn-progress,  .btn-success.btn-progress   { --btn-progress-fill: #064e3b; } /* hijau tua */
-    .btn-download-red.btn-progress,    .btn-danger.btn-progress    { --btn-progress-fill: #7f1d1d; } /* merah tua */
-
-    /* ----- TOMBOL SEBAGAI WAHAN PROGRES ----- */
+    /* ----- TOMBOL SEBAGAI WAHAN PROGRES -----
+       Warna dasar (--btn-progress-base) dan warna isi bar gelap
+       (--btn-progress-fill) DIAMBIL DARI TOMBOLNYA SENDIRI oleh JS lewat
+       warnaDasar() + gelap() di bawah. Karena itu tidak ada lagi aturan warna
+       per class di sini: tombol biru -> bar biru tua, hijau -> hijau tua,
+       merah -> merah tua, dan tidak pernah ada warna putih saat loading. */
     .btn-progress {
         position: relative;
         overflow: hidden;
         white-space: nowrap;
         isolation: isolate;
-        /* Warna dasar diambil dari variabel --btn-progress-base yang sesuai varian tombol */
-        background-color: var(--btn-progress-base, #3b82f6);
-        border-radius: inherit;
+    }
+
+    /* Warna HANYA dipaksa saat proses benar-benar berjalan (atau selesai).
+       Kalau dipaksa sejak awal, aturan !important di sini mengalahkan class
+       warna tombol (btn-download-green & sejenis) sehingga tombol yang hijau
+       ikut tampil biru sebelum diklik. */
+    .btn-progress.is-running,
+    .btn-progress.is-done {
+        background-color: var(--btn-progress-base, #2563eb) !important;
+        background-image: none !important;
+        border-color: var(--btn-progress-base, #2563eb) !important;
+        color: #fff !important;
+        opacity: 1 !important;
     }
 
     /* ----- LAPISAN ISI BAR PROGRES ----- */
@@ -73,8 +72,8 @@
         top: 0; left: 0; bottom: 0;
         width: 0%;
         border-radius: inherit;
-        /* Warna isi diambil dari variabel --btn-progress-fill per varian tombol */
-        background-color: var(--btn-progress-fill, #1f2937);
+        background-color: var(--btn-progress-fill, #1e3a8a) !important;
+        background-image: none !important;
         opacity: 1;
         transition: width .2s linear;   /* pendek & linear: bar dan angka sinkron */
         z-index: 0;
@@ -88,10 +87,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
-        font-weight: bold;
+        color: #fff !important;
+        font-weight: 700;
         z-index: 1;
+        text-shadow: none;
     }
+
+    /* Nonaktif karena sedang jalan: tetap berwarna penuh, bukan putih/pucat. */
+    .btn-progress:disabled, .btn-progress[disabled] { opacity: 1 !important; color: #fff !important; }
 
     /* Saat jalan: hanya persen, tebal, rata tengah; ukuran tombol tetap. */
     .btn-progress.is-running { pointer-events: none; }
@@ -121,15 +124,16 @@
     .dl-progress-error:empty { display: none; }
 
     /* Footer popup unduhan: dua tombol sama lebar, lebar tetap, baris penuh.
-       Tombol Batal/Hentikan tidak pernah berubah abu gelap saat nonaktif. */
+       Tanpa min-width tetap: tombol Generate dibungkus <form>, jadi hanya
+       .dl-actions > .btn yang ikut aturan ini dan kolomnya bisa menyempit. */
     .dl-actions {
         display: flex;
         gap: .5rem;
         width: 100%;
     }
     .dl-actions > .btn {
-        flex: 1 1 168px;
-        min-width: 168px;
+        flex: 1 1 0;
+        min-width: 0;
         white-space: nowrap;
         text-align: center;
     }
@@ -144,6 +148,18 @@
         border-color: var(--bs-btn-border-color, #dee2e6);
         color: var(--bs-btn-color, #212529);
     }
+
+    /* Footer modal cetak: dua kolom sama lebar, satu baris, teks utuh.
+       Berlaku juga pada tombol Generate yang dibungkus <form>. */
+    .modal-footer {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: .5rem;
+    }
+    .modal-footer > * { flex: 1 1 0; min-width: 0; }
+    .modal-footer form { flex: 1 1 0; min-width: 0; display: flex; }
+    .modal-footer form > button,
+    .modal-footer > button { width: 100%; }
 </style>
 
 <script>
@@ -163,14 +179,99 @@
     var MAKS_RETRY      = 3;
     var ESTIMASI_MS     = 150;   // tanpa Content-Length: interval estimasi
     var PLAFON_ESTIMASI = 90;    // maks estimasi selama menunggu
-    var KURVA_ESTIMASI  = 0.06;  // target += (90 - target) * 0.06
+    var KURVA_ESTIMASI  = 0.04;  // target += (90 - target) * 0.04
     var MIN_LANGKAH     = 1;
     var MARGIN_BIASA    = 3;     // ceiling = target + 3 (supaya angka tidak membeku)
+    var MARGIN_ESTIMASI = 6;     // ceiling saat estimasi: selalu di depan display
 
     var sedang = null;   // state unduhan yang sedang berjalan
 
     /* ---------- kerangka fill + label, dibuat otomatis ---------- */
+
+    /* Versi gelap dari sebuah warna rgb: isi bar selalu lebih gelap dari tombol. */
+    function gelap(rgb, f) {
+        var m = (rgb || '').match(/\d+/g) || [37, 99, 235];
+        return 'rgb(' + [0, 1, 2].map(function (i) { return Math.round(m[i] * (1 - f)); }).join(',') + ')';
+    }
+
+    /* Warna dasar tombol.
+       (MASALAH D) Kata kunci pada class / id / teks / href SELALU menang atas
+       getComputedStyle: template / import / impor / unggah / excel -> hijau,
+       danger / hapus -> merah, warning -> oranye. getComputedStyle hanya
+       dipakai sebagai cadangan untuk tombol tanpa kata kunci, dan hasil putih
+       / transparan tetap ditolak (bar tidak boleh pernah putih). */
+    var HIJAU = 'rgb(5,150,105)';
+    var MERAH = 'rgb(220,38,38)';
+    var ORANJE = 'rgb(245,158,11)';
+    var BIRU  = 'rgb(37,99,235)';
+
+    function warnaDasar(btn) {
+        var k = ((btn.className || '') + ' ' + (btn.id || '') + ' '
+               + (btn.textContent || '') + ' '
+               + (btn.getAttribute('href') || '') + ' '
+               + (btn.getAttribute('data-bs-target') || '')).toLowerCase();
+
+        if (k.indexOf('merah') > -1 || k.indexOf('red') > -1 || k.indexOf('danger') > -1 || k.indexOf('hapus') > -1) return MERAH;
+        if (k.indexOf('orange') > -1 || k.indexOf('oranye') > -1 || k.indexOf('warning') > -1) return ORANJE;
+        if (k.indexOf('template') > -1 || k.indexOf('import') > -1 || k.indexOf('impor') > -1
+            || k.indexOf('unggah') > -1 || k.indexOf('upload') > -1 || k.indexOf('excel') > -1
+            || k.indexOf('green') > -1 || k.indexOf('hijau') > -1 || k.indexOf('success') > -1) return HIJAU;
+
+        // Cadangan: baca warna asli tombol. Class status progres dibuang
+        // sementara supaya tidak ikut terukur.
+        var simpan = [];
+        ['btn-progress', 'is-running', 'is-done'].forEach(function (c) {
+            if (btn.classList.contains(c)) { btn.classList.remove(c); simpan.push(c); }
+        });
+        var c = getComputedStyle(btn).backgroundColor || '';
+        simpan.forEach(function (x) { btn.classList.add(x); });
+
+        var m = c.match(/\d+/g) || [];
+        var transparan = c === 'transparent' || (m.length === 4 && +m[3] === 0) || m.length === 0;
+        var putih = m.length >= 3 && +m[0] > 225 && +m[1] > 225 && +m[2] > 225;
+        if (!transparan && !putih) return c;
+
+        // Tidak ada warna & tidak ada kata kunci: biru default.
+        return BIRU;
+    }
+
+    /* (MASALAH A) Ubah tombol jadi wadah progres TANPA meninggalkan jejak.
+       Sebelum apa pun diubah, snapshot lengkap diambil: atribut style utuh,
+       className utuh, dan isi (innerHTML) utuh. Setelah proses selesai /
+       dibatalkan / gagal, snapshot itu dipulihkan persis - itulah yang membuat
+       ukuran tombol kembali sama seperti sebelum diklik. */
     function scaffold(btn) {
+        if (!btn._dlAwal) {
+            btn._dlAwal = {
+                style: btn.getAttribute('style') || '',
+                className: btn.className,
+                html: btn.innerHTML,
+                disabled: btn.disabled
+            };
+            btn.dataset.dlStyleAwal = btn._dlAwal.style;
+            btn.dataset.dlClassAwal = btn._dlAwal.className;
+        }
+
+        // (MASALAH D) Warna dihitung ULANG tiap mulai; cache dihapus supaya
+        // tombol yang salah di klik pertama tidak terkunci selamanya.
+        delete btn.dataset.dlBase;
+        var base = warnaDasar(btn);
+        btn.dataset.dlBase = base;
+        btn.style.setProperty('--btn-progress-base', base);
+        btn.style.setProperty('--btn-progress-fill', gelap(base, 0.45));
+
+        // KUNCI UKURAN sebelum isi tombol pindah ke label. Tanpa ini tombol ikut
+        // menyusut karena teks aslinya lenyap saat loading (labelnya cuma "42%")
+        // dan layout di sekitarnya ikut bergeser.
+        var r = btn.getBoundingClientRect();
+        if (r.width > 0) {
+            btn.style.setProperty('width', r.width + 'px', 'important');
+            btn.style.setProperty('min-width', r.width + 'px', 'important');
+        }
+        if (r.height > 0) {
+            btn.style.setProperty('height', r.height + 'px', 'important');
+        }
+
         btn.classList.add('btn-progress');
 
         var fill = btn.querySelector(':scope > .btn-progress__fill');
@@ -271,13 +372,43 @@
         if (s.timerTahan) { window.clearTimeout(s.timerTahan); s.timerTahan = null; }
     }
 
-    /* Kembalikan tombol ke kondisi awal: persen, fill, teks, disabled. */
+    /* Kembalikan tombol ke kondisi SEBELUM diklik: isi, class, dan style utuh.
+       Dipakai oleh resetTampilan() sehingga berlaku untuk jalur selesai, abort,
+       maupun error - semuanya lewat titik akhir yang sama (tutup()).
+       Urutannya penting: isi & class dulu, baru style terakhir, karena
+       width/height/min-width hasil kunci hanya boleh dilepas setelah
+       tombol sudah kembali ke markup aslinya. */
+    function pulihkanTombol(btn) {
+        var awal = btn._dlAwal;
+        if (!awal) return;
+
+        // 1. Isi tombol kembali persis seperti semula (fill + label lenyap).
+        if (btn.innerHTML !== awal.html) btn.innerHTML = awal.html;
+
+        // 2. Class kembali persis (buang btn-progress/is-running/is-done/...),
+        //    baru state disabled & penanda busy.
+        btn.className = awal.className;
+        btn.disabled  = !!awal.disabled;
+        delete btn.dataset.dlBusy;
+
+        // 3. Style: snapshot utuh, termasuk padding/height asli yang mungkin
+        //    ada. Kalau memang tidak ada atribut style -> hapus, jangan dibuat
+        //    string kosong yang bisa mengubah cascade.
+        if (awal.style) btn.setAttribute('style', awal.style);
+        else btn.removeAttribute('style');
+
+        // 4. Bersihkan penanda yang kita tambahkan.
+        delete btn.dataset.dlBase;
+        delete btn.dataset.dlStyleAwal;
+        delete btn.dataset.dlClassAwal;
+        delete btn._dlAwal;
+    }
+
+    /* Kembalikan tombol ke kondisi awal: persen, fill, teks, disabled, UKURAN. */
     function resetTampilan(s) {
-        s.parts.fill.style.width   = '0%';
-        s.parts.label.textContent = s.labelAwal;
-        s.button.disabled         = false;
-        s.button.classList.remove('is-running', 'is-done', 'is-indeterminate');
-        s.button.dataset.dlBusy   = '';
+        // Selesaikan dulu tampilan persen supaya tidak ada kilatan "0%".
+        if (s.parts.fill) s.parts.fill.style.width = '0%';
+        pulihkanTombol(s.button);
     }
 
     /* Titik akhir tunggal (idempotent): reset + peristiwa + selesaikan promise. */
@@ -292,6 +423,14 @@
         s.button.dispatchEvent(new CustomEvent('dl-busy-end', {
             detail: { url: s.url, sukses: !!sukses, dibatalkan: !!s.dibatalkan }
         }));
+
+        // Mode import: baru buka halaman hasil SETELAH tampil "Selesai".
+        // Kalau gagal / dibatalkan, callback ini tidak dijalankan sama sekali.
+        if (sukses && typeof s.setelahSelesai === 'function') {
+            var lanjut = s.setelahSelesai;
+            s.setelahSelesai = null;
+            try { lanjut(); } catch (e) { /* abaikan */ }
+        }
 
         if (typeof s.selesaikan === 'function') s.selesaikan(!!sukses);
     }
@@ -349,14 +488,20 @@
         if (s.target > s.display) kejar(s);
     }
 
-    /* Mengejar target: +1 tiap 15 ms, atau +2 bila selisih > 10 (tanpa lompat). */
+    /* Mengejar target: +1 tiap 15 ms, atau +2 bila selisih > 10 (tanpa lompat).
+       Display TIDAK BOLEH pernah mundur. Estimasi sempat mendorong display
+       melewati target (ceiling = target + margin), lalu persen ASLI arrives
+       dengan target yang lebih kecil - tanpa penjaga di bawah, angka akan
+       mundur dan bar terlihat melompat ke belakang. */
     function tickKejar(s) {
         if (s.sudahTutup || s.dibatalkan) { stopSemuaTimer(s); return; }
         if (s.geser) return;
 
-        var langkah = (s.target - s.display) > 10 ? 2 : 1;
-        s.display = Math.min(s.target, s.display + langkah);
-        tampil(s);
+        if (s.display < s.target) {
+            var langkah = (s.target - s.display) > 10 ? 2 : 1;
+            s.display = Math.min(s.target, s.display + langkah);
+            tampil(s);
+        }
 
         if (s.display >= s.target) merayap(s);
     }
@@ -375,13 +520,18 @@
         s.timerTahan = window.setTimeout(function () { keSelesai(s); }, HOLD_100_MS);
     }
 
-    /* Tanpa Content-Length: naik pelan menuju 90% dengan kurva melambat. */
+    /* Tanpa Content-Length (dan tanpa persen asli dari luar): naik pelan menuju
+       90% dengan kurva melambat. Ceiling selalu MARGIN_ESTIMASI di depan target,
+       sehingga display tidak pernah mandek di angka yang sama. */
     function tickEstimasi(s) {
         if (s.sudahTutup || s.dibatalkan || s.geser || s.fase === 'final') return;
+        if (s.persenAsli === true) return;      // sudah dapat persen asli
         if (s.target >= PLAFON_ESTIMASI) return;
         var sisa = PLAFON_ESTIMASI - s.target;
         var baru = Math.min(PLAFON_ESTIMASI, s.target + Math.max(MIN_LANGKAH, sisa * KURVA_ESTIMASI));
-        if (baru > s.target) window.dlProgressSet(baru, MARGIN_BIASA);
+        // Pakai setTarget langsung: window.dlProgressSet() akan mematikan timer
+        // estimasi ini sendiri karena dianggap "persen asli".
+        if (baru > s.target) setTarget(s, baru, MARGIN_ESTIMASI);
     }
 
     function keSelesai(s) {
@@ -429,13 +579,15 @@
             geser: false,
             dibatalkan: false,
             sudahTutup: false,
+            persenAsli: false,
             timerMerayap: null,
             timerKejar: null,
             timerFinal: null,
             timerEstimasi: null,
             timerTahan: null,
             url: '',
-            selesai: null
+            selesai: null,
+            setelahSelesai: null
         };
         sedang = s;
 
@@ -444,17 +596,38 @@
         paksaReflow(parts.fill);
         merayap(s);
 
+        /* (MASALAH 1) Estimasi dinyalakan SEKARANG, bukan setelah respons
+           datang. Sebelumnya estimate baru hidup setelah fetch selesai, sehingga
+           display naik hanya sampai ceiling = 0 + 3 = 3% lalu macet, dan begitu
+           respons tiba melompat ke 100%.
+           Jalur ZIP Rekap yang mengirim persen ASLI menandai tombolnya dengan
+           dataset.dlPersen = 'asli' sehingga estimasi tidak ikut berjalan. */
+        if (button.dataset.dlPersen !== 'asli') {
+            s.timerEstimasi = window.setInterval(function () { tickEstimasi(s); }, ESTIMASI_MS);
+        }
+
         return s;
     };
 
-    /** Target baru (persen asli) + ceiling; display mengejar cepat. */
-    window.dlProgressSet = function (target, margin) {
-        var s = sedang;
-        if (!s) return 0;
+    /** Set target + ceiling untuk state yang sedang berjalan (inti dari API publik). */
+    function setTarget(s, target, margin) {
         s.target  = Math.max(0, Math.min(100, target || 0));
         s.ceiling = Math.min(100, s.target + (margin === undefined ? MARGIN_BIASA : margin));
         if (s.target > s.display) kejar(s);
         return s.display;
+    }
+
+    /** Target baru (persen asli) + ceiling; display mengejar cepat.
+        Dipanggil dari luar = ada persen ASLI, jadi estimasi dimatikan. */
+    window.dlProgressSet = function (target, margin) {
+        var s = sedang;
+        if (!s) return 0;
+        // Persen asli masuk -> matikan timer estimasi (tidak lagi menebak).
+        if (s.persenAsli !== true) {
+            s.persenAsli = true;
+            stop(s, 'timerEstimasi');
+        }
+        return setTarget(s, target, margin);
     };
 
     /** Semua data sudah lengkap: kejar 100%, tahan, lalu "Selesai". */
@@ -561,6 +734,62 @@
         });
     };
 
+    /* (5e) Unggah import lewat XMLHttpRequest karena XHR punya upload.onprogress
+       (persen ASLI saat file dikirim), sedangkan fetch tidak.
+       Hanya dipakai kalau body-nya FormData yang benar-benar punya File.
+       Mengembalikan Promise, atau null kalau tidak cocok (fallback ke fetch). */
+    function kirimDgXhr(s, url, opts, headers) {
+        if (typeof XMLHttpRequest === 'undefined') return null;
+        if (!opts.body || typeof FormData === 'undefined' || !(opts.body instanceof FormData)) return null;
+
+        var adaFile = false;
+        try { opts.body.forEach(function (v) { if (v instanceof File) adaFile = true; }); }
+        catch (e) { return null; }
+        if (!adaFile) return null;
+
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(opts.method || 'GET', url, true);
+            xhr.withCredentials = true;
+            xhr.responseType = 'arraybuffer';
+            Object.keys(headers).forEach(function (h) { xhr.setRequestHeader(h, headers[h]); });
+
+            // Batal = batal: XHR ikut di-abort, tidak ada file tersimpan.
+            if (s.signal) {
+                if (s.signal.aborted) { reject(abortError()); return; }
+                s.signal.addEventListener('abort', function () {
+                    try { xhr.abort(); } catch (e) { /* noop */ }
+                });
+            }
+
+            xhr.upload.onprogress = function (e) {
+                if (!e.lengthComputable || !e.total) return;
+                s.persenAsli = true;                       // tidak perlu menebak lagi
+                stop(s, 'timerEstimasi');
+                // Unggahan = maksimal 90%; 100% diserahkan ke final(s).
+                setTarget(s, (e.loaded / e.total) * 90, MARGIN_BIASA);
+            };
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Baca diam-diam: flash message & hasil import tetap tampil
+                    // lewat reload/lokasi di bawah, sama seperti sebelumnya.
+                    s.setelahSelesai = function () {
+                        window.location.href = xhr.responseURL || (url + '#import-selesai');
+                    };
+                    resolve(true);
+                } else {
+                    reject(new Error('HTTP ' + xhr.status));
+                }
+            };
+            xhr.onerror   = function () { reject(new Error('Gagal mengunggah file')); };
+            xhr.onabort   = function () { reject(abortError()); };
+            xhr.ontimeout = function () { reject(new Error('Waktu habis')); };
+
+            xhr.send(opts.body);
+        });
+    }
+
     async function jalankan(s, opts, url) {
         var percobaan = 0;
 
@@ -574,6 +803,23 @@
             }
             if (opts.csrf) headers['X-CSRF-TOKEN'] = opts.csrf;
             headers['X-Requested-With'] = 'XMLHttpRequest';
+
+            // MODE IMPORT: file diunggah, bukan diunduh.
+            // Dijalankan SEBELUM fetch supaya tidak ada dua request.
+            if (opts.mode === 'import') {
+                // Unggahan lewat XMLHttpRequest memberi persen ASLI lewat
+                // upload.onprogress - jauh lebih jujur daripada menebak.
+                var viaXhr = kirimDgXhr(s, url, opts, headers);
+                if (viaXhr) {
+                    await viaXhr;   // resolve setelah respons selesai dibaca
+                    if (s.dibatalkan) throw abortError();
+                    // Tanpa onprogress, estimasi di dlProgressMulai tetap menyala
+                    // sampai 90%, lalu final(s) mengejar 100% (+1 tiap 12 ms).
+                    final(s);
+                    return;
+                }
+                // Tidak ada File di body -> lanjut ke fetch biasa di bawah.
+            }
 
             var res = await fetch(url, {
                 method: opts.method || 'GET',
@@ -611,16 +857,68 @@
             var punyaPanjang = !isNaN(total) && total > 0;
             var blob;
 
+            // MODE IMPORT via fetch (fallback, mis. tanpa File di body). Tidak ada blob
+            // yang disimpan ke folder Unduhan; respons dipakai seperti biasa
+            // supaya flash message & hasil import tetap tampil.
+            if (opts.mode === 'import') {
+                // Estimasi sudah menyala sejak dlProgressMulai.
+                if (res.body && typeof res.body.getReader === 'function') {
+                    var rdr = res.body.getReader();
+                    var n   = 0;
+                    for (;;) {
+                        var piece = await rdr.read();
+                        if (piece.done) break;
+                        n += piece.value.length;
+                        if (punyaPanjang) {
+                            window.dlProgressSet((n / total) * 100, MARGIN_BIASA);
+                        }
+                    }
+                } else {
+                    await res.arrayBuffer();
+                }
+                stop(s, 'timerEstimasi');
+                if (s.dibatalkan) throw abortError();
+
+                // Respons import: diam-diam dibaca supaya tidak ada error HTML mentah.
+                var ctImport = (res.headers.get('Content-Type') || '').toLowerCase();
+                var jsonImport = null;
+                try {
+                    if (ctImport.indexOf('application/json') !== -1) {
+                        jsonImport = await res.clone().json();
+                    }
+                } catch (e) { /* abaikan */ }
+
+                if (jsonImport && jsonImport.message) {
+                    pesanError(s.button, jsonImport.message);
+                }
+
+                // Kejar 100% -> "Selesai" -> baru buka halaman hasil import.
+                // Callback-nya dijalankan oleh tutup() HANYA kalau sukses, jadi
+                // pembatalan (tutup(s,false)) tidak pernah memuat ulang halaman.
+                if (!s.dibatalkan && !s.sudahTutup) {
+                    s.setelahSelesai = function () {
+                        if (jsonImport) {
+                            if (jsonImport.redirect) window.location.href = jsonImport.redirect;
+                            else window.location.reload();
+                        } else {
+                            window.location.href = (res.url || window.location.href);
+                        }
+                    };
+                    final(s);
+                }
+                return;
+            }
+
             if (res.body && typeof res.body.getReader === 'function') {
                 var reader   = res.body.getReader();
                 var chunks   = [];
                 var diterima = 0;
 
                 // PDF yang digenerate on-the-fly tidak punya Content-Length:
-                // pakai estimasi bertahap 0 -> 90%, display tetap lewat timer.
-                if (!punyaPanjang) {
-                    s.timerEstimasi = window.setInterval(function () { tickEstimasi(s); }, ESTIMASI_MS);
-                }
+                // estimasi sudah menyala sejak dlProgressMulai, jadi di sini
+                // TIDAK perlu menyalakannya lagi (bakal dobel & bocor timer).
+                // Kalau punya Content-Length, dlProgressSet() mematikan estimasi
+                // dan mengambil alih dengan persen byte asli.
 
                 for (;;) {
                     var chunk = await reader.read();
@@ -682,6 +980,7 @@
             }
             return;
         }
+    }
 
     function abortError() {
         var e = new Error('dibatalkan');
@@ -689,10 +988,52 @@
         return e;
     }
 
+    /* ---------- BATAL = BATAL ----------
+       Satu listener delegasi untuk SELURUH modal: tombol Batal/Hentikan, tombol
+       X, klik di luar modal, dan Esc semuanya melewati .modal. Efeknya sama:
+       fetch di-ABORT, tidak ada file tersimpan, tidak ada pesan sukses/error,
+       tidak ada "Selesai", tombol kembali ke bentuk awal & bisa diklik lagi. */
+    function batalkanJikaBusy() {
+        if (window.dlProgressBusy && window.dlProgressBusy()) {
+            window.dlProgressAbort();
+            return true;
+        }
+        return false;
+    }
+    document.addEventListener('click', function (e) {
+        var pemicu = e.target && e.target.closest ? e.target.closest('[data-bs-dismiss="modal"]') : null;
+        if (pemicu) batalkanJikaBusy();
+    }, true);
+    document.addEventListener('hide.bs.modal', function (e) {
+        batalkanJikaBusy();
+    });
+    document.addEventListener('hidden.bs.modal', function (e) {
+        batalkanJikaBusy();
+    });
+
     /* ---------- pengikatan otomatis ---------- */
     function pasang(el) {
         if (el.dataset.dlBound === '1') return;
         el.dataset.dlBound = '1';
+        el.setAttribute('data-dl-progress', '');
+
+        // <button type="submit" data-import> -> FormData POST, mode import.
+        if (el.hasAttribute('data-import')) {
+            el.addEventListener('click', function (e) {
+                var f = el.closest ? el.closest('form') : null;
+                if (!f) return;
+                e.preventDefault();
+                var fd = new FormData(f);
+                fd.delete('output_format');
+                window.downloadWithProgress(el, f.getAttribute('action') || window.location.href, {
+                    method: (f.getAttribute('method') || 'POST').toUpperCase(),
+                    body: fd,
+                    csrf: csrf(),
+                    mode: 'import'
+                });
+            });
+            return;
+        }
 
         el.addEventListener('click', function (e) {
             var form = el.closest ? el.closest('form') : null;
@@ -720,13 +1061,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        var semua = document.querySelectorAll('[data-dl-progress]');
+        var semua = document.querySelectorAll('[data-dl-progress], [data-import]');
         Array.prototype.forEach.call(semua, pasang);
     });
 
     // Elemen yang muncul belakangan (baris tabel, modal) juga mengikat diri.
     document.addEventListener('click', function (e) {
-        var t = e.target && e.target.closest ? e.target.closest('[data-dl-progress]') : null;
+        var t = e.target && e.target.closest ? e.target.closest('[data-dl-progress], [data-import]') : null;
         if (t && t.dataset.dlBound !== '1') pasang(t);
     }, true);
 })();

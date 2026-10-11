@@ -664,7 +664,7 @@
                             Format kolom file Excel: <strong>Nama Kelas, Tingkat (7/8/9)</strong> (.xlsx atau .csv)
                         </div>
                         @if(Route::has('admin.classes.template'))
-                        <a href="{{ panel_route('classes.template') }}" class="btn-download-green btn-progress w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
+                        <a href="{{ panel_route('classes.template') }}" class="btn-download-green w-100" data-download data-dl-progress>Unduh Template Excel</a>
                         @endif
                     </div>
                     <label class="form-label small fw-semibold">Pilih File Excel</label>
@@ -672,7 +672,7 @@
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-green px-4" data-import>Unggah &amp; Import</button>
+                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>Unggah &amp; Import</button>
                 </div>
             </form>
         </div>

@@ -730,8 +730,11 @@
                         </div>
                         @endif
 
-                        <div class="mb-3">
-                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green btn-progress w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
+                        <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
+                            <div class="mb-2">
+                                Format kolom file Excel: <strong>NIP, Nama, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, No. HP</strong> (.xlsx atau .csv)
+                            </div>
+                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green w-100" data-download data-dl-progress>Unduh Template Excel</a>
                         </div>
 
                         <div class="mb-3">
@@ -745,7 +748,7 @@
                     </div>
                     <div class="modal-footer border-top-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn-download-green px-4" data-import>Mulai Import</button>
+                        <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>Mulai Import</button>
                     </div>
                 </form>
             </div>

@@ -330,19 +330,25 @@
     #printRekapSubmitBtn {
         position: relative;
         overflow: hidden;
-        min-width: 168px;
+        min-width: 0;
         white-space: nowrap;
         isolation: isolate;
+        /* Bleu depuis l'ouverture du popup : jamais blanc au chargement.
+           State hijau "Selesai" (.is-done) di bawah tetap menang. */
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #fff !important;
     }
-    /* Selesai semua: tombol hijau sesaat, teks "Selesai" tanpa ikon. */
-    #printRekapSubmitBtn.is-done { background-color: #16a34a; border-color: #16a34a; color: #fff; }
+    /* Selesai semua: tombol hijau sesaat, teks "Selesai" tanpa ikon.
+        !important wajib: aturan biru di atas juga !important dan berdempetan. */
+    #printRekapSubmitBtn.is-done { background-color: #16a34a !important; border-color: #16a34a !important; color: #fff !important; }
     #printRekapSubmitBtn.is-done .btn-progress__fill { display: none; }
 
-    /* Footer: dua tombol sama lebar, lebar tetap, mengisi baris penuh.
-       Batal/Hentikan tidak pernah mengecil dan tidak jadi abu gelap. */
+    /* Footer: dua tombol sama lebar (flex:1 1 0, tanpa min-width tetap),
+       satu baris, teks utuh. Batal/Hentikan tidak pernah mengecil. */
     #printRekapModal .dl-actions > .btn {
-        flex: 1 1 168px;
-        min-width: 168px;
+        flex: 1 1 0;
+        min-width: 0;
         white-space: nowrap;
         text-align: center;
     }
@@ -1303,6 +1309,9 @@
                 btn.style.backgroundColor = '';
                 btn.style.borderColor = '';
                 btn.removeAttribute('data-mode');
+                // Mode biasa (bukan loop ZIP) butuh estimasi komponen bersama,
+                // jadi tanda 'asli' yang dipasang loop harus dibuang di sini.
+                btn.removeAttribute('data-dl-persen');
                 rekapIsiTombol('Generate & Unduh');
             }
             const fill = document.getElementById('rekapBtnFill');
@@ -1573,8 +1582,12 @@
             const infoText = document.getElementById('rekapInfoText');
 
             /* Progres started LANGSUNG di baris pertama: tampil 0%, lalu naik ke 1%
-               dalam <=100 ms. Tidak menunggu daftar kelas / penyiapan ZIP. */
+               dalam <=100 ms. Tidak menunggu daftar kelas / penyiapan ZIP.
+               Tandai 'asli' supaya timer ESTIMASI komponen bersama tidak ikut
+               menebak: loop di bawah memang mengirim persen kelas asli lewat
+               window.dlProgressSet, dan tanpa tanda ini angka bisa melompat. */
             if (btn && window.dlProgressMulai) {
+                btn.dataset.dlPersen = 'asli';
                 window.dlProgressMulai(btn, 3);
                 btn.classList.add('is-running', 'btn-progress');
             }
@@ -2145,6 +2158,12 @@
                          "Batal" berubah jadi "Hentikan" (lebar tetap). -->
                     <div class="dl-actions">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal" id="rekapCancelBtn">Batal</button>
+                        <!-- Tombol ini punya logika submit sendiri (#printRekapForm submit handler):
+     semua mode sudah diarahkan ke window.downloadWithProgress, termasuk loop
+     ZIP per kelas. Karena itu TIDAK diberi data-dl-progress supaya tidak
+     di-capture dua kali oleh pengikatan otomatis. -->
+                        <!-- Tombol Generate selalu biru sejak modal dibuka (bukan putih saat loading).
+         :not(.is-done) supaya state hijau "Selesai" tetap menang. -->
                         <button type="submit" class="btn-download-blue btn-progress px-3" data-download id="printRekapSubmitBtn">
                             <!-- Lapisan warna = bar progres (lebar = persen) -->
                             <span class="btn-progress__fill" id="rekapBtnFill" aria-hidden="true"></span>

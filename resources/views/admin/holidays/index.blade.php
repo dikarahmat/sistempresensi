@@ -465,7 +465,7 @@
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-green px-4" data-import>Unggah & Import</button>
+                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>Unggah &amp; Import</button>
                 </div>
             </form>
         </div>
