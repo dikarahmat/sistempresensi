@@ -7,7 +7,7 @@
     <title>{{ config('app.name', 'Website') }} - Under Maintenance</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg:#10509a; --navy:#0b2a5b; --gold:#c9a54f; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -71,11 +71,20 @@
                     <rect width="44" height="40" fill="#0b2a5b"/>
                     <polygon points="0,40 22,0 44,0 22,40" fill="#c9a54f"/>
                 </pattern>
-                <pattern id="barp" width="24" height="18" patternUnits="userSpaceOnUse">
-                    <rect width="24" height="18" fill="#2c5fa6"/>
-                    <polygon points="0,18 9,0 17,0 8,18" fill="#4f86c6"/>
-                    <animateTransform attributeName="patternTransform" type="translate" from="0 0" to="24 0" dur="1.1s" repeatCount="indefinite"/>
+                <pattern id="ledtxt" x="0" y="34" width="730" height="36" patternUnits="userSpaceOnUse">
+                    <text x="6" y="27" font-family="DotGothic16, 'Courier New', monospace" font-size="24" fill="#fff" textLength="640" lengthAdjust="spacingAndGlyphs">UNIVERSITAS PAMULANG <tspan fill="#e3c26a">&#215;</tspan> SMP PGRI PARUNG PANJANG</text>
+                    <text x="690" y="27" font-family="DotGothic16, 'Courier New', monospace" font-size="24" fill="#e3c26a">&#215;</text>
+                    <animateTransform attributeName="patternTransform" type="translate" from="0 0" to="-730 0" dur="16s" repeatCount="indefinite"/>
                 </pattern>
+                <pattern id="ledgrid" width="4" height="4" patternUnits="userSpaceOnUse">
+                    <path fill-rule="evenodd" d="M0 0H4V4H0Z M2 .5A1.5 1.5 0 1 0 2 3.5A1.5 1.5 0 1 0 2 .5Z" fill="#061a3a" opacity=".8"/>
+                </pattern>
+                <linearGradient id="ledfade" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#061a3a"/>
+                    <stop offset=".1" stop-color="#061a3a" stop-opacity="0"/>
+                    <stop offset=".9" stop-color="#061a3a" stop-opacity="0"/>
+                    <stop offset="1" stop-color="#061a3a"/>
+                </linearGradient>
                 <pattern id="keys" width="22" height="11" patternUnits="userSpaceOnUse">
                     <rect x="1.5" y="1.5" width="19" height="8" rx="1.5" fill="#2b5c9e"/>
                 </pattern>
@@ -121,9 +130,10 @@
                     <rect x="68" y="34" width="84" height="26" fill="#f4f8fd"/>
                     <rect x="68" y="72" width="84" height="26" fill="#f4f8fd"/>
                     <rect x="176" y="22" width="286" height="204" rx="3" fill="#8fb3de"/>
-                    <rect x="194" y="40" width="260" height="22" rx="2" fill="#2c5fa6"/>
-                    <rect x="196" y="42" width="170" height="18" fill="url(#barp)"/>
-                    <rect x="366" y="42" width="86" height="18" fill="#fff"/>
+                    <rect x="186" y="34" width="268" height="36" rx="5" fill="#061a3a" stroke="#4f86c6" stroke-width="2"/>
+                    <rect x="190" y="36" width="260" height="32" fill="url(#ledtxt)"/>
+                    <rect x="190" y="36" width="260" height="32" fill="url(#ledgrid)"/>
+                    <rect x="190" y="36" width="260" height="32" fill="url(#ledfade)"/>
                     <polygon points="190,150 250,150 270,226 190,226" fill="#6c97cb" opacity=".6"/>
                     <polygon points="300,170 360,140 420,200 440,226 300,226" fill="#5b88bf" opacity=".55"/>
                     <polygon points="300,0 372,0 250,252 178,252" fill="url(#shine)" class="glint"/>
