@@ -179,28 +179,9 @@
         flex: 0 0 auto;
     }
 
-    @media (max-width: 767.98px) {
-        .action-bar-section {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .action-bar-section .action-search-form,
-        .action-bar-section .action-buttons-wrap {
-            flex: 1 1 auto;
-            width: 100%;
-            margin-left: 0;
-        }
-        .action-bar-section .search-box-wrap {
-            flex: 1 1 calc(100% - 0.5rem);
-        }
-        .action-bar-section .filter-box-wrap {
-            flex: 1 1 100%;
-            max-width: none;
-        }
-        .action-bar-section .action-buttons-wrap .btn-solid-pill {
-            flex: 1 1 calc(50% - 0.25rem);
-        }
-    }
+    /* CATATAN: aturan susunan mobile untuk action bar sudah dipindah ke
+       layout bersama (layouts/app.blade.php) dan standar mobile
+       (public/css/presensi-tokens.css) — tidak ada duplikasi di sini. */
 
     /* --------------------------------------------------------------------------
        NOTIFIKASI HALAMAN DATA KELAS (.alert-kelas)

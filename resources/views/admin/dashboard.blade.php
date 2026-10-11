@@ -977,7 +977,7 @@
                              grafik yang isinya kosong terlihat seperti error). -->
                     <div class="pt-1 pb-1">
                         @if(($totalChartPoints ?? 0) > 0)
-                            <div style="position: relative; height: 240px; width: 100%;">
+                            <div class="chart-canvas-wrap" style="position: relative; height: 240px; width: 100%;">
                                 <canvas id="attendanceLineChart"></canvas>
                             </div>
                             @unless($chartHasData ?? false)

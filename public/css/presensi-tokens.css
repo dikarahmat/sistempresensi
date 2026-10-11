@@ -775,4 +775,958 @@
 #scannerColumn .panel-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
 #scannerColumn .panel-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
 
+/* ==========================================================================
+   STANDAR MOBILE (max-width: 640px) — SATU SUMBER UKURAN KONTROL & TEKS
+   SMP PGRI Parungpanjang
+
+   SEMUA aturan di dalam blok ini HANYA berlaku di lebar <= 640px, sehingga
+   tampilan desktop & tablet (641-767px) TIDAK berubah sama sekali. Tidak ada
+   angka ukuran yang di-hardcode berulang: semua memakai variabel standar di
+   :root di bawah.
+
+   PATOKAN LEBAR (--m-inset): toolbar Data Siswa — wrapper p-3 (16px) dengan
+   tabel full-bleed di bawahnya, jadi kontrol di dalam toolbar menjorok 16px
+   dari tepi kartu. Tombol aksi di halaman lain (Presensi, Rekap, Pengaturan)
+   disejajarkan ke lebar yang sama lewat variabel ini.
+
+   Aturan lama di <style> per halaman yang mengatur rentang 641-767px
+   (tablet) sengaja DIPERTAHANKAN — di sini aturan baru hanya menimpa
+   (<= 640px) lewat !important, jadi tablet tidak tersentuh.
+   ========================================================================== */
+@media (max-width: 640px) {
+
+    :root {
+        --m-inset: 16px;      /* jorokan horizontal toolbar (patokan Data Siswa) */
+        --m-ctl-h: 34px;      /* tinggi input, select, tombol */
+        --m-ctl-fs: 0.75rem;  /* teks tombol (bold, uppercase, letter-spacing .03em) */
+        --m-ctl-r: 8px;       /* radius kontrol */
+        --m-gap: 0.5rem;      /* jarak vertikal antar kontrol / antar tombol */
+        --m-ico: 0.9rem;      /* ikon di dalam tombol */
+        --m-sec-gap: 1rem;    /* jarak vertikal antar section */
+        --bottom-nav-height: 52px;
+    }
+
+    /* ------------------------------------------------------------------
+       1. KONTROL STANDAR: input & select (semua halaman)
+       ------------------------------------------------------------------ */
+    body .action-search-form .search-box-wrap input.form-control,
+    body .action-search-form .filter-box-wrap select.form-select,
+    body .kehadiran-filter-form .search-box-wrap input.form-control,
+    body .kehadiran-filter-form .filter-box-wrap select.form-select,
+    body .recap-mobile-filters .form-control,
+    body .recap-mobile-filters .form-select,
+    body .recap-mobile-period .form-select,
+    body .filter-input,
+    body .identitas-grid .form-control,
+    body .class-attendance-toolbar .class-attendance-date .form-control,
+    body .date-filter-group .form-control,
+    body .modal .form-control,
+    body .modal .form-select {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: 0.85rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        padding: 0 0.75rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Tombol ikon search di samping input cari: setinggi input */
+    body .action-search-form .search-box-wrap > .btn,
+    body .kehadiran-filter-form .search-box-wrap > .btn {
+        height: var(--m-ctl-h) !important;
+    }
+
+    /* Tombol toolbar standar (Siswa / Guru / Kelas).
+       Selector berbasis id kartu halaman (specificity tertinggi) supaya
+       menang atas aturan !important di layouts/app.blade.php. */
+    body #daftar-siswa .action-buttons-wrap .btn-solid-pill,
+    body #daftar-guru .action-buttons-wrap .btn-solid-pill,
+    body #daftar-kelas .action-buttons-wrap .btn-solid-pill,
+    body .action-buttons-wrap .btn-solid-pill,
+    body .btn-solid-pill {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        line-height: 1 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ------------------------------------------------------------------
+       2. PRESENSI HARI INI — tombol Scanner QR & Mode Gerbang
+       Warna tetap biru (.btn-portal-scanner) & hijau (.btn-portal-gate);
+       hanya ukuran, font, ikon, dan inset yang disamakan ke standar.
+       ------------------------------------------------------------------ */
+    body .btn-portal-action {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        line-height: 1 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    body .btn-portal-action i {
+        font-size: var(--m-ico) !important;
+    }
+    /* Inset horizontal = --m-inset (sama dengan toolbar Data Siswa) &
+       jarak ke tabel di bawahnya .75rem */
+    body .presensi-mobile-actions {
+        padding-left: var(--m-inset);
+        padding-right: var(--m-inset);
+        margin-bottom: 0.75rem !important;
+    }
+    body .presensi-mobile-actions > div {
+        gap: var(--m-gap) !important;
+    }
+
+    /* ------------------------------------------------------------------
+       3. REKAP PRESENSI — select/input standar, label, tombol cetak,
+       dan blok KETERANGAN yang dirapatkan.
+       ------------------------------------------------------------------ */
+    body .recap-mobile-card {
+        padding-left: var(--m-inset);
+        padding-right: var(--m-inset);
+    }
+    body .recap-mobile-card .form-label {
+        font-size: 0.75rem !important;
+        font-weight: 600;
+        margin-bottom: 0.25rem !important;
+    }
+    body .recap-mobile-filters .mb-2 {
+        margin-bottom: var(--m-gap) !important;
+    }
+    body .recap-mobile-actions {
+        gap: var(--m-gap) !important;
+    }
+    body .recap-mobile-actions .btn {
+        height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    body .rekap-legend {
+        font-size: 0.7rem !important;
+        padding: 0.35rem 0.5rem !important;
+        gap: 0.25rem 0.4rem !important;
+    }
+    body .rekap-legend-item {
+        font-size: 0.7rem !important;
+    }
+    body .rekap-legend-item strong {
+        font-size: 0.75rem !important;
+    }
+
+    /* ------------------------------------------------------------------
+       4. PENGATURAN — tombol Pengelolaan Sistem, judul seksi, form.
+       ------------------------------------------------------------------ */
+    /* Container tombol: inset horizontal = --m-inset (jorokan yang sama
+       dengan toolbar Data Siswa), gap antar tombol .5rem */
+    body .pengaturan-modul-wrap {
+        gap: var(--m-gap) !important;
+        padding-left: var(--m-inset) !important;
+        padding-right: var(--m-inset) !important;
+    }
+    /* Tiga tombol Pengelolaan Sistem: PERSIS standar toolbar Data Siswa
+       (34px, font .75rem bold uppercase, padding 0 .75rem, radius 8px).
+       min-width:0 menetralkan min-width:12rem dari aturan halaman. */
+    body .pengaturan-modul-wrap > .btn,
+    body .pengaturan-modul-wrap .pengaturan-modul-btn {
+        flex: 0 0 auto !important;
+        width: 100 !important;
+        min-width: 0 !important;
+        max-width: 100 !important;
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        line-height: 1 !important;
+        padding: 0 0.75rem !important;
+        margin: 0 !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    /* Tombol Simpan (form selebar field): samakan tinggi & font dengan
+       standar yang sama; lebarnya (w-100) tidak diubah */
+    body .settings-mobile-form .btn-primary {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    body .section-header h5 {
+        font-size: 0.95rem !important;
+    }
+    body .section-header .small {
+        font-size: 0.75rem !important;
+    }
+    body .identitas-field {
+        margin-bottom: 0.625rem !important;
+    }
+    body .identitas-field .form-label {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    /* ------------------------------------------------------------------
+       5. DASHBOARD MOBILE — satu wrapper jorokan, jarak seragam, tanpa
+       kotak bersarang. Desktop/tablet memakai aturan sendiri di view
+       (>= 641px); blok ini TIDAK menyentuh markup desktop — blok
+       Monitoring hanya DISEMBUNYIKAN lewat CSS. Semua nilai ukuran
+       memakai variabel standar yang sudah ada (--m-inset, --m-ctl-*,
+       --m-gap, --m-sec-gap) + token gaya dashboard (--dash-*) yang
+       nilainya PERSIS sama dengan desktop.
+       ------------------------------------------------------------------ */
+
+    /* (a) SATU wrapper jorokan + FLEX COLUMN GAP: seluruh blok halaman jadi
+       anak satu kolom dengan gap seragam --m-sec-gap (1rem), sehingga jarak
+       Pintasan Cepat -> Grafik -> Ketidakhadiran -> Jadwal selalu sama.
+       Total jorokan = --m-inset + padding <main> (16px), sama dengan
+       halaman Pengaturan mobile. Jarak header ke kartu statistik = --m-sec-gap. */
+    body .content-scroll-wrapper > main:has(#attendanceLineChart) > .flex-1 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--m-sec-gap) !important;
+        padding-left: var(--m-inset) !important;
+        padding-right: var(--m-inset) !important;
+    }
+    body .content-scroll-wrapper > main:has(#attendanceLineChart) > .app-header-bar {
+        margin-bottom: var(--m-sec-gap) !important;
+    }
+
+    /* (b) Token gaya dashboard mobile = nilai desktop (border 1px #e5e9f0,
+       radius 1rem, judul section .95rem, sub .7rem, radius kontrol 6px). */
+    body .dashboard-section {
+        --dash-border-color: #e5e9f0;
+        --dash-radius: 1rem;
+        --dash-title-size: 0.95rem;
+        --dash-sub-size: 0.7rem;
+        --dash-control-radius: 6px;
+    }
+
+    /* (c) SEMUA section tanpa margin (jarak antar blok dari gap flex column
+       wrapper (a)), gutter Bootstrap diganti GRID murni.
+       Sebab grid runtuh sebelumnya: item `col-6` (width:50%) + column-gap
+       melebihi 100% -> item turun satu per baris, menempel kiri setengah lebar.
+       Sebab celah ~2px antar kotak: `margin: 0 !important` pada section
+       membuat jarak Ketidakhadiran -> Jadwal = 0. */
+    body .dashboard-section {
+        margin: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        width: 100% !important;
+    }
+    /* Grid kartu statistik (2x2): 2 kolom SAMA LEBAR */
+    body .dashboard-stat-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--m-gap) !important;
+        width: 100% !important;
+        align-items: stretch !important;
+        margin: 0 !important;
+    }
+    /* Grid di dalam section: PINTASAN CEPAT (2 kolom x 4 baris) dan grid
+       kartu jam JADWAL — keduanya 2 kolom sama lebar */
+    body .dashboard-section .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--m-gap) !important;
+        width: 100% !important;
+        align-items: stretch !important;
+        margin: 0 !important;
+    }
+    /* Section baris lain (tengah: grafik & ketidakhadiran; jadwal): SATU kolom,
+       jarak antar kotak besar = --m-sec-gap */
+    body .dashboard-section.row:not(.dashboard-stat-row) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: var(--m-sec-gap) !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    /* Item grid: tidak boleh menyempit, menumpuk, atau melebar */
+    body .dashboard-stat-row > *,
+    body .dashboard-section .row > *,
+    body .dashboard-section.row > * {
+        flex: none !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin: 0 !important;
+        grid-column: auto !important;
+    }
+
+    /* (d) KARTU STATISTIK (grid 2x2): border tipis, TANPA shadow,
+       padding .75rem, label .65rem uppercase, angka 1.5rem, sub .7rem. */
+    body .dashboard-stat-row .stat-card-modern {
+        padding: 0.75rem !important;
+        border: 1px solid var(--dash-border-color) !important;
+        border-radius: var(--dash-radius) !important;
+        box-shadow: none !important;
+        gap: 0.5rem !important;
+        min-height: 0 !important;
+    }
+    body .dashboard-stat-row .stat-card-modern span.text-uppercase {
+        font-size: 0.65rem !important;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.25rem !important;
+    }
+    body .dashboard-stat-row .stat-card-modern h3 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.1rem !important;
+    }
+    body .dashboard-stat-row .stat-card-modern span.small {
+        font-size: 0.7rem !important;
+    }
+
+    /* (e) PINTASAN CEPAT: kotak/kontainer putih pembungkus judul + grid
+       DIHAPUS (border, background, shadow, padding, radius) sehingga kartu
+       langsung berada di wrapper halaman dan tepi teks judul lurus dengan
+       tepi kartu. Jarak judul ke grid = .5rem. */
+    body .dashboard-section .dashboard-flat,
+    body .dashboard-section .dashboard-shortcuts-flat {
+        background-color: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    body .dashboard-shortcuts-flat .dashboard-divider-off {
+        border-bottom: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        /* Jarak atas judul datang dari flex gap wrapper (1rem); jarak bawah
+           judul ke grid kartu = 1rem -> judul TEPAT DI TENGAH. */
+        margin-top: 0 !important;
+        margin-bottom: var(--m-sec-gap) !important;
+    }
+    body .dashboard-shortcuts-flat .fw-bold {
+        font-size: var(--dash-title-size) !important;
+    }
+    /* Kartu pintasan: tipis, gaya sama dengan kartu statistik, tinggi sama */
+    body .shortcut-card-interactive {
+        padding: 0.625rem !important;
+        border: 1px solid var(--dash-border-color) !important;
+        border-radius: var(--dash-radius) !important;
+        box-shadow: none !important;
+        gap: 0.25rem !important;
+    }
+    body .shortcut-card-interactive i {
+        font-size: 1.25rem !important;
+        margin: 0 !important;
+    }
+    body .shortcut-card-interactive span.fw-bold {
+        font-size: 0.8rem !important;
+    }
+    body .shortcut-card-interactive span.small {
+        font-size: 0.65rem !important;
+    }
+
+    /* (f) BLOCK MONITORING & ANALITIK: DISEMBUNYIKAN di mobile (markup tetap
+       untuk desktop). Section pembungkusnya ikut disembunyikan agar tidak
+       menyisakan ruang kosong bekas margin/padding. */
+    body .dashboard-section:has(> .dashboard-monitor-box) { display: none !important; }
+
+    /* (g) KOTAK TIPIS (grafik, ketidakhadiran, jadwal): border 1px, radius
+       sama, background putih, padding .75rem, tanpa shadow. */
+    body .dashboard-box {
+        border: 1px solid var(--dash-border-color) !important;
+        border-radius: var(--dash-radius) !important;
+        box-shadow: none !important;
+        padding: 0.75rem !important;
+    }
+    body .dashboard-box-title {
+        font-size: var(--dash-title-size) !important;
+        font-weight: 700;
+        margin-bottom: 0 !important;
+        /* Judul grafik panjang TIDAK boleh terpotong: boleh turun baris */
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+    body .dashboard-box-sub {
+        font-size: var(--dash-sub-size) !important;
+    }
+    /* Header tiap kotak (judul + angka "N Siswa"/status): jarak ke isi .75rem */
+    body .dashboard-box .pb-3 {
+        padding-bottom: 0.75rem !important;
+    }
+    body .dashboard-box .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+    /* Jarak daftar isi ke tombol bawah ("Buka Tabel Presensi Hari Ini") = .75rem */
+    body .dashboard-box .pt-3 {
+        padding-top: 0.75rem !important;
+        border-top: 0 !important;
+    }
+    body .dashboard-box .mt-3 {
+        margin-top: 0.75rem !important;
+    }
+
+    /* (h) KOTAK GRAFIK: header DUA BARIS.
+       Baris 1: judul lebar penuh, boleh turun baris per KATA
+                (word-break normal, overflow-wrap normal, hyphens none).
+       Baris 2: segmented (kiri) + tanggal periode teks biasa (kanan), satu baris.
+       Penyebab judul pecah per huruf sebelumnya: header tetap flex-row
+       (selector lama salah sasaran ke wrapper luar), sehingga judul terkurung
+       ~100px dan patah per huruf. */
+    body .dashboard-box div:has(> .chart-header-actions) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+        padding-bottom: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+        border-bottom: 0 !important;
+    }
+    body .dashboard-box div:has(> .chart-header-actions) > div:first-child {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+    body .dashboard-box .dashboard-box-title {
+        flex: none !important;
+        width: 100% !important;
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+        hyphens: none !important;
+    }
+    body .chart-header-actions {
+        gap: 0.5rem !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+    /* Segmented Harian | Mingguan | Bulanan (kotak menyatu, bukan pill) */
+    body .dash-seg {
+        display: inline-flex !important;
+        align-items: stretch;
+        gap: 0;
+        padding: 0;
+        background-color: #ffffff;
+        border: 1px solid var(--dash-border-color) !important;
+        border-radius: var(--dash-control-radius) !important;
+        box-shadow: none !important;
+        overflow: hidden;
+    }
+    body .dash-seg .dash-seg__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 30px;
+        min-height: 30px;
+        padding: 0 0.625rem;
+        margin: 0;
+        border: 0;
+        border-left: 1px solid var(--dash-border-color);
+        border-radius: 0 !important;
+        background-color: #ffffff;
+        color: #334155;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow: none !important;
+    }
+    body .dash-seg .dash-seg__btn:first-child { border-left: 0; }
+    body .dash-seg .dash-seg__btn:hover { background-color: #f1f5f9; color: #0f172a; }
+    body .dash-seg .dash-seg__btn.is-active,
+    body .dash-seg .dash-seg__btn--solid { background-color: #2563eb; color: #ffffff; }
+    body .dash-seg .dash-seg__btn.is-active:hover,
+    body .dash-seg .dash-seg__btn--solid:hover { background-color: #1d4ed8; color: #ffffff; }
+    /* Tanggal periode: TEKS BIAS, tanpa kontainer (badge/bg-light/rounded-pill/
+       px-2/py-1 Bootstrap dibatalkan), rata kanan, sejajar dengan segmented. */
+    body .dashboard-box .chart-header-actions .dash-period,
+    body .dash-period {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 0.7rem !important;
+        font-weight: 600;
+        color: #475569;
+        white-space: nowrap;
+        flex: 0 0 auto !important;
+        text-align: right;
+    }
+    /* Tinggi area grafik (204px = -15% dari 240px), label Chart.js tetap utuh */
+    body .chart-canvas-wrap {
+        height: 204px !important;
+    }
+    /* Baris "Garis Tren Kehadiran ... Total": teks biasa tanpa garis/kotak */
+    body .dashboard-trend-footer {
+        border-top: 0 !important;
+        padding-top: 0 !important;
+        margin-top: 0.5rem !important;
+    }
+
+    /* (i) KOTAK KETIDAKHADIRAN: baris latar abu tipis tanpa border, ikon POLOS
+       (tanpa kotak/lingkaran/background), padding .5rem .75rem. */
+    body .absence-row-interactive,
+    body .dashboard-inner-card {
+        background-color: #f8fafc !important;
+        border: 0 !important;
+        border-radius: var(--dash-radius) !important;
+        box-shadow: none !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    body .absence-status-icon,
+    body .dash-status-icon {
+        width: auto !important;
+        height: auto !important;
+        flex: 0 0 auto !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        font-size: 1.25rem !important;
+        line-height: 1;
+    }
+    body .absence-row-inner { gap: 0.75rem !important; }
+    body .absence-row-interactive .fw-bold {
+        font-size: 0.85rem !important;
+        margin-bottom: 0 !important;
+    }
+    body .absence-row-interactive .small { font-size: 0.7rem !important; }
+    body .absence-row-interactive .fs-4 { font-size: 1.1rem !important; }
+    /* Jarak antar tiga baris = --m-gap (kartu & tombol Buka Tabel ikut lebar
+       penuh kotak dengan tinggi & font standar kontrol) */
+    body .dashboard-box .gap-2\.5 { gap: var(--m-gap) !important; }
+    body .dashboard-box .btn-primary {
+        height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+
+    /* (j) KOTAK JADWAL OPERASIONAL: dua kartu jam berdampingan sama lebar,
+       latar abu tipis tanpa border, angka 1.4rem, label/WIB .65rem. */
+    body .dashboard-clock {
+        padding: 0.625rem !important;
+        background-color: #f8fafc !important;
+        border: 0 !important;
+        border-radius: var(--dash-radius) !important;
+        box-shadow: none !important;
+    }
+    body .dashboard-clock .clock-label {
+        font-size: 0.65rem !important;
+        letter-spacing: 0.04em;
+    }
+    body .dashboard-clock .clock-value {
+        font-size: 1.4rem !important;
+        margin-top: 0.15rem !important;
+    }
+    body .dashboard-clock .clock-unit { font-size: 0.65rem !important; }
+    /* Tombol "Ubah Pengaturan Jadwal": standar kontrol mobile, warna tetap.
+       Jarak kartu jam ke tombol = .75rem. */
+    body .dashboard-schedule-btn {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        margin-top: 0.75rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ------------------------------------------------------------------
+       6. HALAMAN LAIN — Hari Libur, Presensi Kelas (toolbar kembali/
+       tanggal/scanner). Halaman scanner kamera/layar penuh tidak disentuh.
+       ------------------------------------------------------------------ */
+    body .btn-green-excel,
+    body .btn-add-holiday,
+    body .btn-add-year {
+        height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    /* Tombol "Tampilkan" di filter tanggal Riwayat Presensi */
+    body .date-filter-group .btn {
+        height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    /* Tombol di halaman scanner / mode gerbang — hanya ukuran tombol yang
+       disamakan; kamera & layar penuh tidak disentuh. */
+    body .btn-kiosk-action {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    body .class-attendance-toolbar .class-attendance-back,
+    body .class-attendance-toolbar .class-attendance-scan {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+    }
+    body .class-attendance-toolbar .class-attendance-date .form-control {
+        height: var(--m-ctl-h) !important;
+        min-height: var(--m-ctl-h) !important;
+    }
+
+    /* ------------------------------------------------------------------
+       7. MODAL (Import, Cetak Rekap, Cetak Kartu, konfirmasi) — tombol
+       footer & kontrol standar, judul 1rem, padding modal dirapatkan.
+       Batal & aksi utama tetap sejajar 2 kolom sama lebar (aturan footer
+       modal sebelumnya tidak diubah).
+       ------------------------------------------------------------------ */
+    body .modal .modal-title {
+        font-size: 1rem !important;
+    }
+    body .modal .modal-body {
+        padding: 0.85rem 1rem !important;
+    }
+    body .modal .modal-footer {
+        padding: 0.5rem 0.75rem !important;
+    }
+    body .modal .form-label {
+        font-size: 0.75rem !important;
+    }
+    body .modal .modal-footer .btn {
+        height: var(--m-ctl-h) !important;
+        font-size: var(--m-ctl-fs) !important;
+        font-weight: 700 !important;
+        padding: 0 0.75rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ------------------------------------------------------------------
+       8. MENU SIDEBAR (drawer) & LOGOUT — item 40px, logout 36px merah
+       solid (gaya merah #dc2626 yang sudah dipakai tombol HAPUS).
+       ------------------------------------------------------------------ */
+    body .app-sidebar-drawer .nav-link {
+        height: 40px;
+        padding: 0 0.75rem !important;
+        font-size: 0.85rem !important;
+        border-radius: var(--m-ctl-r) !important;
+        margin-bottom: 0.25rem !important;
+        box-sizing: border-box !important;
+    }
+    body .app-sidebar-drawer .nav-link i {
+        font-size: 1rem !important;
+    }
+    body .app-sidebar-drawer .sidebar-logout-link {
+        height: 36px;
+        font-size: 0.8rem !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        border-radius: var(--m-ctl-r) !important;
+        box-sizing: border-box !important;
+    }
+    body .app-sidebar-drawer .sidebar-logout-link i {
+        font-size: var(--m-ico) !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    /* ------------------------------------------------------------------
+       9. BOTTOM NAV — total ~52px + safe area, ikon 1.15rem, label .65rem.
+       Tab aktif tetap terlihat (aturan .active tidak diubah).
+       ------------------------------------------------------------------ */
+    body .mobile-nav-icon {
+        font-size: 1.15rem !important;
+    }
+    body .mobile-nav-label {
+        font-size: 0.65rem !important;
+    }
+
+    /* ------------------------------------------------------------------
+       10. SKALA TEKS MOBILE — judul halaman 1.05rem, subjudul .75rem,
+       header tabel .7rem, teks sel tabel .8rem.
+       ------------------------------------------------------------------ */
+    body .header-main-title {
+        font-size: 1.05rem !important;
+    }
+    body .header-main-subtitle {
+        font-size: 0.75rem !important;
+    }
+    body .table-zebra-custom thead th,
+    body .table-enterprise thead th,
+    body .table-matrix thead th,
+    body .table-history thead th {
+        font-size: 0.7rem !important;
+    }
+    body .table-zebra-custom tbody td,
+    body .table-enterprise tbody td,
+    body .table-matrix tbody td,
+    body .table-history tbody td {
+        font-size: 0.8rem !important;
+    }
+
+    /* ------------------------------------------------------------------
+       12. PERBAIKAN TOOLBAR (Siswa / Guru / Kelas / Catatan Kehadiran)
+       Akar masalah: .action-search-form memakai `flex: 1 1 380px`; di
+       flex-direction: column (mobile) basis 380px dibaca sebagai TINGGI
+       380px -> ruang kosong ~350px & dropdown terdorong ke kanan sampai
+       terpotong. Aturan di sini menormalkan container + SEMUA anak
+       langsung (wrapper cari, wrapper dropdown, deretan tombol): tidak ada
+       flex-grow, tidak ada flex-basis 0, tidak ada tinggi persentase.
+       Urutan atas->bawah: kolom cari, dropdown, tombol (ditumpuk, gap
+       .5rem); dropdown tampil penuh selebar kolom cari.
+       ------------------------------------------------------------------ */
+    body #daftar-siswa .action-bar-section,
+    body #daftar-guru .action-bar-section,
+    body #daftar-kelas .action-bar-section,
+    body #daftar-kehadiran .action-bar-section,
+    body #daftar-siswa .action-search-form,
+    body #daftar-guru .action-search-form,
+    body #daftar-kelas .action-search-form,
+    body #daftar-kehadiran .action-search-form {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: var(--m-gap) !important;
+        height: auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    /* SEMUA anak langsung toolbar: wrapper cari, wrapper dropdown,
+       form pembungkus tombol, deretan tombol */
+    body #daftar-siswa .action-bar-section > *,
+    body #daftar-guru .action-bar-section > *,
+    body #daftar-kelas .action-bar-section > *,
+    body #daftar-kehadiran .action-bar-section > *,
+    body #daftar-siswa .action-search-form > *,
+    body #daftar-guru .action-search-form > *,
+    body #daftar-kelas .action-search-form > *,
+    body #daftar-kehadiran .action-search-form > * {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    /* Deretan tombol: satu kolom, tiap tombol lebar penuh seperti wrapper
+       cari, tanpa flex-grow */
+    body #daftar-siswa .action-buttons-wrap,
+    body #daftar-guru .action-buttons-wrap,
+    body #daftar-kelas .action-buttons-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: var(--m-gap) !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    body #daftar-siswa .action-buttons-wrap .btn-solid-pill,
+    body #daftar-guru .action-buttons-wrap .btn-solid-pill,
+    body #daftar-kelas .action-buttons-wrap .btn-solid-pill {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* ------------------------------------------------------------------
+       13. KERANGKA LAYOUT MOBILE — satu area scroll, tanpa celah di atas
+       bottom nav.
+
+       Penyebab celah: <main> memakai height:100dvh + padding-bottom
+       calc(56px + 2.5rem) -> konten berakhir 96px di atas tepi layar
+       (40px jalur putih + 56px navbar). Sekarang wrapper yang menahan
+       tinggi navbar, <main> mengisi sisa & menjadi SATU-satunya area
+       scroll, dan padding-bottom 1rem berada DI DALAM area scroll.
+       ------------------------------------------------------------------ */
+    :root {
+        /* Tinggi bottom nav sebenarnya (--bottom-nav-height = 56px) */
+        --m-nav-h: 56px;
+    }
+
+    /* 2. Wrapper layout utama: satu layar penuh, flex column, overflow
+       hidden (tidak scroll sendiri). Padding-bottom = tinggi bottom nav
+       supaya kartu konten berakhir TEPAT di tepi atas navbar. */
+    body .content-scroll-wrapper {
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: calc(var(--m-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+        margin-bottom: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* 3. Kartu konten utama: mengisi sisa tinggi, scroll di dalam,
+       padding-bottom 1rem DI DALAM area scroll, radius bawah menyatu
+       dengan navbar, tanpa shadow bawah. */
+    body .content-scroll-wrapper > main,
+    body .content-scroll-wrapper > main.w-full {
+        flex: 1 1 auto !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 1rem !important;
+        margin-bottom: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* .flex-1 tidak lagi scroll sendiri (scroll utama kini di <main>) —
+       mencegah dua scrollbar bersarang / scroll ganda. */
+    body .content-scroll-wrapper > main > .flex-1 {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* ------------------------------------------------------------------
+       14. PENGATURAN — JOROKAN HORIZONTAL SERAGAM (patokan: tombol
+       "Tahun Ajaran"). Dulu inset 16px hanya ada di container tombol,
+       sehingga tombol menjorok 16px lebih dalam daripada judul, deskripsi,
+       label, input, dan tombol Simpan. Sekarang SATU sumber jorokan:
+       wrapper isi (.flex-1) memakai var(--m-inset) (16px) + padding
+       horizontal <main> (16px) = 32px dari tepi layar = tepi tombol Tahun
+       Ajaran SEMUANYA: judul seksi + deskripsi, tiga tombol, judul
+       "Identitas & Logo Sekolah" + deskripsi, semua label/input, blok logo,
+       judul "Jadwal Presensi & Toleransi Keterlambatan" + deskripsi,
+       field jam + batas toleransi, kotak info, dan tombol Simpan.
+       Inset ganda pada container tombol DIHAPUS agar tidak ada jorokan
+       bertumpuk yang membuat sebagian elemen lebih menjorok.
+       Ukuran tombol (34px/.75rem) TIDAK diubah.
+       ------------------------------------------------------------------ */
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 {
+        padding-left: var(--m-inset) !important;
+        padding-right: var(--m-inset) !important;
+    }
+    /* Hapus inset ganda pada container tombol — jorokan kini dari wrapper
+       isi di atas, jadi tidak ada jorokan bertumpuk. */
+    body .pengaturan-modul-wrap {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    /* Semua elemen lebar penuh di dalam isi: tepi kiri-kanan sama persis
+       dengan tepi tombol Tahun Ajaran, tanpa overflow horizontal. */
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .form-control,
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .form-select,
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .btn,
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .pengaturan-modul-wrap,
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .identitas-field,
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .logo-preview-box {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    /* Gutter horizontal .row dinetralkan supaya label & input tidak
+       menjorok 12px lebih dalam daripada judul seksi di atasnya.
+       --bs-gutter-x saja: jarak vertikal antar field TIDAK berubah.
+       Nilai yang sama sudah dipakai desktop (lihat CSS halaman). */
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .row {
+        --bs-gutter-x: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar > .flex-1 .row > * {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* ------------------------------------------------------------------
+       11. LAYAR SANGAT SEMPIT (<= 360px) — teks tombol diturunkan ke .7rem
+       supaya tidak terpotong; kontrol & tata letak lain tidak berubah.
+       ------------------------------------------------------------------ */
+    @media (max-width: 360px) {
+        body .action-buttons-wrap .btn-solid-pill,
+        body .btn-solid-pill,
+        body .btn-portal-action,
+        body .recap-mobile-actions .btn,
+        body .pengaturan-modul-wrap > .btn,
+        body .modal .modal-footer .btn {
+            font-size: 0.7rem !important;
+        }
+    }
+}
+
+/* ==========================================================================
+   LOG OUT (sidebar drawer & menu mobile) — HANYA WARNA yang diatur di sini.
+   Kondisi normal: netral seperti item menu lain, dibedakan tipis lewat
+   border putih transparan; teks & ikon putih. Merah (#dc2626) HANYA saat:
+   - hover (kursor lewat) — dibungkus @media (hover: hover) supaya tidak
+     "menempel" merah setelah tap di HP;
+   - :active (ditekan) & :focus-visible (keyboard) untuk mobile/touch.
+   Ukuran, radius, font, dan posisi TIDAK berubah (tetap diatur
+   layouts/app.blade.php dan blok mobile di atas).
+   ========================================================================== */
+body .app-sidebar-drawer .sidebar-logout-link {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+body .app-sidebar-drawer .sidebar-logout-link i {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+@media (hover: hover) {
+    body .app-sidebar-drawer .sidebar-logout-link:hover {
+        background-color: #dc2626 !important;
+        border-color: #dc2626 !important;
+        color: #ffffff !important;
+    }
+    body .app-sidebar-drawer .sidebar-logout-link:hover i {
+        color: #ffffff !important;
+    }
+}
+body .app-sidebar-drawer .sidebar-logout-link:active,
+body .app-sidebar-drawer .sidebar-logout-link:focus-visible {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+body .app-sidebar-drawer .sidebar-logout-link:active i,
+body .app-sidebar-drawer .sidebar-logout-link:focus-visible i {
+    color: #ffffff !important;
+}
+
 

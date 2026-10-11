@@ -606,7 +606,7 @@
              shadow, radius, padding kontener). Yang tersisa hanya dua tombol
              langsung di kanvas putih, full width di mobile, jarak antar tombol
              8px (gap-2) dari div pembungkus di bawah. Tombol & teks TIDAK diubah. --}}
-        <div class="mb-1">
+        <div class="mb-1 presensi-mobile-actions">
             <div class="d-flex flex-column gap-2">
                 <!-- 1. Buka Scanner QR -->
                 <div class="w-100">

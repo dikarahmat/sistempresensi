@@ -170,21 +170,9 @@
         margin-left: auto;
     }
 
-    @media (max-width: 767.98px) {
-        .action-search-form {
-            flex: 1 1 100%;
-        }
-        .action-search-form .search-box-wrap {
-            flex: 1 1 calc(100% - 0.5rem);
-        }
-        .action-buttons-wrap {
-            flex: 1 1 100%;
-            margin-left: 0;
-        }
-        .action-buttons-wrap .btn-solid-pill {
-            flex: 1 1 auto;
-        }
-    }
+    /* CATATAN: aturan susunan mobile untuk action bar sudah dipindah ke
+       layout bersama (layouts/app.blade.php) dan standar mobile
+       (public/css/presensi-tokens.css) — tidak ada duplikasi di sini. */
 
     /* Notifikasi import: tombol X + posisi diatur CSS notifikasi global di layout.
        Yang khas halaman ini hanya daftar alasan error yang boleh discroll. */
@@ -394,8 +382,9 @@
     <!-- ========================================================================= -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-guru">
 
-        <!-- Action Bar & Search (Stretch Memanjang, Tombol Radius Konsisten) -->
-        <div class="p-3.5 p-md-4 border-bottom border-gray-100 bg-white">
+        <!-- Action Bar & Search (Stretch Memanjang, Tombol Radius Konsisten).
+             p-3 (16px) = patokan inset toolbar Data Siswa/Kelas/Catatan Kehadiran. -->
+        <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section d-flex flex-column flex-md-row justify-content-between">
 
                 <!-- Sisi Kiri: Form Pencarian -->

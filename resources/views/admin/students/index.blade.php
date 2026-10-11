@@ -200,25 +200,11 @@
         flex: 0 0 auto;
     }
 
-    @media (max-width: 767.98px) {
-        .action-search-form {
-            flex: 1 1 100%;
-        }
-        .action-search-form .search-box-wrap {
-            flex: 1 1 calc(100% - 0.5rem);
-        }
-        .action-search-form .filter-box-wrap {
-            flex: 1 1 100%;
-            max-width: none;
-        }
-        .action-buttons-wrap {
-            flex: 1 1 100%;
-            margin-left: 0;
-        }
-        .action-buttons-wrap .btn-solid-pill {
-            flex: 1 1 calc(50% - 0.25rem);
-        }
-    }
+    /* CATATAN: aturan susunan mobile untuk action bar (tumpuk vertikal,
+       kontrol lebar penuh) sudah dipindah ke layout bersama
+       (layouts/app.blade.php, blok @media max-width: 767.98px) dan standar
+       mobile (public/css/presensi-tokens.css, @media max-width: 640px),
+       jadi di sini tidak ada duplikasi yang bentrok. */
 
     .btn-solid-pill,
     button.btn-solid-pill,

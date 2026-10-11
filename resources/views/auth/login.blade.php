@@ -622,6 +622,59 @@
                 padding: 0.7rem 1rem;
             }
         }
+
+        /* ============================================================ */
+        /* MOBILE SEMPIT (<= 640px): jorokan kartu login DISAMAKAN dengan
+           lebar tombol standar halaman Pengaturan mobile (Tahun Ajaran /
+           Hari Libur / Tempat Sampah).
+           Nilai itu = --m-inset (16px) + padding <main> (16px) = 32px.
+           --m-inset TIDAK tersedia di halaman login (login tidak memakai
+           layout admin), jadi variabel yang sama didefinisikan di sini
+           dengan nilai hasil yang PERSIS sama. */
+        @media (max-width: 640px) {
+            :root {
+                --set-inset: 32px;   /* = jorokan efektif tombol Pengaturan */
+            }
+
+            body {
+                padding-left: calc(var(--set-inset) + env(safe-area-inset-left, 0px));
+                padding-right: calc(var(--set-inset) + env(safe-area-inset-right, 0px));
+                box-sizing: border-box;
+            }
+
+            /* Kartu login (gambar header + panel form) selebar konten:
+               tepi kiri-kanan persis di jorokan itu, simetris, tanpa
+               jorokan ganda dari margin/max-width lama. */
+            .login-split-card {
+                width: 100%;
+                max-width: none;
+                margin-left: 0;
+                margin-right: 0;
+                box-sizing: border-box;
+            }
+
+            /* Panel form: padding horizontal 1rem agar input & tombol tidak
+               mepet tepi kartu; isi form sudah width:100% menyatu. */
+            .form-panel {
+                padding-left: 1rem;
+                padding-right: 1rem;
+                box-sizing: border-box;
+            }
+
+            /* Ukuran logo saja yang dipertahankan dari revisi header login
+               (56px -> 64px); ukuran TEKS, jarak, dan padding header tetap
+               seperti nilai lama (lihat blok @media max-width: 991px).
+               min-height hanya jaring pengaman: panel memakai
+               aspect-ratio 16/9 + overflow:hidden, dan di 360px konten
+               (logo 64px + teks ukuran lama) sedikit melebihi 202px. */
+            .branding-panel {
+                min-height: 230px;
+            }
+            .school-logo-hero {
+                width: 64px;
+                height: 64px;
+            }
+        }
     </style>
 </head>
 
