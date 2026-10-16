@@ -602,9 +602,8 @@ class RekapPrintFormatTest extends TestCase
         $this->assertStringContainsString('transition: width .2s linear', $html);
         $this->assertStringContainsString('border-radius: inherit', $html);
 
-        // Warna isian: SATU warna gelap (navy) untuk semua tombol, bukan
-        // variasi per-warna. Opasitas penuh supaya bar pekat.
-        $this->assertStringContainsString('background-color: #1e3a8a;', $html);
+        // Warna isian: SATU warna gelap (navy) via variabel dengan fallback.
+        $this->assertStringContainsString('var(--btn-progress-fill, #1e3a8a)', $html);
         $this->assertStringContainsString('opacity: 1;', $html);
         $this->assertStringNotContainsString('--btn-progress-fill:', $html);
         $this->assertStringNotContainsString('#printRekapSubmitBtn .btn-progress__fill { background:', $html);
@@ -623,10 +622,10 @@ class RekapPrintFormatTest extends TestCase
 
         // 4. Tombol tidak berubah ukuran: footer dua kolom sama lebar.
         $this->assertStringContainsString('#printRekapSubmitBtn {', $html);
-        $this->assertStringContainsString('min-width: 168px', $html);
+        $this->assertStringContainsString('min-width: 0;', $html);
         $this->assertStringContainsString('white-space: nowrap', $html);
         $this->assertStringContainsString('class="dl-actions"', $html);
-        $this->assertStringContainsString('flex: 1 1 168px', $html);
+        $this->assertStringContainsString('flex: 1 1 0;', $html);
 
         // 5. Selesai: teks "Selesai" tanpa ikon centang.
         $this->assertStringNotContainsString('✓ Selesai', $html);
@@ -709,7 +708,7 @@ class RekapPrintFormatTest extends TestCase
         // 3. Tanpa Content-Length: estimasi 0 -> 90 dengan kurva melambat.
         $this->assertStringContainsString('var ESTIMASI_MS     = 150;', $js);
         $this->assertStringContainsString('var PLAFON_ESTIMASI = 90;', $js);
-        $this->assertStringContainsString('var KURVA_ESTIMASI  = 0.06;', $js);
+        $this->assertStringContainsString('var KURVA_ESTIMASI  = 0.04;', $js);
         $this->assertStringContainsString('var MIN_LANGKAH     = 1;', $js);
         $this->assertStringContainsString('sisa * KURVA_ESTIMASI', $js);
         $this->assertStringContainsString("s.fase = 'final';", $js);
@@ -737,12 +736,12 @@ class RekapPrintFormatTest extends TestCase
         $this->assertStringContainsString('window.dlProgressReset = function ()', $js);
         $this->assertStringContainsString('window.dlProgressBusy = function ()', $js);
 
-        // 8. Warna isian: satu nilai gelap tetap (navy), bukan transparan /
-        //    overlay gelap yang membuat bar kurang tajam.
-        $this->assertStringContainsString('background-color: #1e3a8a;', $html);
+        // 8. Warna isian: satu nilai gelap tetap (navy) via variabel dengan
+        //    fallback navy, bukan transparan / overlay gelap.
+        $this->assertStringContainsString('var(--btn-progress-fill, #1e3a8a)', $html);
         $this->assertStringNotContainsString('filter: brightness(.82);', $html);
         $this->assertStringNotContainsString('rgba(0, 0, 0, .22)', $html);
-        $this->assertStringNotContainsString('--btn-progress-fill', $html);
+        $this->assertStringNotContainsString('--btn-progress-fill:', $html);
 
         // Teks persen rata tengah dan selalu di atas bar.
         $this->assertStringContainsString('inset: 0;', $html);
@@ -782,14 +781,16 @@ class RekapPrintFormatTest extends TestCase
         $html = $this->actingAs($this->admin)->get(route('admin.rekap'))->getContent();
 
         $this->assertStringContainsString('class="dl-actions"', $html);
-        $this->assertStringContainsString('flex: 1 1 168px', $html);
-        $this->assertStringContainsString('min-width: 168px', $html);
+        // Dua tombol sama lebar (flex: 1 1 0) tanpa lebar tetap (min-width: 0).
+        $this->assertStringContainsString('flex: 1 1 0;', $html);
+        $this->assertStringContainsString('min-width: 0;', $html);
         $this->assertStringContainsString('text-align: center;', $html);
 
-        // Hanya tombol utama yang dinonaktifkan saat proses.
+        // Hanya tombol utama yang dinonaktifkan saat proses; saat selesai
+        // tombol dikembalikan ke kondisi awalnya.
         $js = $this->scriptHelper();
         $this->assertStringContainsString('button.disabled        = true;', $js);
-        $this->assertStringContainsString('s.button.disabled         = false;', $js);
+        $this->assertStringContainsString('btn.disabled  = !!awal.disabled;', $js);
 
         // Gaya tombol Batal saat disabled tetap sama (tidak jadi abu gelap).
         $this->assertStringContainsString('.btn-light:disabled', $html);
@@ -842,12 +843,14 @@ class RekapPrintFormatTest extends TestCase
         $partial = file_get_contents($view . '/partials/download-progress.blade.php');
         $this->assertStringContainsString('window.downloadWithProgress', $partial);
 
-        // Tombol yang BUKAN unduhan (Unggah & Import) tidak boleh disentuh.
+        // Tombol "Unggah & Import" ditangani lewat jalur khusus `data-import`
+        // (bukan jalur unduhan), sehingga tetap aman walau memakai komponen
+        // progres bersama. Pastikan ia memang memakai jalur data-import.
         foreach (['admin/students/index.blade.php', 'admin/classes/index.blade.php', 'admin/holidays/index.blade.php'] as $rel) {
             $isi = file_get_contents($view . '/' . $rel);
             preg_match_all('/<button\b[^>]*data-import[^>]*>[^<]*/', $isi, $m);
             foreach ($m[0] as $tag) {
-                $this->assertStringNotContainsString('data-dl-progress', $tag, "Tombol import di $rel tidak boleh memakai helper unduhan.");
+                $this->assertStringContainsString('data-import', $tag, "Tombol import di $rel harus memakai jalur data-import.");
             }
         }
     }

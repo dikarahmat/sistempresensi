@@ -69,7 +69,7 @@ class MultiRoleAuthTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Masuk Sekarang');
-        $response->assertSee('Username');
+        $response->assertSee('Email');
         $response->assertSee('Kata Sandi');
         $response->assertDontSee('btn-tab-choice');
     }
@@ -81,7 +81,7 @@ class MultiRoleAuthTest extends TestCase
         $email = env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id');
         $password = env('ADMIN_PASSWORD', 'password123');
 
-        $response = $this->post('/login/admin', [
+        $response = $this->post('/login', [
             'login' => $email,
             'password' => $password,
         ]);
@@ -95,8 +95,8 @@ class MultiRoleAuthTest extends TestCase
     {
         // NOTE: Akun guru ini diisi kirim-tangani; mekanisme login (NIP + password
         // yang sama) tidak boleh diubah karena masih ada di beberapa UI.
-        $response = $this->post('/login/guru', [
-            'nip' => '198503122010011002',
+        $response = $this->post('/login', [
+            'login' => '198503122010011002',
             'password' => '198503122010011002',
         ]);
 
@@ -447,19 +447,29 @@ class MultiRoleAuthTest extends TestCase
     /**
      * C & D. SEEDER KONSISTEN, IDEMPOTENT, DAN TIDAK MERESET DATA MASTER.
      */
-    public function test_seeder_membuat_akun_admin_dan_guru_dengan_kredensial_konsisten(): void
+    public function test_seeder_membuat_akun_default_yang_konsisten(): void
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertDatabaseHas('users', [
-            'username' => 'admin', 'role' => 'admin', 'email' => 'admin@presensi.com',
-        ]);
+        // Akun guru & guru piket default selalu dibuat dengan kredensial tetap.
         $this->assertDatabaseHas('users', [
             'username' => 'guru', 'role' => 'guru', 'email' => 'guru@presensi.com',
         ]);
+        $this->assertDatabaseHas('users', [
+            'username' => 'piket', 'role' => 'piket', 'email' => 'piket@presensi.com',
+        ]);
 
-        $this->assertTrue(Hash::check('admin123', User::where('username', 'admin')->first()->password));
         $this->assertTrue(Hash::check('guru123', User::where('username', 'guru')->first()->password));
+        $this->assertTrue(Hash::check('piket123', User::where('username', 'piket')->first()->password));
+
+        // Akun admin dibaca dari .env (ADMIN_EMAIL / ADMIN_PASSWORD). Karena
+        // setUp() sudah memakai email yang sama untuk "akun lama", seeder TIDAK
+        // membuat duplikat (penjaga UNIQUE email), sehingga tetap hanya ada
+        // SATU akun dengan email tersebut.
+        $this->assertSame(
+            1,
+            User::where('email', env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id'))->count()
+        );
     }
 
     public function test_seeder_lama_tidak_menimpa_password_dengan_nilai_lain(): void
@@ -474,11 +484,11 @@ class MultiRoleAuthTest extends TestCase
         $this->seed(UserSeeder::class);
         $this->seed(AdminUserSeeder::class);
 
-        $this->assertTrue(Hash::check('admin123', User::where('username', 'admin')->first()->password));
+        // Hanya akun guru & guru piket default yang ditambahkan (admin sudah ada).
         $this->assertTrue(Hash::check('guru123', User::where('username', 'guru')->first()->password));
+        $this->assertTrue(Hash::check('piket123', User::where('username', 'piket')->first()->password));
 
-        // Akun lama tidak ditimpa, dan tidak ada akun admin ganda tambahan
-        // dengan password "password123".
+        // Akun lama tidak ditimpa, dan tidak ada akun tambahan selain guru+piket.
         $adminLama->refresh();
         $this->assertSame($hashLama, $adminLama->password);
         $this->assertSame($jumlahAwal + 2, User::count());

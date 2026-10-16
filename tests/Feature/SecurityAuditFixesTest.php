@@ -215,17 +215,19 @@ class SecurityAuditFixesTest extends TestCase
         ]));
 
         $this->guruUser->refresh();
+        $this->teacher->refresh();
 
-        // Nama terupdate
-        $this->assertEquals('Guru Pengajar A (Updated Name)', $this->guruUser->name);
-        // Password TIDAK BOLEH berubah/tertimpa
+        // Nama guru terupdate di tabel `teachers` (sumber data guru).
+        $this->assertEquals('Guru Pengajar A (Updated Name)', $this->teacher->name);
+        // Password akun user TIDAK BOLEH berubah/tertimpa.
         $this->assertEquals($existingPasswordHash, $this->guruUser->password);
         $this->assertTrue(Hash::check('password_rahasia_guru', $this->guruUser->password));
 
-        // Guru baru dibuat dengan default password NIP
-        $newGuruUser = User::where('email', '199001012020011005@guru.smppresensipgri.sch.id')->first();
-        $this->assertNotNull($newGuruUser);
-        $this->assertTrue(Hash::check('199001012020011005', $newGuruUser->password));
+        // Import TIDAK lagi membuat akun User otomatis (login hanya lewat
+        // Kelola Akun). Yang dibuat hanyalah data guru baru di tabel teachers.
+        $newTeacher = Teacher::where('nip', '199001012020011005')->first();
+        $this->assertNotNull($newTeacher);
+        $this->assertDatabaseMissing('users', ['email' => '199001012020011005@guru.smppresensipgri.sch.id']);
     }
 
     /**
