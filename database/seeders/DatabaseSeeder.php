@@ -54,9 +54,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminName = $this->env('ADMIN_NAME', 'Administrator');
-        $adminEmail = $this->env('ADMIN_EMAIL');
-        $adminPassword = $this->env('ADMIN_PASSWORD');
+        $adminName = env('ADMIN_NAME', 'Administrator');
+        $adminEmail = env('ADMIN_EMAIL', '');
+        $adminPassword = env('ADMIN_PASSWORD', '');
 
         if ($adminEmail === '' || $adminPassword === '' || $adminName === '') {
             throw new RuntimeException(
@@ -138,10 +138,10 @@ class DatabaseSeeder extends Seeder
         $accounts = [
             [
                 'username' => 'admin',
-                'name' => (string) $this->env('ADMIN_NAME', 'Administrator'),
+                'name' => (string) env('ADMIN_NAME', 'Administrator'),
                 'role' => 'admin',
-                'email' => (string) $this->env('ADMIN_EMAIL'),
-                'password' => (string) $this->env('ADMIN_PASSWORD'),
+                'email' => (string) env('ADMIN_EMAIL', ''),
+                'password' => (string) env('ADMIN_PASSWORD', ''),
             ],
             [
                 'username' => 'guru',
@@ -166,17 +166,31 @@ class DatabaseSeeder extends Seeder
                 continue;
             }
 
-            User::updateOrCreate(
-                ['username' => $account['username']],
-                [
-                    'name' => $account['name'],
-                    'role' => $account['role'],
-                    'email' => $account['email'],
-                    'password' => Hash::make($plainPassword),
-                    'password_terenkripsi' => Crypt::encryptString($plainPassword),
-                    'email_verified_at' => now(),
-                ]
-            );
+            // Idempotent & TIDAK menimpa akun lain:
+            //   - akun dengan username sama sudah ada  -> perbarui;
+            //   - email sudah dipakai akun username lain (mis. akun lama tanpa
+            //     username) -> LEWATI, agar password akun lama tidak tertimpa
+            //     dan tidak terjadi pelanggaran UNIQUE(users.email).
+            $user = User::where('username', $account['username'])->first();
+
+            if (! $user && $account['email'] !== '' && User::where('email', $account['email'])->exists()) {
+                continue;
+            }
+
+            $attributes = [
+                'name' => $account['name'],
+                'role' => $account['role'],
+                'email' => $account['email'],
+                'password' => Hash::make($plainPassword),
+                'password_terenkripsi' => Crypt::encryptString($plainPassword),
+                'email_verified_at' => now(),
+            ];
+
+            if ($user) {
+                $user->update($attributes);
+            } else {
+                User::create($attributes + ['username' => $account['username']]);
+            }
         }
     }
 }
