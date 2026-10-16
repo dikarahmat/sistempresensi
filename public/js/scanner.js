@@ -530,10 +530,7 @@ async function safeStop() {
 
 /* ================= START KAMERA ================= */
 async function startCameraKiosk() {
-    console.log('[kiosk-camera] startCameraKiosk called, state:', scanner.state);
-
     if (scanner.state === 'starting' || scanner.state === 'running') {
-        console.log('[kiosk-camera] Already starting/running, skipping');
         return;
     }
 
@@ -755,12 +752,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (scanner.initialized) {
-        console.log('[kiosk-camera] Already initialized, skipping');
         return;
     }
     scanner.initialized = true;
-
-    console.log('[kiosk-camera] Initializing...');
 
     const hardInput = document.getElementById('hardwareInput');
     if (hardInput) {
@@ -799,7 +793,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('pointerdown', unlockOnce, { once: true });
     window.addEventListener('keydown', unlockOnce, { once: true });
 
-    console.log('[kiosk-camera] Starting camera...');
     runCamera(async () => {
         await startCameraKiosk();
     });

@@ -798,7 +798,7 @@
                         <div class="mb-2">
                             Format kolom file Excel: <strong>NISN, Nama Lengkap, Kelas, Jenis Kelamin</strong> (.xlsx atau .csv)
                         </div>
-                        <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download data-dl-progress>Unduh Template Excel</a>
+                        <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
                     </div>
                     <label class="form-label small fw-semibold">Pilih File Excel</label>
                     <input type="file" name="file_excel" class="form-control rounded-3 @error('file_excel') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>

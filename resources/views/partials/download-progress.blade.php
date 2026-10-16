@@ -108,8 +108,22 @@
     }
     .btn-progress.is-done .btn-progress__fill { display: none; }
 
+    /* Mode GESER (indeterminate): lebar tetap 45% lalu bergerak menyapu.
+       Dipakai saat persentase benar-benar tidak diketahui (mis. menunggu
+       Retry-After). JS melepas style inline supaya animasi ini yang menang. */
+    .btn-progress.is-indeterminate .btn-progress__fill {
+        width: 45%;
+        transition: none;
+        animation: btnProgressGeser 1.1s ease-in-out infinite;
+    }
+    @keyframes btnProgressGeser {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(320%); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .btn-progress__fill { transition: none; }
+        .btn-progress.is-indeterminate .btn-progress__fill { animation: none; }
     }
 
     /* Pesan gagal: satu baris kecil, bukan blok teks panjang.
