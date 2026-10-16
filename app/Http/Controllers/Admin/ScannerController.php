@@ -125,7 +125,7 @@ class ScannerController extends Controller
 
         // Validasi ganda anti-double scan lintas role (Admin Gerbang & Guru Kelas) sebelum DB::transaction
         $existingAttendance = Attendance::where('student_id', $student->id)
-            ->where('date', $todayDate)
+            ->whereDate('date', $todayDate)
             ->first();
 
         if ($existingAttendance) {
@@ -182,7 +182,29 @@ class ScannerController extends Controller
                 $timeRemark = $evaluasi['time_remark'];
                 $displayRemark = $evaluasi['display_remark'];
 
-                $attendance->save();
+                try {
+                    $attendance->save();
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Race condition: request lain menyisipkan baris
+                    // (student_id, date) yang sama lebih dulu sehingga UNIQUE
+                    // constraint menolak simpan ini. Kembalikan pesan yang sama
+                    // seperti pemeriksaan aplikasi, bukan error 500.
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => 'Siswa atas nama ' . $student->name . ' sudah melakukan presensi hari ini.',
+                            'student' => [
+                                'name' => $student->name,
+                                'nisn' => $student->nisn,
+                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                            ],
+                        ],
+                    ];
+                }
 
                 return [
                     'status_code' => 200,
