@@ -124,7 +124,7 @@ class TrashArchiveTest extends TestCase
         $response = $this->actingAs($this->admin)->delete(route('admin.students.force-delete', $student->id));
 
         $response->assertRedirect(route('admin.students.trash'));
-        $response->assertSessionHas('error');
+        $response->assertSessionHas('deleted');
         $this->assertDatabaseMissing('students', ['id' => $student->id]);
     }
 
@@ -157,7 +157,7 @@ class TrashArchiveTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.students.trash'));
-        $response->assertSessionHas('error');
+        $response->assertSessionHas('deleted');
         $this->assertDatabaseHas('students', ['id' => $aktif->id]);
         $this->assertDatabaseMissing('students', ['id' => $arsip->id]);
     }
@@ -203,7 +203,7 @@ class TrashArchiveTest extends TestCase
         $response = $this->actingAs($this->admin)->delete(route('admin.teachers.force-delete', $teacher->id));
 
         $response->assertRedirect(route('admin.teachers.trash'));
-        $response->assertSessionHas('error');
+        $response->assertSessionHas('deleted');
         $this->assertDatabaseMissing('teachers', ['id' => $teacher->id]);
     }
 }

@@ -1,11 +1,13 @@
 @php
     // ========================================================================
-    // SIDEBAR BERSAMA ADMIN & GURU (single source of truth).
+    // SIDEBAR BERSAMA ADMIN, GURU & GURU PIKET (single source of truth).
     // Item menu ditentukan oleh role: admin melihat menu penuh, guru melihat
-    // DASHBOARD, PRESENSI, KEHADIRAN, REKAP, SISWA, KELAS.
+    // DASHBOARD, PRESENSI, KEHADIRAN, REKAP, SISWA, KELAS, sedangkan GURU
+    // PIKET hanya melihat PRESENSI dan KEHADIRAN (plus tombol Logout).
     // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
     $isAdminPanel = ($userRole === 'admin');
+    $isPiketPanel = ($userRole === 'piket');
 
     $dashboardRoute = panel_route('dashboard');
     $isDashboardActive = request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard');
@@ -89,6 +91,7 @@
     <!-- Scrollable sidebar menu -->
     <div class="flex-grow-1 py-2 sidebar-menu-scroll sidebar-menu-wrapper menu-container">
         <ul class="nav nav-pills flex-column mb-auto" style="gap: 0;">
+            @if(!$isPiketPanel)
             <li class="nav-item">
                 <a href="{{ $dashboardRoute }}" 
                    class="nav-link text-white d-flex align-items-center gap-3 {{ $isDashboardActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
@@ -98,6 +101,7 @@
                     <span class="sidebar-nav-label">Dashboard</span>
                 </a>
             </li>
+            @endif
 
             @if($absensiRoute || $kehadiranRoute || $rekapRoute)
             <li class="nav-item">
@@ -122,6 +126,7 @@
                 </a>
                 @endif
 
+                @if(!$isPiketPanel)
                 <a href="{{ $rekapRoute }}" 
                    class="nav-link text-white d-flex align-items-center gap-3 {{ $isRekapActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
                    data-label="Rekap" 
@@ -129,6 +134,7 @@
                     <i class='bx bx-folder-open fs-5 {{ $isRekapActive ? 'text-primary' : 'text-white' }}'></i> 
                     <span class="sidebar-nav-label">Rekap</span>
                 </a>
+                @endif
             </li>
             @endif
 
@@ -139,6 +145,7 @@
                  menyala di kedua halaman tersebut (lihat kondisi active). -->
             @endif
 
+            @if(!$isPiketPanel)
             <li class="nav-item">
                 
                 <a href="{{ $siswaRoute }}" 
@@ -167,6 +174,7 @@
                     <span class="sidebar-nav-label">Kelas</span>
                 </a>
             </li>
+            @endif
 
             @if($isAdminPanel)
             <!-- PENGATURAN juga menyala di halaman Tahun Ajaran, Hari Libur, dan
@@ -176,6 +184,7 @@
                 'admin.settings.*',
                 'admin.academic-years.*',
                 'admin.holidays.*',
+                'admin.accounts.*',
                 'admin.students.trash',
                 'admin.teachers.trash',
                 'admin.classes.trash'

@@ -26,12 +26,16 @@ class MultiRoleAuthTest extends TestCase
     {
         parent::setUp();
 
-        // Siapkan akun Admin jika belum ada
+        // Siapkan akun Admin (seed DBSeeder baca ADMIN_EMAIL/ADMIN_PASSWORD
+        // dari phpunit.xml), pastikan ada walaupun staging tidak di-seed sendiri.
+        $adminEmail = env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id');
+        $adminPassword = env('ADMIN_PASSWORD', 'password123');
+
         User::updateOrCreate(
-            ['email' => 'admin@smppresensipgri.sch.id'],
+            ['email' => $adminEmail],
             [
                 'name' => 'Administrator SMP PGRI',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make($adminPassword),
                 'role' => 'admin',
             ]
         );
@@ -72,9 +76,14 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_admin_can_login_and_is_redirected_to_admin_dashboard(): void
     {
+        // Kredensial dicegat dari .env (ADMIN_EMAIL / ADMIN_PASSWORD)
+        // karena DatabaseSeeder tidak lagi bawaakun default hardcode.
+        $email = env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id');
+        $password = env('ADMIN_PASSWORD', 'password123');
+
         $response = $this->post('/login/admin', [
-            'login' => 'admin@smppresensipgri.sch.id',
-            'password' => 'password123',
+            'login' => $email,
+            'password' => $password,
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
@@ -84,6 +93,8 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_guru_can_login_using_nip_and_is_redirected_to_guru_dashboard(): void
     {
+        // NOTE: Akun guru ini diisi kirim-tangani; mekanisme login (NIP + password
+        // yang sama) tidak boleh diubah karena masih ada di beberapa UI.
         $response = $this->post('/login/guru', [
             'nip' => '198503122010011002',
             'password' => '198503122010011002',
@@ -97,6 +108,8 @@ class MultiRoleAuthTest extends TestCase
     public function test_only_admin_and_guru_roles_are_supported(): void
     {
         // Role di luar admin & guru sudah tidak dikenali sistem (dibersihkan total).
+        // Akun default kini dihasilkan DatabaseSeeder dari ADMIN_* — tidak ada
+        // akun non-admin/guru yang tersisa.
         $this->assertEquals(0, User::whereNotIn('role', ['admin', 'guru'])->count());
 
         // Root route mengarahkan admin ke /admin/dashboard dan guru ke /guru/dashboard.

@@ -403,6 +403,19 @@
     </div>
     @endif
 
+    {{-- Notifikasi sukses HAPUS: MERAH (alert-danger) + ikon tempat sampah. --}}
+    @if(session('deleted'))
+    <div class="alert alert-danger alert-deleted alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-trash fs-5 me-2 text-danger'></i>
+                <span>{{ session('deleted') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+    </div>
+    @endif
+
     {{-- Notifikasi import sebagian berhasil (kuning/oranye) --}}
     @if(session('warning'))
     <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">

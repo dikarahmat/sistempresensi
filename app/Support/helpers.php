@@ -15,11 +15,24 @@ use Illuminate\Support\Facades\Route;
 
 if (!function_exists('panel_role')) {
     /**
-     * Nama panel yang sedang aktif berdasarkan role pengguna (admin|guru).
+     * Nama panel yang sedang aktif berdasarkan role pengguna (admin|guru|piket).
+     *
+     * Piket punya panel sendiri (route group "piket.*") yang hanya memuat
+     * Kehadiran & Presensi; view yang dipakai tetap view bersama milik
+     * admin/guru, cukup nama panelnya yang berbeda sehingga panel_route()
+     * me-resolve ke route piket (dan route yang tidak didaftarkan otomatis '#').
      */
     function panel_role(): string
     {
-        return (Auth::check() && Auth::user()->role === 'guru') ? 'guru' : 'admin';
+        if (!Auth::check()) {
+            return 'admin';
+        }
+
+        return match (Auth::user()->role) {
+            'guru' => 'guru',
+            'piket' => 'piket',
+            default => 'admin',
+        };
     }
 }
 
@@ -40,6 +53,19 @@ if (!function_exists('is_guru')) {
     function is_guru(): bool
     {
         return Auth::check() && Auth::user()->role === 'guru';
+    }
+}
+
+if (!function_exists('is_piket')) {
+    /**
+     * True jika pengguna yang sedang login adalah GURU PIKET.
+     * Dipakai view untuk menyembunyikan aksi/tautan yang tidak boleh
+     * dilihat piket (mis. form override absensi sudah ada proteksi
+     * is_admin() sendiri di class.blade.php).
+     */
+    function is_piket(): bool
+    {
+        return Auth::check() && Auth::user()->role === 'piket';
     }
 }
 

@@ -357,6 +357,19 @@
     </div>
     @endif
 
+    {{-- Notifikasi sukses HAPUS: MERAH (alert-danger) + ikon tempat sampah. --}}
+    @if(session('deleted'))
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas alert-deleted" role="alert">
+        <div class="alert-kelas-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-trash fs-5 me-2 text-danger'></i>
+                <span>{{ session('deleted') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+    </div>
+    @endif
+
     {{-- Rincian baris Excel yang dilewati ketika tidak ada pesan utama (3 status) --}}
     @if(!session('success') && !session('warning') && !session('error') && session('import_errors') && count(session('import_errors')) > 0)
     <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">

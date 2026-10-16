@@ -454,6 +454,15 @@
             background-color: rgba(15, 23, 42, .10) !important;
         }
 
+        /* Notifikasi HAPUS (flash 'deleted'): kotak alert-danger yang sama,
+           hanya ikonnya diganti tempat sampah dan tombol X ikut MERAH senada.
+           Merah diambil dari warna danger Bootstrap yang sudah dipakai tombol
+           hapus (bukan warna baru). */
+        .alert-deleted .btn-close {
+            filter: brightness(0) saturate(100%) invert(26%) sepia(89%) saturate(2458%) hue-rotate(340deg) brightness(93%) contrast(92%) !important;
+            opacity: .7 !important;
+        }
+
         /* Ikon di kiri tidak ikut melebar, teks di sampingnya yang tumbuh */
         .flash-notice-body {
             display: block;
@@ -2311,7 +2320,11 @@
             padding-bottom: 1rem !important;
         }
 
-        .content-scroll-wrapper > main > .flex-1 > *:last-child {
+        /* `:not(dialog)` WAJIB: <dialog> memakai `margin: auto` + `inset: 0`
+           untuk memusatkan diri (lihat dialog.acc-dialog). Bila dialog kebetulan
+           jadi anak terakhir .flex-1 (mis. modal Hapus Akun), margin-bottom:0
+           akan mematikan pemusatan itu dan dialog jatuh ke bawah layar. */
+        .content-scroll-wrapper > main > .flex-1 > *:last-child:not(dialog) {
             margin-bottom: 0 !important;
         }
 
@@ -5269,6 +5282,8 @@
 @php
     $navUserRole = Auth::user()->role ?? 'admin';
     $isNavAdmin = ($navUserRole === 'admin');
+    // GURU PIKET: bottom nav hanya menampilkan Kehadiran & Presensi.
+    $isNavPiket = ($navUserRole === 'piket');
 
     // 1. Dashboard
     $navDashboardUrl = panel_route('dashboard');
@@ -5294,9 +5309,10 @@
 @endphp
 
 <nav class="mobile-bottom-nav lg:hidden" aria-label="Menu Navigasi Bawah">
-    <div class="mobile-nav-grid">
+    <div class="mobile-nav-grid" @if($isNavPiket) style="grid-template-columns: repeat(2, minmax(0,1fr)) !important;" @endif>
         
-        <!-- 1. Dashboard (bx bxs-dashboard) -->
+        <!-- 1. Dashboard (bx bxs-dashboard) - TIDAK tampil untuk Guru Piket -->
+        @if(!$isNavPiket)
         <a href="{{ $navDashboardUrl }}" 
            class="mobile-nav-item {{ $isNavDashboardActive ? 'active' : '' }}"
            title="Dashboard">
@@ -5307,6 +5323,7 @@
             <i class='bx bxs-dashboard mobile-nav-icon'></i>
             <span class="mobile-nav-label">Dashboard</span>
         </a>
+        @endif
 
         <!-- 2. Kehadiran (bx bx-calendar-check) -->
         <a href="{{ $navKehadiranUrl }}" 
@@ -5332,7 +5349,8 @@
             <span class="mobile-nav-label">Presensi</span>
         </a>
 
-        <!-- 4. Rekap (bx bx-folder-open) -->
+        <!-- 4. Rekap (bx bx-folder-open) - TIDAK tampil untuk Guru Piket -->
+        @if(!$isNavPiket)
         <a href="{{ $navRekapUrl }}" 
            class="mobile-nav-item {{ $isNavRekapActive ? 'active' : '' }}"
            title="Rekap">
@@ -5359,6 +5377,7 @@
             <i class='{{ $nav5Icon }} mobile-nav-icon'></i>
             <span class="mobile-nav-label">{{ $nav5Title }}</span>
         </a>
+        @endif {{-- penutup @if(!$isNavPiket): Rekap & item-5 tidak tampil untuk piket --}}
 
     </div>
 </nav>

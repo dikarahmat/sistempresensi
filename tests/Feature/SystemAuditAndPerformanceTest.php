@@ -118,7 +118,7 @@ class SystemAuditAndPerformanceTest extends TestCase
             'confirm_all' => '1',
         ]);
         $response->assertRedirect(route('admin.students.index'));
-        $response->assertSessionHas('error');
+        $response->assertSessionHas('deleted');
 
         $this->assertSoftDeleted('students', ['id' => $student->id]);
         $this->assertDatabaseMissing('attendances', ['student_id' => $student->id]);
@@ -246,7 +246,7 @@ class SystemAuditAndPerformanceTest extends TestCase
 
         $responseAll = $this->actingAs($this->admin)->delete(route('admin.guru.destroy-all'));
         $responseAll->assertRedirect(route('admin.guru.index'));
-        $responseAll->assertSessionHas('error');
+        $responseAll->assertSessionHas('deleted');
 
         $this->assertSoftDeleted('teachers', ['id' => $teacher2->id]);
         $this->assertNull($class->fresh()->teacher_id);

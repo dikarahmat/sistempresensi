@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\Admin\UserAccountController;
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -21,8 +22,6 @@ Route::get('/', [AuthController::class, 'redirectRoot']);
 // Autentikasi
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
-Route::post('/login/guru', [AuthController::class, 'loginGuru'])->name('login.guru')->middleware('throttle:5,1');
-Route::post('/login/admin', [AuthController::class, 'loginAdmin'])->name('login.admin')->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('throttle:10,1');
 
 // ============================================================================
@@ -153,6 +152,23 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // Manajemen Role & Permission
     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.index');
     Route::post('/roles-permissions', [RolePermissionController::class, 'update'])->name('roles.update');
+
+    // ==========================================================================
+    // KELOLA AKUN (khusus ADMIN)
+    // Halaman pengelolaan akun login (tambah, edit, reset password).
+    // Berada DI DALAM group ini sehingga otomatis
+    // terkunci middleware role:admin - role lain (guru, piket) menerima 403.
+    // Akun hanya dibuat lewat sini; tidak ada registrasi publik.
+    // ==========================================================================
+    Route::prefix('kelola-akun')->name('accounts.')->group(function () {
+        Route::get('/', [UserAccountController::class, 'index'])->name('index');
+        Route::post('/', [UserAccountController::class, 'store'])->name('store');
+        Route::put('/{user}/update', [UserAccountController::class, 'update'])->name('update');
+        // Endpoint khusus admin: dekripsi password terenkripsi untuk ditampilkan
+        // di modal Edit (read-only, hanya dikembalikan sebagai JSON).
+        Route::get('/{user}/password', [UserAccountController::class, 'getEncryptedPassword'])->name('password');
+        Route::delete('/{user}', [UserAccountController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ============================================================================
@@ -204,4 +220,35 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
 
     // KELAS - identik admin, READ-ONLY
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('classes.index');
+});
+
+// ============================================================================
+// 3. GROUP GURU PIKET
+// ============================================================================
+// Akses HANYA KE DUA MODUL: KEHADIRAN dan PRESENSI (scan QR / mode gerbang).
+// Route Dashboard, Rekap (termasuk export/cetak), Siswa, Guru, Kelas,
+// Pengaturan, Tahun Ajaran, Hari Libur, Tempat Sampah, Kelola Akun, maupun
+// override absensi TIDAK didaftarkan di sini - sehingga piket otomatis
+// menerima HTTP 403 untuk SEMUA method (GET/POST/PUT/PATCH/DELETE) bila
+// URL diketik manual. View yang dipakai tetap view bersama admin/guru;
+// menu disesuaikan lewat partials/sidebar.blade.php & bottom nav.
+// Setelah login, piket diarahkan ke Presensi (lihat AuthController).
+// ============================================================================
+Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(function () {
+    // PRESENSI - identik admin/guru (absensi harian, detail kelas, scanner, kiosk)
+    // Route statis WAJIB didaftarkan sebelum route berparameter dinamis,
+    // supaya /piket/absensi/kiosk tidak ditangkap {schoolClass}.
+    Route::get('/absensi', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi-view', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('presensi.index');
+    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
+    Route::get('/absensi/{schoolClass}', [\App\Http\Controllers\Admin\AttendanceController::class, 'showClass'])->name('absensi.show');
+    Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
+    Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
+    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
+
+    // KEHADIRAN - READ-ONLY (route override absensi sengaja tidak ada => 403)
+    Route::get('/kehadiran', [\App\Http\Controllers\Admin\AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa/{student}/history', [\App\Http\Controllers\Admin\AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    Route::get('/kehadiran/{schoolClass}', [\App\Http\Controllers\Admin\AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 });

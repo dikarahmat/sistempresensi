@@ -92,5 +92,11 @@
         <server name="PULSE_ENABLED" value="false"/>
         <server name="TELESCOPE_ENABLED" value="false"/>
         <server name="NIGHTWATCH_ENABLED" value="false"/>
+
+        <!-- Akun default dihasilkan DatabaseSeeder dari ADMIN_* (bukan hardcode).
+             Dummy test-nya: seeder BERHENTI/diabaikan kalau env kosong. -->
+        <env name="ADMIN_NAME" value="Administrator SMP PGRI" force="true"/>
+        <env name="ADMIN_EMAIL" value="admin@smppresensipgri.sch.id" force="true"/>
+        <env name="ADMIN_PASSWORD" value="password123" force="true"/>
     </php>
 </phpunit>

@@ -384,11 +384,11 @@ class StudentController extends Controller
             return $this->backToStudentIndex('Gagal menghapus data siswa. Coba lagi.');
         }
 
-        // Notifikasi hapus memakai flash 'error' (alert-danger/merah), bukan
-        // 'success' (hijau) - flash hijau dipakai untuk tambah/ubah data.
+        // Notifikasi hapus memakai flash 'deleted' (alert-danger/merah + ikon
+        // tempat sampah), bukan 'success' (hijau) - hijau untuk tambah/ubah.
         return $this->backToStudentIndex(
             "Data siswa {$studentName} berhasil dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.",
-            'error'
+            'deleted'
         );
     }
 
@@ -446,10 +446,10 @@ class StudentController extends Controller
             }
 
             DB::commit();
-            // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
-            // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
+            // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil
+            // MERAH (alert-danger) + ikon tempat sampah, bukan hijau.
             return redirect()->route('admin.students.trash')
-                ->with('error', "Berhasil menghapus permanen {$total} siswa di Tempat Sampah.");
+                ->with('deleted', "Berhasil menghapus permanen {$total} siswa di Tempat Sampah.");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -497,7 +497,7 @@ class StudentController extends Controller
 
             return $this->backToStudentIndex(
                 "Seluruh data siswa aktif ({$total} data) berhasil dihapus dan dipindahkan ke Tempat Sampah.",
-                'error'
+                'deleted'
             );
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -560,10 +560,10 @@ class StudentController extends Controller
             $student->forceDelete();
 
             DB::commit();
-            // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
-            // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
+            // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil
+            // MERAH (alert-danger) + ikon tempat sampah, bukan hijau.
             return redirect()->route('admin.students.trash')
-                ->with('error', "Data siswa {$studentName} berhasil dihapus permanen!");
+                ->with('deleted', "Data siswa {$studentName} berhasil dihapus permanen!");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);

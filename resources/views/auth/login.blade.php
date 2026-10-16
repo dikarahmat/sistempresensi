@@ -771,30 +771,30 @@
         >
             @csrf
 
-            <!-- USERNAME -->
+            <!-- EMAIL -->
             <div class="form-group-item">
                 <label
                     class="input-label-custom"
                     for="loginInput"
                 >
-                    Username
+                    Email
                 </label>
 
                 <div class="input-box-wrapper {{ $errors->has('login') ? 'is-invalid-field' : '' }}">
                     <span class="input-icon-box">
-                        <i class='bx bx-user'></i>
+                        <i class='bx bx-envelope'></i>
                     </span>
 
                     <input
-                        type="text"
+                        type="email"
                         name="login"
                         id="loginInput"
                         class="form-input-field"
                         value="{{ old('login') }}"
                         required
                         autofocus
-                        placeholder="Masukkan username"
-                        aria-label="Username"
+                        placeholder="Masukkan email"
+                        aria-label="Email"
                         autocomplete="username"
                     >
                 </div>

@@ -361,6 +361,11 @@
          tombol lain tanpa mengubah struktur. -->
     @php
         $pengaturanModules = [
+            // KELOLA AKUN dulu (paling depan): ini jalur masuk utama pengelolaan
+            // akun login, jadi ditempatkan lebih dulu daripada modul lain.
+            // Warna: abu gelap (btn-secondary) - sengaja BUKAN merah supaya
+            // tidak bersaing secara visual dengan Tempat Sampah.
+            ['route' => 'admin.accounts.index', 'class' => 'btn-secondary', 'label' => 'KELOLA AKUN'],
             ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => 'TAHUN AJARAN'],
             ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => 'HARI LIBUR'],
             ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => 'TEMPAT SAMPAH'], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
@@ -375,7 +380,7 @@
         <div class="section-header">
             <div>
                 <h5 class="fw-bold mb-0" style="color: #0f172a;">Pengelolaan Sistem</h5>
-                <div class="text-muted small">Kelola tahun ajaran, kalender libur, dan tempat sampah data.</div>
+                <div class="text-muted small">Kelola tahun ajaran, kalender libur, akun pengguna, dan tempat sampah data.</div>
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">

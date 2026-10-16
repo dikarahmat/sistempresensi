@@ -13,6 +13,32 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    // ========================================================================
+    // DAFTAR ROLE TERPUSAT (Single Source of Truth)
+    // Dropdown form, validasi controller, dan middleware semuanya memakai
+    // daftar ini. Menambah role baru cukup menambah satu baris di sini
+    // + mendaftarkan route group-nya di routes/web.php.
+    // ========================================================================
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_GURU = 'guru';
+    public const ROLE_PIKET = 'piket';
+
+    /** @var array<string, string> Nilai role => label tampilan (Bahasa Indonesia). */
+    public const ROLES = [
+        self::ROLE_ADMIN => 'Admin',
+        self::ROLE_GURU => 'Guru',
+        self::ROLE_PIKET => 'Guru Piket',
+    ];
+
+    // ========================================================================
+    // STATUS AKUN (Kelola Akun)
+    // Akun NONAKTIF tidak bisa login dan sesi aktifnya ditolak middleware
+    // EnsureUserRole pada request berikutnya. Tidak ada penghapusan permanen
+    // supaya riwayat data tetap utuh.
+    // ========================================================================
+    public const STATUS_AKTIF = 'Aktif';
+    public const STATUS_NONAKTIF = 'Nonaktif';
+
     /**
      * Akun yang tidak boleh dihapus lewat aplikasi.
      *
@@ -33,7 +59,9 @@ class User extends Authenticatable
         'name',
         'email',
         'role',
+        'status',
         'password',
+        'password_terenkripsi',
     ];
 
     /**
@@ -43,6 +71,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'password_terenkripsi',
         'remember_token',
     ];
 
@@ -84,6 +113,43 @@ class User extends Authenticatable
     {
         return in_array($this->username, self::PROTECTED_USERNAMES, true);
     }
+
+    /**
+     * Apakah akun ini AKTIF dan diizinkan login?
+     *
+     * Nilai null/kosong dianggap Aktif agar kompatibel dengan akun lama
+     * yang ada SEBELUM kolom users.status ditambahkan (migration
+     * 2026_10_14_000001_add_status_to_users_table) - akun lama tidak boleh
+     * tiba-tiba terkunci setelah update aplikasi.
+     */
+    public function isActive(): bool
+    {
+        $status = $this->attributes['status'] ?? null;
+
+        return $status === null || $status === '' || $status === self::STATUS_AKTIF;
+    }
+
+    /**
+     * Label tampilan role (Bahasa Indonesia) dari daftar role terpusat.
+     */
+    public function roleLabel(): string
+    {
+        return self::ROLES[$this->role] ?? ucfirst((string) $this->role);
+    }
+
+    /**
+     * Jumlah akun ADMIN yang masih AKTIF (dihitung dinamis, tanpa cache).
+     * Dipakai penjaga "wajib tersisa minimal satu admin aktif" di
+     * UserAccountController.
+     */
+    public static function countActiveAdmins(): int
+    {
+        return self::query()
+            ->where('role', self::ROLE_ADMIN)
+            ->where('status', self::STATUS_AKTIF)
+            ->count();
+    }
+
 
     public function teacher()
     {

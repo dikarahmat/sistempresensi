@@ -178,6 +178,6 @@ class HolidayController extends Controller
         $holiday->delete();
         // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
         // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
-        return redirect()->route('admin.holidays.index')->with('error', 'Hari libur berhasil dihapus!');
+        return redirect()->route('admin.holidays.index')->with('deleted', 'Hari libur berhasil dihapus!');
     }
 }

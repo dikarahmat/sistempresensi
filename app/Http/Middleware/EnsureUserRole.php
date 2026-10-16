@@ -26,7 +26,22 @@ class EnsureUserRole
             return redirect()->route('login');
         }
 
-        // 2. Periksa apakah role pengguna termasuk dalam daftar role yang diizinkan
+        // 2. Akun NONAKTIF: sesi yang sedang berjalan ikut DITOLAK di sini.
+        //    Status dibaca dari database setiap request, sehingga ketika admin
+        //    menonaktifkan sebuah akun lewat halaman Kelola Akun, user tersebut
+        //    langsung keluar pada request berikutnya tanpa perlu pencabutan
+        //    sesi manual.
+        if (!$request->user()->isActive()) {
+            \Illuminate\Support\Facades\Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+            ]);
+        }
+
+        // 3. Periksa apakah role pengguna termasuk dalam daftar role yang diizinkan
         if (!in_array($request->user()->role, $roles, true)) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengakses halaman ini.');
         }

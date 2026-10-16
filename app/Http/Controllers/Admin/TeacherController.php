@@ -175,11 +175,11 @@ class TeacherController extends Controller
             $teacher->delete();
 
             DB::commit();
-            // Notifikasi hapus sengaja memakai flash 'error' supaya tampil
-            // MERAH (alert-danger), sama seperti notifikasi hapus di Data
-            // Siswa. Flash 'success' (hijau) dipakai untuk tambah/ubah.
+            // Notifikasi hapus memakai flash 'deleted' supaya tampil MERAH
+            // (alert-danger) + ikon tempat sampah, sama seperti notifikasi
+            // hapus lainnya. Flash 'success' (hijau) untuk tambah/ubah.
             $message = 'Data guru ' . $name . ' berhasil dihapus! Penugasan kelasnya otomatis dilepaskan.';
-            return redirect()->route('admin.guru.index')->with('error', $message);
+            return redirect()->route('admin.guru.index')->with('deleted', $message);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -221,10 +221,10 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            // Flash 'error' supaya notifikasi tampil MERAH (alert-danger),
-            // sama seperti notifikasi hapus di Data Siswa.
+            // Flash 'deleted' supaya notifikasi tampil MERAH (alert-danger)
+            // dengan ikon tempat sampah, sama seperti notifikasi hapus lainnya.
             return redirect()->route('admin.guru.index')
-                ->with('error', "Seluruh data guru ({$total}) berhasil dihapus dan dipindahkan ke Tempat Sampah di Pengaturan.");
+                ->with('deleted', "Seluruh data guru ({$total}) berhasil dihapus dan dipindahkan ke Tempat Sampah di Pengaturan.");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -443,9 +443,9 @@ class TeacherController extends Controller
             $teacher->forceDelete();
 
             DB::commit();
-            // Flash 'error' supaya notifikasi hapus tampil MERAH.
+            // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
-                ->with('error', "Data guru {$teacherName} berhasil dihapus permanen!");
+                ->with('deleted', "Data guru {$teacherName} berhasil dihapus permanen!");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -486,9 +486,9 @@ class TeacherController extends Controller
             Teacher::onlyTrashed()->forceDelete();
 
             DB::commit();
-            // Flash 'error' supaya notifikasi hapus tampil MERAH.
+            // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
-                ->with('error', "Seluruh data guru di Tempat Sampah ({$total}) berhasil dihapus permanen!");
+                ->with('deleted', "Seluruh data guru di Tempat Sampah ({$total}) berhasil dihapus permanen!");
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);

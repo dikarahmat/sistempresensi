@@ -7,6 +7,7 @@ use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -35,29 +36,36 @@ class DatabaseSeeder extends Seeder
     /**
      * Akun default yang dibuat/dipastikan ada.
      *
-     * Struktur ini dipakai ulang oleh UserSeeder & AdminUserSeeder agar
-     * `db:seed --class=UserSeeder` (atau AdminUserSeeder) tetap menghasilkan
-     * kredensial yang sama persis - tidak ada lagi versi password berbeda.
+     * Sumber kebenaran akun login SEBARANG PERUBAHAN:
+     *   - email & password dibaca dari .env (ADMIN_EMAIL, ADMIN_PASSWORD).
+     *   - SEEDER TIDAK MENYIMPAN KONDITIONAL DEFAULT PASSWORD.
+     *   - Saat env kosong: seeder BERHENTI dengan pesan error yang jelas,
+     *     ITSU BUKAN membuat akun default yang memicu login tanpa izin.
+     *
+     * Idempotent: memakai updateOrCreate(['email' => $email]), jadi
+     * `db:seed` berjalan berkali-kali tidak menimpa akun lain & tidak
+     * membuat duplikat.
+     * =======================================================================
+     * CARA MENGGUNAKAN (di .env):
+     *   ADMIN_NAME="Administrator SMP PGRI"
+     *   ADMIN_EMAIL="admin@sekolah.sch.id"
+     *   ADMIN_PASSWORD="SangatKuat123!"
+     * =======================================================================
      */
-    public const ACCOUNTS = [
-        [
-            'username' => 'admin',
-            'name' => 'Administrator',
-            'role' => 'admin',
-            'email' => 'admin@presensi.com',
-            'password' => 'admin123',
-        ],
-        [
-            'username' => 'guru',
-            'name' => 'Guru Pengajar',
-            'role' => 'guru',
-            'email' => 'guru@presensi.com',
-            'password' => 'guru123',
-        ],
-    ];
-
     public function run(): void
     {
+        $adminName = $this->env('ADMIN_NAME', 'Administrator');
+        $adminEmail = $this->env('ADMIN_EMAIL');
+        $adminPassword = $this->env('ADMIN_PASSWORD');
+
+        if ($adminEmail === '' || $adminPassword === '' || $adminName === '') {
+            throw new RuntimeException(
+                'Seeder DatabaseSeeder gagal: variabel .env belum diisi. '
+                .'Silakan set setidaknya ADMIN_EMAIL dan ADMIN_PASSWORD '
+                .'di .env (lihat docblock pada DatabaseSeeder::run()).'
+            );
+        }
+
         $this->seedAccounts();
         $this->seedActiveAcademicYear();
         $this->seedCoreClasses();
@@ -112,23 +120,60 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Pastikan akun admin & guru ada dengan kredensial yang konsisten.
+     * Pastikan akun ADMIN (dari .env) + akun default Guru & Guru Piket ada.
      *
-     * Idempotent: dijalankan berkali-kali tetap aman dan tidak mengubah
-     * data lain. Password development di-set ulang ke nilai default di atas
-     * setiap kali seeding, jadi tidak ada kebingungan antar seeder.
+     *   - ADMIN: nama/email/password dibaca dari .env (ADMIN_NAME,
+     *     ADMIN_EMAIL, ADMIN_PASSWORD) - TIDAK ada password hardcode.
+     *   - Guru & Guru Piket: akun default development (diubah lewat aplikasi
+     *     setelah login). Satu akun per role.
+     *
+     * Kolom password_terenkripsi ikut diisi (enkripsi reversibel) supaya admin
+     * bisa melihat password lewat Kelola Akun.
+     *
+     * Idempotent: dijalankan berkali-kali tetap aman dan tidak mengubah data
+     * lain.
      */
     public function seedAccounts(): void
     {
-        foreach (self::ACCOUNTS as $account) {
+        $accounts = [
+            [
+                'username' => 'admin',
+                'name' => (string) $this->env('ADMIN_NAME', 'Administrator'),
+                'role' => 'admin',
+                'email' => (string) $this->env('ADMIN_EMAIL'),
+                'password' => (string) $this->env('ADMIN_PASSWORD'),
+            ],
+            [
+                'username' => 'guru',
+                'name' => 'Guru Pengajar',
+                'role' => 'guru',
+                'email' => 'guru@presensi.com',
+                'password' => 'guru123',
+            ],
+            [
+                'username' => 'piket',
+                'name' => 'Guru Piket',
+                'role' => 'piket',
+                'email' => 'piket@presensi.com',
+                'password' => 'piket123',
+            ],
+        ];
+
+        foreach ($accounts as $account) {
+            $plainPassword = $account['password'];
+
+            if ($plainPassword === '') {
+                continue;
+            }
+
             User::updateOrCreate(
                 ['username' => $account['username']],
                 [
                     'name' => $account['name'],
                     'role' => $account['role'],
                     'email' => $account['email'],
-                    // WAJIB diganti sebelum production (lihat docblock).
-                    'password' => Hash::make($account['password']),
+                    'password' => Hash::make($plainPassword),
+                    'password_terenkripsi' => Crypt::encryptString($plainPassword),
                     'email_verified_at' => now(),
                 ]
             );

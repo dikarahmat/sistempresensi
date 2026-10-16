@@ -136,6 +136,44 @@
         }
     }
 
+    /* Tutup pop-up yang memuat form ini SEBELUM loading tampil, supaya modal
+       tidak terlihat "di belakang" overlay loading. Dua jenis pop-up yang
+       dipakai di project ini:
+         1. <dialog> native (mis. modal Tambah/Edit/Hapus Akun) - berada di
+            TOP LAYER browser sehingga SELALU menutupi overlay loading, berapa
+            pun z-index overlay. Karena itu WAJIB ditutup, bukan sekadar
+            ditimpa.
+         2. Bootstrap modal (mis. Tambah Siswa, Import Excel, Cetak Kartu).
+       Menutup pop-up TIDAK membatalkan submit: form tetap ada di DOM, hanya
+       status "terbuka" yang dilepas. Kalau validasi browser gagal, event
+       submit memang tidak pernah sampai ke sini, jadi modal tetap terbuka
+       (perilaku yang diinginkan). Dialog SweetAlert tidak perlu ditangani di
+       sini karena pop-up-nya sudah menutup sendiri sebelum form tersembunyi
+       di-submit. */
+    function closeContainingPopup(form) {
+        if (!(form instanceof Element)) {
+            return;
+        }
+
+        const dialog = form.closest('dialog');
+        if (dialog && dialog.open) {
+            try {
+                dialog.close();
+            } catch (error) { /* gagal menutup: lanjut ke loading + submit */ }
+            return;
+        }
+
+        const modalEl = form.closest('.modal');
+        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+            try {
+                const instance = window.bootstrap.Modal.getInstance(modalEl);
+                if (instance) {
+                    instance.hide();
+                }
+            } catch (error) { /* gagal menutup: lanjut ke loading + submit */ }
+        }
+    }
+
     window.addEventListener('load', hideLoader);
     window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
@@ -189,6 +227,8 @@
                 return;
             }
         }
+        // Tutup modal/dialog form lebih dulu agar spinner langsung terlihat.
+        closeContainingPopup(form);
         showLoaderWithDelay();
     });
 

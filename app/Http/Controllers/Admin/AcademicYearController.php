@@ -133,6 +133,6 @@ class AcademicYearController extends Controller
 
         // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
         // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
-        return redirect()->route('admin.academic-years.index')->with('error', 'Tahun ajaran berhasil dihapus!');
+        return redirect()->route('admin.academic-years.index')->with('deleted', 'Tahun ajaran berhasil dihapus!');
     }
 }

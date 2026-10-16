@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +21,7 @@ class AuthController extends Controller
             return match (Auth::user()->role) {
                 'admin' => redirect()->route('admin.dashboard'),
                 'guru' => redirect()->route('guru.dashboard'),
+                'piket' => redirect()->route('piket.absensi.index'),
                 default => redirect()->route('login'),
             };
         }
@@ -36,9 +36,21 @@ class AuthController extends Controller
         $this->warnIfUsersTableEmpty();
 
         if (Auth::check()) {
+            // Akun NONAKTIF yang masih membawa sesi lama: keluarkan paksa
+            // supaya pesan "akun tidak dapat digunakan" tampil di halaman login.
+            if (!Auth::user()->isActive()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return view('auth.login')->withErrors([
+                    'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                ]);
+            }
+
             // Role yang dikenal: langsung arahkan ke dashboard panelnya.
             // Role tak dikenal: logout agar tidak terjadi loop redirect ke /login.
-            if (in_array(Auth::user()->role, ['admin', 'guru'], true)) {
+            if (in_array(Auth::user()->role, ['admin', 'guru', 'piket'], true)) {
                 return $this->redirectBasedOnRole(Auth::user());
             }
 
@@ -99,18 +111,11 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // Dukung input universal 'login' maupun legacy parameter ('nip' / 'email')
-        if (!$request->has('login') && $request->has('nip')) {
-            $request->merge(['login' => $request->input('nip')]);
-        } elseif (!$request->has('login') && $request->has('email')) {
-            $request->merge(['login' => $request->input('email')]);
-        }
-
-        $request->validate([
+                $request->validate([
             'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ], [
-            'login.required' => 'Username wajib diisi.',
+            'login.required' => 'Email wajib diisi.',
             'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
@@ -118,22 +123,16 @@ class AuthController extends Controller
         $password = (string) $request->input('password');
         $remember = $request->boolean('remember');
 
-        // 1. Cek apakah login menggunakan NIP Guru
-        $teacher = Teacher::where('nip', $loginInput)->first();
-        if ($teacher) {
-            $teacherUser = $this->resolveTeacherUser($teacher);
-            if ($teacherUser && $this->verifyTeacherPassword($teacherUser, $teacher, $password)) {
-                Auth::login($teacherUser, $remember);
-                $request->session()->regenerate();
-
-                return redirect()->intended(route('guru.dashboard'));
-            }
-        }
-
-        // 2. Cek apakah login menggunakan Email User lengkap
+        // 1. Cek apakah login menggunakan Email User lengkap (atau username pendek)
         if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
             $user = User::where('email', $loginInput)->first();
             if ($user && $this->verifyUserCredentials($user, $password)) {
+                if (!$user->isActive()) {
+                    return back()->withInput($request->only('login', 'remember'))->withErrors([
+                        'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                    ]);
+                }
+
                 Auth::login($user, $remember);
                 $request->session()->regenerate();
 
@@ -141,33 +140,45 @@ class AuthController extends Controller
             }
         }
 
-        // 3. Cek apakah login menggunakan Username pendek atau prefix alias email (misal: 'admin', 'guru')
-        //    Gunakan grouping where agar orWhere tidak "bocor" ke kondisi lain.
+        // 2. Cek apakah login menggunakan Username pendek (misal: 'admin', 'guru')
         //    Hanya query username jika kolom sudah ada di database.
-        // Prioritaskan pencocokan username persis, lalu email persis, lalu prefix email
         $user = null;
         if (Schema::hasColumn('users', 'username')) {
             $user = User::where('username', $loginInput)->first();
         }
         if (!$user) {
-            $user = User::where('email', $loginInput)->first();
-        }
-        if (!$user) {
+            // Prefix alias email: 'admin' -> 'admin@%'
             $user = User::where('email', 'like', $loginInput . '@%')->first();
         }
 
         if ($user && $this->verifyUserCredentials($user, $password)) {
+            if (!$user->isActive()) {
+                return back()->withInput($request->only('login', 'remember'))->withErrors([
+                    'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                ]);
+            }
+
             Auth::login($user, $remember);
             $request->session()->regenerate();
 
             return $this->redirectBasedOnRole($user);
         }
 
-        // 4. Standar Auth::attempt sebagai fallback terakhir
-        //    Deteksi field: email lengkap vs username pendek
+        // 3. Auth::attempt sebagai fallback terakhir (untuk username/email yang valid)
         $attemptField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         if (Schema::hasColumn('users', 'username') || $attemptField === 'email') {
             if (Auth::attempt([$attemptField => $loginInput, 'password' => $password], $remember)) {
+                // Pengecekan nonaktif juga berlaku di jalur fallback ini.
+                if (!Auth::user()->isActive()) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return back()->withInput($request->only('login', 'remember'))->withErrors([
+                        'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                    ]);
+                }
+
                 $request->session()->regenerate();
 
                 return $this->redirectBasedOnRole(Auth::user());
@@ -176,53 +187,8 @@ class AuthController extends Controller
 
         // Autentikasi Gagal
         return back()->withInput($request->only('login', 'remember'))->withErrors([
-            'login' => 'Username atau kata sandi yang Anda masukkan salah.',
+            'login' => 'Email atau kata sandi yang Anda masukkan salah.',
         ]);
-    }
-
-    /**
-     * Dapatkan atau sinkronkan akun User untuk Guru berdasarkan data Teacher.
-     */
-    protected function resolveTeacherUser(Teacher $teacher): ?User
-    {
-        if ($teacher->user_id) {
-            $user = User::find($teacher->user_id);
-            if ($user) {
-                if ($user->role !== 'guru') {
-                    $user->update(['role' => 'guru']);
-                }
-                return $user;
-            }
-        }
-
-        $userEmail = $teacher->nip . '@guru.smppresensipgri.sch.id';
-        $user = User::where('email', $userEmail)->first();
-
-        if (!$user) {
-            $user = User::create([
-                'name' => $teacher->name,
-                'email' => $userEmail,
-                'password' => Hash::make($teacher->nip),
-                'role' => 'guru',
-                'email_verified_at' => now(),
-            ]);
-        } else {
-            if ($user->role !== 'guru') {
-                $user->update(['role' => 'guru']);
-            }
-        }
-
-        $teacher->update(['user_id' => $user->id]);
-
-        return $user;
-    }
-
-    /**
-     * Verifikasi kata sandi akun Guru dengan enkripsi standar.
-     */
-    protected function verifyTeacherPassword(User $user, Teacher $teacher, string $password): bool
-    {
-        return Hash::check($password, $user->password);
     }
 
     /**
@@ -241,26 +207,13 @@ class AuthController extends Controller
         return match ($user->role) {
             'admin' => redirect()->intended(route('admin.dashboard')),
             'guru' => redirect()->intended(route('guru.dashboard')),
+            // Guru Piket langsung masuk ke halaman Presensi (scan QR) -
+            // tidak punya Dashboard dan aksesnya dibatasi Kehadiran+Presensi.
+            'piket' => redirect()->intended(route('piket.absensi.index')),
             default => redirect()->route('login')->withErrors([
                 'login' => 'Role pengguna tidak dikenali atau tidak memiliki hak akses.',
             ]),
         };
-    }
-
-    /**
-     * Kompatibilitas untuk legacy route /login/guru
-     */
-    public function loginGuru(Request $request)
-    {
-        return $this->login($request);
-    }
-
-    /**
-     * Kompatibilitas untuk legacy route /login/admin
-     */
-    public function loginAdmin(Request $request)
-    {
-        return $this->login($request);
     }
 
     /**

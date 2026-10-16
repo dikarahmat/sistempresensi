@@ -3,10 +3,8 @@
 namespace App\Imports;
 
 use App\Models\Teacher;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
@@ -74,25 +72,9 @@ class TeachersImport implements ToCollection, WithHeadingRow
             $address = trim((string) ($row['alamat'] ?? $row['address'] ?? ''));
 
             try {
-                $userEmail = $nip . '@guru.smppresensipgri.sch.id';
-                $user = User::where('email', $userEmail)->first();
-
-                if ($user) {
-                    // Jika user sudah terdaftar di database, cukup perbarui nama saja tanpa menimpa password
-                    $user->update([
-                        'name' => $name,
-                    ]);
-                } else {
-                    // Password default (NIP) hanya untuk akun guru yang baru dibuat
-                    $user = User::create([
-                        'name' => $name,
-                        'email' => $userEmail,
-                        'password' => Hash::make($nip),
-                        'role' => 'guru',
-                        'email_verified_at' => now(),
-                    ]);
-                }
-
+                // Hanya simpan data guru ke tabel teachers.
+                // Akun User tidak lagi dibuat otomatis melalui import —
+                // login hanya melalui email + password (lihat AuthController).
                 Teacher::updateOrCreate(
                     ['nip' => $nip],
                     [
@@ -102,7 +84,6 @@ class TeachersImport implements ToCollection, WithHeadingRow
                         'birth_date' => $birthDate ?: null,
                         'phone_number' => $phone ?: null,
                         'phone' => $phone ?: null,
-                        'user_id' => $user->id,
                     ]
                 );
 
