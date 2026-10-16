@@ -165,7 +165,7 @@ class AdminDashboardController extends Controller
 
             $monthlyHadirCounts = Attendance::whereBetween('date', [$bulanAwal->toDateString(), $bulanIni->copy()->endOfMonth()->toDateString()])
                 ->where('status', 'Hadir')
-                ->selectRaw("DATE_FORMAT(date, '%Y-%m') as ym, count(*) as total")
+                ->selectRaw("substr(date, 1, 7) as ym, count(*) as total")
                 ->groupBy('ym')
                 ->pluck('total', 'ym');
 
