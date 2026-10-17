@@ -2328,6 +2328,35 @@
             margin-bottom: 0 !important;
         }
 
+        /* --------------------------------------------------------------------------
+           RUANG NAPIS BAWAH LAYAR (MOBILE & TABLET) – ANTI-TERPOTONG NAVBAR BAWAH
+           --------------------------------------------------------------------------
+           Navbar bawah (`.mobile-bottom-nav`, tinggi 56px + safe-area inset) adalah
+           position:fixed di ujung bawah viewport dan menimpa konten halaman.
+           Untuk SEMUA halaman yang isinya berada di `.flex-1` (satu-satunya area
+           scroll vertikal: Dashboard, Kehadiran, Rekap, Data Siswa/Guru/Kelas,
+           Pengaturan, serta seluruh halaman lain yang memakai layouts.app),
+           elemen paling bawah (tombol aksi, pagination angka 1-5, teks terakhir)
+           tidak boleh tertutup navbar saat pengguna discroll ke mentok.
+
+           padding-bottom wrapper scroll diatur MELEBIHI tinggi navbar bawah:
+           calc(var(--bottom-nav-height) + 3.5rem + env(safe-area-inset-bottom, 0px))
+           = 56px + 56px + safe-area = 112px + safe-area (setara pb-28 Tailwind),
+           yakni lebih besar dari tinggi navbar (56px + safe-area) dengan selang
+           nyaman, sehingga saat scroll mentok elemen terakhir tetap terlihat utuh
+           di atas navbar dengan ruang kosong yang cukup besar.
+           Selector diawali `body` agar spesifikitas lebih tinggi dari aturan
+           global `.content-scroll-wrapper > main > .flex-1 { padding-bottom: 1rem
+           !important }` di blok "JARAK BAWAH KONTEN SERAGAM" di atas.
+           Hanya berlaku <= 1023.98px (breakpoint di mana bottom navbar tampil);
+           desktop >= 1024px tidak tersentuh karena navbar bawah disembunyikan.
+        -------------------------------------------------------------------------- */
+        @media (max-width: 1023.98px) {
+            body .content-scroll-wrapper > main > .flex-1 {
+                padding-bottom: calc(var(--bottom-nav-height) + 3.5rem + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
+
         /* ==========================================================================
            TABEL DATA DI MOBILE (< 1024px) - SAMA PERSIS DENGAN DESKTOP
 
