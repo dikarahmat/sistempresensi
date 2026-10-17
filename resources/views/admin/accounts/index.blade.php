@@ -160,6 +160,15 @@
 
     /* Jarak aman dari bottom nav */
     #daftar-akun { margin-bottom: calc(var(--bottom-nav-height, 56px) + env(safe-area-inset-bottom, 0px) + .75rem) !important; }
+
+    /* KHUSUS HP (<= 640px): ruang bawah sudah ditangani SATU sumber oleh
+       layout (padding-bottom wrapper = tinggi nav + safe area, lalu padding
+       .flex-1 1rem sebagai ruang napas). Margin besar di atas membuat celah
+       kosong berlebih, jadi dinolkan. Tablet (641-1023) & desktop (>=1024)
+       TIDAK disentuh — nilainya tetap seperti semula. */
+    @media (max-width: 640px) {
+        #daftar-akun { margin-bottom: 0 !important; }
+    }
 </style>
 @endpush
 

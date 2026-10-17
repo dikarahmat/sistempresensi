@@ -1712,18 +1712,29 @@
         border-bottom-right-radius: 0 !important;
         box-shadow: none !important;
     }
-    /* Spacer ekor scroll: tepat 3rem, berlaku untuk SEMUA halaman admin. */
+    /* Ekor scroll DINETRALKAN. Spacer 3rem ini bukan obat akar masalah: saat
+       konten lebih tinggi dari layar, .flex-1 MENYUSUT (dulu flex-shrink:1)
+       sehingga kontennya meluber melewati kotak padding <main> dan menelan
+       spacer ini -> terukur gap bawah = 0px. Perbaikannya ada di aturan
+       .flex-1 tepat di bawah (berhenti menyusut); ruang napas bawah kini
+       murni dari padding-bottom 1rem .flex-1 (blok "JARAK BAWAH KONTEN
+       SERAGAM" di layouts/app.blade.php), jadi spacer tidak dobel. */
     body .content-scroll-wrapper > main::after {
         content: "";
         display: block;
         flex: none;
-        height: 3rem;
+        height: 0;
     }
 
     /* .flex-1 tidak lagi scroll sendiri (scroll utama kini di <main>) —
-       mencegah dua scrollbar bersarang / scroll ganda. */
+       mencegah dua scrollbar bersarang / scroll ganda.
+       Nilai kedua pada `flex: 1 0 auto` = flex-shrink: 0, WAJIB: dulu
+       `flex: 1 1 auto` membuatnya menyusut sampai tinggi viewport sehingga
+       ekor konten meluber menutupi ruang bawah (gap 0px). Dengan shrink 0,
+       tinggi .flex-1 = tinggi kontennya, sehingga elemen terakhir berhenti
+       ~1rem di atas bottom nav (navbar tetap di atas area aman). */
     body .content-scroll-wrapper > main > .flex-1 {
-        flex: 1 1 auto !important;
+        flex: 1 0 auto !important;
         min-height: 0 !important;
         overflow: visible !important;
     }
