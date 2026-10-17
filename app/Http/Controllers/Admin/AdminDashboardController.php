@@ -91,16 +91,9 @@ class AdminDashboardController extends Controller
         $countAlfa  = $attendancesToday->filter(fn($a) => in_array($a->status, ['Alfa', 'Alpha']))->count();
         $totalKetidakhadiran = $countSakit + $countIzin + $countAlfa;
 
-        // 3. Grafik Kehadiran - 3 MODE: harian / mingguan / bulanan
-        //
-        // Default = 'mingguan' karena itu tampilan yang sudah ada sebelumnya,
-        // sehingga user tidak melihat perubahan mendadak saat membuka dashboard.
-        $chartMode = (string) $request->query('mode', 'mingguan');
-        if (! in_array($chartMode, ['harian', 'mingguan', 'bulanan'], true)) {
-            $chartMode = 'mingguan';
-        }
-
-        // --- 3a. MODE MINGGUAN (TIDAK DIUBAH: per-rombel, sama seperti sebelumnya)
+        // 3. REKAP MINGGUAN PER ROMBEL - data pendukung dashboard. Tetap
+        //    dihitung agar variabel $classesAttendance tidak hilang dari data
+        //    view (dipakai test regresi & bisa dipakai dashboard berikutnya).
         $effectiveDays = Attendance::whereBetween('date', [$startOfWeek, $endOfWeek])
             ->distinct('date')
             ->count('date');
@@ -118,7 +111,7 @@ class AdminDashboardController extends Controller
             $weeklyHadir = (int) ($weeklyHadirCounts->get($cls->id) ?? 0);
             $totalCapacity = ($cls->total_students ?? 0) * $effectiveDays;
 
-            $cls->percentage = $totalCapacity > 0 
+            $cls->percentage = $totalCapacity > 0
                 ? min(100, round(($weeklyHadir / $totalCapacity) * 100))
                 : 0;
             $cls->weekly_hadir = $weeklyHadir;
@@ -126,6 +119,11 @@ class AdminDashboardController extends Controller
 
             return $cls;
         });
+
+        $chartMode = (string) $request->query('mode', 'mingguan');
+        if (! in_array($chartMode, ['harian', 'mingguan', 'bulanan'], true)) {
+            $chartMode = 'mingguan';
+        }
 
         // --- 3b. MODE HARIAN: satu titik per hari dalam minggu terpilih
         // Kapasitas memakai jumlah siswa aktif di seluruh rombel * jumlah hari efektif,
