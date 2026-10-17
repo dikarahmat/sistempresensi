@@ -249,56 +249,47 @@
     .btn-solid-blue { background-color: #2563eb; }
     .btn-solid-red { background-color: #dc2626; }
 
-    /* Row Action Buttons */
+    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.3rem;
         border: none;
-        border-radius: var(--clean-radius) !important;
-        padding: 0.32rem 0.7rem;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #ffffff;
-        white-space: nowrap;
-        transition: filter 0.15s ease;
-        box-shadow: none !important;
-        letter-spacing: 0.03em;
-        font-family: 'Poppins', 'Roboto', sans-serif;
-    }
-    /* Tombol ikon di kolom AKSI: ukuran seragam 40x34px, ikon di tengah, rounded 10px */
-    .btn-row-action {
-        width: 40px;
-        height: 34px;
-        padding: 0;
+        background: transparent !important;
+        border-radius: 0 !important;
+        padding: 0.2rem;
         font-size: 16px;
-        border-radius: 10px !important;
+        color: inherit;
+        white-space: nowrap;
+        transition: color 0.15s ease, opacity 0.15s ease;
+        box-shadow: none !important;
+        cursor: pointer;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-row-action svg {
         display: block;
-        margin: 0;
-        padding: 0;
         width: 20px;
         height: 20px;
     }
     @media (max-width: 767.98px) {
-        .btn-row-action {
-            width: 36px;
-            height: 32px;
-        }
         .btn-row-action svg {
             width: 18px;
             height: 18px;
         }
     }
     .btn-row-action:hover {
-        filter: brightness(0.94);
-        color: #ffffff;
+        opacity: 0.8;
     }
-    .btn-row-action.action-detail { background-color: #16a34a; }
-    .btn-row-action.action-edit { background-color: #f59e0b; }
-    .btn-row-action.action-delete { background-color: #dc2626; }
+    .btn-row-action:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+    .btn-row-action.action-detail { color: #16a34a; }      /* hijau */
+    .btn-row-action.action-detail:hover { color: #15803d; }
+    .btn-row-action.action-edit { color: #f59e0b; }        /* kuning/oranye */
+    .btn-row-action.action-edit:hover { color: #d97706; }
+    .btn-row-action.action-delete { color: #dc2626; }      /* merah */
+    .btn-row-action.action-delete:hover { color: #b91c1c; }
 
     /* Search bar & dropdown filter */
     .search-input-wrap input.form-control,
@@ -559,7 +550,7 @@
                         <td data-label="Aksi" class="text-center">
                             <div class="crud-center-wrapper">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail" aria-label="Detail">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
                                 @if(Auth::check() && Auth::user()->role === 'admin')
                                 <a href="{{ panel_route('students.edit', $student->id) }}" class="btn-row-action action-edit" title="Edit" aria-label="Edit">

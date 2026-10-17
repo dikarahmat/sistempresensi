@@ -196,73 +196,78 @@
         }
     }
 
-    /* Action Buttons (QR Code + Teks Presensi & Tombol Lihat Lengkap) */
+    /* Action Buttons (QR Code + Teks Presensi & Tombol Lihat Lengkap) - Pure Icon */
     .btn-action-presensi,
     .btn-action-absensi {
-        background-color: #2563eb;
-        color: #ffffff !important;
+        background: transparent !important;
+        border: none;
+        border-radius: 0 !important;
+        padding: 0.2rem;
         font-size: 0.8rem;
         font-weight: 500;
-        padding: 0.42rem 0.85rem;
-        border-radius: var(--clean-radius);
+        color: #2563eb;
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        border: none;
         text-decoration: none;
         white-space: nowrap;
-        box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
-        transition: all 0.15s ease-in-out;
+        transition: color 0.15s ease, opacity 0.15s ease;
+        box-shadow: none !important;
+        cursor: pointer;
     }
     .btn-action-presensi:hover,
     .btn-action-absensi:hover {
-        background-color: #1d4ed8;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(37, 99, 235, 0.3);
+        color: #1d4ed8;
+        opacity: 0.85;
+        transform: none;
+        box-shadow: none !important;
+    }
+    .btn-action-presensi i,
+    .btn-action-absensi i {
+        font-size: 1.1rem;
     }
 
     .btn-action-lihat {
-        background-color: #3b82f6;
-        color: #ffffff !important;
+        background: transparent !important;
         border: none;
+        border-radius: 0 !important;
+        padding: 0.2rem;
         font-size: 0.8rem;
         font-weight: 500;
-        padding: 0.42rem 0.85rem;
-        border-radius: var(--clean-radius);
+        color: #16a34a;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0;
         text-decoration: none;
         white-space: nowrap;
-        transition: all 0.15s ease-in-out;
-        box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
+        transition: color 0.15s ease, opacity 0.15s ease;
+        box-shadow: none !important;
+        cursor: pointer;
     }
     .btn-action-lihat:hover {
-        background-color: #2563eb;
-        color: #ffffff !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(59, 130, 246, 0.3);
+        color: #15803d;
+        opacity: 0.85;
+        transform: none;
+        box-shadow: none !important;
     }
-    /* Tombol ikon di kolom AKSI: ukuran seragam 40x34px, ikon di tengah, rounded 10px */
+    /* Tombol ikon di kolom AKSI: pure icon, tanpa ukuran kotak */
     .btn-action-lihat {
-        width: 40px;
-        height: 34px;
-        padding: 0;
-        font-size: 16px;
-        border-radius: 10px;
+        width: auto;
+        height: auto;
+        padding: 0.2rem;
+        border-radius: 0 !important;
     }
     .btn-action-lihat svg {
         display: block;
-        margin: 0;
-        padding: 0;
         width: 20px;
         height: 20px;
     }
     @media (max-width: 767.98px) {
+        .btn-action-presensi,
+        .btn-action-absensi,
         .btn-action-lihat {
-            width: 36px;
-            height: 32px;
+            padding: 0.2rem;
         }
         .btn-action-lihat svg {
             width: 18px;
@@ -563,7 +568,7 @@
                         <td class="text-center fw-normal" style="color: #ef4444;">{{ $item->alfa }}</td>
                         <td class="text-center text-nowrap">
                             <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="Lihat" aria-label="Lihat">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                             </a>
                         </td>
                     </tr>

@@ -52,22 +52,21 @@
         .table-zebra-custom thead th { background-color: #ffffff !important; }
     }
 
-    /* ===== Ikon aksi (pensil & tong sampah) ===== */
+    /* ===== Ikon aksi (pensil & tong sampah) – PURE ICON, tanpa background box ===== */
     .btn-row-action {
         display: inline-flex; align-items: center; justify-content: center;
-        border: none; border-radius: 10px !important;
-        width: 40px; height: 34px; padding: 0;
-        color: #ffffff; transition: filter .15s ease;
+        border: none; border-radius: 0 !important;
+        width: auto; height: auto; padding: 0.2rem;
+        background: transparent !important;
+        color: inherit; transition: color .15s ease, opacity .15s ease;
     }
     .btn-row-action svg { display: block; width: 20px; height: 20px; }
-    .btn-row-action:hover { filter: brightness(0.94); color: #ffffff; }
-    .btn-row-action.action-edit { background-color: #f59e0b; }
-    .btn-row-action.action-delete { background-color: #dc2626; }
-    .btn-row-action.action-delete.is-disabled { opacity: .4; cursor: not-allowed; filter: none; }
-    @media (max-width: 767.98px) {
-        .btn-row-action { width: 40px; height: 40px; }
-        .btn-row-action svg { width: 20px; height: 20px; }
-    }
+    .btn-row-action.action-edit { color: #f59e0b; } /* pensil – kuning/oranye */
+    .btn-row-action.action-edit:hover { color: #d97706; }
+    .btn-row-action.action-delete { color: #dc2626; } /* tong sampah – merah */
+    .btn-row-action.action-delete:hover { color: #b91c1c; }
+    .btn-row-action.action-delete.is-disabled,
+    .btn-row-action.action-edit.is-disabled { opacity: .4; cursor: not-allowed; filter: none; }
 
     /* ===== Tombol Tambah ===== */
     .akun-btn-tambah {
@@ -106,21 +105,22 @@
         inset: 0;
         margin: auto;
         width: calc(100% - 32px);
-        max-width: 440px;
+        max-width: 420px;
         height: fit-content;
         max-height: calc(100dvh - 32px);
         overflow-y: auto;
         border: 0;
-        border-radius: 16px;
-        padding: 24px;
+        border-radius: 18px;
+        padding: 16px;
         box-shadow: 0 20px 50px rgba(0,0,0,.25);
         color: #0f172a;
     }
     dialog.acc-dialog::backdrop { background: rgba(15, 23, 42, .55); backdrop-filter: blur(2px); }
     /* dialog.acc-dialog sudah punya padding 24px, jadi isi hanya atur jarak vertikal. */
-    .akun-dialog-body { padding: 20px 0 0; }
+    .akun-dialog-body { padding: 12px 0 0; }
     .akun-dialog-head { padding: 0; }
-    .akun-dialog-footer { padding: 18px 0 0; display: flex; gap: 12px; justify-content: flex-end; }
+    .akun-dialog-footer { padding: 12px 0 0; display: flex; gap: 10px; justify-content: center; }
+    .akun-dialog-footer .btn { flex: 1 1 50%; width: 50%; height: 42px; min-height: 42px; }
     .akun-role-static { padding: 12px 14px; background-color: #f8fafc; border-radius: 10px; }
     .akun-role-static-value { font-size: .95rem; font-weight: 600; }
     .akun-role-static-note { display: block; font-size: .72rem; color: #64748b; margin-top: 2px; }
@@ -137,25 +137,19 @@
     .akun-password-toggle:focus-visible { outline: 2px solid #3b62f6; outline-offset: 2px; }
 
     /* ===== Hapus: checkbox + tombol ===== */
-    .hapus-check { display: flex; gap: .5rem; align-items: flex-start; margin-bottom: .5rem; font-size: .85rem; }
-    .hapus-icon { color: #dc2626; font-size: 2rem; line-height: 1; }
+    .hapus-check { display: flex; gap: .5rem; align-items: flex-start; margin-bottom: .35rem; font-size: .8rem; }
+    .hapus-icon { color: #dc2626; font-size: 1.5rem; line-height: 1; margin-bottom: 0.5rem; display: block; }
 
-    /* ===== Mobile: baris tabel bertumpuk ===== */
+    /* ===== Mobile: tabel tetap mendatar dengan scroll horizontal ===== */
     @media (max-width: 575.98px) {
-        #daftar-akun .table-responsive table,
-        #daftar-akun .table-responsive thead,
-        #daftar-akun .table-responsive tbody,
-        #daftar-akun .table-responsive tr,
-        #daftar-akun .table-responsive td { display: block; width: 100%; }
-        #daftar-akun .table-responsive thead { display: none; }
-        #daftar-akun .table-responsive tr { border-bottom: 1px solid #eef1f6; padding: .5rem 0; }
-        #daftar-akun .table-responsive td { border: none !important; padding: .25rem .75rem !important; text-align: left !important; }
-        #daftar-akun .table-responsive td[data-label]::before {
-            content: attr(data-label);
-            display: inline-block; min-width: 72px;
-            font-size: .72rem; font-weight: 600; color: #334155;
+        #daftar-akun .table-responsive {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
-        #daftar-akun .table-responsive td.col-aksi { text-align: right !important; }
+        /* Pastikan tabel lebar cukup agar ada yang bisa di-geser di layar sempit */
+        #daftar-akun .table-responsive table {
+            min-width: 620px;
+        }
     }
 
     /* Jarak aman dari bottom nav */
@@ -388,14 +382,13 @@
             @csrf
             @method('DELETE')
             <div class="akun-dialog-body">
-                <div class="d-flex align-items-start gap-3 mb-3">
+                <!-- Header: ikon di atas tengah, judul dan deskripsi rata tengah -->
+                <div class="text-center mb-2">
                     <i class='bx bx-error-circle hapus-icon'></i>
-                    <div>
-                        <h5 class="fw-bold mb-1">Hapus Akun Ini?</h5>
-                        <p class="mb-0 small text-secondary">
-                            Akun <strong id="hapusNama">-</strong> (<span id="hapusEmail">-</span>) akan dihapus permanen dan tidak dapat dipulihkan.
-                        </p>
-                    </div>
+                    <h5 class="fw-bold mb-1">Hapus Akun Ini?</h5>
+                    <p class="mb-0 small text-secondary">
+                        Akun <strong id="hapusNama">-</strong> (<span id="hapusEmail">-</span>) akan dihapus permanen dan tidak dapat dipulihkan.
+                    </p>
                 </div>
                 <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>Saya memahami akun ini dihapus permanen dan tidak dapat dipulihkan.</span></label>
                 <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>Saya yakin ingin menghapus akun ini.</span></label>

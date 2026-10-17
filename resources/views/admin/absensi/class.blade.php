@@ -97,7 +97,7 @@
         border-bottom: 1px solid #f1f5f9;
     }
 
-    /* Dropdown & Tombol Aksi */
+    /* Dropdown & Tombol Aksi (Pure Icon) */
     .select-quick-status {
         font-size: 0.8rem;
         font-weight: 600;
@@ -106,14 +106,20 @@
         border: 1px solid #cbd5e1;
         background-color: #ffffff;
         min-width: 95px;
+        height: 34px;
+        min-height: 34px;
     }
     .btn-save-quick {
         background-color: #2563eb;
         color: #ffffff;
         border: none;
         border-radius: var(--clean-radius);
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        min-height: 34px;
+        aspect-ratio: 1 / 1;
+        flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -121,6 +127,13 @@
     }
     .btn-save-quick:hover {
         background-color: #1d4ed8;
+    }
+    .btn-save-quick i {
+        font-size: 18px !important;      /* w-5 h-5 = 20px, setara ~18px proporsional */
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
     }
     .btn-edit-modal {
         background-color: #f8fafc;
@@ -591,7 +604,7 @@
 
                                         <!-- Tombol Simpan Cepat (Checklist) -->
                                         <button type="submit" class="btn-save-quick" title="Simpan Status">
-                                            <i class='bx bx-check fs-5'></i>
+                                            <i class='bx bx-check' style="font-size: 18px !important; width: 18px !important; height: 18px !important; color: #ffffff !important;"></i>
                                         </button>
                                     </form>
 

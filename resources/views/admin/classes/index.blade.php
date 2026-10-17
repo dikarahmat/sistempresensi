@@ -239,53 +239,45 @@
     .btn-solid-blue { background-color: #2563eb; }
     .btn-solid-red { background-color: #dc2626; }
 
-    /* Row Action Buttons (Edit/Hapus per baris): Bentuk & Radius SAMA dengan tombol atas */
+    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.3rem;
         border: none;
-        border-radius: var(--clean-radius) !important;
-        padding: 0.32rem 0.7rem;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #ffffff;
-        white-space: nowrap;
-        transition: filter 0.15s ease;
-        box-shadow: none !important;
-    }
-    /* Tombol ikon di kolom AKSI: ukuran seragam 40x34px, ikon di tengah, rounded 10px */
-    .btn-row-action {
-        width: 40px;
-        height: 34px;
-        padding: 0;
+        background: transparent !important;
+        border-radius: 0 !important;
+        padding: 0.2rem;
         font-size: 16px;
-        border-radius: 10px !important;
+        color: inherit;
+        white-space: nowrap;
+        transition: color 0.15s ease, opacity 0.15s ease;
+        box-shadow: none !important;
+        cursor: pointer;
+        font-family: 'Poppins', 'Roboto', sans-serif;
     }
     .btn-row-action svg {
         display: block;
-        margin: 0;
-        padding: 0;
         width: 20px;
         height: 20px;
     }
     @media (max-width: 767.98px) {
-        .btn-row-action {
-            width: 36px;
-            height: 32px;
-        }
         .btn-row-action svg {
             width: 18px;
             height: 18px;
         }
     }
     .btn-row-action:hover {
-        filter: brightness(0.94);
-        color: #ffffff;
+        opacity: 0.8;
     }
-    .btn-row-action.action-edit { background-color: #f59e0b; }
-    .btn-row-action.action-delete { background-color: #dc2626; }
+    .btn-row-action:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+    .btn-row-action.action-edit { color: #f59e0b; }        /* kuning/oranye */
+    .btn-row-action.action-edit:hover { color: #d97706; }
+    .btn-row-action.action-delete { color: #dc2626; }      /* merah */
+    .btn-row-action.action-delete:hover { color: #b91c1c; }
 
     /* Dropdown filter disamakan bentuknya (kotak sudut tumpul) */
     .filter-select-wrap select.form-select,

@@ -403,40 +403,51 @@
             text-align: center !important;
         }
         .btn-buka-kelas {
-            padding: 0.30rem 0.65rem !important;
-            font-size: 0.76rem !important;
-            border-radius: var(--clean-radius) !important;
+            padding: 0.2rem !important;
+            border-radius: 0 !important;
         }
     }
 
-    /* Tombol Buka Kelas (Tema Royal Blue Standar & Proporsional) */
+    /* Tombol Buka Kelas (Pure Icon - tanpa background box) */
     .btn-buka-kelas {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.35rem;
-        background-color: #3b62f6;
-        color: #ffffff !important;
-        border: 1px solid #3b62f6;
-        border-radius: var(--clean-radius);
-        padding: 0.32rem 0.75rem;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0.2rem;
+        color: #3b62f6;
         font-size: 0.80rem;
         font-weight: 600;
         text-decoration: none !important;
-        box-shadow: 0 1px 2px rgba(59, 98, 246, 0.2);
-        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: none !important;
+        transition: color 0.15s ease, opacity 0.15s ease;
         line-height: 1.25;
         white-space: nowrap;
+        cursor: pointer;
     }
     .btn-buka-kelas:hover {
-        background-color: #254fd9;
-        border-color: #254fd9;
-        color: #ffffff !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(59, 98, 246, 0.3);
+        color: #254fd9;
+        opacity: 0.85;
+        transform: none;
+        box-shadow: none !important;
     }
     .btn-buka-kelas:active {
-        transform: translateY(0);
+        transform: none;
+    }
+    .btn-buka-kelas i {
+        font-size: 22px !important;
+        font-weight: 400 !important;
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
         box-shadow: 0 1px 2px rgba(59, 98, 246, 0.2);
     }
 
@@ -872,7 +883,7 @@
                                 <td class="text-center align-middle col-td-aksi text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
                                         <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap" title="Buka Kelas" aria-label="Buka Kelas">
-                                            <i class='bx bx-door-open fs-6'></i>
+                                            <i class='bx bx-door-open' style="font-size: 22px !important; font-weight: 400 !important; width: 24px !important; height: 24px !important; min-width: 24px !important; min-height: 24px !important; display: inline-flex; align-items: center; justify-content: center; color: #3b62f6 !important;"></i>
                                         </a>
                                     </div>
                                 </td>
