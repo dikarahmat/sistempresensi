@@ -455,7 +455,7 @@
     @endif
 
     <!-- KARTU UTAMA DATA SISWA -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-siswa">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-siswa">
         
         <!-- Action Bar & Filter -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">

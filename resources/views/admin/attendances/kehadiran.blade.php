@@ -493,7 +493,7 @@
          Data Kelas. Tidak ada lagi kartu atau celah di antara
          search dan tabel.
          ========================================================== -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-kehadiran">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kehadiran">
 
         <!-- Action Bar & Filter: tinggi wrapper mengikuti isi (height:auto),
              search + tombol cari + dropdown dalam satu baris, tinggi 38px. -->

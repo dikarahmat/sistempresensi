@@ -1,4 +1,4 @@
-@php
+﻿@php
     $appName = \App\Models\Setting::getTitleAppName();
     // Nama sekolah: ambil dari Pengaturan (getSchoolName() / key school_name / nama_sekolah)
     $schoolName = null;
@@ -92,7 +92,6 @@
             pointer-events: none;
             overflow: hidden;
         }
-        /* garis kisi halus, memudar ke tepi */
         .deco-grid {
             position: absolute;
             inset: 0;
@@ -103,7 +102,6 @@
             -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 58%, #000 25%, transparent 75%);
             mask-image: radial-gradient(ellipse 70% 60% at 50% 58%, #000 25%, transparent 75%);
         }
-        /* bola cahaya besar di sudut */
         .deco-orb {
             position: absolute;
             border-radius: 50%;
@@ -183,7 +181,7 @@
             max-width: 100%;
             object-fit: contain;
             filter: drop-shadow(0 18px 28px rgba(10, 30, 120, .3));
-            transform: translateY(-25px); /* Geser gambar ke atas agar lebih proporsional dan tetap center */
+            transform: translateY(-25px);
         }
 
         .brand-bottom {
@@ -237,6 +235,9 @@
                 #fff;
         }
         .form-wrap { position: relative; z-index: 10; width: 100%; max-width: 460px; }
+
+        /* Blok khusus mobile: disembunyikan di desktop */
+        .card-brand { display: none; }
 
         .form-heading {
             font-size: clamp(1.9rem, 2.6vw, 2.7rem);
@@ -411,66 +412,211 @@
 
         .alert-login { border-radius: 12px; font-size: .85rem; font-weight: 600; padding: .65rem .9rem; margin-bottom: 1rem; }
 
-        /* ===================== MOBILE / TABLET ===================== */
+        /* ==========================================================
+           MOBILE / TABLET (< 992px)  -- SATU BLOK, SEMUA DI DALAMNYA
+           Kartu putih solid di atas background biru, tanpa scroll.
+        ========================================================== */
         @media (max-width: 991px) {
-            .login-screen { flex-direction: column; }
-            .brand-panel {
-                flex: none;
+            html, body {
+                margin: 0;
+                padding: 0;
                 width: 100%;
-                height: auto;
-                justify-content: center;
-                padding: calc(2.3rem + env(safe-area-inset-top, 0px)) 1.25rem 2.2rem;
+                height: 100%;
+                overflow: hidden;
+                overscroll-behavior: none;
+                background: linear-gradient(160deg, #4f74ff 0%, #3b62f6 48%, #1f44db 100%);
             }
-            .brand-mid { display: none; }
-            .deco { display: none; }
-            .brand-logo { width: 56px; height: 56px; }
-            .brand-title { font-size: clamp(1.05rem, 5vw, 1.25rem); margin: .55rem 0 .1rem; }
-            .brand-school { font-size: (.85rem, 3.8vw, 1rem); }
-            .brand-bottom { margin-top: 1.5rem; }
-            .dots-r {
-                display: block;
-                left: auto; right: 0;
-                -webkit-mask-image: radial-gradient(circle at 100% 0, #000 30%, transparent 72%);
-                mask-image: radial-gradient(circle at 100% 0, #000 30%, transparent 72%);
-            }
-            .swoosh-tr, .swoosh-br { display: block; transform: scaleX(-1); }
-            .swoosh-tr { top: -10px; left: auto; right: -10px; width: clamp(150px, 16vw, 260px); aspect-ratio: 170 / 220; }
-            .swoosh-br { bottom: -10px; left: auto; right: -10px; width: clamp(130px, 14vw, 230px); aspect-ratio: 150 / 170; }
-            .brand-icons { gap: 1.2rem; margin-bottom: .5rem; }
-            .feat-icon { font-size: 1.4rem; }
-            .brand-foot { font-size: .7rem; }
 
-            .wave-divider { display: none; }
-            .wave-mobile {
-                display: block;
+            .login-screen {
+                flex-direction: column;
                 position: relative;
-                z-index: 5;
-                height: var(--bar);
-                margin-top: 0;
-                pointer-events: none;
-                background: #4ade80;
+                width: 100%;
+                height: 100vh;
+                height: 100svh;
+                min-height: 0;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background: linear-gradient(160deg, #4f74ff 0%, #3b62f6 48%, #1f44db 100%);
             }
-            .wave-mobile::before { display: none; }
+
+            /* Panel biru lama, pemisah, dan semua hiasan: hilang di mobile */
+            .brand-panel,
+            .wave-divider,
+            .wave-mobile { display: none !important; }
 
             .form-panel {
+                position: relative;
+                z-index: 2;
                 flex: 1;
-                align-items: flex-start;
-                padding: 1.4rem 2.4rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
-                margin-top: -30px;
-                padding-top: calc(1.4rem + 30px);
+                height: 100%;
+                min-height: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1.75rem 2.25rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
+                background: transparent;
+                overflow: hidden;
             }
-            .form-wrap { max-width: 400px; }
-            .form-heading { font-size: 1.4rem; margin-bottom: .2rem; }
-            .form-subtext { font-size: .78rem; margin-bottom: .9rem; }
-            .form-group-item { margin-bottom: .75rem; }
-            .input-label-custom { font-size: .78rem; margin-bottom: .25rem; }
-            .input-box-wrapper { border-radius: 11px; padding: 0 .4rem; }
-            .input-icon-box { padding: .35rem .4rem; font-size: 1.05rem; }
-            .btn-toggle-eye { padding: .35rem .4rem; font-size: 1.05rem; }
-            .form-input-field { padding: .42rem .3rem; font-size: .82rem; }
-            .remember-label { font-size: .76rem; }
-            .row-extra { margin-bottom: .9rem; }
-            .btn-submit-action { min-height: 40px; padding: .55rem 1.25rem; font-size: .88rem; border-radius: 11px; }
+
+            /* ---------- KARTU PUTIH SOLID ---------- */
+            .form-wrap {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                background: #ffffff;
+                border-radius: 10px;
+                padding: 4.1rem 1.25rem 3.9rem;
+                border: 1px solid rgba(255, 255, 255, .6);
+                box-shadow: 0 24px 60px rgba(10, 30, 120, .35);
+            }
+
+            /* ---------- BLOK LOGO + JUDUL ---------- */
+            .card-brand {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: fit-content;
+                margin: 0 auto 2.25rem;
+            }
+            .card-brand-logo {
+                width: 72px;
+                height: 72px;
+                object-fit: contain;
+                margin-bottom: .9rem;
+                border-radius: 8px;
+                filter: drop-shadow(0 1px 2px rgba(5, 15, 90, .5));
+            }
+            .card-brand-title {
+                font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+                line-height: 1.15;
+                font-weight: 800;
+                letter-spacing: -.01em;
+                text-transform: uppercase;
+                color: #0f172a;
+                margin-bottom: .25rem;
+                white-space: nowrap;
+            }
+            .card-brand-school {
+                font-size: clamp(.85rem, 3.9vw, .98rem);
+                line-height: 1.15;
+                font-weight: 800;
+                letter-spacing: -.01em;
+                text-transform: uppercase;
+                color: #0f172a;
+                margin-top: .15rem;
+                white-space: nowrap;
+            }
+
+            .form-heading, .form-subtext { display: none; }
+
+            /* ---------- FIELD ---------- */
+            .form-group-item { margin-bottom: 1rem; }
+            .input-label-custom {
+                font-size: .8rem;
+                font-weight: 700;
+                color: #0f172a;
+                margin-bottom: .3rem;
+            }
+            .input-box-wrapper {
+                border-radius: 10px;
+                padding: 0 .6rem;
+                min-height: 54px;
+                background: #f8fafc;
+                border: 1.5px solid #e2e8f0;
+                box-shadow: none;
+            }
+            .input-box-wrapper:focus-within {
+                border-color: #3b5bf5;
+                box-shadow: 0 0 0 3px rgba(59, 91, 245, .15);
+                background: #ffffff;
+            }
+            .input-icon-box { padding: .5rem .6rem; font-size: 1.2rem; color: #94a3b8; }
+            .btn-toggle-eye { padding: .5rem .6rem; font-size: 1.2rem; color: #94a3b8; }
+            .input-box-wrapper:focus-within .input-icon-box,
+            .input-box-wrapper:focus-within .btn-toggle-eye { color: #3b5bf5; }
+
+            .form-input-field {
+                padding: .85rem .4rem;
+                font-size: 16px; /* anti-zoom iOS */
+                font-weight: 500;
+            }
+
+            /* ---------- INGAT SAYA ---------- */
+            .row-extra { margin-top: .7rem; margin-bottom: 1.25rem; gap: .5rem; }
+            .remember-label { font-size: .8rem; color: #334155; }
+            .remember-checkbox {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 22px;
+                height: 22px;
+                border-radius: 5px;
+                border: 1.5px solid #d1d5db;
+                background: #ffffff;
+                cursor: pointer;
+            }
+            .remember-checkbox:checked {
+                background-color: #3b5bf5;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+                background-size: 16px 16px;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+            .remember-checkbox:focus-visible {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(59, 91, 245, .3);
+            }
+
+            /* ---------- TOMBOL ---------- */
+            .btn-submit-action {
+                min-height: 54px;
+                padding: .85rem 1.25rem;
+                border-radius: 10px;
+                background: #3b5bf5;
+                color: #ffffff;
+                box-shadow: 0 10px 24px rgba(59, 91, 245, .35);
+            }
+            .btn-submit-action:hover { background: #2f4ce0; }
+            .btn-submit-action:active { transform: translateY(1px) scale(.985); }
+
+            .alert-login {
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                color: #991b1b;
+                border-radius: 10px;
+            }
+        }
+
+        /* Tablet (576-991px) */
+        @media (min-width: 576px) and (max-width: 991px) {
+            .form-panel { padding-left: 1.25rem; padding-right: 1.25rem; }
+            .form-wrap { width: 86%; max-width: 540px; }
+        }
+
+        /* Layar sempit sekali */
+        @media (max-width: 340px) {
+            .form-panel { padding-left: 1.25rem; padding-right: 1.25rem; }
+        }
+
+        /* Layar pendek: padatkan agar kartu tetap utuh tanpa scroll */
+        @media (max-width: 991px) and (max-height: 700px) {
+            .form-wrap { padding: 1.5rem 1.1rem 1.4rem; }
+            .card-brand { margin-bottom: 1rem; }
+            .card-brand-logo { width: 56px; height: 56px; margin-bottom: .6rem; }
+            .card-brand-title { margin-bottom: .2rem; }
+            .form-group-item { margin-bottom: .65rem; }
+            .input-box-wrapper { min-height: 46px; }
+            .btn-submit-action { min-height: 46px; padding: .7rem 1rem; }
+            .row-extra { margin-top: .5rem; margin-bottom: .9rem; }
+            .alert-login { padding: .55rem .8rem; margin-bottom: .75rem; }
+        }
+        @media (max-width: 991px) and (max-height: 600px) {
+            .form-wrap { padding: 1.25rem 1rem 1.2rem; }
+            .card-brand-logo { width: 48px; height: 48px; margin-bottom: .4rem; }
+            .form-group-item { margin-bottom: .5rem; }
+            .input-box-wrapper { min-height: 44px; }
+            .btn-submit-action { min-height: 44px; padding: .65rem 1rem; }
         }
     </style>
 </head>
@@ -551,12 +697,19 @@
     {{-- ================= PEMISAH HIJAU LURUS (DESKTOP) ================= --}}
     <div class="wave-divider" aria-hidden="true"></div>
 
-    {{-- ================= PEMISAH HIJAU LURUS (MOBILE) ================= --}}
+    {{-- ================= PEMISAH (MOBILE, disembunyikan) ================= --}}
     <div class="wave-mobile" aria-hidden="true"></div>
 
     {{-- ================= PANEL KANAN ================= --}}
     <section class="form-panel">
         <div class="form-wrap">
+            {{-- Blok card-brand: hanya tampil di mobile (< 992px) --}}
+            <div class="card-brand" aria-hidden="true">
+                <img class="card-brand-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo">
+                <div class="card-brand-title">{{ $appName }}</div>
+                <div class="card-brand-school">{{ $schoolName }}</div>
+            </div>
+
             <h2 class="form-heading">{{ __('Masuk Akun') }}</h2>
             <p class="form-subtext">{{ __('Silakan masuk untuk melanjutkan ke sistem presensi.') }}</p>
 

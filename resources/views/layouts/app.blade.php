@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -158,6 +158,7 @@
             --text-dark: #1e293b;
             --bg-canvas: #3b62f6;
             --bottom-nav-height: 56px;
+            --bottom-nav-h: 56px; /* Alias untuk konsistensi naming */
 
             /* ===== TOKEN UKURAN TOMBOL AKSI TOOLBAR (standar seragam) =====
                Dipakai bersama oleh halaman Data Siswa, Data Guru, Data Kelas,
@@ -521,6 +522,13 @@
             margin: 0 auto !important;
         }
 
+        @media (max-width: 767.98px) {
+            .pagination-arrow-container {
+                padding-top: 0.75rem !important;  /* ~12px from table */
+                padding-bottom: 0.5rem !important; /* minimal, container handles bottom nav spacing */
+            }
+        }
+
         .pagination-arrow-bar {
             display: inline-flex !important;
             align-items: center !important;
@@ -798,8 +806,8 @@
             right: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px)) !important;
-            min-height: var(--bottom-nav-height) !important;
+            height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+            min-height: var(--bottom-nav-h) !important;
             margin: 0 !important;
             padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px) !important;
             background-color: #ffffff !important;
@@ -826,7 +834,7 @@
         .mobile-nav-grid {
             display: grid !important;
             grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-            height: var(--bottom-nav-height) !important;
+            height: var(--bottom-nav-h) !important;
             width: 100% !important;
             max-width: 600px !important;
             margin: 0 auto !important;
@@ -1030,9 +1038,9 @@
                 margin: 0 !important;
                 /* padding-top sengaja 0: header sticky yang memegang area notch/status bar,
                    supaya tidak ada celah putih yang bisa "bocor" di atas header.
-                   padding-bottom: tinggi bottom nav (56px) + ruang napas 2.5rem (40px) + safe area inset
+                   padding-bottom: tinggi bottom nav (--bottom-nav-h) + ruang napas 1rem (16px) + safe area inset
                    supaya tombol paling bawah (Detail Siswa, Pengaturan, dll.) tidak terpotong saat di-scroll mentok. */
-                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-height) + 2.5rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
+                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-h) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
             }
 
             body {
@@ -1223,14 +1231,6 @@
                 border-radius: 1rem !important;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
                 margin: 0 !important;
-            }
-
-            @media (max-width: 1023.98px) {
-                main,
-                .content-scroll-wrapper > main,
-                main.w-full {
-                    padding-bottom: calc(var(--bottom-nav-height) + 2.5rem + env(safe-area-inset-bottom, 0px)) !important;
-                }
             }
         }
 
@@ -2643,67 +2643,6 @@
         }
 
         /* --------------------------------------------------------------------------
-           JARAK BAWAH KONTEN SERAGAM (SUMBER BERSAMA)
-
-           Nilai diambil dari halaman PRESENSI sebagai acuan: wrapper-nya
-           memakai `pb-4` (= 1rem / 16px) sebagai jarak bawah. Dashboard,
-           Kehadiran, Rekap, dan Pengaturan sebelumnya memakai `mb-4`
-           (= 1.5rem / 24px) pada elemen terakhir, sehingga jaraknya 8px
-           lebih besar dari Presensi dan antar halaman tidak seragam.
-
-           Diperbaiki DI SATU kontainer layout bersama - bukan per halaman:
-             - kontainer konten (`.flex-1` di dalam <main>) diberi
-               padding-bottom 1rem, sama persis dengan `pb-4` di Presensi;
-             - margin bawah elemen TERAKHIR dinolkan supaya tidak menambah
-               jarak ganda (termasuk tombol SIMPAN di Pengaturan, yang
-               sebelumnya memakai `mb-4`).
-
-           Tidak menambah scrollbar baru: padding-bottom ini menggantikan
-           margin yang dihapus, jadi total tinggi konten di halaman pendek
-           justru tidak bertambah.
-        -------------------------------------------------------------------------- */
-        .content-scroll-wrapper > main > .flex-1 {
-            padding-bottom: 1rem !important;
-        }
-
-        /* `:not(dialog)` WAJIB: <dialog> memakai `margin: auto` + `inset: 0`
-           untuk memusatkan diri (lihat dialog.acc-dialog). Bila dialog kebetulan
-           jadi anak terakhir .flex-1 (mis. modal Hapus Akun), margin-bottom:0
-           akan mematikan pemusatan itu dan dialog jatuh ke bawah layar. */
-        .content-scroll-wrapper > main > .flex-1 > *:last-child:not(dialog) {
-            margin-bottom: 0 !important;
-        }
-
-        /* --------------------------------------------------------------------------
-           RUANG NAPIS BAWAH LAYAR (MOBILE & TABLET) ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ ANTI-TERPOTONG NAVBAR BAWAH
-           --------------------------------------------------------------------------
-           Navbar bawah (`.mobile-bottom-nav`, tinggi 56px + safe-area inset) adalah
-           position:fixed di ujung bawah viewport dan menimpa konten halaman.
-           Untuk SEMUA halaman yang isinya berada di `.flex-1` (satu-satunya area
-           scroll vertikal: Dashboard, Kehadiran, Rekap, Data Siswa/Guru/Kelas,
-           Pengaturan, serta seluruh halaman lain yang memakai layouts.app),
-           elemen paling bawah (tombol aksi, pagination angka 1-5, teks terakhir)
-           tidak boleh tertutup navbar saat pengguna discroll ke mentok.
-
-           padding-bottom wrapper scroll diatur MELEBIHI tinggi navbar bawah:
-           calc(var(--bottom-nav-height) + 3.5rem + env(safe-area-inset-bottom, 0px))
-           = 56px + 56px + safe-area = 112px + safe-area (setara pb-28 Tailwind),
-           yakni lebih besar dari tinggi navbar (56px + safe-area) dengan selang
-           nyaman, sehingga saat scroll mentok elemen terakhir tetap terlihat utuh
-           di atas navbar dengan ruang kosong yang cukup besar.
-           Selector diawali `body` agar spesifikitas lebih tinggi dari aturan
-           global `.content-scroll-wrapper > main > .flex-1 { padding-bottom: 1rem
-           !important }` di blok "JARAK BAWAH KONTEN SERAGAM" di atas.
-           Hanya berlaku <= 1023.98px (breakpoint di mana bottom navbar tampil);
-           desktop >= 1024px tidak tersentuh karena navbar bawah disembunyikan.
-        -------------------------------------------------------------------------- */
-        @media (max-width: 1023.98px) {
-            body .content-scroll-wrapper > main > .flex-1 {
-                padding-bottom: calc(var(--bottom-nav-height) + 3.5rem + env(safe-area-inset-bottom, 0px)) !important;
-            }
-        }
-
-        /* ==========================================================================
            TABEL DATA DI MOBILE (< 1024px) - SAMA PERSIS DENGAN DESKTOP
 
            Sebelumnya tabel di bawah 1024px diubah menjadi KARTU BERTUMPUK:
@@ -3401,6 +3340,21 @@
             font-size: 0.85rem;
             color: #64748b;
             letter-spacing: 0.02em;
+        }
+
+        /* Mobile pagination spacing: tabel ke pagination ~12px, pagination ke info ~8px,
+           tidak ada padding-bottom ekstra setelah info (jarak ke navbar diatur container). */
+        @media (max-width: 767.98px) {
+            .kehadiran-pagination {
+                padding: 0.75rem 0.5rem 0.5rem !important;
+            }
+            .kehadiran-pagination-list {
+                margin: 0 0 0.5rem !important;
+            }
+            .kehadiran-pagination-info {
+                margin: 0 !important;
+                padding-bottom: 0 !important;
+            }
         }
 
         /* --------------------------------------------------------------------------

@@ -382,7 +382,7 @@
     <!-- KARTU UTAMA DATA GURU: CLEAN ACTION BAR & TABEL TERPADU      -->
     <!-- (Layout & container disamakan persis dengan Data Siswa)                  -->
     <!-- ========================================================================= -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-guru">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-guru">
 
         <!-- Action Bar & Search (Stretch Memanjang, Tombol Radius Konsisten).
              p-3 (16px) = patokan inset toolbar Data Siswa/Kelas/Catatan Kehadiran. -->

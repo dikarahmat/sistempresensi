@@ -576,7 +576,7 @@
     @endif
 
     <!-- TABEL UTAMA -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" id="daftar-rekap">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">

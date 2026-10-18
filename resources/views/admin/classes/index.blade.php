@@ -408,7 +408,7 @@
     <!-- KARTU UTAMA MASTER DATA KELAS: CLEAN ACTION BAR & TABEL TERPADU           -->
     <!-- (Layout & container disamakan persis dengan Data Guru & Data Siswa)      -->
     <!-- ========================================================================= -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white" id="daftar-kelas">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kelas">
 
         <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">

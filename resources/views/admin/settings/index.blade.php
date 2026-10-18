@@ -124,9 +124,6 @@
 
     /* ===== Optimalisasi Mobile (< 768px): Clean Look — desktop tidak tersentuh ===== */
     @media (max-width: 767.98px) {
-        .settings-mobile-form {
-            padding-bottom: 1rem;
-        }
         .section-header {
             gap: 0.6rem;
             margin-bottom: 1rem;
@@ -524,7 +521,7 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end mb-4">
+        <div class="d-flex justify-content-end md:mb-4">
             <!-- Tombol SIMPAN: teks saja (tanpa ikon), desktop & mobile. -->
             <button type="submit" class="btn btn-primary btn-sm w-100 w-md-auto px-4 py-2 rounded-3 fw-semibold shadow-xs d-inline-flex align-items-center justify-content-center">
                 {{ __('Simpan Semua Pengaturan') }}
