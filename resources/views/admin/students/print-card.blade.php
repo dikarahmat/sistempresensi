@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Presensi Siswa - {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
+    <title>{{ __('Kartu Presensi Siswa') }} - {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
 
     <style>
         /* Standar Dimensi Kartu CR80 (53,98 mm x 85,6 mm / KTP) */
@@ -153,22 +153,22 @@
             <tr>
                 <td style="vertical-align: middle;">
                     <div style="font-size: 15px; font-weight: bold; color: #0f172a;">
-                        Pratinjau Kartu Siswa
+                        {{ __('Pratinjau Kartu Siswa') }}
                     </div>
                     <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                        Ukuran Fisik CR80 (54 &times; 85,6 mm / KTP)
+                        {{ __('Ukuran Fisik CR80 (54 × 85,6 mm / KTP)') }}
                     </div>
                 </td>
                 <td style="vertical-align: middle; text-align: right;">
                     <button type="button" 
                             onclick="if(window.history.length > 1) { window.history.back(); } else { window.close(); }" 
                             class="btn-action btn-back">
-                        Kembali
+                        {{ __('Kembali') }}
                     </button>
                     <button type="button" 
                             onclick="window.print()" 
                             class="btn-action btn-print">
-                        Cetak Kartu
+                        {{ __('Cetak Kartu') }}
                     </button>
                 </td>
             </tr>

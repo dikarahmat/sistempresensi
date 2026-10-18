@@ -54,13 +54,13 @@ class HolidayController extends Controller
             // 1) Semua baris berhasil -> notifikasi hijau (sukses)
             if ($imported > 0 && $skipped === 0) {
                 return redirect()->route('admin.holidays.index')
-                    ->with('success', "Import berhasil: {$imported} hari libur diimpor.");
+                    ->with('success', __('Import berhasil: :imported hari libur diimpor.', ['imported' => $imported]));
             }
 
             // 2) Sebagian berhasil -> notifikasi kuning (peringatan)
             if ($imported > 0) {
                 return redirect()->route('admin.holidays.index')
-                    ->with('warning', "Import sebagian berhasil: {$imported} diimpor, {$skipped} dilewati.")
+                    ->with('warning', __('Import sebagian berhasil: :imported diimpor, :skipped dilewati.', ['imported' => $imported, 'skipped' => $skipped]))
                     ->with('import_errors', $errors);
             }
 
@@ -70,12 +70,12 @@ class HolidayController extends Controller
                 : 'File tidak memiliki baris data.';
 
             return redirect()->route('admin.holidays.index')
-                ->with('error', "Import gagal: tidak ada data yang diimpor. {$reason} Periksa format file Excel.")
+                ->with('error', __('Import gagal: tidak ada data yang diimpor. :reason Periksa format file Excel.', ['reason' => $reason]))
                 ->with('import_errors', $errors);
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.holidays.index')
-                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -123,7 +123,7 @@ class HolidayController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.holidays.index')->with('success', 'Hari libur berhasil ditambahkan!');
+        return redirect()->route('admin.holidays.index')->with('success', __('Hari libur berhasil ditambahkan!'));
     }
 
     public function update(Request $request, Holiday $holiday): RedirectResponse
@@ -170,7 +170,7 @@ class HolidayController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.holidays.index')->with('success', 'Hari libur berhasil diperbarui!');
+        return redirect()->route('admin.holidays.index')->with('success', __('Hari libur berhasil diperbarui!'));
     }
 
     public function destroy(Holiday $holiday): RedirectResponse
@@ -178,6 +178,6 @@ class HolidayController extends Controller
         $holiday->delete();
         // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
         // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
-        return redirect()->route('admin.holidays.index')->with('deleted', 'Hari libur berhasil dihapus!');
+        return redirect()->route('admin.holidays.index')->with('deleted', __('Hari libur berhasil dihapus!'));
     }
 }

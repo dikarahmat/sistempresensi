@@ -64,11 +64,11 @@ class StudentController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.students.index')
-                ->with('error', 'Gagal menyimpan data siswa. Coba lagi.');
+                ->with('error', __('Gagal menyimpan data siswa. Coba lagi.'));
         }
 
         return redirect()->route('admin.students.index')
-            ->with('success', "Siswa {$student->name} berhasil ditambahkan.");
+            ->with('success', __('Siswa :name berhasil ditambahkan.', ['name' => $student->name]));
     }
 
     public function show(Student $student): View
@@ -96,11 +96,11 @@ class StudentController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.students.edit', $student->id)
-                ->with('error', 'Gagal menyimpan data siswa. Coba lagi.');
+                ->with('error', __('Gagal menyimpan data siswa. Coba lagi.'));
         }
 
         return redirect()->route('admin.students.show', $student->id)
-            ->with('success', "Siswa {$student->name} berhasil diperbarui.");
+            ->with('success', __('Siswa :name berhasil diperbarui.', ['name' => $student->name]));
     }
 
     /**
@@ -210,7 +210,7 @@ class StudentController extends Controller
         });
 
         if ($students->isEmpty()) {
-            return back()->with('error', 'Tidak ada data siswa yang dipilih atau ditemukan untuk dicetak.');
+            return back()->with('error', __('Tidak ada data siswa yang dipilih atau ditemukan untuk dicetak.'));
         }
 
         if ($request->isMethod('get') && !$request->has('download')) {
@@ -328,7 +328,7 @@ class StudentController extends Controller
             // 3. Tidak ada yang masuk   -> merah
             if ($count > 0 && $skipped === 0) {
                 $redirect = redirect()->route('admin.students.index')
-                    ->with('success', "Import berhasil: {$count} siswa diimpor.");
+                    ->with('success', __('Import berhasil: :count siswa diimpor.', ['count' => $count]));
             } elseif ($count > 0) {
                 $msg = "Import sebagian berhasil: {$count} diimpor, {$skipped} dilewati.";
                 if (!empty($errors)) {
@@ -337,7 +337,7 @@ class StudentController extends Controller
                 $redirect = redirect()->route('admin.students.index')->with('warning', $msg);
             } else {
                 $redirect = redirect()->route('admin.students.index')
-                    ->with('error', "Import gagal: tidak ada data yang diimpor. {$skipped} baris dilewati karena format tidak sesuai. Periksa format file Excel.");
+                    ->with('error', __('Import gagal: tidak ada data yang diimpor. :skipped baris dilewati karena format tidak sesuai. Periksa format file Excel.', ['skipped' => $skipped]));
             }
 
             if (!empty($errors)) {
@@ -348,7 +348,7 @@ class StudentController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.students.index')
-                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -387,7 +387,7 @@ class StudentController extends Controller
         // Notifikasi hapus memakai flash 'deleted' (alert-danger/merah + ikon
         // tempat sampah), bukan 'success' (hijau) - hijau untuk tambah/ubah.
         return $this->backToStudentIndex(
-            "Data siswa {$studentName} berhasil dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.",
+            __('Data siswa :name berhasil dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.', ['name' => $studentName]),
             'deleted'
         );
     }
@@ -449,12 +449,12 @@ class StudentController extends Controller
             // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil
             // MERAH (alert-danger) + ikon tempat sampah, bukan hijau.
             return redirect()->route('admin.students.trash')
-                ->with('deleted', "Berhasil menghapus permanen {$total} siswa di Tempat Sampah.");
+                ->with('deleted', __('Berhasil menghapus permanen :total siswa di Tempat Sampah.', ['total' => $total]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.students.trash')
-                ->with('error', 'Gagal menghapus semua data siswa di Tempat Sampah. Coba lagi.');
+                ->with('error', __('Gagal menghapus semua data siswa di Tempat Sampah. Coba lagi.'));
         }
     }
 
@@ -538,7 +538,7 @@ class StudentController extends Controller
         $student->restore();
 
         return redirect()->route('admin.students.trash')
-            ->with('success', "Data siswa {$student->name} berhasil dipulihkan!");
+            ->with('success', __('Data siswa :name berhasil dipulihkan!', ['name' => $student->name]));
     }
 
     /**
@@ -563,12 +563,12 @@ class StudentController extends Controller
             // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil
             // MERAH (alert-danger) + ikon tempat sampah, bukan hijau.
             return redirect()->route('admin.students.trash')
-                ->with('deleted', "Data siswa {$studentName} berhasil dihapus permanen!");
+                ->with('deleted', __('Data siswa :name berhasil dihapus permanen!', ['name' => $studentName]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.students.trash')
-                ->with('error', 'Gagal menghapus permanen siswa. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus permanen siswa. Silakan coba lagi atau hubungi admin.'));
         }
     }
 }

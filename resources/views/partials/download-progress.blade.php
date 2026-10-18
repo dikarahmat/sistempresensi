@@ -188,8 +188,8 @@
     var TICK_FINAL_MS   = 12;    // kejar 100%: +1 tiap 12 ms
     var HOLD_100_MS     = 300;   // tahan di 100% supaya terlihat
     var HOLD_SELESAI_MS = 1000;  // tahan teks "Selesai"
-    var TEKS_SELESAI    = 'Selesai';
-    var TEKS_GESER      = 'Memproses...';
+    var TEKS_SELESAI    = (window.__i18n && window.__i18n.dl_selesai) || 'Selesai';
+    var TEKS_GESER      = (window.__i18n && window.__i18n.dl_memproses) || 'Memproses...';
     var MAKS_RETRY      = 3;
     var ESTIMASI_MS     = 150;   // tanpa Content-Length: interval estimasi
     var PLAFON_ESTIMASI = 90;    // maks estimasi selama menunggu
@@ -741,7 +741,7 @@
                     s.dibatalkan = true;
                     tutup(s, false);
                 } else {
-                    pesanError(button, 'Gagal: ' + (err && err.message ? err.message : err));
+                    pesanError(button, ((window.__i18n && window.__i18n.dl_gagal) || 'Gagal') + ': ' + (err && err.message ? err.message : err));
                     tutup(s, false);
                 }
             });
@@ -796,9 +796,9 @@
                     reject(new Error('HTTP ' + xhr.status));
                 }
             };
-            xhr.onerror   = function () { reject(new Error('Gagal mengunggah file')); };
+            xhr.onerror   = function () { reject(new Error((window.__i18n && window.__i18n.dl_gagal_upload) || 'Gagal mengunggah file')); };
             xhr.onabort   = function () { reject(abortError()); };
-            xhr.ontimeout = function () { reject(new Error('Waktu habis')); };
+            xhr.ontimeout = function () { reject(new Error((window.__i18n && window.__i18n.dl_waktu_habis) || 'Waktu habis')); };
 
             xhr.send(opts.body);
         });

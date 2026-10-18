@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Tahun Ajaran')
-@section('page_title', 'Tahun Ajaran')
-@section('page_subtitle', 'Kelola periode akademik dan tentukan satu tahun ajaran aktif sistem.')
+@section('title', __('Tahun Ajaran'))
+@section('page_title', __('Tahun Ajaran'))
+@section('page_subtitle', __('Kelola periode akademik dan tentukan satu tahun ajaran aktif sistem.'))
 
 @section('page_header_right')
 <!-- Tombol Aksi Header Versi Desktop (>= 768px): Sejajar Horizontal Asli -->
 <div class="d-none d-md-block">
     <button type="button" class="btn btn-add-year btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#addYearModal">
-        Tambah Tahun Ajaran
+        {{ __('Tambah Tahun Ajaran') }}
     </button>
 </div>
 @endsection
@@ -125,7 +125,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -137,7 +137,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -150,7 +150,7 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -158,10 +158,10 @@
     <div class="d-flex align-items-start gap-2 mb-3">
         <i class='bx bx-info-circle text-muted mt-1'></i>
         <span class="small text-muted" style="line-height: 1.5;">
-            Hanya <b class="text-dark">satu tahun ajaran</b> yang dapat aktif dalam satu waktu.
-            Untuk memindahkannya, klik tombol <b class="text-dark">AKTIFKAN</b> pada tahun ajaran lain
-            &mdash; tahun ajaran yang sedang aktif otomatis dinonaktifkan.
-            Tahun ajaran yang sedang berlangsung tidak dapat dihapus.
+            {{ __('Hanya') }} <b class="text-dark">{{ __('satu tahun ajaran') }}</b> {{ __('yang dapat aktif dalam satu waktu.') }}
+            {{ __('Untuk memindahkannya, klik tombol') }} <b class="text-dark">{{ __('AKTIFKAN') }}</b> {{ __('pada tahun ajaran lain') }}
+            &mdash; {{ __('tahun ajaran yang sedang aktif otomatis dinonaktifkan.') }}
+            {{ __('Tahun ajaran yang sedang berlangsung tidak dapat dihapus.') }}
         </span>
     </div>
 
@@ -171,7 +171,7 @@
     <div class="d-block d-md-none mb-3">
         <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white">
             <button type="button" class="btn btn-primary btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addYearModal">
-                <span>Tambah Tahun Ajaran</span>
+                <span>{{ __('Tambah Tahun Ajaran') }}</span>
             </button>
         </div>
     </div>
@@ -183,37 +183,37 @@
                 <thead class="bg-light">
                     <tr class="text-secondary small fw-bold align-middle text-uppercase text-nowrap" style="letter-spacing: 0.03em;">
                         <th class="text-center py-3 text-nowrap px-3" style="width: 6%;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3">Tahun Ajaran</th>
-                        <th class="text-center py-3 text-nowrap px-3">Semester</th>
-                        <th class="text-center py-3 text-nowrap px-3 d-none d-md-table-cell">Periode Tanggal</th>
+                        <th class="text-center py-3 text-nowrap px-3">{{ __('Tahun Ajaran') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3">{{ __('Semester') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 d-none d-md-table-cell">{{ __('Periode Tanggal') }}</th>
                         <th class="text-center py-3 text-nowrap px-3">
-                            <span class="col-status-aktif">Status Aktif</span>
+                            <span class="col-status-aktif">{{ __('Status Aktif') }}</span>
                         </th>
-                        <th class="text-center py-3 text-nowrap px-3" style="width: 11%;">Aksi</th>
+                        <th class="text-center py-3 text-nowrap px-3" style="width: 11%;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody class="text-uppercase">
                     @forelse($academicYears as $index => $year)
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle text-nowrap">
-                        <td data-label="No" class="text-center text-nowrap px-3">{{ $academicYears->firstItem() + $index }}</td>
-                        <td data-label="Tahun Ajaran" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $academicYears->firstItem() + $index }}</td>
+                        <td data-label="{{ __('Tahun Ajaran') }}" class="text-center text-nowrap px-3">
                             {{-- Kolom ini hanya berisi nama tahun ajaran (mis. "2026/2027").
                                  Status "AKTIF" hanya tampil di kolom Status Aktif. --}}
                             <span>{{ $year->name }}</span>
                         </td>
-                        <td data-label="Semester" class="text-center text-nowrap px-3">
-                            Semester {{ $year->semester }}
+                        <td data-label="{{ __('Semester') }}" class="text-center text-nowrap px-3">
+                            {{ __('Semester') }} {{ $year->semester }}
                         </td>
-                        <td data-label="Periode Tanggal" class="text-center text-nowrap px-3 d-none d-md-table-cell">
+                        <td data-label="{{ __('Periode Tanggal') }}" class="text-center text-nowrap px-3 d-none d-md-table-cell">
                             @php \Carbon\Carbon::setLocale('id'); @endphp
                             {{ \Carbon\Carbon::parse($year->start_date)->translatedFormat('d M Y') }} &mdash; 
                             {{ \Carbon\Carbon::parse($year->end_date)->translatedFormat('d M Y') }}
                         </td>
-                        <td data-label="Status Aktif" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Status Aktif') }}" class="text-center text-nowrap px-3">
                             <span class="col-status-aktif">
                                 @if($year->is_active)
-                                    <span class="d-inline-flex align-items-center gap-1 fw-bold text-success" style="font-size: 0.78rem;" title="Tahun ajaran ini sedang aktif di sistem">
-                                        <i class='bx bx-check-circle'></i> AKTIF
+                                    <span class="d-inline-flex align-items-center gap-1 fw-bold text-success" style="font-size: 0.78rem;" title="{{ __('Tahun ajaran ini sedang aktif di sistem') }}">
+                                        <i class='bx bx-check-circle'></i> {{ __('Aktif') }}
                                     </span>
                                 @else
                                     {{-- Konfirmasi ada di onsubmit (bukan onclick tombol) supaya
@@ -223,18 +223,18 @@
                                           data-no-loader
                                           onsubmit="return confirmToggleActive(this, '{{ $year->id }}', '{{ $year->name }}', '{{ $year->semester }}')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success" title="Jadikan tahun ajaran ini sebagai tahun ajaran aktif">
-                                            Aktifkan
+                                        <button type="submit" class="btn btn-sm btn-success" title="{{ __('Jadikan tahun ajaran ini sebagai tahun ajaran aktif') }}">
+                                            {{ __('Aktifkan') }}
                                         </button>
                                     </form>
                                 @endif
                             </span>
                         </td>
-                        <td data-label="Aksi" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
-                                <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editYearModal{{ $year->id }}" title="Edit">
-                                    Edit
+                                <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editYearModal{{ $year->id }}" title="{{ __('Edit') }}">
+                                    {{ __('Edit') }}
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
@@ -242,14 +242,14 @@
                                     <!-- Tahun ajaran aktif: tombol tampil redup/nonaktif + tooltip alasan.
                                          Pembungkus <span> ber-title karena elemen disabled sering tidak
                                          menampilkan tooltip di sebagian browser. -->
-                                    <span class="d-inline-flex" title="Tahun ajaran sedang berlangsung, tidak dapat dihapus">
+                                    <span class="d-inline-flex" title="{{ __('Tahun ajaran sedang berlangsung, tidak dapat dihapus') }}">
                                         <button type="button" class="btn btn-sm btn-danger disabled" aria-disabled="true">
-                                            Hapus
+                                            {{ __('Hapus') }}
                                         </button>
                                     </span>
                                 @else
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteYear('{{ $year->id }}', '{{ $year->name }}')" title="Hapus">
-                                        Hapus
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteYear('{{ $year->id }}', '{{ $year->name }}')" title="{{ __('Hapus') }}">
+                                        {{ __('Hapus') }}
                                     </button>
                                 @endif
                                 <form id="deleteYearForm-{{ $year->id }}" action="{{ panel_route('academic-years.destroy', $year->id) }}" method="POST" class="d-none">
@@ -265,7 +265,7 @@
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content border-0 shadow-lg rounded-4">
                                 <div class="modal-header border-bottom-0 pb-0">
-                                    <h5 class="fw-bold mb-0">Edit Tahun Ajaran</h5>
+                                    <h5 class="fw-bold mb-0">{{ __('Edit Tahun Ajaran') }}</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <form action="{{ panel_route('academic-years.update', $year->id) }}" method="POST">
@@ -273,11 +273,11 @@
                                     @method('PUT')
                                     <div class="modal-body py-3">
                                         <div class="mb-3">
-                                            <label class="form-label small fw-semibold">Nama Tahun Ajaran</label>
-                                            <input type="text" name="name" class="form-control rounded-3" value="{{ $year->name }}" placeholder="Contoh: 2025/2026" required>
+                                            <label class="form-label small fw-semibold">{{ __('Nama Tahun Ajaran') }}</label>
+                                            <input type="text" name="name" class="form-control rounded-3" value="{{ $year->name }}" placeholder="{{ __('Contoh: 2025/2026') }}" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label small fw-semibold">Semester</label>
+                                            <label class="form-label small fw-semibold">{{ __('Semester') }}</label>
                                             <select name="semester" class="form-select rounded-3" required>
                                                 <option value="Ganjil" {{ $year->semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
                                                 <option value="Genap" {{ $year->semester == 'Genap' ? 'selected' : '' }}>Genap</option>
@@ -285,11 +285,11 @@
                                         </div>
                                         <div class="row g-2 mb-3">
                                             <div class="col-6">
-                                                <label class="form-label small fw-semibold">Tanggal Mulai</label>
+                                                <label class="form-label small fw-semibold">{{ __('Tanggal Mulai') }}</label>
                                                 <input type="date" name="start_date" class="form-control rounded-3" value="{{ \Carbon\Carbon::parse($year->start_date)->format('Y-m-d') }}" required>
                                             </div>
                                             <div class="col-6">
-                                                <label class="form-label small fw-semibold">Tanggal Selesai</label>
+                                                <label class="form-label small fw-semibold">{{ __('Tanggal Selesai') }}</label>
                                                 <input type="date" name="end_date" class="form-control rounded-3" value="{{ \Carbon\Carbon::parse($year->end_date)->format('Y-m-d') }}" required>
                                             </div>
                                         </div>
@@ -299,21 +299,21 @@
                                             <input type="hidden" name="is_active" value="1">
                                             <div class="form-check form-switch mt-2">
                                                 <input class="form-check-input" type="checkbox" name="is_active_disabled" value="1" id="editActive{{ $year->id }}" checked disabled>
-                                                <label class="form-check-label small fw-semibold text-success" for="editActive{{ $year->id }}">Tahun Ajaran Aktif (tidak dapat dinonaktifkan langsung)</label>
+                                                <label class="form-check-label small fw-semibold text-success" for="editActive{{ $year->id }}">{{ __('Tahun Ajaran Aktif (tidak dapat dinonaktifkan langsung)') }}</label>
                                             </div>
                                             <div class="form-text mt-1">
-                                                Untuk memindahkan tahun ajaran aktif, gunakan tombol AKTIFKAN pada tahun ajaran lain.
+                                                {{ __('Untuk memindahkan tahun ajaran aktif, gunakan tombol') }} {{ __('AKTIFKAN') }} {{ __('pada tahun ajaran lain.') }}
                                             </div>
                                         @else
                                             <div class="form-check form-switch mt-2">
                                                 <input class="form-check-input" type="checkbox" name="is_active" value="1" id="editActive{{ $year->id }}">
-                                                <label class="form-check-label small fw-semibold" for="editActive{{ $year->id }}">Set sebagai Tahun Ajaran Aktif</label>
+                                                <label class="form-check-label small fw-semibold" for="editActive{{ $year->id }}">{{ __('Set sebagai Tahun Ajaran Aktif') }}</label>
                                             </div>
                                         @endif
                                     </div>
                                     <div class="modal-footer border-top-0 pt-0">
-                                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan Perubahan</button>
+                                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                                        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Perubahan') }}</button>
                                     </div>
                                 </form>
                             </div>
@@ -324,7 +324,7 @@
                     <tr class="text-nowrap">
                         <td colspan="6" class="text-center py-5 text-muted text-nowrap empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            Belum ada data tahun ajaran yang terdaftar.
+                            {{ __('Belum ada data tahun ajaran yang terdaftar.') }}
                         </td>
                     </tr>
                     @endforelse
@@ -335,7 +335,7 @@
         @if($academicYears->hasPages())
         <div class="px-4 py-2 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-white small">
             <div class="text-muted small">
-                Menampilkan <span>{{ $academicYears->firstItem() ?? 0 }}</span> - <span>{{ $academicYears->lastItem() ?? 0 }}</span> dari <span>{{ $academicYears->total() }}</span> tahun ajaran
+                {{ __('Menampilkan') }} <span>{{ $academicYears->firstItem() ?? 0 }}</span> - <span>{{ $academicYears->lastItem() ?? 0 }}</span> {{ __('dari') }} <span>{{ $academicYears->total() }}</span> {{ __('tahun ajaran') }}
             </div>
             <div class="pagination-compact">
                 {{ $academicYears->links('pagination::bootstrap-5') }}
@@ -349,18 +349,18 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Tambah Tahun Ajaran Baru</h5>
+                <h5 class="fw-bold mb-0">{{ __('Tambah Tahun Ajaran Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('academic-years.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Nama Tahun Ajaran</label>
-                        <input type="text" name="name" class="form-control rounded-3" placeholder="Contoh: 2025/2026" required>
+                        <label class="form-label small fw-semibold">{{ __('Nama Tahun Ajaran') }}</label>
+                        <input type="text" name="name" class="form-control rounded-3" placeholder="{{ __('Contoh: 2025/2026') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Semester</label>
+                        <label class="form-label small fw-semibold">{{ __('Semester') }}</label>
                         <select name="semester" class="form-select rounded-3" required>
                             <option value="Ganjil">Ganjil</option>
                             <option value="Genap">Genap</option>
@@ -368,22 +368,22 @@
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">Tanggal Mulai</label>
+                            <label class="form-label small fw-semibold">{{ __('Tanggal Mulai') }}</label>
                             <input type="date" name="start_date" class="form-control rounded-3" value="{{ date('Y-m-d') }}" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">Tanggal Selesai</label>
+                            <label class="form-label small fw-semibold">{{ __('Tanggal Selesai') }}</label>
                             <input type="date" name="end_date" class="form-control rounded-3" value="{{ date('Y-m-d') }}" required>
                         </div>
                     </div>
                     <div class="form-check form-switch mt-2">
                         <input class="form-check-input" type="checkbox" name="is_active" value="1" id="addActive" checked>
-                        <label class="form-check-label small fw-semibold" for="addActive">Set sebagai Tahun Ajaran Aktif Langsung</label>
+                        <label class="form-check-label small fw-semibold" for="addActive">{{ __('Set sebagai Tahun Ajaran Aktif Langsung') }}</label>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan') }}</button>
                 </div>
             </form>
         </div>
@@ -396,10 +396,10 @@
 <script>
     function confirmDeleteYear(id, name) {
         confirmUniversalDelete({
-            title: 'Hapus Tahun Ajaran?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus data tahun ajaran <b class="text-dark">${name}</b> dari sistem.`,
-            confirmText: 'Hapus',
-            cancelText: 'Tidak',
+            title: {!! json_encode(__('Hapus Tahun Ajaran?')) !!},
+            html: {!! json_encode(__('Tindakan ini bersifat permanen. Anda akan menghapus data tahun ajaran')) !!} + ' <b class="text-dark">' + name + '</b> ' + {!! json_encode(__('dari sistem.')) !!},
+            confirmText: {!! json_encode(__('Hapus')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
             onConfirm: function() {
                 document.getElementById(`deleteYearForm-${id}`).submit();
             }
@@ -425,7 +425,7 @@
      * Penyebab kegagalan dicatat ke console browser (tab Console) untuk diagnosis.
      */
     function confirmToggleActive(form, id, name, semester) {
-        const message = `Tahun ajaran ${name} - ${semester} akan diaktifkan. Tahun ajaran aktif saat ini akan dinonaktifkan.`;
+        const message = {!! json_encode(__('Tahun ajaran')) !!} + ' ' + name + ' - ' + semester + ' ' + {!! json_encode(__('akan diaktifkan. Tahun ajaran aktif saat ini akan dinonaktifkan.')) !!};
 
         const submitForm = () => {
             if (sudahDikirim) return; // cegah submit kedua
@@ -443,7 +443,7 @@
             const btn = target.querySelector('button[type="submit"]');
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = 'Memproses...';
+                btn.textContent = {!! json_encode(__('Memproses...')) !!};
             }
 
             target.submit();
@@ -456,14 +456,14 @@
 
         try {
             window.confirmUniversalDelete({
-                title: 'Aktifkan Tahun Ajaran?',
+                title: {!! json_encode(__('Aktifkan Tahun Ajaran?')) !!},
                 text: message,
                 // Ikon info (bukan tanda tanya raksasa) di dalam lingkaran biru muda.
                 icon: 'bx-info-circle',
                 // Aksen biru; kartu/overlay/tombol tetap sama dengan dialog hapus.
                 tone: 'primary',
-                confirmText: 'Ya, Aktifkan',
-                cancelText: 'Batal',
+                confirmText: {!! json_encode(__('Ya, Aktifkan')) !!},
+                cancelText: {!! json_encode(__('Batal')) !!},
                 onConfirm: function () {
                     submitForm();
                 }

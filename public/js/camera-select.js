@@ -77,18 +77,18 @@ window.CameraSelect = (function () {
     /* Pesan error per nama error — daftar persis seperti mode gerbang */
     function errorMessageFor(normalizedErr) {
         if (!normalizedErr || !normalizedErr.name) {
-            return "Kamera gagal dibuka. Coba lagi atau gunakan Alat Scanner.";
+            return (window.__i18n && window.__i18n.camera_open_failed) || "Kamera gagal dibuka. Coba lagi atau gunakan Alat Scanner.";
         }
         switch (normalizedErr.name) {
             case 'NotAllowedError':
             case 'SecurityError':
-                return "Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.";
+                return (window.__i18n && window.__i18n.camera_denied) || "Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.";
             case 'NotReadableError':
             case 'TrackStartError':
-                return "Kamera sedang dipakai aplikasi atau tab lain. Tutup lalu coba lagi.";
+                return (window.__i18n && window.__i18n.camera_busy) || "Kamera sedang dipakai aplikasi atau tab lain. Tutup lalu coba lagi.";
             case 'NotFoundError':
             case 'OverconstrainedError':
-                return "Kamera tidak ditemukan.";
+                return (window.__i18n && window.__i18n.camera_not_found) || "Kamera tidak ditemukan.";
             case 'LibraryError':
                 return `Kamera gagal dibuka (kode: ${normalizedErr.name}). ${normalizedErr.message}`;
             default:

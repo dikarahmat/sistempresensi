@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Presensi Hari Ini')
-@section('page_title', 'Presensi Hari Ini')
+@section('title', __('Presensi Hari Ini'))
+@section('page_title', __('Presensi Hari Ini'))
 @section('page_subtitle')
     @php
-        \Carbon\Carbon::setLocale('id');
+        \Carbon\Carbon::setLocale(app()->getLocale());
         $tanggalStr = \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y');
     @endphp
     {{-- Subjudul HANYA tanggal hari ini, sama persis dengan versi mobile.
@@ -22,9 +22,9 @@
          (.btn-portal-gate), sehingga desktop & mobile satu sumber warna. -->
     <a href="{{ panel_route('absensi.kiosk') }}" 
        class="btn btn-action-header btn-portal-gate fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
-       title="Mode Gerbang">
+       title="{{ __('Mode Gerbang') }}">
         <i class='bx bx-scan'></i>
-        <span>Mode Gerbang</span>
+        <span>{{ __('Mode Gerbang') }}</span>
     </a>
 
     <!-- Tombol Toggle Scanner (Desktop)
@@ -32,9 +32,9 @@
     <button type="button" id="btnToggleScannerDesktop" 
             class="btn btn-action-header btn-portal-scanner fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs" 
             onclick="toggleInlineScanner()"
-            title="Buka Scanner QR">
+            title="{{ __('Buka Scanner QR') }}">
         <i class='bx bx-camera' id="toggleScannerIconDesktop"></i>
-        <span id="toggleScannerTextDesktop">Buka Scanner QR</span>
+        <span id="toggleScannerTextDesktop">{{ __('Buka Scanner QR') }}</span>
     </button>
 </div>
 @endsection
@@ -624,9 +624,9 @@
                     <button type="button" id="btnToggleScannerMobile" 
                             class="btn-portal-action btn-portal-scanner shadow-2xs w-100" 
                             onclick="toggleInlineScanner()"
-                            title="Buka Scanner QR">
+                            title="{{ __('Buka Scanner QR') }}">
                         <i class='bx bx-camera' id="toggleScannerIconMobile"></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;" id="toggleScannerTextMobile">Scanner QR</span>
+                        <span class="text-nowrap" style="font-size: 0.8rem;" id="toggleScannerTextMobile">{{ __('Scanner QR') }}</span>
                     </button>
                 </div>
 
@@ -634,9 +634,9 @@
                 <div class="w-100">
                           <a href="{{ panel_route('absensi.kiosk') }}"
                               class="btn-portal-action btn-portal-gate shadow-2xs w-100"
-                       title="Mode Gerbang">
+                       title="{{ __('Mode Gerbang') }}">
                         <i class='bx bx-scan'></i>
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Mode Gerbang</span>
+                        <span class="text-nowrap" style="font-size: 0.8rem;">{{ __('Mode Gerbang') }}</span>
                     </a>
                 </div>
             </div>
@@ -648,9 +648,9 @@
     <!-- ========================================================================= -->
     <div class="badges-scroll-container mb-3 no-scrollbar d-none d-md-block" style="scrollbar-width: none; -ms-overflow-style: none;">
         <div class="stats-bar">
-            <div class="stats-bar__item"><span><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> sudah presensi</span></div>
-            <div class="stats-bar__item"><span><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> belum presensi</span></div>
-            <div class="stats-bar__item"><span><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> total siswa</span></div>
+            <div class="stats-bar__item"><span><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {{ __('sudah presensi') }}</span></div>
+            <div class="stats-bar__item"><span><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {{ __('belum presensi') }}</span></div>
+            <div class="stats-bar__item"><span><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {{ __('total siswa') }}</span></div>
         </div>
     </div>
 
@@ -663,10 +663,10 @@
                 <!-- Switcher Button (Kamera / Alat Scanner) -->
                 <div class="kiosk-switcher">
                     <button type="button" id="btnTabCamera" class="kiosk-switch-btn active" onclick="switchMode('camera')">
-                        <i class='bx bx-camera fs-5'></i> Kamera
+                        <i class='bx bx-camera fs-5'></i> {{ __('Kamera') }}
                     </button>
                     <button type="button" id="btnTabHardware" class="kiosk-switch-btn" onclick="switchMode('hardware')">
-                        <i class='bx bx-barcode-reader fs-5'></i> Alat Scanner
+                        <i class='bx bx-barcode-reader fs-5'></i> {{ __('Alat Scanner') }}
                     </button>
                 </div>
 
@@ -687,16 +687,16 @@
                         <div id="cameraError" class="alert alert-danger d-none mt-2" role="alert" style="font-size: 0.85rem;"></div>
                         <div id="cameraPlaceholder" class="py-4 position-absolute top-50 start-50 translate-middle w-100" style="background: #fafbfd; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
                             <i class='bx bx-qr-scan text-secondary' style="font-size: 3rem;"></i>
-                            <p class="text-secondary small mt-2 mb-0 fw-semibold">Tempelkan kartu QR ke kamera</p>
+                            <p class="text-secondary small mt-2 mb-0 fw-semibold">{{ __('Tempelkan kartu QR ke kamera') }}</p>
                         </div>
                     </div>
 
                     <!-- Mode Alat Scanner -->
                     <div id="hardwareView" class="d-none w-100 py-3">
                         <i class='bx bx-scan text-primary' style="font-size: 3rem;"></i>
-                        <p class="text-dark fw-semibold small mt-2 mb-3">Arahkan fokus tetap di sini, lalu scan kartu dengan alat</p>
+                        <p class="text-dark fw-semibold small mt-2 mb-3">{{ __('Arahkan fokus tetap di sini, lalu scan kartu dengan alat') }}</p>
                         <div class="px-3">
-                            <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="Siap menerima scan..." autofocus autocomplete="off">
+                            <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Siap menerima scan...') }}" autofocus autocomplete="off">
                         </div>
                     </div>
 
@@ -719,8 +719,8 @@
                                 </g>
                             </svg>
                             <div class="scan-result-text">
-                                <div class="scan-result-name" id="scanResultTitle">Nama Siswa</div>
-                                <div class="scan-result-status" id="scanResultSubtitle">Status Presensi</div>
+                                <div class="scan-result-name" id="scanResultTitle">{{ __('Nama Siswa') }}</div>
+                                <div class="scan-result-status" id="scanResultSubtitle">{{ __('Status Presensi') }}</div>
                             </div>
                         </div>
                     </div>
@@ -729,7 +729,7 @@
 
                 <!-- Jam Operasional di Bawah Kotak -->
                 <div class="text-secondary" style="font-size: 0.78rem;">
-                    Jam masuk <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jam_masuk ?? $checkInTime ?? '07:00' }}</span> · Jam pulang <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? $jam_pulang ?? $checkOutTime ?? '14:00' }}</span>
+                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jam_masuk ?? $checkInTime ?? '07:00' }}</span> · {{ __('Jam pulang') }} <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? $jam_pulang ?? $checkOutTime ?? '14:00' }}</span>
                 </div>
 
             </div>
@@ -741,7 +741,7 @@
             <div class="alert alert-primary d-flex align-items-center justify-content-between py-2 px-3 mb-3 rounded-3 shadow-xs">
                 <div class="d-flex align-items-center gap-2">
                     <i class='bx bx-filter-alt fs-5'></i>
-                    <span class="small fw-semibold">Menampilkan siswa dengan status: <strong class="badge bg-primary fs-7">{{ ucfirst(request('status')) }}</strong> pada tanggal {{ \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('d F Y') }} ({{ count($processedStudents ?? []) }} Siswa)</span>
+                    <span class="small fw-semibold">{{ __('Menampilkan siswa dengan status:') }} <strong class="badge bg-primary fs-7">{{ ucfirst(request('status')) }}</strong> {{ __('pada tanggal') }} {{ \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('d F Y') }} ({{ count($processedStudents ?? []) }} {{ __('Siswa') }})</span>
                 </div>
             </div>
             
@@ -751,12 +751,12 @@
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">
-                                <th style="width: 5%;" class="text-nowrap">NO</th>
-                                <th style="width: 35%;" class="text-nowrap">Nama Siswa</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">NISN</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">Kelas</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">Status</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">Keterangan</th>
+                                <th style="width: 5%;" class="text-nowrap">{{ __('NO') }}</th>
+                                <th style="width: 35%;" class="text-nowrap">{{ __('Nama Siswa') }}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('NISN') }}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('Kelas') }}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('Status') }}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('Keterangan') }}</th>
                             </tr>
                         </thead>
                         <tbody class="text-nowrap">
@@ -814,14 +814,14 @@
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">
-                                <th class="text-center align-middle col-th-kelas text-nowrap" style="width: 16%;">Kelas</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">Total</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">Hadir</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">Sakit</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">Izin</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">Alpha</th>
-                                <th class="text-center align-middle col-th-kehadiran text-nowrap" style="width: 22%;">Kehadiran</th>
-                                <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 17%;">Aksi</th>
+                                <th class="text-center align-middle col-th-kelas text-nowrap" style="width: 16%;">{{ __('Kelas') }}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Total') }}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Hadir') }}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Sakit') }}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Izin') }}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Alpha') }}</th>
+                                <th class="text-center align-middle col-th-kehadiran text-nowrap" style="width: 22%;">{{ __('Kehadiran') }}</th>
+                                <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 17%;">{{ __('Aksi') }}</th>
                             </tr>
                         </thead>
                         <tbody class="text-nowrap">
@@ -882,7 +882,7 @@
                                 </td>
                                 <td class="text-center align-middle col-td-aksi text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
-                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap" title="Buka Kelas" aria-label="Buka Kelas">
+                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap" title="{{ __('Buka Kelas') }}" aria-label="{{ __('Buka Kelas') }}">
                                             <i class='bx bx-door-open' style="font-size: 22px !important; font-weight: 400 !important; width: 24px !important; height: 24px !important; min-width: 24px !important; min-height: 24px !important; display: inline-flex; align-items: center; justify-content: center; color: #3b62f6 !important;"></i>
                                         </a>
                                     </div>
@@ -892,7 +892,7 @@
                             <tr class="text-nowrap">
                                 <td colspan="8" class="text-center py-3 text-secondary text-nowrap empty-state">
                                     <i class='bx bx-error' aria-hidden='true'></i>
-                                    Belum ada data kelas tersedia.
+                                    {{ __('Belum ada data kelas tersedia.') }}
                                 </td>
                             </tr>
                             @endforelse
@@ -971,12 +971,12 @@
             if (btnDesktop) {
                 btnDesktop.className = 'btn btn-action-header btn-danger fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs';
                 if (iconDesktop) iconDesktop.className = 'bx bx-camera-off';
-                if (textDesktop) textDesktop.textContent = 'Tutup Scanner';
+                if (textDesktop) textDesktop.textContent = (window.__i18n && window.__i18n.tutup_scanner) || 'Tutup Scanner';
             }
             if (btnMobile) {
                 btnMobile.className = 'btn-portal-action btn-portal-scanner scanner-active shadow-2xs';
                 if (iconMobile) iconMobile.className = 'bx bx-camera-off';
-                if (textMobile) textMobile.textContent = 'Tutup';
+                if (textMobile) textMobile.textContent = (window.__i18n && window.__i18n.tutup) || 'Tutup';
             }
 
             switchMode(activeMode);
@@ -989,12 +989,12 @@
             if (btnDesktop) {
                 btnDesktop.className = 'btn btn-action-header btn-primary fw-semibold d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs';
                 if (iconDesktop) iconDesktop.className = 'bx bx-camera';
-                if (textDesktop) textDesktop.textContent = 'Buka Scanner QR';
+                if (textDesktop) textDesktop.textContent = (window.__i18n && window.__i18n.buka_scanner_qr) || 'Buka Scanner QR';
             }
             if (btnMobile) {
                 btnMobile.className = 'btn-portal-action btn-portal-scanner shadow-2xs';
                 if (iconMobile) iconMobile.className = 'bx bx-camera';
-                if (textMobile) textMobile.textContent = 'Scanner QR';
+                if (textMobile) textMobile.textContent = (window.__i18n && window.__i18n.scanner_qr) || 'Scanner QR';
             }
 
             stopCamera();
@@ -1081,7 +1081,7 @@
             if (typeof handleScanResult === 'function') {
                 handleScanResult(500, {
                     success: false,
-                    message: 'Terjadi kendala koneksi ke server, coba lagi'
+                    message: (window.__i18n && window.__i18n.connection_error) || 'Terjadi kendala koneksi ke server, coba lagi'
                 });
             }
         });
@@ -1104,19 +1104,19 @@
         if (isCamRunning) return;
         if (typeof Html5Qrcode === 'undefined') {
             console.error('Html5Qrcode library not loaded. Make sure the script is loaded.');
-            showCameraError('Library scanner tidak dimuat. Muat ulang halaman.');
+            showCameraError((window.__i18n && window.__i18n.library_scanner_not_loaded) || 'Library scanner tidak dimuat. Muat ulang halaman.');
             return;
         }
 
         // Check if browser supports camera
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             console.error('Camera not supported in this browser');
-            showCameraError('Browser tidak mendukung akses kamera.');
+            showCameraError((window.__i18n && window.__i18n.browser_camera_unsupported) || 'Browser tidak mendukung akses kamera.');
             return;
         }
         if (typeof CameraSelect === 'undefined') {
             console.error('CameraSelect script not loaded');
-            showCameraError('Script kamera tidak dimuat. Muat ulang halaman.');
+            showCameraError((window.__i18n && window.__i18n.camera_script_not_loaded) || 'Script kamera tidak dimuat. Muat ulang halaman.');
             return;
         }
 

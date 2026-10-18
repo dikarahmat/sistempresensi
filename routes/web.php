@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\UserAccountController;
 
 use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root ke dashboard sesuai role (admin/guru), atau ke login
@@ -252,3 +253,20 @@ Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(functi
     Route::get('/kehadiran/siswa/{student}/history', [\App\Http\Controllers\Admin\AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
     Route::get('/kehadiran/{schoolClass}', [\App\Http\Controllers\Admin\AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 });
+
+// ============================================================================
+// BAHASA (id / en) - dipanggil dari pop-up kartu akun di sidebar bersama.
+//
+// - POST + CSRF (form kecil di pop-up), bukan link GET.
+// - Hanya "id" dan "en" yang diterima; selain itu 404.
+// - Pilihan disimpan di session, lalu user dikembalikan ke halaman asal supaya
+//   bahasa baru langsung aktif. Tidak ada controller baru & tidak ada data,
+//   query, atau logika yang diubah.
+// ============================================================================
+Route::post('/locale/{lang}', function (Request $request, string $lang) {
+    abort_unless(in_array($lang, ['id', 'en'], true), 404);
+
+    $request->session()->put('locale', $lang);
+
+    return redirect()->back();
+})->middleware('auth')->name('locale.set');

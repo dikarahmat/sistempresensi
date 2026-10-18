@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Data Siswa')
-@section('page_title', 'Data Siswa')
-@section('page_subtitle', 'Kelola informasi siswa')
+@section('title', __('Data Siswa'))
+@section('page_title', __('Data Siswa'))
+@section('page_subtitle', __('Kelola informasi siswa'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
@@ -378,7 +378,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -390,7 +390,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -403,7 +403,7 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -416,7 +416,7 @@
                 <span>{{ session('warning') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -426,18 +426,18 @@
         <div class="flash-notice-body">
             <div class="d-flex align-items-center mb-1">
                 <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
-                <strong>Baris yang dilewati:</strong>
+                <strong>{{ __('Baris yang dilewati:') }}</strong>
             </div>
             <ul class="mb-0 ps-3 small">
                 @foreach(collect(session('import_errors'))->take(10) as $err)
                     <li>{{ $err }}</li>
                 @endforeach
                 @if(count(session('import_errors')) > 10)
-                    <li>… dan {{ count(session('import_errors')) - 10 }} baris lainnya.</li>
+                    <li>{{ __('… dan :count baris lainnya.', ['count' => count(session('import_errors')) - 10]) }}</li>
                 @endif
             </ul>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -469,23 +469,23 @@
                                name="search" 
                                id="studentSearchInput"
                                class="form-control shadow-none" 
-                               placeholder="Cari nama atau NISN..." 
+                               placeholder="{{ __('Cari nama atau NISN...') }}" 
                                value="{{ request('search') }}"
-                               aria-label="Cari nama atau NISN"
+                               aria-label="{{ __('Cari nama atau NISN') }}"
                                autocomplete="off"
                                style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                        <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
+                        <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
 
                     <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang (pola Catatan Kehadiran) -->
                     <div class="filter-box-wrap">
-                        <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="Pilih kelas">
-                            <option value="">Semua Kelas</option>
+                        <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Pilih kelas') }}">
+                            <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
                             <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>
-                                Kelas {{ $c->name }}
+                                {{ __('Kelas ') }}{{ $c->name }}
                             </option>
                             @endforeach
                         </select>
@@ -496,16 +496,16 @@
                 <!-- Sisi Kanan: Deretan Tombol Aksi -->
                 <div class="action-buttons-wrap">
                     <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#printCardsModal">
-                        <span>Cetak Kartu</span>
+                        <span>{{ __('Cetak Kartu') }}</span>
                     </button>
 
                     @if(Auth::check() && Auth::user()->role === 'admin')
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <span>Import Excel</span>
+                        <span>{{ __('Import Excel') }}</span>
                     </button>
 
                     <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <span>Tambah Siswa</span>
+                        <span>{{ __('Tambah Siswa') }}</span>
                     </button>
 
                     <!-- Hapus Semua Siswa (merah) - di sebelah Tambah Siswa,
@@ -513,8 +513,8 @@
                          Memakai route students.destroy-all-active: siswa aktif
                          di-soft-delete sehingga bisa dipulihkan dari
                          TEMPAT SAMPAH di Pengaturan. -->
-                    <button type="button" class="btn-solid-pill btn-solid-red" title="Hapus Semua Data Siswa" onclick="confirmDeleteAllStudents()">
-                        <span>Hapus</span>
+                    <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Siswa') }}" onclick="confirmDeleteAllStudents()">
+                        <span>{{ __('Hapus') }}</span>
                     </button>
                     @endif
                 </div>
@@ -527,12 +527,12 @@
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 45px;">No</th>
-                        <th class="text-center" style="width: 80px;">Kelas</th>
-                        <th class="text-center">NISN</th>
-                        <th class="text-start indent-nama">Nama Siswa</th>
-                        <th class="text-start">Jenis Kelamin</th>
-                        <th class="text-center" style="min-width: 180px;">Aksi</th>
+                        <th class="text-center" style="width: 45px;">{{ __('No') }}</th>
+                        <th class="text-center" style="width: 80px;">{{ __('Kelas') }}</th>
+                        <th class="text-center">{{ __('NISN') }}</th>
+                        <th class="text-start indent-nama">{{ __('Nama Siswa') }}</th>
+                        <th class="text-start">{{ __('Jenis Kelamin') }}</th>
+                        <th class="text-center" style="min-width: 180px;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -542,21 +542,21 @@
                         $isMale = in_array($rawJk, ['laki-laki', 'laki - laki', 'l', 'pria', 'male']);
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td data-label="No" class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
-                        <td data-label="Kelas" class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
-                        <td data-label="NISN" class="text-center font-monospace">{{ $student->nisn ?: '-' }}</td>
-                        <td data-label="Nama Siswa" class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
-                        <td data-label="Jenis Kelamin" class="text-start">{{ $isMale ? 'Laki-laki' : 'Perempuan' }}</td>
-                        <td data-label="Aksi" class="text-center">
+                        <td data-label="{{ __('No') }}" class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
+                        <td data-label="{{ __('Kelas') }}" class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
+                        <td data-label="{{ __('NISN') }}" class="text-center font-monospace">{{ $student->nisn ?: '-' }}</td>
+                        <td data-label="{{ __('Nama Siswa') }}" class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
+                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-start">{{ $isMale ? __('Laki-laki') : __('Perempuan') }}</td>
+                        <td data-label="{{ __('Aksi') }}" class="text-center">
                             <div class="crud-center-wrapper">
-                                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="Detail" aria-label="Detail">
+                                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
                                 @if(Auth::check() && Auth::user()->role === 'admin')
-                                <a href="{{ panel_route('students.edit', $student->id) }}" class="btn-row-action action-edit" title="Edit" aria-label="Edit">
+                                <a href="{{ panel_route('students.edit', $student->id) }}" class="btn-row-action action-edit" title="{{ __('Edit') }}" aria-label="{{ __('Edit') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </a>
-                                <button type="button" class="btn-row-action action-delete" title="Hapus" aria-label="Hapus" onclick="confirmDeleteStudent('{{ $student->id }}', '{{ addslashes($student->nama ?? $student->name) }}')">
+                                <button type="button" class="btn-row-action action-delete" title="{{ __('Hapus') }}" aria-label="{{ __('Hapus') }}" onclick="confirmDeleteStudent('{{ $student->id }}', '{{ addslashes($student->nama ?? $student->name) }}')">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
                                 <form id="deleteStudentForm-{{ $student->id }}" action="{{ panel_route('students.destroy', $student->id) }}" method="POST" class="d-none">
@@ -572,9 +572,9 @@
                         <td colspan="6" class="text-center py-5 text-muted empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_id'))
-                                Tidak ada data siswa yang cocok dengan pencarian.
+                                {{ __('Tidak ada data siswa yang cocok dengan pencarian.') }}
                             @else
-                                BELUM ADA DATA SISWA YANG TERDAFTAR.
+                                {{ __('BELUM ADA DATA SISWA YANG TERDAFTAR.') }}
                             @endif
                         </td>
                     </tr>
@@ -621,12 +621,12 @@
         @endphp
 
         @if ($pgLast > 1)
-            <nav class="kehadiran-pagination" id="siswa-pagination" aria-label="Navigasi halaman data siswa">
+            <nav class="kehadiran-pagination" id="siswa-pagination" aria-label="{{ __('Navigasi halaman data siswa') }}">
                 <ul class="kehadiran-pagination-list">
                     @if ($pgCurrent <= 1)
-                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; Sebelumnya</span></li>
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; {{ __('Sebelumnya') }}</span></li>
                     @else
-                        <li><a class="kehadiran-pagination-step" href="{{ $students->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; Sebelumnya</a></li>
+                        <li><a class="kehadiran-pagination-step" href="{{ $students->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; {{ __('Sebelumnya') }}</a></li>
                     @endif
 
                     @foreach ($pgPages as $pgItem)
@@ -640,15 +640,15 @@
                     @endforeach
 
                     @if ($pgCurrent >= $pgLast)
-                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">Berikutnya &rsaquo;</span></li>
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">{{ __('Berikutnya') }} &rsaquo;</span></li>
                     @else
-                        <li><a class="kehadiran-pagination-step" href="{{ $students->nextPageUrl() }}{{ $pgHash }}" rel="next">Berikutnya &rsaquo;</a></li>
+                        <li><a class="kehadiran-pagination-step" href="{{ $students->nextPageUrl() }}{{ $pgHash }}" rel="next">{{ __('Berikutnya') }} &rsaquo;</a></li>
                     @endif
                 </ul>
 
                 <p class="kehadiran-pagination-info">
-                    Menampilkan {{ $students->firstItem() ?? 0 }}&ndash;{{ $students->lastItem() ?? 0 }}
-                    dari {{ $students->total() }} siswa
+                    {{ __('Menampilkan') }} {{ $students->firstItem() ?? 0 }}&ndash;{{ $students->lastItem() ?? 0 }}
+                    {{ __('dari') }} {{ $students->total() }} {{ __('siswa') }}
                 </p>
             </nav>
         @endif
@@ -660,48 +660,48 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Cetak Kartu Presensi Massal</h5>
+                <h5 class="fw-bold mb-0">{{ __('Cetak Kartu Presensi Massal') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('students.print-cards') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <p class="text-secondary small mb-3">
-                        Pilih opsi pencetakan kartu presensi siswa. Berkas PDF kartu akan siap dicetak pada kertas A4 landscape (10 kartu per lembar, ukuran kartu CR80 portrait).
+                        {{ __('Pilih opsi pencetakan kartu presensi siswa. Berkas PDF kartu akan siap dicetak pada kertas A4 landscape (10 kartu per lembar, ukuran kartu CR80 portrait).') }}
                     </p>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Pilihan Cetak <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold">{{ __('Pilihan Cetak') }} <span class="text-danger">*</span></label>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="print_type" id="printTypeClass" value="class" checked onchange="togglePrintScope()">
                             <label class="form-check-label fw-medium small" for="printTypeClass">
-                                Cetak per Kelas
+                                {{ __('Cetak per Kelas') }}
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="print_type" id="printTypeAll" value="all" onchange="togglePrintScope()">
                             <label class="form-check-label fw-medium small" for="printTypeAll">
-                                Cetak Semua Siswa Aktif
+                                {{ __('Cetak Semua Siswa Aktif') }}
                             </label>
                         </div>
                     </div>
 
                     <div class="mb-3" id="classSelectContainer">
-                        <label class="form-label small fw-semibold">Pilih Kelas</label>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="modalClassId" class="form-select rounded-3">
                             @foreach($classes as $c)
-                            <option value="{{ $c->id }}">Kelas {{ $c->name }}</option>
+                            <option value="{{ $c->id }}">{{ __('Kelas ') }}{{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2" id="printInfoBox">
-                        <i class='bx bx-info-circle me-1'></i> Kartu akan digenerate dengan QR Code presensi siswa secara otomatis.
+                        <i class='bx bx-info-circle me-1'></i> {{ __('Kartu akan digenerate dengan QR Code presensi siswa secara otomatis.') }}
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen" id="kartuUnduhBtn">Generate &amp; Unduh</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen" id="kartuUnduhBtn">{{ __('Generate & Unduh') }}</button>
                 </div>
             </form>
         </div>
@@ -714,7 +714,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Tambah Siswa Baru</h5>
+                <h5 class="fw-bold mb-0">{{ __('Tambah Siswa Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('students.store') }}" method="POST">
@@ -722,46 +722,46 @@
                 <div class="modal-body py-3">
                     @if($errors->any() && !$errors->has('file_excel'))
                     <div class="alert alert-danger py-2 px-3 small mb-3 border-0 rounded-3" role="alert">
-                        <i class='bx bx-error-circle me-1'></i> Data belum bisa disimpan. Periksa isian yang bertanda merah.
+                        <i class='bx bx-error-circle me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}
                     </div>
                     @endif
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control rounded-3 @error('name') is-invalid @enderror" placeholder="Masukkan nama lengkap siswa" value="{{ old('name') }}" required>
+                        <label class="form-label small fw-semibold">{{ __('Nama Siswa') }} <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control rounded-3 @error('name') is-invalid @enderror" placeholder="{{ __('Masukkan nama lengkap siswa') }}" value="{{ old('name') }}" required>
                         @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-12">
-                            <label class="form-label small fw-semibold">NISN <span class="text-danger">*</span></label>
-                            <input type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="Contoh: 0081234567" value="{{ old('nisn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
+                            <label class="form-label small fw-semibold">{{ __('NISN') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="{{ __('Contoh: 0081234567') }}" value="{{ old('nisn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
                             @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">Kelas <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-semibold">{{ __('Kelas') }} <span class="text-danger">*</span></label>
                             <select name="school_class_id" class="form-select rounded-3 @error('school_class_id') is-invalid @enderror" required>
-                                <option value="">Pilih Kelas</option>
+                                <option value="">{{ __('Pilih Kelas') }}</option>
                                 @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ old('school_class_id') == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ old('school_class_id') == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
                                 @endforeach
                             </select>
                             @error('school_class_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">Jenis Kelamin <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-semibold">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
                             <select name="gender" class="form-select rounded-3 @error('gender') is-invalid @enderror" required>
-                                <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
+                                <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
                             </select>
                             @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan Siswa</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Siswa') }}</button>
                 </div>
             </form>
         </div>
@@ -773,7 +773,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header border-bottom-0">
-                <h5 class="fw-bold mb-0">Import Data Siswa Excel</h5>
+                <h5 class="fw-bold mb-0">{{ __('Import Data Siswa Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('students.import') }}" method="POST" enctype="multipart/form-data">
@@ -781,23 +781,23 @@
                 <div class="modal-body">
                     @if($errors->any() && $errors->has('file_excel'))
                     <div class="alert alert-danger py-2 px-3 small mb-3 border-0 rounded-3" role="alert">
-                        <i class='bx bx-error-circle me-1'></i> Data belum bisa disimpan. Periksa isian yang bertanda merah.
+                        <i class='bx bx-error-circle me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}
                     </div>
                     @endif
 
                     <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
-                            Format kolom file Excel: <strong>NISN, Nama Lengkap, Kelas, Jenis Kelamin</strong> (.xlsx atau .csv)
+                            {{ __('Format kolom file Excel:') }} <strong>{{ __('NISN, Nama Lengkap, Kelas, Jenis Kelamin') }}</strong> {{ __('(.xlsx atau .csv)') }}
                         </div>
-                        <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
+                        <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                     </div>
-                    <label class="form-label small fw-semibold">Pilih File Excel</label>
+                    <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
                     <input type="file" name="file_excel" class="form-control rounded-3 @error('file_excel') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>
                     @error('file_excel')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>Unggah &amp; Import</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Unggah & Import') }}</button>
                 </div>
             </form>
         </div>
@@ -825,10 +825,10 @@
 
     function confirmDeleteStudent(id, name) {
         confirmUniversalDelete({
-            title: 'Hapus Data Siswa?',
-            html: `Siswa <strong>${name}</strong> akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.`,
-            confirmText: 'Hapus',
-            cancelText: 'Tidak',
+            title: {!! json_encode(__('Hapus Data Siswa?')) !!},
+            html: {!! json_encode(__('Siswa')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
+            confirmText: {!! json_encode(__('Hapus')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
             onConfirm: function() {
                 // Dicek null dulu: kalau form tidak ada,error ini akan
                 // dilempar sebagai TypeError dan tombol Hapus akan terlihat
@@ -853,14 +853,14 @@
     // dengan dialog hapus di halaman lain.
     function confirmDeleteAllStudents() {
         confirmUniversalDelete({
-            title: 'Hapus Seluruh Data Siswa?',
+            title: {!! json_encode(__('Hapus Seluruh Data Siswa?')) !!},
             icon: 'bx-error-circle',
-            html: 'Seluruh data siswa aktif akan dihapus dan dipindahkan ke <strong>Tempat Sampah</strong> di Pengaturan.',
-            confirmText: 'Hapus Semua',
-            cancelText: 'Tidak',
+            html: {!! json_encode(__('Seluruh data siswa aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan.')) !!},
+            confirmText: {!! json_encode(__('Hapus Semua')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
             checks: [
-                'Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.',
-                'Saya yakin ingin menghapus semua data siswa aktif.'
+                {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
+                {!! json_encode(__('Saya yakin ingin menghapus semua data siswa aktif.')) !!}
             ],
             onConfirm: function () {
                 document.getElementById('deleteAllStudentsForm').submit();

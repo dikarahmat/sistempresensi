@@ -675,10 +675,10 @@
                     clockEl.innerText = `${hours}:${minutes}:${seconds}`;
                 }
                 
-                // Update tanggal dalam bahasa Indonesia
+                // Update tanggal mengikuti bahasa aktif (id / en)
                 if (dateEl) {
                     const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' };
-                    dateEl.innerText = now.toLocaleDateString('id-ID', options);
+                    dateEl.innerText = now.toLocaleDateString({!! json_encode(app()->getLocale() === 'en' ? 'en-US' : 'id-ID') !!}, options);
                 }
             }
             
@@ -695,6 +695,21 @@
         })();
     </script>
 
+    <script>window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
+        'connection_error' => __('Terjadi kendala koneksi ke server, coba lagi'),
+        'placeholder_camera' => __('Tempelkan kartu QR ke kamera'),
+        'try_again' => __('Coba Lagi'),
+        'camera_denied' => __('Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.'),
+        'camera_busy' => __('Kamera sedang dipakai aplikasi atau tab lain. Tutup lalu coba lagi.'),
+        'camera_not_found' => __('Kamera tidak ditemukan.'),
+        'camera_open_failed' => __('Kamera gagal dibuka. Coba lagi atau gunakan Alat Scanner.'),
+        'late' => __('Terlambat'),
+        'check_out' => __('Presensi Pulang'),
+        'present' => __('Hadir'),
+        'already_checked_in' => __('Siswa atas nama :name sudah melakukan presensi hari ini'),
+        'card_not_found' => __('Kartu tidak dikenali atau data siswa tidak ditemukan'),
+        'failed' => __('Gagal'),
+    ], JSON_UNESCAPED_UNICODE) !!});</script>
     <script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 </body>
 </html>

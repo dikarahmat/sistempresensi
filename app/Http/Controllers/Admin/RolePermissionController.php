@@ -206,7 +206,7 @@ class RolePermissionController extends Controller
     {
         $role = $request->input('role');
         if (!in_array($role, ['admin', 'guru'], true)) {
-            return back()->with('error', 'Role pengguna tidak valid.');
+            return back()->with('error', __('Role pengguna tidak valid.'));
         }
 
         // Admin selalu mempertahankan full access
@@ -227,7 +227,7 @@ class RolePermissionController extends Controller
             default => $role,
         };
 
-        return back()->with('success', "Konfigurasi permission untuk role {$roleLabel} berhasil diperbarui.")
+        return back()->with('success', __('Konfigurasi permission untuk role :role berhasil diperbarui.', ['role' => $roleLabel]))
                      ->with('active_role', $role);
     }
 }

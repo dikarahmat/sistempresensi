@@ -275,7 +275,7 @@ function processCode(token) {
         console.error('[kiosk-scanner] Fetch error:', err);
         const failBody = {
             success: false,
-            message: 'Terjadi kendala koneksi ke server, coba lagi'
+            message: (window.__i18n && window.__i18n.connection_error) || 'Terjadi kendala koneksi ke server, coba lagi'
         };
         // SATU beep per scan (gagal jaringan/timeout/respons tak terbaca) + getar.
         feedbackScan(500, failBody);
@@ -323,15 +323,15 @@ function handleScanResult(status, body) {
 
         if (body.is_late) {
             // HASIL 2: Berhasil tapi TERLAMBAT -> Lingkaran HIJAU + X putih
-            const subtitleText = 'Terlambat' + (waktu ? ' · ' + waktu : '');
+            const subtitleText = ((window.__i18n && window.__i18n.late) || 'Terlambat') + (waktu ? ' · ' + waktu : '');
             renderScanResult('green', 'cross', titleHtml, subtitleText, false);
         } else if (body.type === 'check_out') {
             // Presensi Pulang -> Lingkaran HIJAU + CENTANG putih
-            const subtitleText = 'Presensi Pulang' + (waktu ? ' · ' + waktu : '');
+            const subtitleText = ((window.__i18n && window.__i18n.check_out) || 'Presensi Pulang') + (waktu ? ' · ' + waktu : '');
             renderScanResult('green', 'check', titleHtml, subtitleText, false);
         } else {
             // HASIL 1: Berhasil, tepat waktu (HADIR) -> Lingkaran HIJAU + CENTANG putih
-            const subtitleText = 'Hadir' + (waktu ? ' · ' + waktu : '');
+            const subtitleText = ((window.__i18n && window.__i18n.present) || 'Hadir') + (waktu ? ' · ' + waktu : '');
             renderScanResult('green', 'check', titleHtml, subtitleText, false);
         }
         return;
@@ -347,7 +347,7 @@ function handleScanResult(status, body) {
                           (kelas ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelas)}</span>` : '');
 
         // Pesan teks: "Siswa atas nama X sudah melakukan presensi hari ini"
-        const subtitleText = body.message || `Siswa atas nama ${nama} sudah melakukan presensi hari ini`;
+        const subtitleText = body.message || ((window.__i18n && window.__i18n.already_checked_in) || 'Siswa atas nama :name sudah melakukan presensi hari ini').replace(':name', nama);
 
         // HASIL 3: Sudah presensi hari ini -> Lingkaran MERAH + X putih
         renderScanResult('red', 'cross', titleHtml, subtitleText, true);
@@ -358,7 +358,7 @@ function handleScanResult(status, body) {
     if (status === 404 || isUnrecognizedQrMessage(body.message)) {
         // HASIL 4: QR tidak dikenali -> Lingkaran ORANYE + TANDA SERU (!) putih
         // Pesan teks: "Kartu tidak dikenali atau data siswa tidak ditemukan"
-        const subtitleText = 'Kartu tidak dikenali atau data siswa tidak ditemukan';
+        const subtitleText = (window.__i18n && window.__i18n.card_not_found) || 'Kartu tidak dikenali atau data siswa tidak ditemukan';
         renderScanResult('orange', 'exclamation', '', subtitleText, true);
         return;
     }
@@ -366,7 +366,7 @@ function handleScanResult(status, body) {
     // 5: ERROR SERVER / JARINGAN
     // HASIL 5: Error server/jaringan -> Lingkaran MERAH + TANDA SERU (!) putih
     const titleHtml = `<span class="d-block text-uppercase fw-bold">Gagal</span>`;
-    const subtitleText = body.message || 'Terjadi kendala koneksi ke server, coba lagi';
+    const subtitleText = body.message || (window.__i18n && window.__i18n.connection_error) || 'Terjadi kendala koneksi ke server, coba lagi';
     renderScanResult('red', 'exclamation', titleHtml, subtitleText, true);
 }
 
@@ -482,7 +482,7 @@ function showCameraPlaceholder(html) {
 function resetCameraPlaceholder() {
     showCameraPlaceholder(
         `<i class='bx bx-qr-scan' style="font-size: 2.4rem; color: #94a3b8;"></i>
-         <p class="kiosk-placeholder-text">Tempelkan kartu QR ke kamera</p>`
+         <p class="kiosk-placeholder-text">${(window.__i18n && window.__i18n.placeholder_camera) || 'Tempelkan kartu QR ke kamera'}</p>`
     );
 }
 
@@ -491,7 +491,7 @@ function showCameraError(msg) {
         `<i class='bx bx-camera-off' style="font-size: 2.2rem; color: #dc2626;"></i>
          <p class="kiosk-placeholder-text" style="color:#dc2626;">${msg}</p>
          <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="retryCamera()">
-             <i class='bx bx-refresh'></i> Coba Lagi
+             <i class='bx bx-refresh'></i> ${(window.__i18n && window.__i18n.try_again) || 'Coba Lagi'}
          </button>`
     );
 }
@@ -537,14 +537,14 @@ async function startCameraKiosk() {
     const readerEl = document.getElementById('reader');
     if (!readerEl) {
         console.error('[kiosk-camera] Container #reader tidak ditemukan di DOM');
-        showCameraError("Kamera gagal dibuka (kode: ContainerNotFound).");
+        showCameraError((window.__i18n && window.__i18n.camera_open_failed) || "Kamera gagal dibuka (kode: ContainerNotFound).");
         return;
     }
 
     const readerStyle = window.getComputedStyle(readerEl);
     if (readerStyle.display === 'none' || readerStyle.visibility === 'hidden') {
         console.error('[kiosk-camera] Container #reader masih hidden');
-        showCameraError("Kamera gagal dibuka (kode: ContainerHidden).");
+        showCameraError((window.__i18n && window.__i18n.camera_open_failed) || "Kamera gagal dibuka (kode: ContainerHidden).");
         return;
     }
 
@@ -645,15 +645,15 @@ async function startCameraKiosk() {
         switch (lastError.name) {
             case 'NotAllowedError':
             case 'SecurityError':
-                errorMsg = "Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.";
+                errorMsg = (window.__i18n && window.__i18n.camera_denied) || "Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.";
                 break;
             case 'NotReadableError':
             case 'TrackStartError':
-                errorMsg = "Kamera sedang dipakai aplikasi atau tab lain. Tutup lalu coba lagi.";
+                errorMsg = (window.__i18n && window.__i18n.camera_busy) || "Kamera sedang dipakai aplikasi atau tab lain. Tutup lalu coba lagi.";
                 break;
             case 'NotFoundError':
             case 'OverconstrainedError':
-                errorMsg = "Kamera tidak ditemukan.";
+                errorMsg = (window.__i18n && window.__i18n.camera_not_found) || "Kamera tidak ditemukan.";
                 break;
             case 'LibraryError':
                 errorMsg = `Kamera gagal dibuka (kode: ${lastError.name}). ${lastError.message}`;

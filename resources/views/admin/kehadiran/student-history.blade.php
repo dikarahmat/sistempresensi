@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Presensi')
-@section('page_title', 'Riwayat Presensi')
-@section('page_subtitle', 'HISTORI KEHADIRAN SISWA PER PERIODE')
+@section('title', __('Riwayat Presensi'))
+@section('page_title', __('Riwayat Presensi'))
+@section('page_subtitle', __('HISTORI KEHADIRAN SISWA PER PERIODE'))
 
 @push('styles')
 <style>
@@ -165,7 +165,7 @@
     <div class="mb-2">
         <h5 class="mb-1" style="color: #0f172a; text-transform: uppercase; font-weight: 400;">{{ $student->name }}</h5>
         <p class="text-secondary mb-0" style="font-size: 0.85rem; text-transform: uppercase;">
-            NISN: {{ $student->nisn ?: '-' }} &bull; Kelas: {{ $student->schoolClass->name ?? '-' }}
+            {{ __('NISN') }}: {{ $student->nisn ?: '-' }} &bull; {{ __('Kelas:') }} {{ $student->schoolClass->name ?? '-' }}
         </p>
     </div>
 
@@ -178,53 +178,53 @@
             <div class="stat-summary">
                 <div class="stat-item">
                     <div class="stat-value" style="color: #16a34a;">{{ $stats['hadir'] }}</div>
-                    <div class="stat-label">Hadir</div>
+                    <div class="stat-label">{{ __('Hadir') }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" style="color: #d97706;">{{ $stats['terlambat'] }}</div>
-                    <div class="stat-label">Terlambat</div>
+                    <div class="stat-label">{{ __('Terlambat') }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" style="color: #2563eb;">{{ $stats['sakit'] }}</div>
-                    <div class="stat-label">Sakit</div>
+                    <div class="stat-label">{{ __('Sakit') }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" style="color: #7e22ce;">{{ $stats['izin'] }}</div>
-                    <div class="stat-label">Izin</div>
+                    <div class="stat-label">{{ __('Izin') }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" style="color: #ef4444;">{{ $stats['alfa'] }}</div>
-                    <div class="stat-label">Alfa</div>
+                    <div class="stat-label">{{ __('Alfa') }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value text-dark">{{ $attendanceRate }}%</div>
-                    <div class="stat-label">Kehadiran</div>
+                    <div class="stat-label">{{ __('Kehadiran') }}</div>
                 </div>
             </div>
 
             <!-- Period Nav -->
             <div class="period-nav mb-2">
                 <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'harian', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'harian' ? 'active' : '' }}">
-                    Harian
+                    {{ __('Harian') }}
                 </a>
                 <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'mingguan', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'mingguan' ? 'active' : '' }}">
-                    Mingguan
+                    {{ __('Mingguan') }}
                 </a>
                 <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'bulanan', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'bulanan' ? 'active' : '' }}">
-                    Bulanan
+                    {{ __('Bulanan') }}
                 </a>
             </div>
 
             <!-- Teks Periode hasil mode + tanggal yang dipilih -->
             <div class="period-caption text-secondary mb-2">
-                Periode: <strong>{{ $periodLabel }}</strong>
-                <span class="text-muted">({{ ucfirst($period) }})</span>
+                {{ __('Periode:') }} <strong>{{ $periodLabel }}</strong>
+                <span class="text-muted">({{ __(ucfirst($period)) }})</span>
             </div>
 
             <!-- Date Filter: tanpa card/box, latar putih polos -->
             <div class="date-filter-group">
-                <input type="date" name="tanggal" id="studentHistoryDate" onchange="this.form.submit()" class="form-control" value="{{ $anchor->toDateString() }}" aria-label="Pilih tanggal">
-                <button type="submit" class="btn btn-primary">Tampilkan</button>
+                <input type="date" name="tanggal" id="studentHistoryDate" onchange="this.form.submit()" class="form-control" value="{{ $anchor->toDateString() }}" aria-label="{{ __('Pilih tanggal') }}">
+                <button type="submit" class="btn btn-primary">{{ __('Tampilkan') }}</button>
             </div>
         </form>
     </div>
@@ -235,13 +235,13 @@
             <table class="table table-hover align-middle mb-0 table-history">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">No</th>
-                        <th style="width: 80px;">Hari</th>
-                        <th style="width: 100px;">Tanggal</th>
-                        <th style="width: 100px;">Jam Masuk</th>
-                        <th style="width: 70px;">Status</th>
-                        <th style="width: 70px;">Keterlambatan</th>
-                        <th style="width: 200px;" title="Diisi dari kolom Catatan / Keterangan pada form Ubah Presensi di halaman Presensi Kelas">Keterangan</th>
+                        <th style="width: 40px;">{{ __('No') }}</th>
+                        <th style="width: 80px;">{{ __('Hari') }}</th>
+                        <th style="width: 100px;">{{ __('Tanggal') }}</th>
+                        <th style="width: 100px;">{{ __('Jam Masuk') }}</th>
+                        <th style="width: 70px;">{{ __('Status') }}</th>
+                        <th style="width: 70px;">{{ __('Keterlambatan') }}</th>
+                        <th style="width: 200px;" title="{{ __('Diisi dari kolom Catatan / Keterangan pada form Ubah Presensi di halaman Presensi Kelas') }}">{{ __('Keterangan') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -258,31 +258,31 @@
                             $diff = $checkIn->diffInMinutes(\Carbon\Carbon::parse('08:00:00'));
                             if ($diff > 0) {
                                 if ($diff < 60) {
-                                    $lateDuration = "$diff MNT";
+                                    $lateDuration = $diff . ' ' . __('MNT');
                                 } else {
                                     $hours = floor($diff / 60);
                                     $minutes = $diff % 60;
-                                    $lateDuration = "$hours JAM $minutes MNT";
+                                    $lateDuration = $hours . ' ' . __('JAM') . ' ' . $minutes . ' ' . __('MNT');
                                 }
                             }
                         }
                     @endphp
                     <tr>
-                        <td data-label="No" class="text-secondary">{{ $loop->iteration }}</td>
-                        <td data-label="Hari" class="col-hari">{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') }}</td>
-                        <td data-label="Tanggal" class="col-tanggal">{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
-                        <td data-label="Jam Masuk" class="col-jam">{{ $attendance->check_in ? substr($attendance->check_in, 0, 5) : '-' }}</td>
-                        <td data-label="Status">
-                            <span class="status-{{ $statusTampil }}">{{ ucfirst($statusTampil) }}</span>
+                        <td data-label="{{ __('No') }}" class="text-secondary">{{ $loop->iteration }}</td>
+                        <td data-label="{{ __('Hari') }}" class="col-hari">{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') }}</td>
+                        <td data-label="{{ __('Tanggal') }}" class="col-tanggal">{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
+                        <td data-label="{{ __('Jam Masuk') }}" class="col-jam">{{ $attendance->check_in ? substr($attendance->check_in, 0, 5) : '-' }}</td>
+                        <td data-label="{{ __('Status') }}">
+                            <span class="status-{{ $statusTampil }}">{{ __(ucfirst($statusTampil)) }}</span>
                         </td>
-                        <td data-label="Keterlambatan" class="text-center">{{ $lateDuration }}</td>
-                        <td data-label="Catatan" class="text-start">{{ $attendance->notes && $attendance->notes !== '-' ? $attendance->notes : '-' }}</td>
+                        <td data-label="{{ __('Keterlambatan') }}" class="text-center">{{ $lateDuration }}</td>
+                        <td data-label="{{ __('Catatan') }}" class="text-start">{{ $attendance->notes && $attendance->notes !== '-' ? $attendance->notes : '-' }}</td>
                     </tr>
                     @empty
                     <tr>
                         <td colspan="7" class="text-center align-middle py-5 text-secondary empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            BELUM ADA DATA PRESENSI UNTUK PERIODE INI.
+                            {{ __('BELUM ADA DATA PRESENSI UNTUK PERIODE INI.') }}
                         </td>
                     </tr>
                     @endforelse

@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Kelola Akun')
-@section('page_title', 'Kelola Akun')
-@section('page_subtitle', 'Kelola akun yang bisa login ke sistem: tambah akun, ubah data, dan reset password.')
+@section('title', __('Kelola Akun'))
+@section('page_title', __('Kelola Akun'))
+@section('page_subtitle', __('Kelola akun yang bisa login ke sistem: tambah akun, ubah data, dan reset password.'))
 
 @section('page_header_right')
     <button type="button" class="btn btn-sm btn-primary akun-btn-tambah" id="btnTambahAkun">
-        Tambah
+        {{ __('Tambah') }}
     </button>
 @endsection
 
@@ -61,7 +61,7 @@
         color: inherit; transition: color .15s ease, opacity .15s ease;
     }
     .btn-row-action svg { display: block; width: 20px; height: 20px; }
-    .btn-row-action.action-edit { color: #f59e0b; } /* pensil – kuning/oranye */
+    .btn-row-action.action-edit { color: #f59e0b; } /* pensil - kuning/oranye */
     .btn-row-action.action-edit:hover { color: #d97706; }
     .btn-row-action.action-delete { color: #dc2626; } /* tong sampah – merah */
     .btn-row-action.action-delete:hover { color: #b91c1c; }
@@ -175,7 +175,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -187,7 +187,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -202,12 +202,12 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
     <div id="infoSemuaRole" class="alert alert-info border-0 rounded-3 small mb-3" style="display:none;" role="alert">
-        <i class='bx bx-info-circle me-1'></i> Semua role sudah memiliki akun. Hapus salah satu akun terlebih dahulu.
+        <i class='bx bx-info-circle me-1'></i> {{ __('Semua role sudah memiliki akun. Hapus salah satu akun terlebih dahulu.') }}
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden" id="daftar-akun">
@@ -215,10 +215,10 @@
             <table class="table table-hover align-middle mb-0 table-zebra-custom">
                 <thead>
                     <tr>
-                        <th class="text-start">Nama</th>
-                        <th class="text-start" style="width: 20%;">Role</th>
-                        <th class="text-start" style="width: 18%;">Status</th>
-                        <th class="text-center" style="width: 130px;">Aksi</th>
+                        <th class="text-start">{{ __('Nama') }}</th>
+                        <th class="text-start" style="width: 20%;">{{ __('Role') }}</th>
+                        <th class="text-start" style="width: 18%;">{{ __('Status') }}</th>
+                        <th class="text-center" style="width: 130px;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -231,21 +231,21 @@
                             $akunAdmin = $akun->role === \App\Models\User::ROLE_ADMIN;
                         @endphp
                         <tr>
-                            <td data-label="Nama">
+                            <td data-label="{{ __('Nama') }}">
                                 <div class="akun-name">{{ $akun->name }}</div>
                                 <div class="akun-email">{{ $akun->email }}</div>
                             </td>
-                            <td data-label="Role"><span class="akun-role {{ $akunRoleKelas }}">{{ $akun->roleLabel() }}</span></td>
-                            <td data-label="Status">
+                            <td data-label="{{ __('Role') }}"><span class="akun-role {{ $akunRoleKelas }}">{{ $akun->roleLabel() }}</span></td>
+                            <td data-label="{{ __('Status') }}">
                                 <span class="akun-status {{ $akunAktif ? 'is-aktif' : 'is-nonaktif' }}">
                                     <span class="akun-status-dot" aria-hidden="true"></span>
-                                    <span>{{ $akunAktif ? 'Aktif' : 'Nonaktif' }}</span>
+                                    <span>{{ $akunAktif ? __('Aktif') : __('Nonaktif') }}</span>
                                 </span>
                             </td>
-                            <td class="text-center col-aksi" data-label="Aksi">
+                            <td class="text-center col-aksi" data-label="{{ __('Aksi') }}">
                                 <div class="d-flex align-items-center justify-content-center gap-2">
                                     <button type="button" class="btn-row-action action-edit btn-edit-akun"
-                                            aria-label="Edit akun" title="Edit akun"
+                                            aria-label="{{ __('Edit akun') }}" title="{{ __('Edit akun') }}"
                                             data-id="{{ $akun->id }}"
                                             data-name="{{ $akun->name }}"
                                             data-email="{{ $akun->email }}"
@@ -256,8 +256,8 @@
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                     </button>
                                     <button type="button" class="btn-row-action action-delete btn-hapus-akun {{ $akunAdmin ? 'is-disabled' : '' }}"
-                                            aria-label="Hapus akun"
-                                            title="{{ $akunAdmin ? 'Akun Admin tidak dapat dihapus' : 'Hapus akun' }}"
+                                            aria-label="{{ __('Hapus akun') }}"
+                                            title="{{ $akunAdmin ? __('Akun Admin tidak dapat dihapus') : __('Hapus akun') }}"
                                             data-id="{{ $akun->id }}"
                                             data-name="{{ $akun->name }}"
                                             data-email="{{ $akun->email }}"
@@ -281,24 +281,24 @@
             <input type="hidden" name="_form" value="create">
             <div class="akun-dialog-head d-flex align-items-start justify-content-between">
                 <div>
-                    <h5 class="fw-bold mb-0">Tambah Akun</h5>
-                    <p class="text-secondary small mb-0">Buat akun login baru.</p>
+                    <h5 class="fw-bold mb-0">{{ __('Tambah Akun') }}</h5>
+                    <p class="text-secondary small mb-0">{{ __('Buat akun login baru.') }}</p>
                 </div>
-                <button type="button" class="btn-close" data-dialog-close="dialogTambah" aria-label="Tutup"></button>
+                <button type="button" class="btn-close" data-dialog-close="dialogTambah" aria-label="{{ __('Tutup') }}"></button>
             </div>
             <div class="akun-dialog-body">
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="tambahName">Nama <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="tambahName">{{ __('Nama') }} <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="tambahName" class="form-control rounded-3" maxlength="100" value="{{ old('_form') === 'create' ? old('name') : '' }}" required>
                     @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="tambahEmail">Email <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="tambahEmail">{{ __('Email') }} <span class="text-danger">*</span></label>
                     <input type="email" name="email" id="tambahEmail" class="form-control rounded-3" value="{{ old('_form') === 'create' ? old('email') : '' }}" required autocomplete="off">
                     @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="tambahRole">Role <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="tambahRole">{{ __('Role') }} <span class="text-danger">*</span></label>
                     <select name="role" id="tambahRole" class="form-select rounded-3" required>
                         @foreach($roleOptions as $nilai => $label)
                         <option value="{{ $nilai }}" {{ old('role') === $nilai ? 'selected' : '' }}>{{ $label }}</option>
@@ -307,20 +307,20 @@
                     @error('role')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="tambahPassword">Password <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="tambahPassword">{{ __('Password') }} <span class="text-danger">*</span></label>
                     <div class="akun-password-wrap">
                         <input type="password" name="password" id="tambahPassword" class="form-control rounded-3" minlength="8" autocomplete="new-password">
-                        <button type="button" class="akun-password-toggle" data-toggle-pass="tambahPassword" aria-label="Tampilkan password">
+                        <button type="button" class="akun-password-toggle" data-toggle-pass="tambahPassword" aria-label="{{ __('Tampilkan password') }}">
                             <svg class="akun-password-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </div>
-                    <div class="text-secondary small mt-1">(minimal 8 karakter)</div>
+                    <div class="text-secondary small mt-1">{{ __('(minimal 8 karakter)') }}</div>
                     @error('password')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div class="akun-dialog-footer">
-                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogTambah">Batal</button>
-                <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan</button>
+                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogTambah">{{ __('Batal') }}</button>
+                <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan') }}</button>
             </div>
         </form>
     </dialog>
@@ -334,44 +334,44 @@
             <input type="hidden" name="_user_id" id="editUserId" value="{{ old('_user_id') }}">
             <div class="akun-dialog-head d-flex align-items-start justify-content-between">
                 <div>
-                    <h5 class="fw-bold mb-0">Edit Akun</h5>
-                    <p class="text-secondary small mb-0">Ubah data akun atau reset password.</p>
+                    <h5 class="fw-bold mb-0">{{ __('Edit Akun') }}</h5>
+                    <p class="text-secondary small mb-0">{{ __('Ubah data akun atau reset password.') }}</p>
                 </div>
-                <button type="button" class="btn-close" data-dialog-close="dialogEdit" aria-label="Tutup"></button>
+                <button type="button" class="btn-close" data-dialog-close="dialogEdit" aria-label="{{ __('Tutup') }}"></button>
             </div>
             <div class="akun-dialog-body">
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="editName">Nama <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="editName">{{ __('Nama') }} <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="editName" class="form-control rounded-3" maxlength="100" required>
                     @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="editEmail">Email <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="editEmail">{{ __('Email') }} <span class="text-danger">*</span></label>
                     <input type="email" name="email" id="editEmail" class="form-control rounded-3" required autocomplete="off">
                     @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">Role</label>
+                    <label class="form-label small fw-semibold">{{ __('Role') }}</label>
                     <div class="akun-role-static">
                         <span class="akun-role-static-value" id="editRoleLabel">-</span>
-                        <span class="akun-role-static-note">Role tidak dapat diubah</span>
+                        <span class="akun-role-static-note">{{ __('Role tidak dapat diubah') }}</span>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="editPassword">Password</label>
+                    <label class="form-label small fw-semibold" for="editPassword">{{ __('Password') }}</label>
                     <div class="akun-password-wrap">
                         <input type="password" name="password" id="editPassword" class="form-control rounded-3" minlength="8" autocomplete="new-password">
-                        <button type="button" class="akun-password-toggle" data-toggle-pass="editPassword" aria-label="Tampilkan password">
+                        <button type="button" class="akun-password-toggle" data-toggle-pass="editPassword" aria-label="{{ __('Tampilkan password') }}">
                             <svg class="akun-password-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </div>
-                    <div class="text-secondary small mt-1" id="editPasswordHint">Ubah kolom ini untuk mengganti password.</div>
+                    <div class="text-secondary small mt-1" id="editPasswordHint">{{ __('Ubah kolom ini untuk mengganti password.') }}</div>
                     @error('password')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div class="akun-dialog-footer">
-                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogEdit">Batal</button>
-                <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan</button>
+                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogEdit">{{ __('Batal') }}</button>
+                <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan') }}</button>
             </div>
         </form>
     </dialog>
@@ -385,17 +385,17 @@
                 <!-- Header: ikon di atas tengah, judul dan deskripsi rata tengah -->
                 <div class="text-center mb-2">
                     <i class='bx bx-error-circle hapus-icon'></i>
-                    <h5 class="fw-bold mb-1">Hapus Akun Ini?</h5>
+                    <h5 class="fw-bold mb-1">{{ __('Hapus Akun Ini?') }}</h5>
                     <p class="mb-0 small text-secondary">
-                        Akun <strong id="hapusNama">-</strong> (<span id="hapusEmail">-</span>) akan dihapus permanen dan tidak dapat dipulihkan.
+                        {{ __('Akun') }} <strong id="hapusNama">-</strong> (<span id="hapusEmail">-</span>) {{ __('akan dihapus permanen dan tidak dapat dipulihkan.') }}
                     </p>
                 </div>
-                <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>Saya memahami akun ini dihapus permanen dan tidak dapat dipulihkan.</span></label>
-                <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>Saya yakin ingin menghapus akun ini.</span></label>
+                <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>{{ __('Saya memahami akun ini dihapus permanen dan tidak dapat dipulihkan.') }}</span></label>
+                <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>{{ __('Saya yakin ingin menghapus akun ini.') }}</span></label>
             </div>
             <div class="akun-dialog-footer">
-                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogHapus">Tidak</button>
-                <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold" id="hapusSubmit" disabled>Hapus Akun</button>
+                <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogHapus">{{ __('Tidak') }}</button>
+                <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold" id="hapusSubmit" disabled>{{ __('Hapus Akun') }}</button>
             </div>
         </form>
     </dialog>
@@ -409,7 +409,7 @@
     var open = function (d) { if (d && typeof d.showModal === 'function') { d.showModal(); } };
     var dTambah = $('dialogTambah'), dEdit = $('dialogEdit'), dHapus = $('dialogHapus');
     var roleCount = {{ count($roleOptions) }};
-    var MSG = 'Password lama belum tersimpan. Isi untuk mengganti, atau kosongkan jika tidak ingin mengganti.';
+    var MSG = {!! json_encode(__('Password lama belum tersimpan. Isi untuk mengganti, atau kosongkan jika tidak ingin mengganti.')) !!};
 
     var fillEdit = function (b) {
         var set = function (id, v) { var el = $(id); if (el) { el.value = v; } };
@@ -441,7 +441,7 @@
             fillEdit(eb);
             var pw = $('editPassword'), hint = $('editPasswordHint');
             if (pw) { pw.value = ''; pw.type = 'password'; }
-            if (hint) { hint.textContent = 'Ubah kolom ini untuk mengganti password.'; }
+            if (hint) { hint.textContent = {!! json_encode(__('Ubah kolom ini untuk mengganti password.')) !!}; }
             fetch(eb.getAttribute('data-password-url'), { headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
                 .then(function (d) { if (d && d.stored && d.decrypted) { if (pw) { pw.value = d.decrypted; } } else if (hint) { hint.textContent = MSG; } })
@@ -469,7 +469,7 @@
             if (!inp) { return; }
             var show = inp.type === 'password';
             inp.type = show ? 'text' : 'password';
-            t.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+            t.setAttribute('aria-label', show ? {!! json_encode(__('Sembunyikan password')) !!} : {!! json_encode(__('Tampilkan password')) !!});
         }
     });
 

@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Siswa')
-@section('page_title', 'Edit Data Siswa: ' . $student->name)
-@section('page_subtitle', 'Perbarui biodata siswa dan data rombongan belajar')
+@section('title', __('Edit Siswa'))
+@section('page_title', __('Edit Data Siswa') . ': ' . $student->name)
+@section('page_subtitle', __('Perbarui biodata siswa dan data rombongan belajar'))
 
 @section('page_header_right')
 <div class="d-flex gap-2">
     <a href="{{ panel_route('students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.85rem;">
-        Kembali
+        {{ __('Kembali') }}
     </a>
 </div>
 @endsection
@@ -78,7 +78,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -90,13 +90,13 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
     @if($errors->any())
     <div class="alert alert-danger py-2 px-3 small mb-4 border-0 rounded-3" role="alert">
-        <i class='bx bx-error-circle me-1'></i> Data belum bisa disimpan. Periksa isian yang bertanda merah.
+        <i class='bx bx-error-circle me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}
     </div>
     @endif
 
@@ -107,7 +107,7 @@
 
             <!-- Kelas -->
             <div class="mb-3">
-                <label class="form-label">Kelas</label>
+                <label class="form-label">{{ __('Kelas') }}</label>
                 <select name="school_class_id" class="form-select @error('school_class_id') is-invalid @enderror" required>
                     @foreach($classes as $c)
                     <option value="{{ $c->id }}" {{ old('school_class_id', $student->school_class_id) == $c->id ? 'selected' : '' }}>
@@ -121,7 +121,7 @@
             <!-- Nama Siswa -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-6">
-                    <label class="form-label">Nama Siswa</label>
+                    <label class="form-label">{{ __('Nama Siswa') }}</label>
                     <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $student->name) }}" required>
                     @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
@@ -130,8 +130,8 @@
             <!-- NISN -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-6">
-                    <label class="form-label">NISN</label>
-                    <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" value="{{ old('nisn', $student->nisn) }}" placeholder="Contoh: 0081234567" required maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <label class="form-label">{{ __('NISN') }}</label>
+                    <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" value="{{ old('nisn', $student->nisn) }}" placeholder="{{ __('Contoh: 0081234567') }}" required maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                     @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
             </div>
@@ -139,10 +139,10 @@
             <!-- Jenis Kelamin -->
             <div class="row g-3 mb-3">
                 <div class="col-12 col-md-6">
-                    <label class="form-label">Jenis Kelamin</label>
+                    <label class="form-label">{{ __('Jenis Kelamin') }}</label>
                     <select name="gender" class="form-select @error('gender') is-invalid @enderror" required>
-                        <option value="Laki-laki" {{ old('gender', $student->gender) == 'Laki-laki' || old('gender', $student->gender) == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                        <option value="Perempuan" {{ old('gender', $student->gender) == 'Perempuan' || old('gender', $student->gender) == 'P' ? 'selected' : '' }}>Perempuan</option>
+                        <option value="Laki-laki" {{ old('gender', $student->gender) == 'Laki-laki' || old('gender', $student->gender) == 'L' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
+                        <option value="Perempuan" {{ old('gender', $student->gender) == 'Perempuan' || old('gender', $student->gender) == 'P' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
                     </select>
                     @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                 </div>
@@ -150,8 +150,8 @@
 
             <!-- Tombol Simpan & Batal -->
             <div class="d-flex align-items-center gap-2">
-                <button type="submit" class="btn-submit-blue">Simpan Perubahan</button>
-                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-cancel-gray">Batal</a>
+                <button type="submit" class="btn-submit-blue">{{ __('Simpan Perubahan') }}</button>
+                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-cancel-gray">{{ __('Batal') }}</a>
             </div>
         </form>
     </div>

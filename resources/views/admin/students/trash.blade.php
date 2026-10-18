@@ -14,9 +14,9 @@
      persis dengan teachers/trash.blade.php dan classes/trash.blade.php.
      =========================================================================== --}}
 
-@section('title', 'Tempat Sampah')
-@section('page_title', 'Tempat Sampah')
-@section('page_subtitle', 'Pulihkan atau hapus permanen data yang telah dihapus')
+@section('title', __('Tempat Sampah'))
+@section('page_title', __('Tempat Sampah'))
+@section('page_subtitle', __('Pulihkan atau hapus permanen data yang telah dihapus'))
 
 @push('styles')
 <style>
@@ -127,9 +127,9 @@
          header -> tab -> info -> tabel seragam di ketiga tab.
          =========================================================================== --}}
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span class="trash-tab trash-tab-active" aria-current="page">Siswa</span>
-        <a href="{{ route('admin.teachers.trash') }}" class="trash-tab">Guru</a>
-        <a href="{{ route('admin.classes.trash') }}" class="trash-tab">Kelas</a>
+        <span class="trash-tab trash-tab-active" aria-current="page">{{ __('Siswa') }}</span>
+        <a href="{{ route('admin.teachers.trash') }}" class="trash-tab">{{ __('Guru') }}</a>
+        <a href="{{ route('admin.classes.trash') }}" class="trash-tab">{{ __('Kelas') }}</a>
     </div>
 
     <!-- Alert Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
@@ -142,7 +142,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -154,7 +154,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -167,7 +167,7 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -178,14 +178,14 @@
     @if($errors->any())
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
         <div class="flash-notice-body">
-            <div class="fw-bold mb-1"><i class='bx bx-x-circle me-1'></i> Data belum bisa diproses.</div>
+            <div class="fw-bold mb-1"><i class='bx bx-x-circle me-1'></i> {{ __('Data belum bisa diproses.') }}</div>
             <ul class="mb-0 small ps-3">
                 @foreach($errors->all() as $message)
                     <li>{{ $message }}</li>
                 @endforeach
             </ul>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -195,7 +195,7 @@
     <!-- Info Text: satu baris kecil, sama untuk ketiga tab -->
     <div class="mb-3">
         <p class="text-secondary mb-0" style="font-size: 0.85rem;">
-            Data siswa yang dihapus akan disimpan di sini. Anda dapat memulihkan atau menghapus permanen data.
+            {{ __('Data siswa yang dihapus akan disimpan di sini. Anda dapat memulihkan atau menghapus permanen data.') }}
         </p>
     </div>
 
@@ -205,39 +205,39 @@
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <thead class="bg-slate-50 border-b border-gray-100">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">NISN</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA SISWA</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">TANGGAL DIHAPUS</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">{{ __('No') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">{{ __('Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">{{ __('NISN') }}</th>
+                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Nama Siswa') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('Tanggal Dihapus') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($students as $student)
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td data-label="No" class="text-center text-nowrap px-3">{{ $students->firstItem() + $loop->index }}</td>
-                        <td data-label="Kelas" class="text-center text-nowrap px-3">{{ $student->schoolClass->name ?? '-' }}</td>
-                        <td data-label="NISN" class="text-center text-nowrap font-monospace px-3">{{ $student->nisn ?: '-' }}</td>
-                        <td data-label="Nama Siswa" class="text-start text-nowrap px-3">{{ $student->name }}</td>
-                        <td data-label="Tanggal Dihapus" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $students->firstItem() + $loop->index }}</td>
+                        <td data-label="{{ __('Kelas') }}" class="text-center text-nowrap px-3">{{ $student->schoolClass->name ?? '-' }}</td>
+                        <td data-label="{{ __('NISN') }}" class="text-center text-nowrap font-monospace px-3">{{ $student->nisn ?: '-' }}</td>
+                        <td data-label="{{ __('Nama Siswa') }}" class="text-start text-nowrap px-3">{{ $student->name }}</td>
+                        <td data-label="{{ __('Tanggal Dihapus') }}" class="text-center text-nowrap px-3">
                             {{-- Tampilan tanggal hapus: dd MMM yyyy, HH:mm WIB
                                  (deleted_at dikonversi ke zona waktu Asia/Jakarta) --}}
                             {{ $student->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
                         </td>
-                        <td data-label="Aksi" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="d-inline-flex align-items-center justify-content-center gap-2">
                                 <!-- Tombol Restore -->
                                 <form action="{{ panel_route('students.restore', $student->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn-restore" title="Pulihkan">
-                                        Pulihkan
+                                    <button type="submit" class="btn-restore" title="{{ __('Pulihkan') }}">
+                                        {{ __('Pulihkan') }}
                                     </button>
                                 </form>
 
                                 <!-- Tombol Hapus Permanen -->
-                                <button type="button" class="btn-force-delete" title="Hapus Permanen" onclick="confirmForceDelete('{{ $student->id }}', '{{ addslashes($student->name) }}')">
-                                    Hapus Permanen
+                                <button type="button" class="btn-force-delete" title="{{ __('Hapus Permanen') }}" onclick="confirmForceDelete('{{ $student->id }}', '{{ addslashes($student->name) }}')">
+                                    {{ __('Hapus Permanen') }}
                                 </button>
                                 <form id="forceDeleteForm-{{ $student->id }}" action="{{ panel_route('students.force-delete', $student->id) }}" method="POST" class="d-none">
                                     @csrf
@@ -250,7 +250,7 @@
                     <tr class="align-middle">
                         <td colspan="6" class="text-center py-5 text-muted text-nowrap empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            Tempat Sampah kosong. Tidak ada data siswa yang dihapus.
+                            {{ __('Tempat Sampah kosong. Tidak ada data siswa yang dihapus.') }}
                         </td>
                     </tr>
                     @endforelse
@@ -264,10 +264,11 @@
     <!-- Zona Berbahaya -->
     @if(Auth::check() && Auth::user()->role === 'admin')
     <div class="card border border-danger rounded-4 p-4 bg-white">
-        <h6 class="fw-bold text-danger mb-2">Zona Berbahaya</h6>
+        <h6 class="fw-bold text-danger mb-2">{{ __('Zona Berbahaya') }}</h6>
         <p class="text-secondary small mb-3">
-            Tindakan ini menghapus permanen seluruh isi Tempat Sampah ({{ $trashedCount }} data) beserta riwayat presensinya.
-            Siswa yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.
+            {{ __('Tindakan ini menghapus permanen seluruh isi Tempat Sampah') }} ({{ $trashedCount }} data)
+            {{ __('beserta riwayat presensinya.') }}
+            {{ __('Siswa yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.') }}
         </p>
 
         {{-- Tombol HAPUS SEMUA (PERMANEN).
@@ -282,9 +283,9 @@
                 id="btnDeleteAllArchive"
                 class="btn btn-danger rounded-3 px-4 fw-semibold"
                 onclick="confirmDeleteAllArchive()"
-                title="Hapus permanen seluruh isi Tempat Sampah"
+                title="{{ __('Hapus permanen seluruh isi Tempat Sampah') }}"
                 {{ $trashedCount === 0 ? 'disabled' : '' }}>
-            Hapus Semua Siswa (Permanen)
+            {{ __('Hapus Semua Siswa (Permanen)') }}
         </button>
 
         <form action="{{ panel_route('students.destroy-all') }}" method="POST" id="deleteAllArchiveForm" class="d-none">
@@ -315,14 +316,14 @@
         // Memakai confirmUniversalDelete() dari layout bersama agar tema,
         // ukuran, dan animasinya sama persis dengan dialog hapus lain.
         confirmUniversalDelete({
-            title: 'Hapus Permanen?',
+            title: {!! json_encode(__('Hapus Permanen?')) !!},
             icon: 'bx-error-circle',
-            html: `Data siswa <strong>${name}</strong> akan dihapus permanen dan tidak dapat dikembalikan.`,
-            confirmText: 'Hapus Permanen',
-            cancelText: 'Batal',
+            html: {!! json_encode(__('Data siswa')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus permanen dan tidak dapat dikembalikan.')) !!},
+            confirmText: {!! json_encode(__('Hapus Permanen')) !!},
+            cancelText: {!! json_encode(__('Batal')) !!},
             checks: [
-                'Saya memahami data yang dihapus permanen tidak dapat dikembalikan.',
-                'Saya yakin ingin menghapus data ini secara permanen.'
+                {!! json_encode(__('Saya memahami data yang dihapus permanen tidak dapat dikembalikan.')) !!},
+                {!! json_encode(__('Saya yakin ingin menghapus data ini secara permanen.')) !!}
             ],
             onConfirm: function () {
                 document.getElementById(`forceDeleteForm-${id}`).submit();
@@ -347,14 +348,14 @@
         if (total <= 0 || (btn && btn.disabled)) return;
 
         confirmUniversalDelete({
-            title: 'Hapus Semua dari Tempat Sampah?',
+            title: {!! json_encode(__('Hapus Semua dari Tempat Sampah?')) !!},
             icon: 'bx-error-circle',
-            html: `<strong>${total} siswa</strong> di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.`,
-            confirmText: 'Hapus Permanen',
-            cancelText: 'Batal',
+            html: '<strong>' + total + ' ' + {!! json_encode(__('siswa')) !!} + '</strong> ' + {!! json_encode(__('di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.')) !!},
+            confirmText: {!! json_encode(__('Hapus Permanen')) !!},
+            cancelText: {!! json_encode(__('Batal')) !!},
             checks: [
-                'Saya memahami data yang dihapus permanen tidak dapat dikembalikan.',
-                'Saya yakin ingin menghapus semua data di Tempat Sampah.'
+                {!! json_encode(__('Saya memahami data yang dihapus permanen tidak dapat dikembalikan.')) !!},
+                {!! json_encode(__('Saya yakin ingin menghapus semua data di Tempat Sampah.')) !!}
             ],
             onConfirm: function () {
                 const form = document.getElementById('deleteAllArchiveForm');

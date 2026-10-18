@@ -55,7 +55,7 @@ class UserAccountController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'errors' => ['role' => ['Role ini sudah memiliki akun.']]], 422);
             }
-            return redirect()->route('admin.accounts.index')->with('error', 'Role ini sudah memiliki akun.');
+            return redirect()->route('admin.accounts.index')->with('error', __('Role ini sudah memiliki akun.'));
         }
 
         // Kolom password_terenkripsi ditambahkan migration terpisah. Bila
@@ -93,14 +93,14 @@ class UserAccountController extends Controller
                     'user' => $user->only(['id', 'name', 'email', 'role', 'status']),
                 ]);
             }
-            return redirect()->route('admin.accounts.index')->with('success', 'Akun berhasil ditambahkan.');
+            return redirect()->route('admin.accounts.index')->with('success', __('Akun berhasil ditambahkan.'));
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Terjadi kesalahan.'], 500);
             }
-            return redirect()->route('admin.accounts.index')->with('error', 'Terjadi kesalahan saat menambah akun.');
+            return redirect()->route('admin.accounts.index')->with('error', __('Terjadi kesalahan saat menambah akun.'));
         }
     }
 
@@ -147,12 +147,12 @@ class UserAccountController extends Controller
                     'user' => $user->only(['id', 'name', 'email', 'role', 'status']),
                 ]);
             }
-            return redirect()->route('admin.accounts.index')->with('success', 'Akun berhasil diperbarui.');
+            return redirect()->route('admin.accounts.index')->with('success', __('Akun berhasil diperbarui.'));
         } catch (\Throwable $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Terjadi kesalahan.'], 500);
             }
-            return redirect()->route('admin.accounts.index')->with('error', 'Terjadi kesalahan saat memperbarui akun.');
+            return redirect()->route('admin.accounts.index')->with('error', __('Terjadi kesalahan saat memperbarui akun.'));
         }
     }
 
@@ -219,14 +219,14 @@ class UserAccountController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Anda tidak dapat menghapus akun Anda sendiri.'], 403);
             }
-            return redirect()->route('admin.accounts.index')->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+            return redirect()->route('admin.accounts.index')->with('error', __('Anda tidak dapat menghapus akun Anda sendiri.'));
         }
 
         if ($user->role === User::ROLE_ADMIN) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Akun Admin tidak dapat dihapus.'], 403);
             }
-            return redirect()->route('admin.accounts.index')->with('error', 'Akun Admin tidak dapat dihapus.');
+            return redirect()->route('admin.accounts.index')->with('error', __('Akun Admin tidak dapat dihapus.'));
         }
 
         try {
@@ -248,12 +248,12 @@ class UserAccountController extends Controller
             }
             // Notifikasi HAPUS memakai flash 'deleted' (alert MERAH + ikon
             // tempat sampah). Flash 'success' (hijau) hanya untuk tambah/ubah.
-            return redirect()->route('admin.accounts.index')->with('deleted', 'Akun berhasil dihapus.');
+            return redirect()->route('admin.accounts.index')->with('deleted', __('Akun berhasil dihapus.'));
         } catch (\Throwable $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Terjadi kesalahan.'], 500);
             }
-            return redirect()->route('admin.accounts.index')->with('error', 'Terjadi kesalahan saat menghapus akun.');
+            return redirect()->route('admin.accounts.index')->with('error', __('Terjadi kesalahan saat menghapus akun.'));
         }
     }
 

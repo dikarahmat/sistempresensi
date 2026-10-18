@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Rekap Presensi Siswa')
-@section('page_title', 'Rekap Presensi Siswa')
-@section('page_subtitle', 'Kelola rekapitulasi kehadiran siswa harian, mingguan, dan bulanan.')
+@section('title', __('Rekap Presensi Siswa'))
+@section('page_title', __('Rekap Presensi Siswa'))
+@section('page_subtitle', __('Kelola rekapitulasi kehadiran siswa harian, mingguan, dan bulanan.'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
@@ -390,11 +390,11 @@
                     <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endif
                 @endforeach
-                <label for="mobileRecapType" class="form-label text-muted small fw-semibold mb-1">Periode</label>
+                <label for="mobileRecapType" class="form-label text-muted small fw-semibold mb-1">{{ __('Periode') }}</label>
                 <select id="mobileRecapType" name="type" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3" onchange="debounceRekapFilterSubmit(this.form)">
-                    <option value="harian" {{ $type === 'harian' ? 'selected' : '' }}>Harian</option>
-                    <option value="mingguan" {{ $type === 'mingguan' ? 'selected' : '' }}>Mingguan</option>
-                    <option value="bulanan" {{ $type === 'bulanan' ? 'selected' : '' }}>Bulanan</option>
+                    <option value="harian" {{ $type === 'harian' ? 'selected' : '' }}>{{ __('Harian') }}</option>
+                    <option value="mingguan" {{ $type === 'mingguan' ? 'selected' : '' }}>{{ __('Mingguan') }}</option>
+                    <option value="bulanan" {{ $type === 'bulanan' ? 'selected' : '' }}>{{ __('Bulanan') }}</option>
                 </select>
             </form>
 
@@ -404,42 +404,42 @@
                 <input type="hidden" name="type" value="{{ $type }}">
                 @if($type === 'harian')
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">Tanggal Presensi</label>
+                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Tanggal Presensi') }}</label>
                         <input type="date" name="date" id="mobileRekapDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
+                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
-                            <option value="">Semua Kelas</option>
+                            <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
                 @elseif($type === 'mingguan')
                     <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <label class="form-label text-muted small fw-semibold mb-1">Tanggal Mulai</label>
+                            <label class="form-label text-muted small fw-semibold mb-1">{{ __('Tanggal Mulai') }}</label>
                             <input type="date" name="start_date" id="mobileRekapStartDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $startDate }}">
                         </div>
                         <div class="col-6">
-                            <label class="form-label text-muted small fw-semibold mb-1">Tanggal Selesai</label>
+                            <label class="form-label text-muted small fw-semibold mb-1">{{ __('Tanggal Selesai') }}</label>
                             <input type="date" name="end_date" id="mobileRekapEndDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $endDate }}">
                         </div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
+                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
-                            <option value="">Semua Kelas</option>
+                            <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
                 @else
                     <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <label class="form-label text-muted small fw-semibold mb-1">Bulan</label>
+                            <label class="form-label text-muted small fw-semibold mb-1">{{ __('Bulan') }}</label>
                             <select name="month" id="mobileRekapMonth" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                                 @for($m = 1; $m <= 12; $m++)
                                     <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate($year, $m, 1)->translatedFormat('F') }}</option>
@@ -447,7 +447,7 @@
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label text-muted small fw-semibold mb-1">Tahun</label>
+                            <label class="form-label text-muted small fw-semibold mb-1">{{ __('Tahun') }}</label>
                             <select name="year" id="mobileRekapYear" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                                 @for($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                     <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -456,11 +456,11 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">Pilih Kelas</label>
+                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
-                            <option value="">Semua Kelas</option>
+                            <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -468,11 +468,11 @@
             </form>
 
             <div class="d-flex flex-column gap-2 recap-mobile-actions mt-1">
-                <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="pdf" title="Cetak PDF" aria-label="Cetak PDF">
-                    <span class="text-nowrap" style="font-size: 0.8rem;">CETAK PDF</span>
+                <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="pdf" title="{{ __('Cetak PDF') }}" aria-label="{{ __('Cetak PDF') }}">
+                    <span class="text-nowrap" style="font-size: 0.8rem;">{{ __('CETAK PDF') }}</span>
                 </button>
-                <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="excel" title="Cetak Excel" aria-label="Cetak Excel">
-                    <span class="text-nowrap" style="font-size: 0.8rem;">CETAK EXCEL</span>
+                <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-2 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="excel" title="{{ __('Cetak Excel') }}" aria-label="{{ __('Cetak Excel') }}">
+                    <span class="text-nowrap" style="font-size: 0.8rem;">{{ __('CETAK EXCEL') }}</span>
                 </button>
             </div>
         </div>
@@ -483,13 +483,13 @@
         <div class="period-container">
             <div class="period-nav">
                 <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'harian'])) }}" class="period-link {{ $type === 'harian' ? 'active' : '' }}">
-                    <i class='bx bx-calendar-event'></i> <span>Harian</span>
+                    <i class='bx bx-calendar-event'></i> <span>{{ __('Harian') }}</span>
                 </a>
                 <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'mingguan'])) }}" class="period-link {{ $type === 'mingguan' ? 'active' : '' }}">
-                    <i class='bx bx-calendar-week'></i> <span>Mingguan</span>
+                    <i class='bx bx-calendar-week'></i> <span>{{ __('Mingguan') }}</span>
                 </a>
                 <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'bulanan'])) }}" class="period-link {{ $type === 'bulanan' ? 'active' : '' }}">
-                    <i class='bx bx-calendar'></i> <span>Bulanan</span>
+                    <i class='bx bx-calendar'></i> <span>{{ __('Bulanan') }}</span>
                 </a>
             </div>
         </div>
@@ -499,21 +499,21 @@
                 <input type="hidden" name="type" value="{{ $type }}">
                 @if($type === 'harian')
                     <div class="d-flex flex-column" style="width: 180px;">
-                        <label class="filter-label">Tanggal Presensi</label>
+                        <label class="filter-label">{{ __('Tanggal Presensi') }}</label>
                         <input type="date" name="date" id="rekapDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                 @elseif($type === 'mingguan')
                     <div class="d-flex flex-column" style="width: 160px;">
-                        <label class="filter-label">Tanggal Mulai</label>
+                        <label class="filter-label">{{ __('Tanggal Mulai') }}</label>
                         <input type="date" name="start_date" id="rekapStartDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $startDate }}">
                     </div>
                     <div class="d-flex flex-column" style="width: 160px;">
-                        <label class="filter-label">Tanggal Selesai</label>
+                        <label class="filter-label">{{ __('Tanggal Selesai') }}</label>
                         <input type="date" name="end_date" id="rekapEndDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $endDate }}">
                     </div>
                 @else
                     <div class="d-flex flex-column" style="width: 140px;">
-                        <label class="filter-label">Bulan</label>
+                        <label class="filter-label">{{ __('Bulan') }}</label>
                         <select name="month" id="rekapMonth" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input">
                             @for($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate($year, $m, 1)->translatedFormat('F') }}</option>
@@ -521,7 +521,7 @@
                         </select>
                     </div>
                     <div class="d-flex flex-column" style="width: 100px;">
-                        <label class="filter-label">Tahun</label>
+                        <label class="filter-label">{{ __('Tahun') }}</label>
                         <select name="year" id="rekapYear" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input">
                             @for($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -530,20 +530,20 @@
                     </div>
                 @endif
                 <div class="d-flex flex-column" style="min-width: 200px; flex: 1;">
-                    <label class="filter-label">Pilih Kelas</label>
+                    <label class="filter-label">{{ __('Pilih Kelas') }}</label>
                     <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3">
-                        <option value="">Semua Kelas</option>
+                        <option value="">{{ __('Semua Kelas') }}</option>
                         @foreach($classes as $c)
-                            <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>Kelas {{ $c->name }}</option>
+                            <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto" style="margin-top: 22px;">
-                    <button type="button" class="btn-red-pdf" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="pdf" title="Cetak PDF" aria-label="Cetak PDF">
-                        <span>CETAK PDF</span>
+                    <button type="button" class="btn-red-pdf" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="pdf" title="{{ __('Cetak PDF') }}" aria-label="{{ __('Cetak PDF') }}">
+                        <span>{{ __('CETAK PDF') }}</span>
                     </button>
-                    <button type="button" class="btn-green-excel" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="excel" title="Cetak Excel" aria-label="Cetak Excel">
-                        <span>CETAK EXCEL</span>
+                    <button type="button" class="btn-green-excel" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="excel" title="{{ __('Cetak Excel') }}" aria-label="{{ __('Cetak Excel') }}">
+                        <span>{{ __('CETAK EXCEL') }}</span>
                     </button>
                 </div>
             </form>
@@ -554,23 +554,23 @@
     <div class="alert alert-warning border-0 rounded-4 p-3 mb-3 d-flex align-items-center gap-3 shadow-xs">
         <i class='bx bx-calendar-exclamation fs-3 text-warning'></i>
         <div>
-            <h6 class="fw-bold mb-0">Hari Ini Merupakan Hari Libur: {{ $holidayDesc }}</h6>
-            <small class="text-muted">Presensi tidak diwajibkan untuk tanggal ini.</small>
+            <h6 class="fw-bold mb-0">{{ __('Hari Ini Merupakan Hari Libur:') }} {{ $holidayDesc }}</h6>
+            <small class="text-muted">{{ __('Presensi tidak diwajibkan untuk tanggal ini.') }}</small>
         </div>
     </div>
     @endif
 
     @if($type !== 'harian')
     <div class="rekap-legend mb-3">
-        <span class="rekap-legend-label">Keterangan:</span>
+        <span class="rekap-legend-label">{{ __('Keterangan') }}:</span>
         <div class="rekap-legend-items">
-            <span class="rekap-legend-item"><strong class="text-success">H</strong> Hadir</span>
-            <span class="rekap-legend-item"><strong style="color: #d97706;">T</strong> Terlambat</span>
-            <span class="rekap-legend-item"><strong class="text-primary">S</strong> Sakit</span>
-            <span class="rekap-legend-item"><strong style="color: #7e22ce;">I</strong> Izin</span>
-            <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> Alfa</span>
-            <span class="rekap-legend-item"><strong style="color: #64748b;">L</strong> Libur</span>
-            <span class="rekap-legend-item"><strong style="color: #94a3b8;">-</strong> Belum Hadir</span>
+            <span class="rekap-legend-item"><strong class="text-success">H</strong> {{ __('Hadir') }}</span>
+            <span class="rekap-legend-item"><strong style="color: #d97706;">T</strong> {{ __('Terlambat') }}</span>
+            <span class="rekap-legend-item"><strong class="text-primary">S</strong> {{ __('Sakit') }}</span>
+            <span class="rekap-legend-item"><strong style="color: #7e22ce;">I</strong> {{ __('Izin') }}</span>
+            <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> {{ __('Alfa') }}</span>
+            <span class="rekap-legend-item"><strong style="color: #64748b;">L</strong> {{ __('Libur') }}</span>
+            <span class="rekap-legend-item"><strong style="color: #94a3b8;">-</strong> {{ __('Belum Hadir') }}</span>
         </div>
     </div>
     @endif
@@ -582,14 +582,14 @@
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 45px;">NO</th>
-                            <th style="width: 85px;">NISN</th>
-                            <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
-                            <th style="width: 80px;">Kelas</th>
-                            <th style="width: 100px;">Jam Masuk</th>
-                            <th style="width: 115px;">Keterlambatan</th>
-                            <th style="width: 100px;">Status</th>
-                            <th class="text-start" style="min-width: 140px;">Keterangan</th>
+                            <th style="width: 45px;">{{ __('No') }}</th>
+                            <th style="width: 85px;">{{ __('NISN') }}</th>
+                            <th class="text-start" style="min-width: 170px;">{{ __('Nama Siswa') }}</th>
+                            <th style="width: 80px;">{{ __('Kelas') }}</th>
+                            <th style="width: 100px;">{{ __('Jam Masuk') }}</th>
+                            <th style="width: 115px;">{{ __('Keterlambatan') }}</th>
+                            <th style="width: 100px;">{{ __('Status') }}</th>
+                            <th class="text-start" style="min-width: 140px;">{{ __('Keterangan') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -616,7 +616,7 @@
                             <td class="text-center">{{ $checkIn }}</td>
                             <td class="text-center">
                                 @if($lateText === 'Tepat Waktu')
-                                    <span class="text-success small">Tepat Waktu</span>
+                                    <span class="text-success small">{{ __('Tepat Waktu') }}</span>
                                 @elseif($status === 'Terlambat')
                                     {{-- Format ramah dari rekap_format_late_minutes(): "15 MNT" / "1 JAM 5 MNT" --}}
                                     <span class="text-warning-emphasis small fw-semibold">{{ $lateText }}</span>
@@ -625,17 +625,17 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                @if($status === 'Hadir') <span class="cell-present">Hadir</span>
-                                @elseif($status === 'Terlambat') <span class="cell-late">Terlambat</span>
-                                @elseif($status === 'Sakit') <span class="cell-sick">Sakit</span>
-                                @elseif($status === 'Izin') <span class="cell-permission">Izin</span>
-                                @elseif($status === 'Alpha') <span class="cell-alpha">Alpha</span>
-                                @elseif($status === 'Libur') <span class="cell-holiday">Libur</span>
+                                @if($status === 'Hadir') <span class="cell-present">{{ __('Hadir') }}</span>
+                                @elseif($status === 'Terlambat') <span class="cell-late">{{ __('Terlambat') }}</span>
+                                @elseif($status === 'Sakit') <span class="cell-sick">{{ __('Sakit') }}</span>
+                                @elseif($status === 'Izin') <span class="cell-permission">{{ __('Izin') }}</span>
+                                @elseif($status === 'Alpha') <span class="cell-alpha">{{ __('Alpha') }}</span>
+                                @elseif($status === 'Libur') <span class="cell-holiday">{{ __('Libur') }}</span>
                                 @else <span class="text-secondary">{{ $status }}</span> @endif
                             </td>
                             <td class="text-start">
                                 @if(!empty($proofDoc))
-                                    <a href="{{ asset('storage/' . $proofDoc) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-2 me-1" style="font-size: 0.75rem;">Surat</a>
+                                    <a href="{{ asset('storage/' . $proofDoc) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-2 me-1" style="font-size: 0.75rem;">{{ __('Surat') }}</a>
                                 @endif
                                 <span class="small text-muted">{{ $notes !== '-' ? $notes : '' }}</span>
                             </td>
@@ -645,7 +645,7 @@
                         <tr>
                             <td colspan="8" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
-                                Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.
+                                {{ __('Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.') }}
                             </td>
                         </tr>
                         @endforelse
@@ -656,10 +656,10 @@
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 45px;">NO</th>
-                            <th style="width: 85px;">NISN</th>
-                            <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
-                            <th style="width: 80px;">Kelas</th>
+                            <th style="width: 45px;">{{ __('No') }}</th>
+                            <th style="width: 85px;">{{ __('NISN') }}</th>
+                            <th class="text-start" style="min-width: 170px;">{{ __('Nama Siswa') }}</th>
+                            <th style="width: 80px;">{{ __('Kelas') }}</th>
                             @foreach($dateColumns as $col)
                                 <th class="{{ $col['is_holiday'] ? 'th-holiday' : '' }}" style="min-width: 65px;">{{ $col['label'] }}</th>
                             @endforeach
@@ -712,7 +712,7 @@
                         <tr>
                             <td colspan="{{ 4 + count($dateColumns) + 6 }}" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
-                                Tidak ada data siswa untuk rentang tanggal dan kelas yang dipilih.
+                                {{ __('Tidak ada data siswa untuk rentang tanggal dan kelas yang dipilih.') }}
                             </td>
                         </tr>
                         @endforelse
@@ -723,11 +723,11 @@
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 45px;">NO</th>
-                            <th style="width: 85px;">NISN</th>
-                            <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
-                            <th style="width: 80px;">Kelas</th>
-                            <th style="width: 35px;">JK</th>
+                            <th style="width: 45px;">{{ __('No') }}</th>
+                            <th style="width: 85px;">{{ __('NISN') }}</th>
+                            <th class="text-start" style="min-width: 170px;">{{ __('Nama Siswa') }}</th>
+                            <th style="width: 80px;">{{ __('Kelas') }}</th>
+                            <th style="width: 35px;">{{ __('JK') }}</th>
                             @for($d = 1; $d <= $daysInMonth; $d++)
                                 @php $isHol = isset($holidayMap[$d]); @endphp
                                 <th class="{{ $isHol ? 'th-holiday' : '' }}" style="width: 28px;">{{ $d }}</th>
@@ -787,7 +787,7 @@
                         <tr>
                             <td colspan="{{ 5 + $daysInMonth + 6 }}" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
-                                Tidak ada data siswa atau presensi untuk bulan dan kelas yang dipilih.
+                                {{ __('Tidak ada data siswa atau presensi untuk bulan dan kelas yang dipilih.') }}
                             </td>
                         </tr>
                         @endforelse
@@ -823,12 +823,12 @@
         @endphp
 
         @if ($pgPaginator && $pgLast > 1)
-            <nav class="kehadiran-pagination" id="rekap-pagination" aria-label="Navigasi halaman rekap presensi">
+            <nav class="kehadiran-pagination" id="rekap-pagination" aria-label="{{ __('Navigasi halaman rekap presensi') }}">
                 <ul class="kehadiran-pagination-list">
                     @if ($pgCurrent <= 1)
-                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; Sebelumnya</span></li>
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; {{ __('Sebelumnya') }}</span></li>
                     @else
-                        <li><a class="kehadiran-pagination-step" href="{{ $pgPaginator->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; Sebelumnya</a></li>
+                        <li><a class="kehadiran-pagination-step" href="{{ $pgPaginator->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; {{ __('Sebelumnya') }}</a></li>
                     @endif
 
                     @foreach ($pgPages as $pgItem)
@@ -842,15 +842,15 @@
                     @endforeach
 
                     @if ($pgCurrent >= $pgLast)
-                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">Berikutnya &rsaquo;</span></li>
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">{{ __('Berikutnya') }} &rsaquo;</span></li>
                     @else
-                        <li><a class="kehadiran-pagination-step" href="{{ $pgPaginator->nextPageUrl() }}{{ $pgHash }}" rel="next">Berikutnya &rsaquo;</a></li>
+                        <li><a class="kehadiran-pagination-step" href="{{ $pgPaginator->nextPageUrl() }}{{ $pgHash }}" rel="next">{{ __('Berikutnya') }} &rsaquo;</a></li>
                     @endif
                 </ul>
 
                 <p class="kehadiran-pagination-info">
-                    Menampilkan {{ $pgPaginator->firstItem() ?? 0 }}&ndash;{{ $pgPaginator->lastItem() ?? 0 }}
-                    dari {{ $pgTotal }} siswa
+                    {{ __('Menampilkan') }} {{ $pgPaginator->firstItem() ?? 0 }}&ndash;{{ $pgPaginator->lastItem() ?? 0 }}
+                    {{ __('dari') }} {{ $pgTotal }} {{ __('siswa') }}
                 </p>
             </nav>
         @endif
@@ -937,12 +937,12 @@
 
             let text = '';
             if (mode === 'class') {
-                text = 'Per Kelas';
+                text = {!! json_encode(__('Per Kelas')) !!};
                 text += ' • ' + rangeText;
                 text += format === 'pdf'
-                    ? ' • PDF: tiap kelas di halaman baru.'
-                    : ' • Excel: 1 sheet per kelas.';
-                text += ' • Format: ' + formatLabel;
+                    ? ' • ' + {!! json_encode(__('PDF: tiap kelas di halaman baru.')) !!}
+                    : ' • ' + {!! json_encode(__('Excel: 1 sheet per kelas.')) !!};
+                text += ' • ' + {!! json_encode(__('Format:')) !!} + ' ' + formatLabel;
             } else {
                 let kelasTxt = '';
                 if (scope === 'class') {
@@ -953,23 +953,23 @@
 
                 if (scope === 'classes') {
                     // "Semua Kelas": satu file per kelas, jumlah kelas yang punya siswa.
-                    text = 'Semua Kelas • ' + rangeText
-                        + ' • ' + rekapKelasDenganSiswa().length + ' kelas'
-                        + ' • ' + formatLabel + ' (satu file per kelas)';
+                    text = {!! json_encode(__('Semua Kelas')) !!} + ' • ' + rangeText
+                        + ' • ' + rekapKelasDenganSiswa().length + ' ' + {!! json_encode(__('kelas')) !!}
+                        + ' • ' + formatLabel + ' (' + {!! json_encode(__('satu file per kelas')) !!} + ')';
                     infoText.textContent = text;
                     return;
                 }
 
-                const label = scope === 'single' ? 'Satu Siswa' : 'Satu Kelas';
+                const label = scope === 'single' ? {!! json_encode(__('Satu Siswa')) !!} : {!! json_encode(__('Satu Kelas')) !!};
                 text = label + kelasTxt + ' • ' + rangeText;
                 if (jumlahSiswa !== null && jumlahSiswa !== undefined) {
-                    text += ' • ' + jumlahSiswa + ' siswa';
+                    text += ' • ' + jumlahSiswa + ' ' + {!! json_encode(__('siswa')) !!};
                 }
                 text += ' • ' + formatLabel;
                 if (format === 'excel') {
-                    text += ' (1 sheet per siswa)';
+                    text += ' (' + {!! json_encode(__('1 sheet per siswa')) !!} + ')';
                 } else {
-                    text += ' (1 halaman per siswa)';
+                    text += ' (' + {!! json_encode(__('1 halaman per siswa')) !!} + ')';
                 }
             }
             infoText.textContent = text;
@@ -999,7 +999,7 @@
 
             const bantuan = document.getElementById('studentSearchHelp');
             if (bantuan) {
-                bantuan.textContent = 'Ketik minimal 2 karakter untuk mencari siswa';
+                bantuan.textContent = {!! json_encode(__('Ketik minimal 2 karakter untuk mencari siswa')) !!};
                 bantuan.classList.remove('text-danger');
             }
         }
@@ -1070,8 +1070,17 @@
 
         // Hitung rentang periode di sisi browser untuk info box popup.
         // Mengikuti aturan yang sama dengan resolveDateRange() di server.
-        const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const BULAN = [
+            {!! json_encode(__('Januari')) !!}, {!! json_encode(__('Februari')) !!}, {!! json_encode(__('Maret')) !!},
+            {!! json_encode(__('April')) !!}, {!! json_encode(__('Mei')) !!}, {!! json_encode(__('Juni')) !!},
+            {!! json_encode(__('Juli')) !!}, {!! json_encode(__('Agustus')) !!}, {!! json_encode(__('September')) !!},
+            {!! json_encode(__('Oktober')) !!}, {!! json_encode(__('November')) !!}, {!! json_encode(__('Desember')) !!}
+        ];
+        const HARI = [
+            {!! json_encode(__('Minggu')) !!}, {!! json_encode(__('Senin')) !!}, {!! json_encode(__('Selasa')) !!},
+            {!! json_encode(__('Rabu')) !!}, {!! json_encode(__('Kamis')) !!}, {!! json_encode(__('Jumat')) !!},
+            {!! json_encode(__('Sabtu')) !!}
+        ];
 
         function parseYmd(v) {
             if (!v) return null;
@@ -1118,7 +1127,7 @@
             if (period === 'semester' || period === 'tahunan') {
                 const sel = document.querySelector('#periodFields select[name="period_academic_year"]:not([disabled])');
                 const opt = sel && sel.options[sel.selectedIndex];
-                return { text: (opt ? opt.textContent.trim() : '-') + (period === 'semester' ? '' : ' (1 tahun ajaran)'), days: 0 };
+                return { text: (opt ? opt.textContent.trim() : '-') + (period === 'semester' ? '' : ' (' + {!! json_encode(__('1 tahun ajaran')) !!} + ')'), days: 0 };
             }
             return null;
         }
@@ -1149,12 +1158,12 @@
                     .then(data => {
                         studentSearchResults.innerHTML = '';
                         if (data.length === 0) {
-                            studentSearchResults.innerHTML = '<div class="dropdown-item text-muted small">Tidak ada siswa ditemukan</div>';
+                            studentSearchResults.innerHTML = '<div class="dropdown-item text-muted small">' + {!! json_encode(__('Tidak ada siswa ditemukan')) !!} + '</div>';
                         } else {
                             data.forEach(s => {
                                 const item = document.createElement('div');
                                 item.className = 'dropdown-item small py-2';
-                                item.innerHTML = '<strong>' + s.name + '</strong> <span class="text-muted">(' + s.nisn + ')</span> <span class="text-muted small ms-2">Kelas ' + (s.class_name || '-') + '</span>';
+                                item.innerHTML = '<strong>' + s.name + '</strong> <span class="text-muted">(' + s.nisn + ')</span> <span class="text-muted small ms-2">' + {!! json_encode(__('Kelas ')) !!} + (s.class_name || '-') + '</span>';
                                 item.style.cursor = 'pointer';
                                 item.addEventListener('click', () => {
                                     studentSearchInput.value = s.name + ' (' + s.nisn + ')';
@@ -1274,7 +1283,7 @@
             const detail = document.getElementById('rekapDetailList');
             if (detail) { detail.innerHTML = ''; detail.classList.add('d-none'); }
             const toggle = document.getElementById('rekapDetailToggle');
-            if (toggle) toggle.textContent = 'Lihat detail';
+            if (toggle) toggle.textContent = {!! json_encode(__('Lihat detail')) !!};
 
             const btn = document.getElementById('printRekapSubmitBtn');
             if (btn) {
@@ -1313,7 +1322,7 @@
                 // Mode biasa (bukan loop ZIP) butuh estimasi komponen bersama,
                 // jadi tanda 'asli' yang dipasang loop harus dibuang di sini.
                 btn.removeAttribute('data-dl-persen');
-                rekapIsiTombol('Generate & Unduh');
+                rekapIsiTombol({!! json_encode(__('Generate & Unduh')) !!});
             }
             const fill = document.getElementById('rekapBtnFill');
             if (fill) fill.style.width = '0%';
@@ -1321,7 +1330,7 @@
 
             const cancel = document.getElementById('rekapCancelBtn');
             if (cancel) {
-                cancel.textContent = 'Batal';
+                cancel.textContent = {!! json_encode(__('Batal')) !!};
                 cancel.disabled = false;
                 cancel.setAttribute('data-bs-dismiss', 'modal');
             }
@@ -1356,11 +1365,11 @@
                 btn.disabled = true;
                 btn.classList.remove('is-running');
                 btn.classList.add('is-done');
-                rekapIsiTombol('Selesai');
+                rekapIsiTombol({!! json_encode(__('Selesai')) !!});
             }
             if (cancel) {
                 cancel.disabled = false;
-                cancel.textContent = 'Tutup';
+                cancel.textContent = {!! json_encode(__('Tutup')) !!};
                 cancel.setAttribute('data-bs-dismiss', 'modal');
             }
 
@@ -1380,20 +1389,20 @@
                 btn.style.borderColor = '';
                 // Tombol ini jadi pemicu "Coba lagi".
                 btn.dataset.mode = 'retry';
-                rekapIsiTombol('Coba lagi (' + jumlah + ')');
+                rekapIsiTombol({!! json_encode(__('Coba Lagi')) !!} + ' (' + jumlah + ')');
             }
 
             const cancel = document.getElementById('rekapCancelBtn');
             if (cancel) {
                 cancel.disabled = false;
-                cancel.textContent = 'Tutup';
+                cancel.textContent = {!! json_encode(__('Tutup')) !!};
                 cancel.setAttribute('data-bs-dismiss', 'modal');
             }
 
             const line = document.getElementById('rekapFailLine');
             if (line) line.classList.remove('d-none');
             const cnt = document.getElementById('rekapFailCount');
-            if (cnt) cnt.textContent = jumlah + ' kelas gagal.';
+            if (cnt) cnt.textContent = jumlah + ' ' + {!! json_encode(__('kelas gagal.')) !!};
 
             const detail = document.getElementById('rekapDetailList');
             if (detail) {
@@ -1406,7 +1415,7 @@
                 detail.classList.add('d-none');
             }
             const toggle = document.getElementById('rekapDetailToggle');
-            if (toggle) toggle.textContent = 'Lihat detail';
+            if (toggle) toggle.textContent = {!! json_encode(__('Lihat detail')) !!};
         }
 
         /** Ubah blob + nama file dari header Content-Disposition menjadi unduhan. */
@@ -1536,7 +1545,7 @@
                         },
                     });
                 } catch (err) {
-                    return { ok: false, alasan: (err && err.message) ? err.message : 'gagal' };
+                    return { ok: false, alasan: (err && err.message) ? err.message : {!! json_encode(__('Gagal')) !!} };
                 }
 
                 if (res.status === 429 && percobaan < REKAP_MAKS_RETRY) {
@@ -1555,7 +1564,7 @@
                         const j = await res.json();
                         pesan = j.message || pesan;
                     } catch (e) { /* bukan JSON */ }
-                    if (res.status === 429) pesan = 'Terlalu banyak permintaan';
+                    if (res.status === 429) pesan = {!! json_encode(__('Terlalu banyak permintaan')) !!};
                     return { ok: false, alasan: pesan };
                 }
 
@@ -1565,12 +1574,12 @@
                 const nama = 'Profil_' + namaKelas + '_' + (window.REKAP_TOKEN_PERIODE || '') + '.' + ext;
                 const tersimpan = rekapZipTambah(nama, blob);
                 if (!tersimpan) {
-                    return { ok: false, alasan: 'JSZip tidak tersedia' };
+                    return { ok: false, alasan: {!! json_encode(__('JSZip tidak tersedia')) !!} };
                 }
                 return { ok: true, nama: tersimpan };
             }
 
-            return { ok: false, alasan: 'Terlalu banyak permintaan' };
+            return { ok: false, alasan: {!! json_encode(__('Terlalu banyak permintaan')) !!} };
         }
 
         async function cetakSemuaKelas(daftarOverride) {
@@ -1598,7 +1607,7 @@
             if (!daftar.length) {
                 if (window.dlProgressReset) window.dlProgressReset();
                 rekapAktifkanTombolAwal();
-                if (infoText) infoText.textContent = 'Tidak ada kelas yang memiliki siswa aktif.';
+                if (infoText) infoText.textContent = {!! json_encode(__('Tidak ada kelas yang memiliki siswa aktif.')) !!};
                 return;
             }
 
@@ -1627,7 +1636,7 @@
                 }
             }
             if (cancel) {
-                cancel.textContent = 'Hentikan';
+                cancel.textContent = {!! json_encode(__('Hentikan')) !!};
                 cancel.removeAttribute('data-bs-dismiss');
             }
 
@@ -1709,7 +1718,7 @@
                 rekapGagalKelas.push({
                     nama: 'ZIP',
                     kelas: null,
-                    alasan: 'Gagal menyusun ZIP: ' + (err && err.message ? err.message : err),
+                    alasan: {!! json_encode(__('Gagal menyusun ZIP:')) !!} + ' ' + (err && err.message ? err.message : err),
                 });
                 rekapTampilkanGagal();
                 return;
@@ -1753,7 +1762,7 @@
             if (!list) return;
             const tersembunyi = list.classList.contains('d-none');
             list.classList.toggle('d-none', !tersembunyi);
-            this.textContent = tersembunyi ? 'Sembunyikan detail' : 'Lihat detail';
+            this.textContent = tersembunyi ? {!! json_encode(__('Sembunyikan detail')) !!} : {!! json_encode(__('Lihat detail')) !!};
         });
 
         /* ---------- Batal / Hentikan ----------
@@ -1771,7 +1780,7 @@
 
             function keModeBatal() {
                 controller = null;
-                batal.textContent = 'Batal';
+                batal.textContent = {!! json_encode(__('Batal')) !!};
                 batal.disabled = false;
                 batal.setAttribute('data-bs-dismiss', 'modal');
             }
@@ -1797,7 +1806,7 @@
                 controller = e.detail ? e.detail.controller : null;
                 if (!controller) return;
                 // "Batal" -> "Hentikan" (lebar tetap, gaya tetap).
-                batal.textContent = 'Hentikan';
+                batal.textContent = {!! json_encode(__('Hentikan')) !!};
                 batal.removeAttribute('data-bs-dismiss');
             });
 
@@ -1807,7 +1816,7 @@
 
             // Klik tombol Batal/Hentikan.
             batal.addEventListener('click', function (e) {
-                if (batal.textContent !== 'Hentikan' && !rekapLoopRunning) return;
+                if (batal.textContent !== {!! json_encode(__('Hentikan')) !!} && !rekapLoopRunning) return;
                 e.preventDefault();
                 e.stopPropagation();
                 batalkanSemua();
@@ -1837,12 +1846,12 @@
             if (document.getElementById('printModeStudent').checked) {
                 if (scope === 'single' && !document.getElementById('rekapStudentId').value) {
                     e.preventDefault();
-                    alert('Pilih siswa terlebih dahulu.');
+                    alert({!! json_encode(__('Pilih siswa terlebih dahulu.')) !!});
                     return;
                 }
                 if (scope === 'class' && !document.getElementById('rekapScopeClassId').value) {
                     e.preventDefault();
-                    alert('Pilih kelas terlebih dahulu.');
+                    alert({!! json_encode(__('Pilih kelas terlebih dahulu.')) !!});
                     return;
                 }
             } else if (document.getElementById('printModeClass')?.checked) {
@@ -1859,7 +1868,7 @@
             // Validasi periode: hanya field periode AKTIF yang penting.
             if (!computeRekapRange()) {
                 e.preventDefault();
-                alert('Lengkapi field periode terlebih dahulu.');
+                alert({!! json_encode(__('Lengkapi field periode terlebih dahulu.')) !!});
                 return;
             }
 
@@ -1873,9 +1882,9 @@
                     .catch(function (err) {
                         rekapAktifkanTombolAwal();
                         rekapGagalKelas.push({
-                            nama: 'Unduhan',
+                            nama: {!! json_encode(__('Unduhan')) !!},
                             kelas: null,
-                            alasan: 'Gagal menjalankan unduhan: ' + (err && err.message ? err.message : err),
+                            alasan: {!! json_encode(__('Gagal menjalankan unduhan:')) !!} + ' ' + (err && err.message ? err.message : err),
                         });
                         rekapTampilkanGagal();
                     });
@@ -1972,7 +1981,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Cetak Rekap Presensi</h5>
+                <h5 class="fw-bold mb-0">{{ __('Cetak Rekap Presensi') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
                 {{-- data-no-download: smart loader (instant-download.js) memasang
@@ -1990,80 +1999,80 @@
 
                 <div class="modal-body py-3">
                     <p class="text-secondary small mb-3">
-                        Pilih opsi cetak rekap presensi. Hasil akan diunduh sebagai file PDF atau Excel.
+                        {{ __('Pilih opsi cetak rekap presensi. Hasil akan diunduh sebagai file PDF atau Excel.') }}
                     </p>
 
                     <!-- Jenis Cetak -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Jenis Cetak <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold">{{ __('Jenis Cetak') }} <span class="text-danger">*</span></label>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="print_mode" id="printModeClass" value="class" checked onchange="toggleRekapPrintScope()">
                             <label class="form-check-label fw-medium small" for="printModeClass">
-                                Cetak per Kelas (Rekap Tabel)
+                                {{ __('Cetak per Kelas (Rekap Tabel)') }}
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="print_mode" id="printModeStudent" value="student" onchange="toggleRekapPrintScope()">
                             <label class="form-check-label fw-medium small" for="printModeStudent">
-                                Cetak per Siswa (Profil Lengkap)
+                                {{ __('Cetak per Siswa (Profil Lengkap)') }}
                             </label>
                         </div>
                     </div>
 
                     <!-- Cakupan Siswa (hanya untuk Cetak per Siswa) -->
                     <div class="mb-3" id="studentScopeContainer" style="display: none;">
-                        <label class="form-label small fw-semibold">Cakupan Siswa <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold">{{ __('Cakupan Siswa') }} <span class="text-danger">*</span></label>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="student_scope" id="scopeSingle" value="single" checked onchange="toggleRekapStudentScope()">
                             <label class="form-check-label fw-medium small" for="scopeSingle">
-                                Satu Siswa
+                                {{ __('Satu Siswa') }}
                             </label>
                         </div>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="student_scope" id="scopeClass" value="class" onchange="toggleRekapStudentScope()">
                             <label class="form-check-label fw-medium small" for="scopeClass">
-                                Satu Kelas (Semua Siswa)
+                                {{ __('Satu Kelas (Semua Siswa)') }}
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="student_scope" id="scopeClasses" value="classes" onchange="toggleRekapStudentScope()">
                             <label class="form-check-label fw-medium small" for="scopeClasses">
-                                Semua Kelas (satu file ZIP)
+                                {{ __('Semua Kelas (satu file ZIP)') }}
                             </label>
                         </div>
                     </div>
 
                     <!-- Pilih Siswa (untuk scope single) -->
                     <div class="mb-3" id="singleStudentContainer" style="display: none;">
-                        <label class="form-label small fw-semibold" for="rekapStudentSearch">Cari Siswa <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold" for="rekapStudentSearch">{{ __('Cari Siswa') }} <span class="text-danger">*</span></label>
                         <div class="position-relative">
-                            <input type="text" class="form-control form-control-sm rounded-3" id="rekapStudentSearch" name="student_search" placeholder="Ketik nama atau NISN..." autocomplete="off" aria-describedby="studentSearchHelp">
+                            <input type="text" class="form-control form-control-sm rounded-3" id="rekapStudentSearch" name="student_search" placeholder="{{ __('Ketik nama atau NISN...') }}" autocomplete="off" aria-describedby="studentSearchHelp">
                             <div id="studentSearchResults" class="dropdown-menu w-100 mt-1 border-0 shadow-sm rounded-3" style="max-height: 200px; overflow-y: auto; display: none;"></div>
                         </div>
-                        <div class="form-text small" id="studentSearchHelp">Ketik minimal 2 karakter untuk mencari siswa</div>
+                        <div class="form-text small" id="studentSearchHelp">{{ __('Ketik minimal 2 karakter untuk mencari siswa') }}</div>
                         <input type="hidden" name="student_id" id="rekapStudentId">
                     </div>
 
                     <!-- Pilih Kelas (untuk scope class) -->
                     <div class="mb-3" id="classScopeContainer" style="display: none;">
-                        <label class="form-label small fw-semibold">Pilih Kelas <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }} <span class="text-danger">*</span></label>
                         <select name="scope_class_id" id="rekapScopeClassId" class="form-select form-select-sm rounded-3">
-                            <option value="">Pilih Kelas</option>
+                            <option value="">{{ __('Pilih Kelas') }}</option>
                             @foreach($classes as $c)
-                            <option value="{{ $c->id }}">Kelas {{ $c->name }}</option>
+                            <option value="{{ $c->id }}">{{ __('Kelas ') }}{{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <!-- Periode -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Periode <span class="text-danger">*</span></label>
+                        <label class="form-label small fw-semibold">{{ __('Periode') }} <span class="text-danger">*</span></label>
                         <select name="period_type" id="rekapPeriodType" class="form-select form-select-sm rounded-3" onchange="toggleRekapPeriodFields()">
-                            <option value="harian">Harian</option>
-                            <option value="mingguan">Mingguan</option>
-                            <option value="bulanan">Bulanan</option>
-                            <option value="semester">Semester</option>
-                            <option value="tahunan">Setahun (Tahun Ajaran)</option>
+                            <option value="harian">{{ __('Harian') }}</option>
+                            <option value="mingguan">{{ __('Mingguan') }}</option>
+                            <option value="bulanan">{{ __('Bulanan') }}</option>
+                            <option value="semester">{{ __('Semester') }}</option>
+                            <option value="tahunan">{{ __('Setahun (Tahun Ajaran)') }}</option>
                         </select>
                     </div>
 
@@ -2079,20 +2088,20 @@
                     <div id="periodFields">
                         <!-- Harian: 1 tanggal -->
                         <div class="mb-3" id="periodHarian" style="display: none;">
-                            <label class="form-label small fw-semibold">Tanggal</label>
+                            <label class="form-label small fw-semibold">{{ __('Tanggal') }}</label>
                             <input type="date" name="period_date" data-role="period-date" class="form-control form-control-sm rounded-3" value="{{ $popupDate }}">
                         </div>
                         <!-- Mingguan: 1 tanggal acuan (Senin s/d Minggu dihitung otomatis) -->
                         <div class="mb-3" id="periodMingguan" style="display: none;">
-                            <label class="form-label small fw-semibold">Tanggal dalam minggu ini</label>
+                            <label class="form-label small fw-semibold">{{ __('Tanggal dalam minggu ini') }}</label>
                             <input type="date" name="period_date" data-role="period-date" class="form-control form-control-sm rounded-3" value="{{ $popupDate }}">
-                            <div class="form-text small">Rentang dicetak: Senin sampai Minggu dari tanggal tersebut.</div>
+                            <div class="form-text small">{{ __('Rentang dicetak: Senin sampai Minggu dari tanggal tersebut.') }}</div>
                         </div>
                         <!-- Bulanan: bulan + tahun -->
                         <div class="mb-3" id="periodBulanan" style="display: none;">
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <label class="form-label small fw-semibold">Bulan</label>
+                                    <label class="form-label small fw-semibold">{{ __('Bulan') }}</label>
                                     <select name="period_month" class="form-select form-select-sm rounded-3">
                                         @for($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}" {{ (int) $popupMonth === $m ? 'selected' : '' }}>{{ \Carbon\Carbon::createFromDate((int) $popupYear, $m, 1)->translatedFormat('F') }}</option>
@@ -2100,7 +2109,7 @@
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label small fw-semibold">Tahun</label>
+                                    <label class="form-label small fw-semibold">{{ __('Tahun') }}</label>
                                     <select name="period_year" class="form-select form-select-sm rounded-3">
                                         @for($y = (int) $popupYear - 1; $y <= (int) $popupYear + 2; $y++)
                                         <option value="{{ $y }}" {{ (int) $popupYear === $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -2113,14 +2122,14 @@
                         <div class="mb-3" id="periodSemester" style="display: none;">
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <label class="form-label small fw-semibold">Semester</label>
+                                    <label class="form-label small fw-semibold">{{ __('Semester') }}</label>
                                     <select name="period_semester" class="form-select form-select-sm rounded-3">
-                                        <option value="ganjil">Ganjil</option>
-                                        <option value="genap">Genap</option>
+                                        <option value="ganjil">{{ __('Ganjil') }}</option>
+                                        <option value="genap">{{ __('Genap') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label small fw-semibold">Tahun Ajaran</label>
+                                    <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
                                     <select name="period_academic_year" class="form-select form-select-sm rounded-3">
                                         @foreach($academicYears as $ay)
                                         <option value="{{ $ay->id }}" {{ (int) $activeYear->id === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
@@ -2131,7 +2140,7 @@
                         </div>
                         <!-- Tahunan: tahun ajaran -->
                         <div class="mb-3" id="periodTahunan" style="display: none;">
-                            <label class="form-label small fw-semibold">Tahun Ajaran</label>
+                            <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
                             <select name="period_academic_year" class="form-select form-select-sm rounded-3">
                                 @foreach($academicYears as $ay)
                                 <option value="{{ $ay->id }}" {{ (int) $activeYear->id === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
@@ -2142,14 +2151,14 @@
 
                     <!-- Info Box -->
                     <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2" id="rekapPrintInfoBox">
-                        <i class='bx bx-info-circle me-1'></i> <span id="rekapInfoText">Pilih opsi cetak di atas untuk melihat ringkasan hasil.</span>
+                        <i class='bx bx-info-circle me-1'></i> <span id="rekapInfoText">{{ __('Pilih opsi cetak di atas untuk melihat ringkasan hasil.') }}</span>
                     </div>
 
                     <!-- Baris kegagalan: hanya muncul kalau ada kelas yang gagal.
                          Kalau tidak ada, disembunyikan sehingga tidak memakan ruang. -->
                     <div class="small text-danger d-none mb-2" id="rekapFailLine" role="status" aria-live="polite">
                         <span id="rekapFailCount"></span>
-                        <a href="#" id="rekapDetailToggle" class="ms-1">Lihat detail</a>
+                        <a href="#" id="rekapDetailToggle" class="ms-1">{{ __('Lihat detail') }}</a>
                         <div id="rekapDetailList" class="d-none mt-1"
                              style="max-height:120px; overflow-y:auto;"></div>
                     </div>
@@ -2158,7 +2167,7 @@
                     <!-- Dua tombol sama lebar, lebar tetap. Saat proses berjalan
                          "Batal" berubah jadi "Hentikan" (lebar tetap). -->
                     <div class="dl-actions">
-                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal" id="rekapCancelBtn">Batal</button>
+                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal" id="rekapCancelBtn">{{ __('Batal') }}</button>
                         <!-- Tombol ini punya logika submit sendiri (#printRekapForm submit handler):
      semua mode sudah diarahkan ke window.downloadWithProgress, termasuk loop
      ZIP per kelas. Karena itu TIDAK diberi data-dl-progress supaya tidak
@@ -2168,7 +2177,7 @@
                         <button type="submit" class="btn-download-blue btn-progress px-3" data-download id="printRekapSubmitBtn">
                             <!-- Lapisan warna = bar progres (lebar = persen) -->
                             <span class="btn-progress__fill" id="rekapBtnFill" aria-hidden="true"></span>
-                            <span class="btn-progress__label" id="rekapBtnLabel">Generate &amp; Unduh</span>
+                            <span class="btn-progress__label" id="rekapBtnLabel">{{ __('Generate & Unduh') }}</span>
                         </button>
                     </div>
                 </div>

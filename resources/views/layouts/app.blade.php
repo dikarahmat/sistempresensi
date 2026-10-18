@@ -95,6 +95,7 @@
         })();
     </script>
 
+
     <!-- Skala Otomatis berdasarkan patokan 1920x1080 -->
     <script>
         (function() {
@@ -151,6 +152,9 @@
             --sidebar-gap: 10px;
             --primary-blue: #3b62f6;
             --primary-blue-hover: #2563eb;
+            /* Alias untuk kompatibilitas halaman admin yang memakai var(--blue) */
+            --blue: #3b62f6;
+            --blue-hover: #2563eb;
             --text-dark: #1e293b;
             --bg-canvas: #3b62f6;
             --bottom-nav-height: 56px;
@@ -1105,7 +1109,7 @@
 
         /* --------------------------------------------------------------------------
            3.B LAPISAN MOBILE: SAFE-AREA 16px, CLEAN LOOK & PERFORMA RENDER
-           Aktif HANYA di < 768px — tampilan desktop tetap 100% identik
+           Aktif HANYA di < 768px ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â tampilan desktop tetap 100% identik
            -------------------------------------------------------------------------- */
         @media (max-width: 767.98px) {
             /* Cegah auto-zoom iOS saat fokus input (font < 16px memicu zoom Safari) */
@@ -1998,6 +2002,348 @@
         }
 
         /* ==========================================================================
+           KARTU AKUN + POP-UP LOGOUT (pengganti tombol "LOG OUT" lama)
+
+           Tombol "LOG OUT" beserta garis pemisah di atasnya sudah dihapus dari
+           resources/views/partials/sidebar.blade.php dan digantikan kartu akun
+           di paling bawah sidebar. Semua kelas di bawah (prefix .sidebar-account)
+           adalah kelas BARU yang hanya dipakai elemen kartu itu, sehingga aturan
+           sidebar yang lain (menu, brand, tooltip collapsed) tidak tersentuh.
+
+           Pop-up memakai position: absolute di dalam kartu pada mode expanded
+           (desktop) maupun drawer (mobile), sehingga lebarnya persis selebar
+           kartu dan tidak pernah keluar dari kotak sidebar.
+
+           Pada mode COLLAPSED (>= 1024px, lebar sidebar hanya 76px) kartu tidak
+           punya ruang untuk nama/peran, jadi avatar saja yang tampil dan pop-up
+           dipindahkan ke position: fixed di sebelah kanan sidebar. Teknik yang
+           sama dipakai tooltip menu collapsed di bawah (lihat blok TOOLTIP),
+           sehingga pop-up tetap utuh dan tidak terpotong overflow:hidden <aside>.
+           ========================================================================== */
+        .app-sidebar-drawer .sidebar-account {
+            position: relative;
+            /* mt-auto: kartu terdorong ke paling bawah sidebar, terpisah dari
+               daftar menu yang ada di atasnya. */
+            margin-top: auto;
+            padding: 0.25rem 0.75rem 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* Garis tipis transparan sebagai pemisah daftar menu dengan kartu. */
+        .app-sidebar-drawer .sidebar-account-divider {
+            height: 1px;
+            margin: 0.5rem 0.75rem;
+            border-radius: 1px;
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Kartu akun: satu baris, seluruh area bisa diklik. Tanpa border, tanpa
+           shadow; hover hanya latar putih transparan 10% + radius 12px.
+           Padding 8px 10px supaya kartu tetap ringkas di sidebar 238px. */
+        .app-sidebar-drawer .sidebar-account-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px !important;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: #ffffff;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        @media (hover: hover) {
+            .app-sidebar-drawer .sidebar-account-btn:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .app-sidebar-drawer .sidebar-account-btn:active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .app-sidebar-drawer .sidebar-account-btn:focus-visible {
+            outline: 2px solid rgba(255, 255, 255, 0.6);
+            outline-offset: -2px;
+        }
+
+        /* Avatar: lingkaran 34px, biru tua, ikon orang 18px di tengah.
+           Ikon memakai kelas yang sudah dipakai project (bx-user). */
+        .app-sidebar-drawer .sidebar-account-avatar {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            border-radius: 50%;
+            background-color: #0033cc;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .app-sidebar-drawer .sidebar-account-avatar i {
+            font-size: 18px;
+            line-height: 1;
+            color: #ffffff;
+        }
+
+        /* Nama (semibold, putih) + peran (kecil, putih transparan 70%).
+           min-width:0 + whitespace:nowrap membuat nama TIDAK terpotong untuk
+           nama normal seperti "Administrator"; ellipsis hanya muncul bila nama
+           benar-benar lebih panjang dari ruang yang tersedia. */
+        .app-sidebar-drawer .sidebar-account-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+
+        .app-sidebar-drawer .sidebar-account-name {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.25;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-sidebar-drawer .sidebar-account-role {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.3;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Chevron penanda bisa dibuka; berputar 180deg saat pop-up tampil. */
+        .app-sidebar-drawer .sidebar-account-chevron {
+            font-size: 14px;
+            line-height: 1;
+            color: #ffffff;
+            flex: 0 0 auto;
+            transition: transform 0.2s ease;
+        }
+
+        .app-sidebar-drawer .sidebar-account-chevron.is-open {
+            transform: rotate(180deg);
+        }
+
+        /* Pop-up logout: MUNCUL DI ATAS kartu, bukan menimpanya.
+           Markup: class="sidebar-account-popup absolute bottom-full left-0 right-0 mb-2 z-50"
+           Padanan CSS di bawah dipakai supaya posisinya tetap benar walau utilitas
+           Tailwind belum terkompilasi:
+             position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 8px;
+           `bottom: 100%` berarti tepi bawah pop-up berada tepat di tepi ATAS
+           container .sidebar-account (container yang sama untuk kartu & pop-up),
+           lalu margin-bottom 8px memberi jarak - sehingga kartu (avatar, nama,
+           peran, chevron) tetap utuh dan tidak tertutup. */
+        .app-sidebar-drawer .sidebar-account-popup {
+            position: absolute;
+            bottom: 100%;
+            /* left/right disamakan dengan padding horizontal container (0.75rem)
+               supaya lebar pop-up PERSIS selebar kartu akun, bukan melebar ke
+               tepi sidebar. */
+            left: 0.75rem;
+            right: 0.75rem;
+            margin-bottom: 8px;
+            /* z-index mengikuti tooltip sidebar collapsed yang sudah ada (1046):
+               cukup tinggi untuk selalu tampil di atas isi halaman, dan tetap di
+               bawah modal Bootstrap (1055). */
+            z-index: 1046;
+            padding: 0.25rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.35);
+        }
+
+        /* Baris menu pop-up kartu akun (Kelola Akun, Bahasa, Logout).
+            Semua baris SERAGAM: tinggi 40px, ikon 18px di kiri, teks 14px,
+            padding horizontal 12px, hover abu sangat muda (#f1f5f9).
+            Class .sidebar-account-item dipakai SEMUA baris, jadi baris baru
+            (Kelola Akun) otomatis mengikuti gaya yang sama persis. */
+        .app-sidebar-drawer .sidebar-account-item {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.6rem !important;
+            width: 100%;
+            min-height: 40px;
+            box-sizing: border-box;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #0f172a;
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        @media (hover: hover) {
+            .app-sidebar-drawer .sidebar-account-item:hover {
+                background-color: #f1f5f9;
+            }
+        }
+
+        .app-sidebar-drawer .sidebar-account-item:focus-visible {
+            background-color: #f1f5f9;
+            outline: 2px solid #3b62f6;
+            outline-offset: -2px;
+        }
+
+        .app-sidebar-drawer .sidebar-account-item i {
+            font-size: 1.125rem;
+            line-height: 1;
+            color: #0f172a;
+            flex: 0 0 auto;
+        }
+
+        /* Teks baris menu pop-up mengisi ruang sisa. */
+        .app-sidebar-drawer .sidebar-account-item-text {
+            flex: 1 1 auto;
+            min-width: 0;
+            text-align: left;
+        }
+
+        /* Garis tipis memisahkan baris menu dari item Logout. */
+        .app-sidebar-drawer .sidebar-account-sep {
+            height: 1px;
+            margin: 0.25rem 0.5rem;
+            border-radius: 1px;
+            background-color: #e2e8f0;
+        }
+
+
+
+        /* ---------- PEMILIH BAHASA (ID / EN) ----------
+           Baris "Bahasa" di pop-up kartu akun: ikon globe + teks + segmented
+           kecil di kanan. Pilihan aktif berlatar biru dengan teks putih.
+           Tiap pilihan berupa form POST kecil (CSRF) ke route locale.set. */
+        .app-sidebar-drawer .sidebar-locale-row {
+            cursor: default;
+        }
+
+        .app-sidebar-drawer .sidebar-locale-seg {
+            display: inline-flex;
+            align-items: stretch;
+            flex: 0 0 auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+
+        .app-sidebar-drawer .sidebar-locale-form {
+            display: inline-flex;
+            margin: 0;
+        }
+
+        .app-sidebar-drawer .sidebar-locale-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 24px;
+            padding: 0 8px;
+            border: none;
+            border-left: 1px solid #e2e8f0;
+            background-color: transparent;
+            color: #334155;
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .app-sidebar-drawer .sidebar-locale-form:first-child .sidebar-locale-btn {
+            border-left: 0;
+        }
+
+        .app-sidebar-drawer .sidebar-locale-btn.is-active {
+            background-color: #3b62f6;
+            color: #ffffff;
+        }
+
+
+        /* Transisi buka/tutup pop-up (dipakai lewat x-transition Alpine):
+           fade opacity 0 -> 1 + geser naik 4px, durasi 150ms. */
+        .sidebar-account-popup-enter {
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .sidebar-account-popup-enter-start {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        .sidebar-account-popup-enter-end {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sidebar-account-popup-leave {
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .sidebar-account-popup-leave-start {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sidebar-account-popup-leave-end {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .app-sidebar-drawer .sidebar-account-btn,
+            .app-sidebar-drawer .sidebar-account-chevron,
+            .app-sidebar-drawer .sidebar-account-item,
+            .sidebar-account-popup-enter,
+            .sidebar-account-popup-leave {
+                transition: none !important;
+            }
+        }
+
+        /* --- MODE COLLAPSED - DESKTOP SAJA (>= 1024px) -------------------------
+           Sidebar hanya 76px: nama, peran, dan chevron disembunyikan sehingga
+           hanya avatar yang tampil (avatar tetap 34px, muat di 76px). Pop-up
+           dipindahkan ke position: fixed di KANAN sidebar (tetap 8px di atas
+           kartu) supaya teks "Logout" tetap terbaca utuh. Offset vertikal
+           memakai tinggi kartu yang tetap: 0.25rem (padding atas) + 17px
+           (garis pemisah) + 50px (avatar 34px + 2 x 8px) + 0.75rem (padding
+           bawah) + 8px (jarak pop-up ke kartu). */
+        @media (min-width: 1024px) {
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-account-btn {
+                justify-content: center !important;
+                gap: 0 !important;
+                padding: 8px !important;
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-account-text,
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-account-chevron {
+                display: none !important;
+            }
+
+            html.sidebar-collapsed .app-sidebar-drawer .sidebar-account-popup {
+                position: fixed;
+                left: calc(var(--sidebar-width-collapsed) + 6px);
+                right: auto;
+                bottom: calc(0.25rem + 0.75rem + 50px + 17px + 8px);
+                width: auto;
+                min-width: 150px;
+            }
+        }
+
+        /* ==========================================================================
            MODE COLLAPSED - DESKTOP SAJA (>= 1024px)
 
            Seluruh blok ini dikunci di media query min-width: 1024px dengan begitu
@@ -2329,7 +2675,7 @@
         }
 
         /* --------------------------------------------------------------------------
-           RUANG NAPIS BAWAH LAYAR (MOBILE & TABLET) – ANTI-TERPOTONG NAVBAR BAWAH
+           RUANG NAPIS BAWAH LAYAR (MOBILE & TABLET) ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ ANTI-TERPOTONG NAVBAR BAWAH
            --------------------------------------------------------------------------
            Navbar bawah (`.mobile-bottom-nav`, tinggi 56px + safe-area inset) adalah
            position:fixed di ujung bawah viewport dan menimpa konten halaman.
@@ -2957,7 +3303,7 @@
 
         /* ==========================================================================
            PAGINASI TEKS MURNI BERSAMA (Single Source of Truth)
-           Susunan "‹ Sebelumnya  1 2 3 4 5  Berikutnya ›" + info "Menampilkan ...".
+           Susunan "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Sebelumnya  1 2 3 4 5  Berikutnya ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº" + info "Menampilkan ...".
            Tanpa container/border/shadow/pill; halaman aktif biru tebal bergaris
            bawah tipis; "Sebelumnya/Berikutnya" redup di ujung.
 
@@ -3792,7 +4138,7 @@
            Final: desktop 440px; mobile min(calc(100vw - 44px), 400px)
            (viewport 502px -> 400px; 390px -> 346px). Sempat ditimbang 380
            (masih sempit) dan desktop 420 (kurang lega untuk dua kolom).
-           .modal-lg ikut 440px — form dua kolom dilaporkan terpisah. */
+           .modal-lg ikut 440px ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â form dua kolom dilaporkan terpisah. */
         .modal-dialog {
             max-width: 440px !important;
             width: min(calc(100vw - 44px), 440px) !important;
@@ -4389,6 +4735,26 @@
             inset: 0;
         }
 
+        /* Z-INDEX DI ATAS SEMUA ELEMEN.
+           Modal ini bisa dibuka dari KARTU AKUN di dalam sidebar, sedangkan
+           drawer sidebar memakai z-index 9999999 - jauh di atas nilai bawaan
+           Bootstrap (1055). Tanpa aturan ini, drawer akan menutupi modal saat
+           logout dibuka dari HP. Angka dipilih memakai :has() supaya hanya aktif
+           selama modal tampil, dan tetap di BAWAH loader global (999999999)
+           yang muncul saat proses logout berjalan.
+
+             overlay gelap : 10.000.000  (di atas drawer 9.999.999)
+             kartu modal  : 10.000.005  (di atas overlay-nya sendiri) */
+        body:has(#logoutConfirmModal.show) .modal-backdrop {
+            --bs-backdrop-zindex: 10000000;
+            z-index: 10000000 !important;
+        }
+
+        body:has(#logoutConfirmModal.show) #logoutConfirmModal {
+            --bs-modal-zindex: 10000005;
+            z-index: 10000005 !important;
+        }
+
         /* Saat tampil, area gelap menjadi flex container sehingga .modal-dialog
            (flex item) terpusat horizontal DAN vertikal otomatis. */
         #logoutConfirmModal.show {
@@ -4522,13 +4888,11 @@
             z-index: 1000000000 !important;
         }
 
-        /* Fade-out 180ms saat "Ya, Log Out" diklik (termasuk blur backdrop
-           yang difade via inline style oleh script alur logout). Tanpa ini,
-           aturan global ".modal.fade { transition: none }" membuat modal
-           hilang seketika. */
+        /* INSTANT HIDE: tidak ada animasi fade-out. Modal ditutup seketika
+           saat "Ya, Keluar" diklik. Backdrop dihapus langsung via JS. */
         #logoutConfirmModal.logout-leaving {
-            transition: opacity 180ms linear !important;
             opacity: 0 !important;
+            transition: none !important;
         }
 
         /* ---------- ANIMASI LOG OUT: INSTAN (SAMA DENGAN DIALOG HAPUS) ----------
@@ -5270,8 +5634,8 @@
                     <button @click="window.matchMedia('(min-width: 1024px)').matches ? (window.__presensiToggleSidebar && window.__presensiToggleSidebar()) : (sidebarOpen = !sidebarOpen)"
                             type="button"
                             class="mobile-top-hamburger flex-shrink-0" 
-                            title="Buka/Tutup sidebar"
-                            aria-label="Buka/Tutup sidebar">
+                            title="{{ __('Buka/Tutup sidebar') }}"
+                            aria-label="{{ __('Buka/Tutup sidebar') }}">
                         <i class='bx bx-menu'></i>
                     </button>
                     <!-- Wadah Blok Teks Header Solid (Judul & Subjudul Sejajar Vertikal Presisi) -->
@@ -5337,58 +5701,58 @@
         : (request()->routeIs('*classes*') || request()->routeIs('*kelas*'));
 @endphp
 
-<nav class="mobile-bottom-nav lg:hidden" aria-label="Menu Navigasi Bawah">
+<nav class="mobile-bottom-nav lg:hidden" aria-label="{{ __('Menu Navigasi Bawah') }}">
     <div class="mobile-nav-grid" @if($isNavPiket) style="grid-template-columns: repeat(2, minmax(0,1fr)) !important;" @endif>
         
         <!-- 1. Dashboard (bx bxs-dashboard) - TIDAK tampil untuk Guru Piket -->
         @if(!$isNavPiket)
         <a href="{{ $navDashboardUrl }}" 
            class="mobile-nav-item {{ $isNavDashboardActive ? 'active' : '' }}"
-           title="Dashboard">
+           title="{{ __('Dashboard') }}">
             @if($isNavDashboardActive)
                 <span class="mobile-nav-indicator"></span>
                 <span class="mobile-nav-spotlight"></span>
             @endif
             <i class='bx bxs-dashboard mobile-nav-icon'></i>
-            <span class="mobile-nav-label">Dashboard</span>
+            <span class="mobile-nav-label">{{ __('Dashboard') }}</span>
         </a>
         @endif
 
         <!-- 2. Kehadiran (bx bx-calendar-check) -->
         <a href="{{ $navKehadiranUrl }}" 
            class="mobile-nav-item {{ $isNavKehadiranActive ? 'active' : '' }}"
-           title="Kehadiran">
+           title="{{ __('Kehadiran') }}">
             @if($isNavKehadiranActive)
                 <span class="mobile-nav-indicator"></span>
                 <span class="mobile-nav-spotlight"></span>
             @endif
             <i class='bx bx-calendar-check mobile-nav-icon'></i>
-            <span class="mobile-nav-label">Kehadiran</span>
+            <span class="mobile-nav-label">{{ __('Kehadiran') }}</span>
         </a>
 
         <!-- 3. Presensi (QR Code: bx bx-qr-scan) -->
         <a href="{{ $navAbsensiUrl }}" 
            class="mobile-nav-item {{ $isNavAbsensiActive ? 'active' : '' }}"
-           title="Presensi">
+           title="{{ __('Presensi') }}">
             @if($isNavAbsensiActive)
                 <span class="mobile-nav-indicator"></span>
                 <span class="mobile-nav-spotlight"></span>
             @endif
             <i class='bx bx-qr-scan mobile-nav-icon'></i>
-            <span class="mobile-nav-label">Presensi</span>
+            <span class="mobile-nav-label">{{ __('Presensi') }}</span>
         </a>
 
         <!-- 4. Rekap (bx bx-folder-open) - TIDAK tampil untuk Guru Piket -->
         @if(!$isNavPiket)
         <a href="{{ $navRekapUrl }}" 
            class="mobile-nav-item {{ $isNavRekapActive ? 'active' : '' }}"
-           title="Rekap">
+           title="{{ __('Rekap') }}">
             @if($isNavRekapActive)
                 <span class="mobile-nav-indicator"></span>
                 <span class="mobile-nav-spotlight"></span>
             @endif
             <i class='bx bx-folder-open mobile-nav-icon'></i>
-            <span class="mobile-nav-label">Rekap</span>
+            <span class="mobile-nav-label">{{ __('Rekap') }}</span>
         </a>
 
         <!-- 5. Pengaturan (admin) / Kelas (guru) -->
@@ -5398,13 +5762,13 @@
         @endphp
         <a href="{{ $navPengaturanUrl }}" 
            class="mobile-nav-item {{ $isNavPengaturanActive ? 'active' : '' }}"
-           title="{{ $nav5Title }}">
+           title="{{ __($nav5Title) }}">
             @if($isNavPengaturanActive)
                 <span class="mobile-nav-indicator"></span>
                 <span class="mobile-nav-spotlight"></span>
             @endif
             <i class='{{ $nav5Icon }} mobile-nav-icon'></i>
-            <span class="mobile-nav-label">{{ $nav5Title }}</span>
+            <span class="mobile-nav-label">{{ __($nav5Title) }}</span>
         </a>
         @endif {{-- penutup @if(!$isNavPiket): Rekap & item-5 tidak tampil untuk piket --}}
 
@@ -5453,7 +5817,7 @@
 <!-- Penutupan modal: tombol "Batal", tombol "X", klik area overlay gelap,    -->
 <!-- dan tombol Esc semuanya sudah difasilitasi Bootstrap 5 secara bawaan.  -->
 <!-- ========================================================================= -->
-<div class="modal fade app-dialog-modal" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+<div class="modal fade app-dialog-modal" id="logoutConfirmModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 app-dialog-card">
             <form action="{{ route('logout') }}" method="POST" class="d-flex flex-column app-dialog-card-body">
@@ -5462,13 +5826,13 @@
                     <div class="app-dialog-icon">
                         <i class='bx bx-log-out'></i>
                     </div>
-                    <h5 class="modal-title app-dialog-title mb-0" id="logoutConfirmModalLabel">Log Out</h5>
-                    <p class="app-dialog-text mt-2 mb-0">Apakah Anda yakin untuk Log Out?</p>
-                    <p class="app-dialog-sub">Anda harus login kembali untuk mengakses sistem.</p>
+                    <h5 class="modal-title app-dialog-title mb-0" id="logoutConfirmModalLabel">{{ __('Keluar dari akun?') }}</h5>
+                    <p class="app-dialog-text mt-2 mb-0">{{ __('Anda akan keluar dari Sistem Presensi Terintegrasi.') }}</p>
+                    <p class="app-dialog-sub">{{ __('Anda harus login kembali untuk mengakses sistem.') }}</p>
                 </div>
                 <div class="modal-footer app-dialog-footer">
-                    <button type="button" class="btn btn-light app-dialog-btn" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger app-dialog-btn" id="logoutConfirmBtn">Ya, Log Out</button>
+                    <button type="button" class="btn btn-light app-dialog-btn" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-danger app-dialog-btn" id="logoutConfirmBtn">{{ __('Ya, Keluar') }}</button>
                 </div>
             </form>
         </div>
@@ -5489,6 +5853,17 @@
     var confirmBtn = document.getElementById('logoutConfirmBtn');
     if (!form) return;
 
+    /* FOKUS AWAL di tombol "Batal": jadi pilihan aman yang sudah terpilih saat
+       modal dibuka dari pop-up kartu akun (tekan Enter = Batal, bukan keluar).
+       Ditunda singkat agar selesai setelah transisi fade Bootstrap. */
+    modal.addEventListener('show.bs.modal', function () {
+        var cancelBtn = modal.querySelector('.modal-footer [data-bs-dismiss="modal"]');
+        if (!cancelBtn) return;
+        window.setTimeout(function () {
+            try { cancelBtn.focus(); } catch (err) { /* abaikan */ }
+        }, 80);
+    });
+
     function showLogoutFailed() {
         if (window.hideSmartLoader) { window.hideSmartLoader(); }
         var host = document.querySelector('.content-scroll-wrapper > main > .flex-1') || document.querySelector('main') || document.body;
@@ -5497,8 +5872,8 @@
         note.id = 'logoutFailedNotice';
         note.className = 'alert alert-danger alert-dismissible fade show';
         note.setAttribute('role', 'alert');
-        note.innerHTML = '<span>Log out gagal atau waktu habis. Periksa koneksi lalu coba lagi.</span>'
-            + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>';
+        note.innerHTML = '<span>' + ((window.__i18n && window.__i18n.logout_failed) || 'Log out gagal atau waktu habis. Periksa koneksi lalu coba lagi.') + '</span>'
+            + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="' + ((window.__i18n && window.__i18n.tutup) || 'Tutup') + '"></button>';
         host.insertBefore(note, host.firstChild);
         if (confirmBtn) { confirmBtn.disabled = false; }
         if (form) { delete form.dataset.loggingOut; }
@@ -5508,36 +5883,41 @@
         if (form.dataset.loggingOut === '1') return; /* submit programatik */
         e.preventDefault();
         if (confirmBtn && confirmBtn.disabled) return;
-        if (confirmBtn) { confirmBtn.disabled = true; }
+        if (confirmBtn) { 
+            confirmBtn.disabled = true; 
+            // Ganti tombol ke state loading instan
+            confirmBtn.innerHTML = '<span class="app-loader me-2" style="width:16px;height:16px;padding:2px;"></span>' + ((window.__i18n && window.__i18n.dl_memproses) || 'Memproses...');
+        }
         modal.classList.add('logout-leaving');
+        // Sembunyikan backdrop instan
         var backs = document.querySelectorAll('.modal-backdrop');
         for (var i = 0; i < backs.length; i++) {
-            backs[i].style.transition = 'opacity 180ms linear';
+            backs[i].style.transition = 'none';
             backs[i].style.opacity = '0';
         }
-        window.setTimeout(function () {
-            try {
-                if (window.bootstrap && window.bootstrap.Modal) {
-                    var inst = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
-                    inst.hide();
-                } else {
-                    modal.classList.remove('show');
-                    modal.style.display = 'none';
-                    var b = document.querySelectorAll('.modal-backdrop');
-                    for (var j = 0; j < b.length; j++) {
-                        if (b[j].parentNode) { b[j].parentNode.removeChild(b[j]); }
-                    }
-                    document.body.classList.remove('modal-open');
+        // Tutup modal instan (tanpa timeout)
+        try {
+            if (window.bootstrap && window.bootstrap.Modal) {
+                var inst = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
+                inst.hide();
+            } else {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                var b = document.querySelectorAll('.modal-backdrop');
+                for (var j = 0; j < b.length; j++) {
+                    if (b[j].parentNode) { b[j].parentNode.removeChild(b[j]); }
                 }
-            } catch (err) { /* lanjut ke loading + submit */ }
-            if (window.showSmartLoader) { window.showSmartLoader(); }
-            window.setTimeout(function () {
-                /* Masih di halaman ini setelah 20 detik = logout gagal/timeout. */
-                showLogoutFailed();
-            }, 20000);
-            form.dataset.loggingOut = '1';
-            form.submit();
-        }, 180);
+                document.body.classList.remove('modal-open');
+            }
+        } catch (err) { /* lanjut ke loading + submit */ }
+        // Tampilkan loading global instan
+        if (window.showSmartLoader) { window.showSmartLoader(); }
+        window.setTimeout(function () {
+            /* Masih di halaman ini setelah 20 detik = logout gagal/timeout. */
+            showLogoutFailed();
+        }, 20000);
+        form.dataset.loggingOut = '1';
+        form.submit();
     });
 })();
 </script>
@@ -5545,6 +5925,51 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('js/instant-download.js') }}?v={{ file_exists(public_path('js/instant-download.js')) ? filemtime(public_path('js/instant-download.js')) : config('app.version', '1') }}"></script>
+<script>
+/* Kamus JS bersama (dipakai scanner.js, instant-download.js & script inline halaman).
+   Hanya teks statis; data dinamis tetap dari server. */
+window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
+    'connection_error' => __('Terjadi kendala koneksi ke server, coba lagi'),
+    'placeholder_camera' => __('Tempelkan kartu QR ke kamera'),
+    'try_again' => __('Coba Lagi'),
+    'camera_denied' => __('Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.'),
+    'camera_busy' => __('Kamera sedang dipakai aplikasi atau tab lain. Tutup lalu coba lagi.'),
+    'camera_not_found' => __('Kamera tidak ditemukan.'),
+    'camera_open_failed' => __('Kamera gagal dibuka. Coba lagi atau gunakan Alat Scanner.'),
+    'late' => __('Terlambat'),
+    'check_out' => __('Presensi Pulang'),
+    'present' => __('Hadir'),
+    'already_checked_in' => __('Siswa atas nama :name sudah melakukan presensi hari ini'),
+    'card_not_found' => __('Kartu tidak dikenali atau data siswa tidak ditemukan'),
+    'failed' => __('Gagal'),
+    'tutup_scanner' => __('Tutup Scanner'),
+    'tutup' => __('Tutup'),
+    'buka_scanner_qr' => __('Buka Scanner QR'),
+    'scanner_qr' => __('Scanner QR'),
+    'library_scanner_not_loaded' => __('Library scanner tidak dimuat. Muat ulang halaman.'),
+    'browser_camera_unsupported' => __('Browser tidak mendukung akses kamera.'),
+    'camera_script_not_loaded' => __('Script kamera tidak dimuat. Muat ulang halaman.'),
+    'delete_title' => __('Hapus Data?'),
+    'hapus' => __('Hapus'),
+    'tidak' => __('Tidak'),
+    'delete_message' => __('Data ini akan dihapus.'),
+    'logout_failed' => __('Log out gagal atau waktu habis. Periksa koneksi lalu coba lagi.'),
+    'clear_search' => __('Kosongkan pencarian'),
+    'dl_selesai' => __('Selesai'),
+    'dl_memproses' => __('Memproses...'),
+    'dl_gagal' => __('Gagal'),
+    'dl_gagal_upload' => __('Gagal mengunggah file'),
+    'dl_waktu_habis' => __('Waktu habis'),
+    'id_kartu_belum_unduh' => __('Kartu belum bisa diunduh, coba lagi'),
+    'id_gagal_unduh_berkas' => __('Gagal mengunduh berkas (Status: :status)'),
+    'id_gagal_proses_unduh' => __('Gagal memproses unduhan'),
+    'id_unduhan_gagal' => __('Unduhan Gagal'),
+    'id_gagal_proses_import' => __('Gagal memproses berkas import (Status :status)'),
+    'id_import_gagal' => __('Import Gagal'),
+    'id_tutup' => __('Tutup'),
+    'id_koneksi_terputus' => __('Koneksi terputus saat mengunggah berkas.'),
+], JSON_UNESCAPED_UNICODE) !!});
+</script>
 <script>
     /**
      * TEMA DIALOG BERSAMA - dialog konfirmasi hapus (satuan & massal).
@@ -5577,10 +6002,10 @@
      */
     window.confirmUniversalDelete = function(options) {
         const opts = options || {};
-        const title = opts.title || 'Hapus Data?';
-        const confirmText = opts.confirmText || 'Hapus';
-        const cancelText = opts.cancelText || 'Tidak';
-        const message = opts.html || opts.text || 'Data ini akan dihapus.';
+        const title = opts.title || ((window.__i18n && window.__i18n.delete_title) || 'Hapus Data?');
+        const confirmText = opts.confirmText || ((window.__i18n && window.__i18n.hapus) || 'Hapus');
+        const cancelText = opts.cancelText || ((window.__i18n && window.__i18n.tidak) || 'Tidak');
+        const message = opts.html || opts.text || ((window.__i18n && window.__i18n.delete_message) || 'Data ini akan dihapus.');
         const sub = opts.sub || '';
         const icon = opts.icon || 'bx-error-circle';
         const checks = Array.isArray(opts.checks) ? opts.checks : [];
@@ -5669,7 +6094,7 @@
      SIDEBAR COLLAPSIBLE - DESKTOP (>= 1024px)
      Script ini HANYA mengatur state collapse & posisi tooltip. Seluruh
      tampilan (lebar, ikon, warna, tooltip) dikerjakan oleh CSS.
-     Périlaku mobile TIDAK diubah: di bawah 1024px tombol ini tidak melakukan
+     PÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rilaku mobile TIDAK diubah: di bawah 1024px tombol ini tidak melakukan
      apa-apa dan Alpine @click yang Handles drawer berjalan seperti semula.
      ========================================================================== -->
 <script>
@@ -5824,7 +6249,7 @@
             var clearBtn = document.createElement('button');
             clearBtn.type = 'button';
             clearBtn.className = 'search-clear-x';
-            clearBtn.setAttribute('aria-label', 'Kosongkan pencarian');
+            clearBtn.setAttribute('aria-label', (window.__i18n && window.__i18n.clear_search) || 'Kosongkan pencarian');
             clearBtn.innerHTML = '&times;';
             clearBtn.style.cssText = 'position:absolute; top:50%; transform:translateY(-50%); right:40px; z-index:5; width:18px; height:18px; padding:0; line-height:1; border:none; background:transparent; color:#94a3b8; font-size:16px; display:none; cursor:pointer;';
             var searchBtn = group.querySelector('button:not(.search-clear-x)');

@@ -792,13 +792,13 @@ class AttendanceController extends Controller
             $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
             $mime = $file->getMimeType();
             if (!in_array($mime, $allowedMimes, true)) {
-                return back()->with('error', 'Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.');
+                return back()->with('error', __('Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.'));
             }
             // Validasi ekstensi
             $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
             $ext = strtolower($file->extension());
             if (!in_array($ext, $allowedExts, true)) {
-                return back()->with('error', 'Ekstensi file tidak diizinkan.');
+                return back()->with('error', __('Ekstensi file tidak diizinkan.'));
             }
         }
 
@@ -894,7 +894,7 @@ class AttendanceController extends Controller
 
         $attendance->save();
 
-        return back()->with('success', 'Status presensi siswa berhasil diperbarui!');
+        return back()->with('success', __('Status presensi siswa berhasil diperbarui!'));
     }
 
 }

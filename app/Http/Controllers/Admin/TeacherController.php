@@ -91,10 +91,10 @@ class TeacherController extends Controller
             return redirect()->route('admin.guru.index')
                 ->withInput($request->all())
                 ->with('open_modal', 'add')
-                ->with('form_error', 'Gagal menyimpan data guru. Coba lagi.');
+                ->with('form_error', __('Gagal menyimpan data guru. Coba lagi.'));
         }
 
-        return redirect()->route('admin.guru.index')->with('success', "Data guru {$teacher->name} berhasil disimpan.");
+        return redirect()->route('admin.guru.index')->with('success', __('Data guru :name berhasil disimpan.', ['name' => $teacher->name]));
     }
 
     /**
@@ -144,10 +144,10 @@ class TeacherController extends Controller
                 ->withInput($request->all())
                 ->with('open_modal', 'edit')
                 ->with('open_teacher_id', $teacher->id)
-                ->with('form_error', 'Gagal menyimpan data guru. Coba lagi.');
+                ->with('form_error', __('Gagal menyimpan data guru. Coba lagi.'));
         }
 
-        return redirect()->route('admin.guru.index')->with('success', "Data guru {$teacher->name} berhasil disimpan.");
+        return redirect()->route('admin.guru.index')->with('success', __('Data guru :name berhasil disimpan.', ['name' => $teacher->name]));
     }
 
     /**
@@ -178,12 +178,12 @@ class TeacherController extends Controller
             // Notifikasi hapus memakai flash 'deleted' supaya tampil MERAH
             // (alert-danger) + ikon tempat sampah, sama seperti notifikasi
             // hapus lainnya. Flash 'success' (hijau) untuk tambah/ubah.
-            $message = 'Data guru ' . $name . ' berhasil dihapus! Penugasan kelasnya otomatis dilepaskan.';
+            $message = __('Data guru :name berhasil dihapus! Penugasan kelasnya otomatis dilepaskan.', ['name' => $name]);
             return redirect()->route('admin.guru.index')->with('deleted', $message);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.guru.index')->with('error', 'Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.');
+            return redirect()->route('admin.guru.index')->with('error', __('Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -208,7 +208,7 @@ class TeacherController extends Controller
             if ($total === 0) {
                 DB::rollBack();
                 return redirect()->route('admin.guru.index')
-                    ->with('error', 'Tidak ada data guru aktif yang bisa dihapus.');
+                    ->with('error', __('Tidak ada data guru aktif yang bisa dihapus.'));
             }
 
             // Lepaskan seluruh penugasan kelas lebih dulu supaya tidak ada
@@ -224,12 +224,12 @@ class TeacherController extends Controller
             // Flash 'deleted' supaya notifikasi tampil MERAH (alert-danger)
             // dengan ikon tempat sampah, sama seperti notifikasi hapus lainnya.
             return redirect()->route('admin.guru.index')
-                ->with('deleted', "Seluruh data guru ({$total}) berhasil dihapus dan dipindahkan ke Tempat Sampah di Pengaturan.");
+                ->with('deleted', __('Seluruh data guru (:total) berhasil dihapus dan dipindahkan ke Tempat Sampah di Pengaturan.', ['total' => $total]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.guru.index')
-                ->with('error', 'Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -296,7 +296,7 @@ class TeacherController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.guru.index')
-                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -415,13 +415,13 @@ class TeacherController extends Controller
 
         if ($duplikat) {
             return redirect()->route('admin.teachers.trash')
-                ->with('error', "Gagal dipulihkan: NIP {$teacher->nip} sudah dipakai data guru yang aktif. Perbaiki NIP lebih dulu.");
+                ->with('error', __('Gagal dipulihkan: NIP :nip sudah dipakai data guru yang aktif. Perbaiki NIP lebih dulu.', ['nip' => $teacher->nip]));
         }
 
         $teacher->restore();
 
         return redirect()->route('admin.teachers.trash')
-            ->with('success', "Data guru {$teacher->name} berhasil dipulihkan!");
+            ->with('success', __('Data guru :name berhasil dipulihkan!', ['name' => $teacher->name]));
     }
 
     /**
@@ -445,12 +445,12 @@ class TeacherController extends Controller
             DB::commit();
             // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
-                ->with('deleted', "Data guru {$teacherName} berhasil dihapus permanen!");
+                ->with('deleted', __('Data guru :name berhasil dihapus permanen!', ['name' => $teacherName]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.teachers.trash')
-                ->with('error', 'Gagal menghapus permanen guru. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus permanen guru. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -470,7 +470,7 @@ class TeacherController extends Controller
             if ($total === 0) {
                 DB::rollBack();
                 return redirect()->route('admin.teachers.trash')
-                    ->with('error', 'Tempat Sampah Guru sudah kosong, tidak ada yang bisa dihapus.');
+                    ->with('error', __('Tempat Sampah Guru sudah kosong, tidak ada yang bisa dihapus.'));
             }
 
             // Foto dihapus hanya untuk data yang memang dihapus permanen.
@@ -488,12 +488,12 @@ class TeacherController extends Controller
             DB::commit();
             // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
-                ->with('deleted', "Seluruh data guru di Tempat Sampah ({$total}) berhasil dihapus permanen!");
+                ->with('deleted', __('Seluruh data guru di Tempat Sampah (:total) berhasil dihapus permanen!', ['total' => $total]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.teachers.trash')
-                ->with('error', 'Gagal menghapus permanen data guru dari Tempat Sampah. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus permanen data guru dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
         }
     }
 }

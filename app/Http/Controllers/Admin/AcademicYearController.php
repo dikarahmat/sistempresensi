@@ -45,7 +45,7 @@ class AcademicYearController extends Controller
             'is_active' => $isActive,
         ]);
 
-        return redirect()->route('admin.academic-years.index')->with('success', 'Tahun ajaran berhasil ditambahkan!');
+        return redirect()->route('admin.academic-years.index')->with('success', __('Tahun ajaran berhasil ditambahkan!'));
     }
 
     public function update(Request $request, AcademicYear $academicYear): RedirectResponse
@@ -65,7 +65,7 @@ class AcademicYearController extends Controller
         // supaya sistem tidak pernah berakhir tanpa tahun ajaran aktif.
         if ($academicYear->is_active && !$isActive) {
             return redirect()->route('admin.academic-years.index')
-                ->with('error', 'Tahun ajaran sedang berlangsung tidak dapat dinonaktifkan. Aktifkan tahun ajaran lain terlebih dahulu.');
+                ->with('error', __('Tahun ajaran sedang berlangsung tidak dapat dinonaktifkan. Aktifkan tahun ajaran lain terlebih dahulu.'));
         }
 
         if ($isActive && !$academicYear->is_active) {
@@ -80,7 +80,7 @@ class AcademicYearController extends Controller
             'is_active' => $isActive,
         ]);
 
-        return redirect()->route('admin.academic-years.index')->with('success', 'Tahun ajaran berhasil diperbarui!');
+        return redirect()->route('admin.academic-years.index')->with('success', __('Tahun ajaran berhasil diperbarui!'));
     }
 
     /**
@@ -98,7 +98,7 @@ class AcademicYearController extends Controller
 
         if (! $academicYear) {
             return redirect()->route('admin.academic-years.index')
-                ->with('error', 'Tahun ajaran tidak ditemukan atau sudah dihapus.');
+                ->with('error', __('Tahun ajaran tidak ditemukan atau sudah dihapus.'));
         }
 
         try {
@@ -109,11 +109,11 @@ class AcademicYearController extends Controller
             report($e);
 
             return redirect()->route('admin.academic-years.index')
-                ->with('error', 'Gagal mengaktifkan tahun ajaran. Coba lagi.');
+                ->with('error', __('Gagal mengaktifkan tahun ajaran. Coba lagi.'));
         }
 
         return redirect()->route('admin.academic-years.index')
-            ->with('success', "Tahun ajaran {$academicYear->name} - {$academicYear->semester} berhasil diaktifkan.");
+            ->with('success', __('Tahun ajaran :name - :semester berhasil diaktifkan.', ['name' => $academicYear->name, 'semester' => $academicYear->semester]));
     }
 
     public function destroy(AcademicYear $academicYear): RedirectResponse
@@ -121,18 +121,18 @@ class AcademicYearController extends Controller
         if ($academicYear->is_active) {
             // Pesan sengaja DIPERBANDINGKAN dengan tooltip tombol Hapus di view.
             return redirect()->route('admin.academic-years.index')
-                ->with('error', 'Tahun ajaran sedang berlangsung, tidak dapat dihapus.');
+                ->with('error', __('Tahun ajaran sedang berlangsung, tidak dapat dihapus.'));
         }
 
         if ($academicYear->schoolClasses()->exists() || $academicYear->attendances()->exists()) {
             return redirect()->route('admin.academic-years.index')
-                ->with('error', 'Tahun ajaran tidak dapat dihapus karena memiliki data kelas atau presensi terkait!');
+                ->with('error', __('Tahun ajaran tidak dapat dihapus karena memiliki data kelas atau presensi terkait!'));
         }
 
         $academicYear->delete();
 
         // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
         // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
-        return redirect()->route('admin.academic-years.index')->with('deleted', 'Tahun ajaran berhasil dihapus!');
+        return redirect()->route('admin.academic-years.index')->with('deleted', __('Tahun ajaran berhasil dihapus!'));
     }
 }

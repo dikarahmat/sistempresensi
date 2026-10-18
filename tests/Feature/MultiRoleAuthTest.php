@@ -155,15 +155,15 @@ class MultiRoleAuthTest extends TestCase
     {
         $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
 
-        // Halaman dashboard harus memuat modal konfirmasi Log Out.
+        // Halaman dashboard harus memuat modal konfirmasi keluar.
         $response = $this->actingAs($admin)->get(route('admin.dashboard'));
         $response->assertOk();
         $response->assertSee('id="logoutConfirmModal"', false);
         $response->assertSee('logoutConfirmModalLabel');
-        $response->assertSee('Log Out');
-        $response->assertSee('Apakah Anda yakin untuk Log Out?');
+        $response->assertSee('Keluar dari akun?');
+        $response->assertSee('Anda akan keluar dari Sistem Presensi Terintegrasi.');
         $response->assertSee('Batal');
-        $response->assertSee('Ya, Log Out');
+        $response->assertSee('Ya, Keluar');
 
         // Tombol Log Out di sidebar harus memicu modal, bukan mengirim form langsung.
         $response->assertSee('data-bs-target="#logoutConfirmModal"', false);
@@ -186,8 +186,8 @@ class MultiRoleAuthTest extends TestCase
             $response = $this->actingAs($admin)->get($url);
             $response->assertOk();
             $response->assertSee('id="logoutConfirmModal"', false);
-            $response->assertSee('Apakah Anda yakin untuk Log Out?');
-            $response->assertSee('Ya, Log Out');
+            $response->assertSee('Anda akan keluar dari Sistem Presensi Terintegrasi.');
+            $response->assertSee('Ya, Keluar');
             $this->assertAuthenticated();
         }
     }
@@ -258,11 +258,11 @@ class MultiRoleAuthTest extends TestCase
         $this->assertStringContainsString('border-radius: 10px !important;', $html);
         $this->assertStringContainsString('gap: 10px !important;', $html);
 
-        // Tombol BATAL & YA, LOG OUT tetap ada; YA, LOG OUT tetap merah (btn-danger).
+        // Tombol BATAL & YA, KELUAR tetap ada; YA, KELUAR tetap merah (btn-danger).
         $this->assertStringContainsString('data-bs-dismiss="modal"', $html);
         $this->assertStringContainsString('>Batal</button>', $html);
         $this->assertStringContainsString('btn btn-danger', $html);
-        $this->assertStringContainsString('>Ya, Log Out</button>', $html);
+        $this->assertStringContainsString('>Ya, Keluar</button>', $html);
     }
 
     // =====================================================================

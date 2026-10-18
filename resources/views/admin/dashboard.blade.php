@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', is_admin() ? 'Dashboard Admin' : 'Dashboard Guru')
-@section('page_title', is_admin() ? 'Dashboard Administrator' : 'DASHBOARD GURU')
-@section('page_subtitle', is_admin() ? 'Sistem Presensi Terintegrasi' : 'Selamat datang, ' . (Auth::user()->name ?? 'Guru'))
+@section('title', is_admin() ? __('Dashboard Admin') : __('Dashboard Guru'))
+@section('page_title', is_admin() ? __('Dashboard Administrator') : __('DASHBOARD GURU'))
+@section('page_subtitle', is_admin() ? __('Sistem Presensi Terintegrasi') : __('Selamat datang, ') . (Auth::user()->name ?? 'Guru'))
 
 {{-- Kanvas dikunci setinggi satu layar (sama seperti halaman acuan Presensi /
      Data Guru / Data Kelas) dan isi dashboard menggulir di dalam kanvas.
@@ -24,10 +24,17 @@
     @endif
 
     <div class="dashboard-date-text">
-        <span class="text-secondary fw-semibold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">{{ $dateLabel ?? 'Tanggal Hari Ini' }}</span>
+        <span class="text-secondary fw-semibold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">{{ __($dateLabel ?? 'Tanggal Hari Ini') }}</span>
         <strong class="text-dark fw-bold d-block" style="font-size: 0.88rem;">
-            @php \Carbon\Carbon::setLocale('id'); @endphp
-            {{ $todayFormatted ?? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}
+            {{-- Tanggal mengikuti bahasa aktif. Controller membungkus tanggal dengan
+                 Carbon locale 'id', jadi localediterapkan langsung ke instance
+                 di sini (tidak mengubah controller):
+                 "Minggu, 18 Oktober 2026" (id) -> "Sunday, 18 October 2026" (en).
+                 Format 'l, d F Y' TIDAK diubah supaya mode Bahasa Indonesia
+                 tetap persis sama seperti sebelumnya. --}}
+            {{ app()->getLocale() === 'en'
+                ? \Illuminate\Support\Carbon::parse($selectedDate ?? $dateString)->locale('en')->translatedFormat('l, d F Y')
+                : ($todayFormatted ?? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y')) }}
         </strong>
     </div>
 
@@ -35,7 +42,7 @@
     <input type="date" name="tanggal" value="{{ $dateString }}"
            class="dashboard-date-input" tabindex="-1" aria-hidden="true">
 
-    <button type="button" class="dashboard-date-trigger" title="Pilih tanggal" aria-label="Pilih tanggal">
+    <button type="button" class="dashboard-date-trigger" title="{{ __('Pilih tanggal') }}" aria-label="{{ __('Pilih tanggal') }}">
         <i class='bx bx-calendar text-primary fs-3'></i>
     </button>
 </form>
@@ -44,8 +51,8 @@
 @if(!($isToday ?? true))
 <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['mode' => $chartMode ?? 'mingguan', 'status' => request('status')])) }}"
    class="btn btn-light border text-dark fw-semibold rounded-2 px-2.5 py-1 d-none d-lg-inline-flex align-items-center gap-1 dashboard-reset-today"
-   style="font-size: 0.78rem;" title="Kembali ke data hari ini">
-    <i class='bx bx-undo'></i> Hari Ini
+   style="font-size: 0.78rem;" title="{{ __('Kembali ke data hari ini') }}">
+    <i class='bx bx-undo'></i> {{ __('Hari Ini') }}
 </a>
 @endif
 @endsection
@@ -53,7 +60,7 @@
 @push('styles')
 <style>
     /* ==================================================================
-       DASHBOARD — CLEAN LOOK (versi sebelum redesign terakhir)
+       DASHBOARD ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â CLEAN LOOK (versi sebelum redesign terakhir)
        Kanvas & wrapper TIDAK diubah (putih, lengkung, sama seperti halaman
        lain). Semua bagian tampil di atas putih: tanpa kartu abu, tanpa
        border, tanpa garis, tanpa shadow pada kontainer. Pemisah antar
@@ -128,7 +135,7 @@
     }
 
     /* ------------------------------------------------------------------
-       BAGIAN 1: STATISTIK — memakai grid yang SAMA PERSIS dengan grid
+       BAGIAN 1: STATISTIK ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â memakai grid yang SAMA PERSIS dengan grid
        Pintasan Cepat (jumlah kolom, lebar kolom, dan gap identik) dan
        konten tiap sel RATA TENGAH di kolomnya, sehingga titik tengah
        angka statistik lurus vertikal dengan titik tengah kolom ikon di
@@ -176,7 +183,7 @@
         margin-bottom: 0.25rem;     /* jarak rapat angka -> label (4px) */
     }
 
-    /* Palet warna angka dashboard — dipakai SAMA PERSIS di bagian "Data Sekolah"
+    /* Palet warna angka dashboard ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â dipakai SAMA PERSIS di bagian "Data Sekolah"
        dan "Ketidakhadiran Hari Ini" (satu biru, satu kuning, satu hijau, satu
        merah). Class KHUSUS elemen dashboard ini; definisi class bersama
        (text-danger, text-primary, text-purple, dll) tidak disentuh. */
@@ -229,7 +236,7 @@
     }
 
     /* ------------------------------------------------------------------
-       BAGIAN 2: PINTASAN CEPAT — grid ikon 4 kolom (2 baris x 4 kolom).
+       BAGIAN 2: PINTASAN CEPAT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â grid ikon 4 kolom (2 baris x 4 kolom).
        Tanpa kotak/border per item: hanya wadah ikon rounded-square dengan
        latar lembut + satu label pendek di bawahnya.
        ------------------------------------------------------------------ */
@@ -338,7 +345,7 @@
     }
 
     /* ------------------------------------------------------------------
-       BARIS KETIDAKHADIRAN & KOTAK JAM — tanpa kartu: tanpa background,
+       BARIS KETIDAKHADIRAN & KOTAK JAM ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tanpa kartu: tanpa background,
        border, outline, dan shadow. Yang membedakan hanya jarak kosong.
        ------------------------------------------------------------------ */
     .dashboard-section .dashboard-inner-card,
@@ -363,24 +370,17 @@
         gap: 0.75rem !important;
     }
 
-    /* Tiga baris Sakit/Izin/Alpha: bertumpuk di HP, SEJAJAR 3 KOLOM di
-       desktop. Isi tiap item vertikal, rapat, dan rata tengah. */
+    /* Tiga item Sakit/Izin/Alpha: SEJAJAR 3 KOLOM di HP maupun desktop.
+       Isi tiap item vertikal, rapat, dan rata tengah. */
     .dashboard-section .dash-absence-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.75rem;
     }
     @media (min-width: 992px) {
         .dashboard-section .dash-absence-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 1.5rem;
+            gap: 1rem;
         }
-    }
-
-    /* Jarak judul "Ketidakhadiran Hari Ini" -> baris tiga item = 20px. */
-    .dashboard-section .dash-att-head {
-        padding-bottom: 0 !important;
-        margin-bottom: 1.25rem !important;
     }
 
     /* Angka sebagai TEKS POLOS (tanpa kontainer/wadah), warna hitam sama seperti
@@ -397,6 +397,124 @@
     @media (min-width: 768px) {
         .dashboard-section .dash-att-value {
             font-size: 2rem;
+        }
+    }
+
+    /* ==================================================================
+       BAGIAN BAWAH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â "Ketidakhadiran Hari Ini" (kiri) dan "Jadwal
+       Operasional Sekolah" (kanan) jadi DUA KOLOM SEJAJAR di desktop
+       (md ke atas) dan tetap BERTUMPUK di HP.
+
+       Tata letaknya sendiri memakai utility Tailwind yang sudah ada di
+       halaman ini ("grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8
+       items-stretch" pada .dash-bottom-grid dan "flex flex-col h-full
+       min-w-0" pada .dash-col), sehingga:
+         - HP (<768px) : 1 kolom, jarak antar bagian 32px (gap-y-8).
+         - >=768px      : 2 kolom sama lebar, jarak 48px (gap-x-12).
+       Yang diatur DI BAWAH ini hanya detail yang tidak werde Tailwind:
+       judul sejajar, tombol, badge, dan jam.
+
+       PENTING: semua selector di blok ini memakai
+       "body .dashboard-section .<class>". Class .dashboard-section WAJIB
+       ada pada SEKOLAH/INDUK elemen (.dashboard-section > .dash-bottom-grid
+       > .dash-col > .card). Bila .dashboard-section diletakkan pada
+       elemen yang sama, selector tidak akan pernah cocok.
+
+       Tidak ada border / shadow / background abu-abu pada kontainer:
+       gaya clean look (putih polos) tetap, seperti bagian lain.
+       ================================================================== */
+
+    /* Judul + subjudul tiap kolom. min-height dipakai agar judul kedua
+       kolom (yang tidak punya subjudul) tetap SEJAJAR pada satu garis
+       atas dengan judul kolom kiri, sehingga isi kedua kolom mulai pada
+       garis yang sama. */
+    body .dashboard-section .dash-col-head {
+        padding-bottom: 0 !important;
+        margin-bottom: 1.25rem !important;
+        min-height: 2.6rem;
+        align-items: flex-start !important;
+    }
+
+    /* Kartu di dalam kolom mengisi tinggi kolom, sehingga tombolnya
+       benar-benar bisa terdorong ke dasar (mt-auto pada markup). */
+    body .dashboard-section .dash-bottom-grid > .dash-col > .card {
+        flex: 1 1 auto;
+    }
+
+    /* Dua tombol biru: 40px, radius 10px, font 12px bold kapital, dan
+       selebar kolomnya saja (BUKAN selebar layar). Identik di HP dan
+       desktop sehingga keduanya selalu sejajar. */
+    body .dashboard-section .dash-col-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        height: 40px !important;
+        min-height: 40px !important;
+        margin: 0 !important;
+        padding: 0 1rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        line-height: 1;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+        box-sizing: border-box;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    /* Badge "Aktif" pada judul Jadwal: pill hijau muda, tanpa titik. */
+    body .dashboard-section .dash-active-badge {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        background-color: #dcfce7;
+        color: #15803d;
+        border-radius: 9999px;
+        padding: 2px 10px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        line-height: 1.45;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+
+    /* Jam besar + "WIB" dalam SATU BARIS (WIB sedikit lebih kecil),
+       bukan lagi baris terpisah di bawahnya. */
+    body .dashboard-section .dashboard-clock .clock-value {
+        margin-top: 0.2rem !important;
+        line-height: 1.15;
+        white-space: nowrap;
+    }
+    body .dashboard-section .dashboard-clock .clock-wib {
+        font-size: 0.62em;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        margin-left: 0.35rem;
+        vertical-align: baseline;
+    }
+
+    /* Di 2 kolom (>=768px) tiap kolom hanya setengah lebar konten, jadi
+       angka jam ikut menyesuaikan (tidak ikut melebar atau terpotong).
+       Nilai asal 1.75rem dipakai lagi kalau layar >= ~1330px. */
+    @media (min-width: 768px) {
+        body .dashboard-section .dashboard-clock .clock-value {
+            font-size: clamp(1.05rem, 2.1vw, 1.75rem) !important;
+        }
+    }
+
+    /* HP (s.d. 640px): angka jam sedikit dikecilkan dan padding kotak jam
+       dirapatkan supaya "06:45 WIB" tetap satu baris di layar 320px
+       tanpa scroll horizontal. Ukuran "WIB" tetap mengikuti jamnya (em). */
+    @media (max-width: 640px) {
+        body .dashboard-section .dashboard-clock {
+            padding: 0.5rem 0.35rem !important;
+        }
+        body .dashboard-section .dashboard-clock .clock-value {
+            font-size: 1.25rem !important;
         }
     }
 
@@ -577,19 +695,12 @@
         }
         .dashboard-clock .clock-value {
             font-size: 1.75rem !important;
-            margin-top: 0.15rem !important;
         }
-        .dashboard-clock .clock-unit {
-            font-size: 0.7rem !important;
-            margin-top: 0.1rem !important;
-        }
-        .dashboard-schedule-btn {
-            min-height: 36px !important;
-            padding: 0 0.75rem !important;
-            margin-top: var(--dash-gap) !important;
-            font-size: 0.7rem !important;
-            border-radius: var(--dash-radius) !important;
-        }
+        /* Catatan: "WIB" kini menyatu dalam satu baris bersama jamnya
+           (span .clock-wib, diatur di blok "BAGIAN BAWAH" di atas), jadi
+           aturan .clock-unit yang dulu mengatur baris terpisah sudah
+           dihapus. Tinggi tombol "Ubah Pengaturan Jadwal" juga tidak lagi
+           diatur di sini: keduanya disamakan oleh .dash-col-btn (40px). */
 
         /* Footer grafik (Garis Tren ... Total): teks biasa. */
         .dashboard-trend-footer {
@@ -598,7 +709,7 @@
             margin-top: 0.5rem !important;
         }
 
-        /* GRUP TAB Harian/Mingguan/Bulanan — satu-satunya elemen yang boleh
+        /* GRUP TAB Harian/Mingguan/Bulanan ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â satu-satunya elemen yang boleh
            berborder tipis. Tombol menempel, satu bingkai luar, pemisah 1px. */
         .dash-seg {
             display: inline-flex;
@@ -747,7 +858,7 @@
 @section('content')
 
     <!-- ========================================================================= -->
-    <!-- 1. STATISTIK — satu blok putih, grid 2 kolom x 2 baris, TANPA ikon,      -->
+    <!-- 1. STATISTIK ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â satu blok putih, grid 2 kolom x 2 baris, TANPA ikon,      -->
     <!--    tanpa kotak, dan tanpa garis pemisah. Empat sel: label kecil, angka    -->
     <!--    besar, keterangan kecil. Tautan & data dinamis tidak diubah.          -->
     <!-- ========================================================================= -->
@@ -756,31 +867,31 @@
             <!-- Judul bagian statistik: class & gaya SAMA PERSIS dengan
                  judul "Pintasan Cepat" (rata kiri, jarak ke isi identik). -->
             <div class="dash-shortcut-head">
-                <span class="dash-card-title">Data Sekolah</span>
+                <span class="dash-card-title">{{ __('Data Sekolah') }}</span>
             </div>
 
             <div class="dash-stats-grid">
 
                 <!-- 1. Siswa Aktif (angka memakai warna ikon "Data Siswa") -->
-                <a href="{{ panel_route('students.index') }}" class="dash-stat-cell" title="Buka data siswa aktif">
+                <a href="{{ panel_route('students.index') }}" class="dash-stat-cell" title="{{ __('Buka data siswa aktif') }}">
                     <strong class="dash-stat-value is-sidebar-blue">{{ number_format($totalStudents ?? 0, 0, ',', '.') }}</strong>
-                    <span class="dash-stat-label">Siswa Aktif</span>
+                    <span class="dash-stat-label">{{ __('Siswa Aktif') }}</span>
                 </a>
 
                 <!-- 2. Rombongan Belajar (angka memakai warna ikon "Data Kelas") -->
-                <a href="{{ panel_route('classes.index') }}" class="dash-stat-cell" title="Buka data rombongan belajar">
+                <a href="{{ panel_route('classes.index') }}" class="dash-stat-cell" title="{{ __('Buka data rombongan belajar') }}">
                     <strong class="dash-stat-value is-yellow">{{ number_format($totalClasses ?? 0, 0, ',', '.') }}</strong>
-                    <span class="dash-stat-label">Rombongan Belajar</span>
+                    <span class="dash-stat-label">{{ __('Rombongan Belajar') }}</span>
                 </a>
 
                 <!-- 3. Guru Aktif (admin bisa klik, guru hanya lihat) -->
                 @if(is_admin())
-                <a href="{{ route('admin.guru.index') }}" class="dash-stat-cell" title="Buka data guru">
+                <a href="{{ route('admin.guru.index') }}" class="dash-stat-cell" title="{{ __('Buka data guru') }}">
                 @else
-                <div class="dash-stat-cell" title="Data guru">
+                <div class="dash-stat-cell" title="{{ __('Buka data guru') }}">
                 @endif
                     <strong class="dash-stat-value is-green">{{ number_format($totalTeachers ?? 0, 0, ',', '.') }}</strong>
-                    <span class="dash-stat-label">Guru Aktif</span>
+                    <span class="dash-stat-label">{{ __('Guru Aktif') }}</span>
                 @if(is_admin())
                 </a>
                 @else
@@ -788,9 +899,9 @@
                 @endif
 
                 <!-- 4. Tidak Hadir (angka memakai warna ikon "Hari Libur") -->
-                <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="dash-stat-cell" title="Lihat ketidakhadiran hari ini">
+                <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="dash-stat-cell" title="{{ __('Lihat ketidakhadiran hari ini') }}">
                     <strong class="dash-stat-value is-red">{{ number_format($totalKetidakhadiran ?? 0, 0, ',', '.') }}</strong>
-                    <span class="dash-stat-label">Tidak Hadir</span>
+                    <span class="dash-stat-label">{{ __('Tidak Hadir') }}</span>
                 </a>
 
             </div>
@@ -798,7 +909,7 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 2. PINTASAN CEPAT — judul lalu grid ikon 4 KOLOM yang memanjang penuh     -->
+    <!-- 2. PINTASAN CEPAT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â judul lalu grid ikon 4 KOLOM yang memanjang penuh     -->
     <!--     (2 baris x 4 kolom). Tanpa kotak/border per item: hanya wadah ikon    -->
     <!--     rounded-square berlatar lembut per warna ikon + satu label pendek.    -->
     <!--     Subjudul kartu lama dihapus; ikon & tautan tetap sama persis.         -->
@@ -807,82 +918,82 @@
         <div class="dash-card">
             <div class="dash-shortcut-head">
                 <i class='bx bx-zap text-warning fs-4'></i>
-                <span class="dash-card-title">Pintasan Cepat</span>
+                <span class="dash-card-title">{{ __('Pintasan Cepat') }}</span>
             </div>
 
             <div class="dash-shortcut-grid">
 
-                <!-- 1. Presensi Hari Ini (ikon QR/Scan) — menuju HALAMAN PRESENSI -->
+                <!-- 1. Presensi Hari Ini (ikon QR/Scan) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â menuju HALAMAN PRESENSI -->
                 <a href="{{ panel_route('absensi.index') }}"
                    class="dash-shortcut-item"
-                   title="Buka halaman Presensi (Scanner QR &amp; Mode Gerbang)">
+                   title="{{ __('Buka halaman Presensi (Scanner QR & Mode Gerbang)') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #dbeafe;">
                         <i class='bx bx-qr-scan text-primary'></i>
                     </span>
-                    <span class="dash-sc-label">Presensi Hari Ini</span>
+                    <span class="dash-sc-label">{{ __('Presensi Hari Ini') }}</span>
                 </a>
 
-                <!-- 2. Catatan Kehadiran (ikon List/Ceklis) — HALAMAN KEHADIRAN -->
+                <!-- 2. Catatan Kehadiran (ikon List/Ceklis) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â HALAMAN KEHADIRAN -->
                 <a href="{{ panel_route('kehadiran') }}"
                    class="dash-shortcut-item"
-                   title="Lihat Log Kehadiran &amp; Presensi Harian">
+                   title="{{ __('Lihat Log Kehadiran & Presensi Harian') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #dcfce7;">
                         <i class='bx bx-list-check text-success'></i>
                     </span>
-                    <span class="dash-sc-label">Catatan Kehadiran</span>
+                    <span class="dash-sc-label">{{ __('Catatan Kehadiran') }}</span>
                 </a>
 
                 <!-- 3. Rekapitulasi Presensi (ikon PDF) -->
                 <a href="{{ panel_route('rekap') }}"
                    class="dash-shortcut-item"
-                   title="Laporan Rekapitulasi &amp; Ekspor Dokumen">
+                   title="{{ __('Laporan Rekapitulasi & Ekspor Dokumen') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #fee2e2;">
                         <i class='bx bxs-file-pdf text-danger'></i>
                     </span>
-                    <span class="dash-sc-label">Rekap Presensi</span>
+                    <span class="dash-sc-label">{{ __('Rekap Presensi') }}</span>
                 </a>
 
                 <!-- 4. Master Data Siswa (ikon User) -->
                 <a href="{{ panel_route('students.index') }}"
                    class="dash-shortcut-item"
-                   title="Kelola Master Data Siswa &amp; Generate QR">
+                   title="{{ __('Kelola Master Data Siswa & Generate QR') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #cffafe;">
                         <i class='bx bx-user text-info'></i>
                     </span>
-                    <span class="dash-sc-label">Data Siswa</span>
+                    <span class="dash-sc-label">{{ __('Data Siswa') }}</span>
                 </a>
 
                 <!-- 5. Master Data Guru (ikon Guru) - khusus admin -->
                 @if(is_admin())
                 <a href="{{ route('admin.guru.index') }}"
                    class="dash-shortcut-item"
-                   title="Kelola Data Guru">
+                   title="{{ __('Kelola Data Guru') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #f3e8ff;">
                         <i class='bx bx-user-pin text-purple'></i>
                     </span>
-                    <span class="dash-sc-label">Data Guru</span>
+                    <span class="dash-sc-label">{{ __('Data Guru') }}</span>
                 </a>
                 @endif
 
                 <!-- 6. Master Data Kelas (ikon Gedung) -->
                 <a href="{{ panel_route('classes.index') }}"
                    class="dash-shortcut-item"
-                   title="Kelola Master Rombongan Belajar &amp; Kelas">
+                   title="{{ __('Kelola Master Rombongan Belajar & Kelas') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #fef3c7;">
                         <i class='bx bx-buildings text-warning'></i>
                     </span>
-                    <span class="dash-sc-label">Data Kelas</span>
+                    <span class="dash-sc-label">{{ __('Data Kelas') }}</span>
                 </a>
 
                 <!-- 7. Master Hari Libur (ikon Kalender) - khusus admin -->
                 @if(is_admin())
                 <a href="{{ panel_route('holidays.index') }}"
                    class="dash-shortcut-item"
-                   title="Kelola Kalender Hari Libur Nasional &amp; Sekolah">
+                   title="{{ __('Kelola Kalender Hari Libur Nasional & Sekolah') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #fee2e2;">
                         <i class='bx bx-calendar-x text-danger'></i>
                     </span>
-                    <span class="dash-sc-label">Hari Libur</span>
+                    <span class="dash-sc-label">{{ __('Hari Libur') }}</span>
                 </a>
                 @endif
 
@@ -890,11 +1001,11 @@
                 @if(is_admin())
                 <a href="{{ panel_route('settings.index') }}"
                    class="dash-shortcut-item"
-                   title="Konfigurasi Profil Sekolah, Jam Masuk, &amp; Sistem">
+                   title="{{ __('Konfigurasi Profil Sekolah, Jam Masuk, & Sistem') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #e2e8f0;">
                         <i class='bx bx-cog text-secondary'></i>
                     </span>
-                    <span class="dash-sc-label">Pengaturan</span>
+                    <span class="dash-sc-label">{{ __('Pengaturan') }}</span>
                 </a>
                 @endif
 
@@ -903,33 +1014,41 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 3. SECTION TENGAH: GRAFIK GARIS (penuh lebar) & KETIDAKHADIRAN DI BAWAHNYA -->
+    <!-- 3. SECTION TENGAH: GRAFIK GARIS KEHADIRAN (penuh lebar)                   -->
+    <!--    (mode: harian/mingguan/bulanan). Isi, tautan, dan JS grafik tidak      -->
+    <!--    diubah; "Ketidakhadiran Hari Ini" kini ada di grid 2 kolom di bawah.   -->
     <!-- ========================================================================= -->
     <div class="row g-3 dashboard-section">
 
-        <!-- KOLOM KIRI (70%): GRAFIK GARIS KEHADIRAN (mode: harian/mingguan/bulanan) -->
+        <!-- KOLOM PENUH: GRAFIK GARIS KEHADIRAN (mode: harian/mingguan/bulanan) -->
         <div class="col-12">
             <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
                 <div>
                     <div class="d-flex align-items-center justify-content-between gap-2 pb-3 mb-3">
                         <div class="d-flex align-items-center gap-2 min-w-0">
-                            <span class="fw-bold text-dark text-truncate dashboard-box-title" style="font-size: 0.9rem;">{{ $chartTitle ?? 'Grafik Garis Kehadiran Mingguan' }}</span>
+                            <span class="fw-bold text-dark text-truncate dashboard-box-title" style="font-size: 0.9rem;">{{ __($chartTitle ?? 'Grafik Garis Kehadiran Mingguan') }}</span>
                         </div>
 
                         <div class="d-flex align-items-center gap-2 flex-shrink-0 chart-header-actions">
                             {{-- TOGGLE MODE: Harian / Mingguan / Bulanan.
                                  Hanya tautan GET ke halaman yang sama dengan ?mode=...,
                                  jadi tidak ada endpoint atau JS tambahan. --}}
-                            <div class="chart-mode-toggle dash-seg" role="group" aria-label="Mode grafik kehadiran">
-                                @foreach(['harian' => 'Harian', 'mingguan' => 'Mingguan', 'bulanan' => 'Bulanan'] as $modeKey => $modeLabel)
+                            <div class="chart-mode-toggle dash-seg" role="group" aria-label="{{ __('Mode grafik kehadiran') }}">
+                                @foreach(['harian' => __('Harian'), 'mingguan' => __('Mingguan'), 'bulanan' => __('Bulanan')] as $modeKey => $modeLabel)
                                     <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $modeKey, 'status' => request('status')])) }}"
                                        class="chart-mode-btn dash-seg__btn {{ ($chartMode ?? 'mingguan') === $modeKey ? 'active dash-seg__btn--solid' : '' }}"
-                                       title="Tampilkan grafik {{ strtolower($modeLabel) }}">{{ $modeLabel }}</a>
+                                       title="{{ ['harian' => __('Tampilkan grafik harian'), 'mingguan' => __('Tampilkan grafik mingguan'), 'bulanan' => __('Tampilkan grafik bulanan')][$modeKey] }}">{{ $modeLabel }}</a>
                                 @endforeach
                             </div>
 
                             <span class="badge bg-light text-secondary rounded-pill px-2 px-md-3 py-1 py-md-1.5 fw-semibold flex-shrink-0 text-nowrap dash-period" style="font-size: 0.68rem;">
-                                {{ $chartPeriodLabel ?? (\Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') . ' - ' . \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y')) }}
+                                {{-- Periode grafik. Nilai dari controller (id) dipakai apa adanya saat bahasa
+                                 Indonesia; untuk English format yang sama persis
+                                 ('d M' - 'd M Y') dibangun ulang di view dengan
+                                 locale en. --}}
+                                {{ app()->getLocale() === 'en'
+                                    ? \Illuminate\Support\Carbon::parse($startOfWeek)->locale('en')->translatedFormat('d M') . ' - ' . \Illuminate\Support\Carbon::parse($endOfWeek)->locale('en')->translatedFormat('d M Y')
+                                    : ($chartPeriodLabel ?? (\Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') . ' - ' . \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y'))) }}
                             </span>
                         </div>
                     </div>
@@ -948,12 +1067,12 @@
                             </div>
                             @unless($chartHasData ?? false)
                                 <p class="chart-empty-note text-center text-muted mb-0 mt-1">
-                                    {{ $chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.' }}
+                                    {{ __($chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.') }}
                                 </p>
                             @endunless
                         @else
                             <p class="w-100 text-center text-muted small empty-state mb-0 py-4">
-                                {{ $chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.' }}
+                                {{ __($chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.') }}
                             </p>
                         @endif
                     </div>
@@ -962,73 +1081,18 @@
                 <!-- Keterangan Garis Tren & Total (selalu satu baris, tidak bertumpuk) -->
                 <div class="mt-3 pt-2.5 d-flex flex-nowrap align-items-center justify-content-between gap-2 text-muted dashboard-trend-footer" style="font-size: 0.72rem;">
                     <div class="d-flex align-items-center gap-2 min-w-0 text-truncate">
-                        <span class="text-truncate"><strong class="text-dark">Garis Tren Kehadiran</strong> <span class="d-none d-sm-inline">({{ $chartScopeText ?? (($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C')) }})</span></span>
+                        {{-- "Total: 3 Rombel" berasal dari controller (angka & satuan).
+                             Yang diterjemahkan hanya kata "Total" dan satuannya, angka
+                             tetap apa adanya. --}}
+                        @php
+                            $__dashTotal = (string) ($chartTotalText ?? ('Total: ' . count($classesAttendance ?? []) . ' Rombel'));
+                            $__dashTotal = preg_replace_callback('/^(.*?):\s*(\d+)\s*(.*)$/u', function ($m) {
+                                return __($m[1]).': '.$m[2].' '.__($m[3]);
+                            }, $__dashTotal);
+                        @endphp
+                        <span class="text-truncate"><strong class="text-dark">{{ __('Garis Tren Kehadiran') }}</strong> <span class="d-none d-sm-inline">({{ __($chartScopeText ?? (($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C'))) }})</span></span>
                     </div>
-                    <span class="fw-semibold text-dark flex-shrink-0 text-nowrap">{{ $chartTotalText ?? ('Total: ' . count($classesAttendance ?? []) . ' Rombel') }}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- KOLOM KANAN (30%): KETIDAKHADIRAN HARI INI (Sakit / Izin / Alpha) -->
-        <div class="col-12">
-            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
-                <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 clean-line-off dash-att-head">
-                        <div>
-                            <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">Ketidakhadiran Hari Ini</h6>
-                            <p class="text-secondary small mb-0 dashboard-box-sub">Siswa yang berhalangan hadir</p>
-                        </div>
-                    </div>
-
-                    <!-- 3 Baris Detail Ketidakhadiran Hari Ini (Interaktif) -->
-                    <div class="dash-absence-grid">
-
-                        <!-- 1. Sakit -->
-                        {{-- Baris Absence -> REKAP HARIAN (tanggal yang sedang ditampilkan), BUKAN
-                             kembali ke dashboard. Halaman Rekap BELUM punya
-                             filter status (RekapController hanya membaca
-                             type/class_id/date/month/year), jadi parameter
-                             ?status= sengaja TIDAK ditambahkan - tidak ada
-                             backend yang diubah. --}}
-                        <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
-                           class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}"
-                           title="Buka Rekap Presensi harian untuk siswa sakit">
-                            <span class="d-block dash-att-figure">
-                                <span class="dash-att-value is-sidebar-blue font-monospace">{{ $countSakit ?? 0 }}</span>
-                            </span>
-                            <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Sakit @if(request('status') === 'Sakit')<span class="absence-row-active-badge">Aktif</span>@endif</span>
-                        </a>
-
-                        <!-- 2. Izin -->
-                        <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
-                           class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}"
-                           title="Buka Rekap Presensi harian untuk siswa izin">
-                            <span class="d-block dash-att-figure">
-                                <span class="dash-att-value is-yellow font-monospace">{{ $countIzin ?? 0 }}</span>
-                            </span>
-                            <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Izin @if(request('status') === 'Izin')<span class="absence-row-active-badge">Aktif</span>@endif</span>
-                        </a>
-
-                        <!-- 3. Alpha -->
-                        <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
-                           class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}"
-                           title="Buka Rekap Presensi harian untuk siswa alpha">
-                            <span class="d-block dash-att-figure">
-                                <span class="dash-att-value is-red font-monospace">{{ $countAlfa ?? 0 }}</span>
-                            </span>
-                            <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">Alpha @if(request('status') === 'Alfa')<span class="absence-row-active-badge">Aktif</span>@endif</span>
-                        </a>
-
-                    </div>
-                </div>
-
-                <!-- Tombol Menuju Tabel Presensi Harian -->
-                <div class="pt-3 mt-3 clean-line-off">
-                    <a href="{{ panel_route('presensi.index', array_filter(['tanggal' => $dateString, 'status' => request('status')])) }}"
-                       class="btn btn-primary rounded-3 shadow-sm w-100 fw-bold py-2.5 d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth"
-                       style="font-size: 0.85rem;">
-                        <span>Buka Tabel Presensi Hari Ini</span>
-                    </a>
+                    <span class="fw-semibold text-dark flex-shrink-0 text-nowrap">{{ $__dashTotal }}</span>
                 </div>
             </div>
         </div>
@@ -1036,69 +1100,159 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 5. SECTION BAWAH: JADWAL OPERASIONAL SEKOLAH                              -->
+    <!-- 4. BAGIAN BAWAH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â DUA KOLOM: "Ketidakhadiran Hari Ini" (KIRI) dan         -->
+    <!--    "Jadwal Operasional Sekolah" (KANAN).                                    -->
+    <!--    Desktop (md ke atas) = 2 kolom sama lebar; HP = 1 kolom bertumpuk        -->
+    <!--    (Ketidakhadiran di atas, Jadwal di bawah). Tiap kolom flex-col dengan    -->
+    <!--    tombol mt-auto, sehingga kedua tombol selalu sejajar di bawah.           -->
+    <!--    Kontainer tetap polos: tanpa border, shadow, dan background abu-abu.     -->
     <!-- ========================================================================= -->
-    <div class="row g-3 dashboard-section">
-        <div class="col-12">
-            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column justify-content-between dashboard-panel dashboard-box">
-                <div>
-                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 dashboard-divider-off">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <span class="fw-bold text-dark dashboard-box-title">Jadwal Operasional Sekolah</span>
-                        </div>
-                        <span class="fw-bold d-inline-flex align-items-center gap-1.5" style="font-size: 0.72rem; color: #16a34a;">
-                            <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background: #16a34a;"></span>
-                            Aktif
-                        </span>
-                    </div>
+    <!-- 4. BAGIAN BAWAH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â DUA KOLOM: "Ketidakhadiran Hari Ini" (KIRI) dan         -->
+    <!--    "Jadwal Operasional Sekolah" (KANAN).                                    -->
+    <!--    - .dashboard-section : pembungkus bagian. Class ini WAJIB ada di sini    -->
+    <!--      supaya aturan CSS lama tetap berlaku, mis. .dashboard-section          -->
+    <!--      .dash-nobox (penihil border kotak) dan .dashboard-section             -->
+    <!--      .dash-absence-grid (grid 3 kolom).                                    -->
+    <!--    - .dash-bottom-grid  : 1 kolom di HP (gap-y-8 = 32px) dan 2 kolom sama  -->
+    <!--      lebar di >=768px (gap-x-12 = 48px, items-stretch).                    -->
+    <!--    - .dash-col          : kolom flex (flex flex-col h-full min-w-0) dengan  -->
+    <!--      tinggi sama; tombol memakai mt-auto pt-6 sehingga kedua tombol        -->
+    <!--      sejajar rata di bawah dan tidak menyentuh isi di atasnya.              -->
+    <!--    Kontainer tetap polos: tanpa border, shadow, dan background abu-abu.     -->
+    <!-- ========================================================================= -->
+    <div class="dashboard-section">
+        <div class="dash-bottom-grid grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 items-stretch align-content-start">
 
-                    <div class="row g-2.5">
-                        <div class="col-6">
-                            @if(is_admin())
-                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox" title="Ubah jam masuk">
-                            @else
-                            <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox" title="Jam masuk sekolah">
-                            @endif
-                                <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">Jam Masuk</span>
-                                <strong class="text-dark mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
-                                    {{ $checkInTime ?? '06:45' }}
-                                </strong>
-                                <span class="d-block text-secondary mt-1 clock-unit" style="font-size: 0.68rem;">WIB</span>
-                            @if(is_admin())
-                            </a>
-                            @else
-                            </div>
-                            @endif
-                        </div>
-                        <div class="col-6">
-                            @if(is_admin())
-                            <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox" title="Ubah batas terlambat">
-                            @else
-                            <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox" title="Batas keterlambatan sekolah">
-                            @endif
-                                <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">Batas Terlambat</span>
-                                <strong class="text-amber-600 mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
-                                    {{ $lateLimitTime ?? '07:15' }}
-                                </strong>
-                                <span class="d-block text-secondary mt-1 clock-unit" style="font-size: 0.68rem;">WIB</span>
-                            @if(is_admin())
-                            </a>
-                            @else
-                            </div>
-                            @endif
-                        </div>
+        <!-- ===== KOLOM KIRI: KETIDAKHADIRAN HARI INI (Sakit / Izin / Alpha) ===== -->
+        <div class="dash-col flex flex-col h-full min-w-0">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column dashboard-panel dashboard-box">
+
+                <!-- Judul + subjudul (tanpa teks "0 Siswa" di kanan). -->
+                <div class="d-flex items-start justify-between gap-2 clean-line-off dash-col-head">
+                    <div class="min-w-0">
+                        <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">{{ __('Ketidakhadiran Hari Ini') }}</h6>
+                        <p class="text-secondary small mb-0 dashboard-box-sub">{{ __('Siswa yang berhalangan hadir') }}</p>
                     </div>
                 </div>
 
+                <!-- 3 item Ketidakhadiran Hari Ini: 3 kolom sejajar 1 baris -->
+                <div class="dash-absence-grid grid grid-cols-3">
+
+                    <!-- 1. Sakit -->
+                    {{-- Baris Absence -> REKAP HARIAN (tanggal yang sedang ditampilkan), BUKAN
+                         kembali ke dashboard. Halaman Rekap BELUM punya
+                         filter status (RekapController hanya membaca
+                         type/class_id/date/month/year), jadi parameter
+                         ?status= sengaja TIDAK ditambahkan - tidak ada
+                         backend yang diubah. --}}
+                    <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
+                       class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}"
+                       title="{{ __('Buka Rekap Presensi harian untuk siswa sakit') }}">
+                        <span class="d-block dash-att-figure">
+                            <span class="dash-att-value is-sidebar-blue font-monospace">{{ $countSakit ?? 0 }}</span>
+                        </span>
+                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                    </a>
+
+                    <!-- 2. Izin -->
+                    <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
+                       class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}"
+                       title="{{ __('Buka Rekap Presensi harian untuk siswa izin') }}">
+                        <span class="d-block dash-att-figure">
+                            <span class="dash-att-value is-yellow font-monospace">{{ $countIzin ?? 0 }}</span>
+                        </span>
+                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                    </a>
+
+                    <!-- 3. Alpha -->
+                    <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
+                       class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}"
+                       title="{{ __('Buka Rekap Presensi harian untuk siswa alpha') }}">
+                        <span class="d-block dash-att-figure">
+                            <span class="dash-att-value is-red font-monospace">{{ $countAlfa ?? 0 }}</span>
+                        </span>
+                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Alpha') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                    </a>
+
+                </div>
+
+                <!-- Tombol Menuju Tabel Presensi Harian: mt-auto pt-6 = terdorong
+                     ke dasar kolom, ada jarak dari isi, dan hanya selebar
+                     kolom (BUKAN selebar layar). -->
+                <div class="mt-auto pt-6 clean-line-off">
+                    <a href="{{ panel_route('presensi.index', array_filter(['tanggal' => $dateString, 'status' => request('status')])) }}"
+                       class="btn btn-primary shadow-sm w-100 fw-bold d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth dash-col-btn">
+                        <span>{{ __('Buka Tabel Presensi Hari Ini') }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== KOLOM KANAN: JADWAL OPERASIONAL SEKOLAH ===== -->
+        <div class="dash-col flex flex-col h-full min-w-0">
+            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column dashboard-panel dashboard-box">
+
+                <!-- Judul + badge pill "Aktif" di kanan judul, satu baris.
+                     `d-block` dipakai supaya judul kolom kanan menjadi kotak
+                     blok seperti <h6> kolom kiri, sehingga keduanya tepat
+                     pada satu garis atas despite kolom kiri punya subjudul. -->
+                <div class="d-flex items-start justify-between gap-2 dashboard-divider-off dash-col-head">
+                    <div class="min-w-0">
+                        <span class="d-block fw-bold text-dark dashboard-box-title">{{ __('Jadwal Operasional Sekolah') }}</span>
+                    </div>
+                    <span class="dash-active-badge">{{ __('Aktif') }}</span>
+                </div>
+
+                <!-- Dua kotak jam: 2 kolom sama lebar, isi rata tengah.
+                     Jam + "WIB" sekarang SATU BARIS, dan nilainya tetap
+                     diambil dari pengaturan yang sama ($checkInTime /
+                     $lateLimitTime) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tidak ada data yang di-hardcode. -->
+                <div class="dash-clock-grid grid grid-cols-2 gap-3">
+                    @if(is_admin())
+                    <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Ubah jam masuk') }}">
+                    @else
+                    <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Jam masuk sekolah') }}">
+                    @endif
+                        <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Jam Masuk') }}</span>
+                        <strong class="text-dark mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
+                            {{ $checkInTime ?? '06:45' }}<span class="clock-wib">WIB</span>
+                        </strong>
+                    @if(is_admin())
+                    </a>
+                    @else
+                    </div>
+                    @endif
+
+                    @if(is_admin())
+                    <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Ubah batas terlambat') }}">
+                    @else
+                    <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operacional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Batas keterlambatan sekolah') }}">
+                    @endif
+                        <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Batas Terlambat') }}</span>
+                        <strong class="text-amber-600 mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
+                            {{ $lateLimitTime ?? '07:15' }}<span class="clock-wib">WIB</span>
+                        </strong>
+                    @if(is_admin())
+                    </a>
+                    @else
+                    </div>
+                    @endif
+                </div>
+
                 @if(is_admin())
-                <!-- Tombol Ubah Pengaturan Jadwal (khusus admin) -->
-                <a href="{{ route('admin.pengaturan.jadwal') }}"
-                   class="btn btn-primary rounded-3 shadow-sm w-100 mt-3 py-2.5 px-3 fw-semibold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth dashboard-schedule-btn"
-                   style="font-size: 0.85rem;">
-                    <span>Ubah Pengaturan Jadwal</span>
-                </a>
+                <!-- Tombol Ubah Pengaturan Jadwal (khusus admin): pembungkus
+                     sama persis dengan kolom kiri (mt-auto pt-6) supaya
+                     kedua tombol selalu sejajar dan tidak menempel ke isi. -->
+                <div class="mt-auto pt-6">
+                    <a href="{{ route('admin.pengaturan.jadwal') }}"
+                       class="btn btn-primary shadow-sm w-100 fw-bold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth dashboard-schedule-btn dash-col-btn">
+                        <span>{{ __('Ubah Pengaturan Jadwal') }}</span>
+                    </a>
+                </div>
                 @endif
             </div>
+        </div>
+
         </div>
     </div>
 
@@ -1168,7 +1322,7 @@
         if (typeof Chart === 'undefined') {
             const note = document.createElement('p');
             note.className = 'chart-empty-note text-center text-muted mb-0 mt-1';
-            note.textContent = 'Grafik belum dapat dimuat (perpustakaan grafik gagal dimuat).';
+            note.textContent = {!! json_encode(__('Grafik belum dapat dimuat (perpustakaan grafik gagal dimuat).')) !!};
             if (ctx.parentNode) {
                 ctx.parentNode.insertAdjacentElement('afterend', note);
             }
@@ -1196,7 +1350,7 @@
             data: {
                 labels: chartLabels,
                 datasets: [{
-                    label: 'Tingkat Kehadiran (%)',
+                    label: {!! json_encode(__('Tingkat Kehadiran (%)')) !!},
                     data: chartData,
                     borderColor: '#2563eb',
                     borderWidth: 2.5,
@@ -1229,7 +1383,7 @@
                         displayColors: false,
                         callbacks: {
                             label: function (context) {
-                                return 'Tingkat Kehadiran: ' + context.parsed.y + '%';
+                                return {!! json_encode(__('Tingkat Kehadiran')) !!} + ': ' + context.parsed.y + '%';
                             }
                         }
                     }
@@ -1272,6 +1426,7 @@
                 }
             }
         });
+
     });
 </script>
 @endpush

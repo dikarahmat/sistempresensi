@@ -119,7 +119,7 @@
                             {{ strtoupper($schoolName) }}
                         </div>
                         <div style="font-size: 4.2pt; font-weight: bold; color: #fcd34d; text-transform: uppercase; margin-top: 0.5mm; letter-spacing: 0.4px; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
-                            KARTU PRESENSI DIGITAL
+                            {{ __('KARTU PRESENSI DIGITAL') }}
                         </div>
                     </td>
                 </tr>
@@ -160,7 +160,7 @@
             </div>
             <!-- TEKS "SCAN PRESENSI": Tepat di bawah QR, center, bold, kecil -->
             <div style="font-size: 5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-top: 1.5mm; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
-                SCAN PRESENSI
+                {{ __('SCAN PRESENSI') }}
             </div>
         </td>
     </tr>
@@ -169,7 +169,7 @@
     <tr>
         <td style="height: 6.6mm; background-color: #f8fafc; padding: 0 3mm; vertical-align: middle; text-align: center; border-bottom-left-radius: 3.18mm; border-bottom-right-radius: 3.18mm; border-top: 1px solid #e2e8f0;">
             <div style="font-size: 4.5pt; font-style: italic; color: #64748b; text-align: center; line-height: 1; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
-                Tunjukkan kartu saat presensi masuk
+                {{ __('Tunjukkan kartu saat presensi masuk') }}
             </div>
         </td>
     </tr>

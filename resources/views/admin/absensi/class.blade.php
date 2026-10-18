@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Presensi Kelas ' . ($selectedClass->name ?? ''))
-@section('page_title', 'Presensi Kelas ' . ($selectedClass->name ?? '-'))
+@section('title', __('Presensi Kelas') . ' ' . ($selectedClass->name ?? ''))
+@section('page_title', __('Presensi Kelas') . ' ' . ($selectedClass->name ?? '-'))
 @section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y'))
 
 @push('styles')
@@ -136,9 +136,9 @@
         min-height: 18px !important;
     }
     .btn-edit-modal {
-        background-color: #f8fafc;
-        color: #475569;
-        border: 1px solid #cbd5e1;
+        background-color: #f59e0b;
+        color: #ffffff;
+        border: none;
         border-radius: var(--clean-radius);
         width: 32px;
         height: 32px;
@@ -148,8 +148,8 @@
         transition: all 0.15s ease;
     }
     .btn-edit-modal:hover {
-        background-color: #e2e8f0;
-        color: #0f172a;
+        background-color: #d97706;
+        color: #ffffff;
     }
 
     /* Card Scanner Mode Gerbang Style di Halaman Detail Kelas */
@@ -442,22 +442,22 @@
     <!-- RINGKASAN STATUS -->
     <div class="status-summary-grid mb-3">
         <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countHadir ?? 0 }}</strong> Hadir</span>
+            <span><strong>{{ $countHadir ?? 0 }}</strong> {{ __('Hadir') }}</span>
         </div>
         <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countTerlambat ?? 0 }}</strong> Terlambat</span>
+            <span><strong>{{ $countTerlambat ?? 0 }}</strong> {{ __('Terlambat') }}</span>
         </div>
         <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countSakit ?? 0 }}</strong> Sakit</span>
+            <span><strong>{{ $countSakit ?? 0 }}</strong> {{ __('Sakit') }}</span>
         </div>
         <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countIzin ?? 0 }}</strong> Izin</span>
+            <span><strong>{{ $countIzin ?? 0 }}</strong> {{ __('Izin') }}</span>
         </div>
         <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countAlfa ?? 0 }}</strong> Alfa</span>
+            <span><strong>{{ $countAlfa ?? 0 }}</strong> {{ __('Alfa') }}</span>
         </div>
         <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countBelumAbsen ?? 0 }}</strong> Belum</span>
+            <span><strong>{{ $countBelumAbsen ?? 0 }}</strong> {{ __('Belum') }}</span>
         </div>
     </div>
 
@@ -470,10 +470,10 @@
                 <!-- Switcher Button (Kamera / Alat Scanner) -->
                 <div class="kiosk-switcher">
                     <button type="button" id="btnTabCamera" class="kiosk-switch-btn active" onclick="switchMode('camera')">
-                        <i class='bx bx-camera fs-5'></i> Kamera
+                        <i class='bx bx-camera fs-5'></i> {{ __('Kamera') }}
                     </button>
                     <button type="button" id="btnTabHardware" class="kiosk-switch-btn" onclick="switchMode('hardware')">
-                        <i class='bx bx-barcode-reader fs-5'></i> Alat Scanner
+                        <i class='bx bx-barcode-reader fs-5'></i> {{ __('Alat Scanner') }}
                     </button>
                 </div>
 
@@ -493,16 +493,16 @@
                         </div>
                         <div id="cameraPlaceholder" class="py-4 position-absolute top-50 start-50 translate-middle w-100" style="background: #fafbfd; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
                             <i class='bx bx-qr-scan text-secondary' style="font-size: 3rem;"></i>
-                            <p class="text-secondary small mt-2 mb-0 fw-semibold">Tempelkan kartu QR ke kamera</p>
+                            <p class="text-secondary small mt-2 mb-0 fw-semibold">{{ __('Tempelkan kartu QR ke kamera') }}</p>
                         </div>
                     </div>
 
                     <!-- Mode Alat Scanner -->
                     <div id="hardwareView" class="d-none w-100 py-3">
                         <i class='bx bx-scan text-primary' style="font-size: 3rem;"></i>
-                        <p class="text-dark fw-semibold small mt-2 mb-3">Arahkan fokus tetap di sini, lalu scan kartu dengan alat</p>
+                        <p class="text-dark fw-semibold small mt-2 mb-3">{{ __('Arahkan fokus tetap di sini, lalu scan kartu dengan alat') }}</p>
                         <div class="px-3">
-                            <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="Siap menerima scan..." autofocus autocomplete="off">
+                            <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Siap menerima scan...') }}" autofocus autocomplete="off">
                         </div>
                     </div>
 
@@ -525,8 +525,8 @@
                                 </g>
                             </svg>
                             <div class="scan-result-text">
-                                <div class="scan-result-name" id="scanResultTitle">Nama Siswa</div>
-                                <div class="scan-result-status" id="scanResultSubtitle">Status Presensi</div>
+                                <div class="scan-result-name" id="scanResultTitle">{{ __('Nama Siswa') }}</div>
+                                <div class="scan-result-status" id="scanResultSubtitle">{{ __('Status Presensi') }}</div>
                             </div>
                         </div>
                     </div>
@@ -535,7 +535,7 @@
 
                 <!-- Jam Operasional di Bawah Kotak -->
                 <div class="text-secondary" style="font-size: 0.78rem;">
-                    Jam masuk <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jamMasuk ?? '07:00' }}</span> · Jam pulang <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? $jamPulang ?? '14:00' }}</span>
+                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jamMasuk ?? '07:00' }}</span> · {{ __('Jam pulang') }} <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? $jamPulang ?? '14:00' }}</span>
                 </div>
 
             </div>
@@ -548,12 +548,12 @@
                     <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
                         <thead class="bg-light">
                             <tr class="text-dark small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
-                                <th class="text-center py-3" style="width: 8%; white-space: nowrap;">NO</th>
-                                <th class="py-3" style="width: 30%; white-space: nowrap;">NAMA SISWA</th>
-                                <th class="text-center py-3" style="width: 15%; white-space: nowrap;">JAM MASUK</th>
-                                <th class="text-center py-3" style="width: 20%; white-space: nowrap;">STATUS</th>
+                                <th class="text-center py-3" style="width: 8%; white-space: nowrap;">{{ __('No') }}</th>
+                                <th class="py-3" style="width: 30%; white-space: nowrap;">{{ __('Nama Siswa') }}</th>
+                                <th class="text-center py-3" style="width: 15%; white-space: nowrap;">{{ __('Jam Masuk') }}</th>
+                                <th class="text-center py-3" style="width: 20%; white-space: nowrap;">{{ __('Status') }}</th>
                                 @if(is_admin())
-                                <th class="text-center py-3" style="width: 27%; white-space: nowrap;">AKSI</th>
+                                <th class="text-center py-3" style="width: 27%; white-space: nowrap;">{{ __('Aksi') }}</th>
                                 @endif
                             </tr>
                         </thead>
@@ -595,15 +595,15 @@
 
                                         <!-- Dropdown Status Cepat -->
                                         <select name="status" class="select-quick-status">
-                                            <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>Hadir</option>
-                                            <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>Terlambat</option>
-                                            <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>Sakit</option>
-                                            <option value="Izin" {{ $st === 'Izin' ? 'selected' : '' }}>Izin</option>
-                                            <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>Alfa</option>
+                                            <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
+                                            <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
+                                            <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
+                                            <option value="Izin" {{ $st === 'Izin' ? 'selected' : '' }}>{{ __('Izin') }}</option>
+                                            <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>{{ __('Alfa') }}</option>
                                         </select>
 
                                         <!-- Tombol Simpan Cepat (Checklist) -->
-                                        <button type="submit" class="btn-save-quick" title="Simpan Status">
+                                        <button type="submit" class="btn-save-quick" title="{{ __('Simpan Status') }}">
                                             <i class='bx bx-check' style="font-size: 18px !important; width: 18px !important; height: 18px !important; color: #ffffff !important;"></i>
                                         </button>
                                     </form>
@@ -613,7 +613,7 @@
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content presensi-modal-content">
                                                 <div class="presensi-modal-header d-flex justify-content-between align-items-center">
-                                                    <h5 class="modal-title">Ubah Presensi Siswa</h5>
+                                                    <h5 class="modal-title">{{ __('Ubah Presensi Siswa') }}</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="presensi-modal-student-strip">
@@ -627,34 +627,34 @@
 
                                                     <div class="modal-body p-4 text-start">
                                                         <div class="mb-3">
-                                                            <label class="form-label small fw-semibold text-secondary">Status Kehadiran <span class="text-danger">*</span></label>
+                                                            <label class="form-label small fw-semibold text-secondary">{{ __('Status Kehadiran') }} <span class="text-danger">*</span></label>
                                                             <select name="status" class="form-select rounded-3" required>
-                                                                <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>Hadir (Tepat Waktu)</option>
-                                                                <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>Hadir (Terlambat)</option>
-                                                                <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>Sakit (S)</option>
-                                                                <option value="Izin" {{ $st === 'Izin' ? 'selected' : '' }}>Izin (I)</option>
-                                                                <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>Alfa (A)</option>
+                                                                <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir (Tepat Waktu)') }}</option>
+                                                                <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Hadir (Terlambat)') }}</option>
+                                                                <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>{{ __('Sakit (S)') }}</option>
+                                                                <option value="Izin" {{ $st === 'Izin' ? 'selected' : '' }}>{{ __('Izin (I)') }}</option>
+                                                                <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>{{ __('Alfa (A)') }}</option>
                                                             </select>
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label class="form-label small fw-semibold text-secondary">Jam Masuk</label>
+                                                            <label class="form-label small fw-semibold text-secondary">{{ __('Jam Masuk') }}</label>
                                                             <input type="time" name="check_in" class="form-control rounded-3" value="{{ ($student->raw_check_in ?? false) ? substr($student->raw_check_in, 0, 5) : '' }}">
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label class="form-label small fw-semibold text-secondary">Catatan / Keterangan</label>
-                                                            <textarea name="notes" rows="2" class="form-control rounded-3" placeholder="Contoh: Sakit demam ada surat dokter">{{ $student->notes ?? '' }}</textarea>
+                                                            <label class="form-label small fw-semibold text-secondary">{{ __('Catatan / Keterangan') }}</label>
+                                                            <textarea name="notes" rows="2" class="form-control rounded-3" placeholder="{{ __('Contoh: Sakit demam ada surat dokter') }}">{{ $student->notes ?? '' }}</textarea>
                                                         </div>
 
                                                         <div class="mb-2">
-                                                            <label class="form-label small fw-semibold text-secondary">Upload Bukti Surat (Sakit / Izin)</label>
+                                                            <label class="form-label small fw-semibold text-secondary">{{ __('Upload Bukti Surat (Sakit / Izin)') }}</label>
                                                             <input type="file" name="proof_document" class="form-control rounded-3 form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer bg-light px-4 py-3 border-top">
-                                                        <button type="button" class="btn btn-light border px-3 rounded-3" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-presensi-primary px-4 fw-semibold rounded-3">Simpan Status</button>
+                                                        <button type="button" class="btn btn-light border px-3 rounded-3" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                                                        <button type="submit" class="btn btn-presensi-primary px-4 fw-semibold rounded-3">{{ __('Simpan Status') }}</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -668,7 +668,7 @@
                             <tr>
                                 <td colspan="{{ is_admin() ? 6 : 5 }}" class="text-center py-4 text-secondary empty-state">
                                     <i class='bx bx-error' aria-hidden='true'></i>
-                                    BELUM ADA DATA SISWA DI KELAS INI.
+                                    {{ __('Belum ada data siswa di kelas ini.') }}
                                 </td>
                             </tr>
                             @endforelse
@@ -827,7 +827,7 @@
             if (typeof handleScanResult === 'function') {
                 handleScanResult(500, {
                     success: false,
-                    message: 'Terjadi kendala koneksi ke server, coba lagi'
+                    message: {!! json_encode(__('Terjadi kendala koneksi ke server, coba lagi')) !!}
                 });
             }
         });

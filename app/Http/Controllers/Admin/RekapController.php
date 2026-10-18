@@ -499,7 +499,7 @@ class RekapController extends Controller
             }, $fileName);
         } catch (\Throwable $e) {
             Log::error('Gagal export Excel: ' . $e->getMessage(), ['exception' => $e]);
-            return redirect()->back()->with('error', 'Gagal membuat file export. Silakan coba lagi atau hubungi admin.');
+            return redirect()->back()->with('error', __('Gagal membuat file export. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -561,7 +561,7 @@ class RekapController extends Controller
             }, $fileName);
         } catch (\Throwable $e) {
             Log::error('Gagal export PDF: ' . $e->getMessage(), ['exception' => $e]);
-            return redirect()->back()->with('error', 'Gagal membuat file export. Silakan coba lagi atau hubungi admin.');
+            return redirect()->back()->with('error', __('Gagal membuat file export. Silakan coba lagi atau hubungi admin.'));
         }
     }
 

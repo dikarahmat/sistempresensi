@@ -22,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security headers global
         $middleware->append(SecurityHeaders::class);
 
+        // BAHASA (id / en): locale per request dipasang dari middleware role yang
+        // sudah ada (App\Http\Middleware\EnsureUserRole memanggil
+        // AppServiceProvider::setLocale), jadi tidak ada file middleware baru.
+        // Middleware itu berjalan di dalam group `web`, sehingga session sudah
+        // aktif ketika bahasa dibaca.
+
         // Railway ada di belakang reverse proxy, percayai header X-Forwarded-*
         $middleware->trustProxies(at: '*');
     })

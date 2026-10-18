@@ -4,9 +4,9 @@
      teachers/trash.blade.php. Judul modul di dalam konten (yang tadinya
      "Tempat Sampah Kelas") sudah dihapus supaya tidak ada judul ganda: header
      dari layout sudah otomatis huruf besar. --}}
-@section('title', 'Tempat Sampah')
-@section('page_title', 'Tempat Sampah')
-@section('page_subtitle', 'Pulihkan atau hapus permanen data yang telah dihapus')
+@section('title', __('Tempat Sampah'))
+@section('page_title', __('Tempat Sampah'))
+@section('page_subtitle', __('Pulihkan atau hapus permanen data yang telah dihapus'))
 
 {{-- ===========================================================================
      Halaman ini memakai pola yang SAMA persis dengan
@@ -123,9 +123,9 @@
          sama persis dengan dua halaman trash lain.
          =========================================================================== --}}
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <a href="{{ route('admin.students.trash') }}" class="trash-tab">Siswa</a>
-        <a href="{{ route('admin.teachers.trash') }}" class="trash-tab">Guru</a>
-        <span class="trash-tab trash-tab-active" aria-current="page">Kelas</span>
+        <a href="{{ route('admin.students.trash') }}" class="trash-tab">{{ __('Siswa') }}</a>
+        <a href="{{ route('admin.teachers.trash') }}" class="trash-tab">{{ __('Guru') }}</a>
+        <span class="trash-tab trash-tab-active" aria-current="page">{{ __('Kelas') }}</span>
     </div>
 
     {{-- Notifikasi. Layout tidak menampilkan flash secara global, jadi blok ini
@@ -141,7 +141,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -153,7 +153,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -166,7 +166,7 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -175,14 +175,14 @@
     @if($errors->any())
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
         <div class="flash-notice-body">
-            <div class="fw-bold mb-1"><i class='bx bx-x-circle me-1'></i> Data belum bisa diproses.</div>
+            <div class="fw-bold mb-1"><i class='bx bx-x-circle me-1'></i> {{ __('Data belum bisa diproses.') }}</div>
             <ul class="mb-0 small ps-3">
                 @foreach($errors->all() as $message)
                     <li>{{ $message }}</li>
                 @endforeach
             </ul>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -192,7 +192,7 @@
          dan trash Guru. --}}
     <div class="mb-3">
         <p class="text-secondary mb-0" style="font-size: 0.85rem;">
-            Data kelas yang dihapus akan disimpan di sini. Anda dapat memulihkan atau menghapus permanen data.
+            {{ __('Data kelas yang dihapus akan disimpan di sini. Anda dapat memulihkan atau menghapus permanen data.') }}
         </p>
     </div>
 
@@ -201,32 +201,32 @@
             <table class="table table-zebra-custom align-middle mb-0">
                 <thead>
                     <tr>
-                        <th class="text-center py-3 px-3">NO</th>
-                        <th class="text-center py-3 px-3">NAMA KELAS</th>
-                        <th class="text-center py-3 px-3">TINGKAT</th>
-                        <th class="text-center py-3 px-3">TAHUN AJARAN</th>
-                        <th class="text-center py-3 px-3">WALI KELAS</th>
-                        <th class="text-center py-3 px-3">TANGGAL DIHAPUS</th>
-                        <th class="text-center py-3 px-3">AKSI</th>
+                        <th class="text-center py-3 px-3">{{ __('No') }}</th>
+                        <th class="text-center py-3 px-3">{{ __('Nama Kelas') }}</th>
+                        <th class="text-center py-3 px-3">{{ __('Tingkat') }}</th>
+                        <th class="text-center py-3 px-3">{{ __('Tahun Ajaran') }}</th>
+                        <th class="text-center py-3 px-3">{{ __('Wali Kelas') }}</th>
+                        <th class="text-center py-3 px-3">{{ __('Tanggal Dihapus') }}</th>
+                        <th class="text-center py-3 px-3">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($classes as $index => $class)
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle">
-                        <td data-label="No" class="text-center px-3">{{ $classes->firstItem() + $index }}</td>
-                        <td data-label="Nama Kelas" class="text-center px-3 fw-semibold">{{ $class->name }}</td>
-                        <td data-label="Tingkat" class="text-center px-3">{{ $class->level ?: $class->grade }}</td>
-                        <td data-label="Tahun Ajaran" class="text-center px-3">{{ $class->academicYear->name ?? '-' }}</td>
-                        <td data-label="Wali Kelas" class="text-center px-3">{{ $class->teacher->name ?? '-' }}</td>
-                        <td data-label="Tanggal Dihapus" class="text-center px-3">{{ $class->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
-                        <td data-label="Aksi" class="text-center px-3">
+                        <td data-label="{{ __('No') }}" class="text-center px-3">{{ $classes->firstItem() + $index }}</td>
+                        <td data-label="{{ __('Nama Kelas') }}" class="text-center px-3 fw-semibold">{{ $class->name }}</td>
+                        <td data-label="{{ __('Tingkat') }}" class="text-center px-3">{{ $class->level ?: $class->grade }}</td>
+                        <td data-label="{{ __('Tahun Ajaran') }}" class="text-center px-3">{{ $class->academicYear->name ?? '-' }}</td>
+                        <td data-label="{{ __('Wali Kelas') }}" class="text-center px-3">{{ $class->teacher->name ?? '-' }}</td>
+                        <td data-label="{{ __('Tanggal Dihapus') }}" class="text-center px-3">{{ $class->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
+                        <td data-label="{{ __('Aksi') }}" class="text-center px-3">
                             <div class="d-flex justify-content-center gap-2">
                                 <form action="{{ route('admin.classes.restore', $class->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn-restore" title="Pulihkan">Pulihkan</button>
+                                    <button type="submit" class="btn-restore" title="{{ __('Pulihkan') }}">{{ __('Pulihkan') }}</button>
                                 </form>
-                                <button type="button" class="btn-force-delete" title="Hapus Permanen" onclick="confirmForceDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')">
-                                    Hapus Permanen
+                                <button type="button" class="btn-force-delete" title="{{ __('Hapus Permanen') }}" onclick="confirmForceDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')">
+                                    {{ __('Hapus Permanen') }}
                                 </button>
                             </div>
                         </td>
@@ -235,7 +235,7 @@
                     <tr>
                         <td colspan="7" class="text-center py-5 text-muted empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            Tidak ada data kelas di Tempat Sampah
+                            {{ __('Tidak ada data kelas di Tempat Sampah') }}
                         </td>
                     </tr>
                     @endforelse
@@ -258,19 +258,19 @@
          menghapus data siswa. -->
     @if(Auth::check() && Auth::user()->role === 'admin')
     <div class="card border border-danger rounded-4 p-4 bg-white">
-        <h6 class="fw-bold text-danger mb-2">Zona Berbahaya</h6>
+        <h6 class="fw-bold text-danger mb-2">{{ __('Zona Berbahaya') }}</h6>
         <p class="text-secondary small mb-3">
-            Tindakan ini menghapus permanen seluruh isi Tempat Sampah ({{ $trashedCount }} data kelas).
-            Kelas yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.
+            {{ __('Tindakan ini menghapus permanen seluruh isi Tempat Sampah') }} ({{ $trashedCount }} {{ __('data kelas') }}).
+            {{ __('Kelas yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.') }}
         </p>
 
         <button type="button"
                 id="btnDeleteAllClassArchive"
                 class="btn btn-danger rounded-3 px-4 fw-semibold"
                 onclick="confirmDeleteAllClassArchive()"
-                title="Hapus permanen seluruh isi Tempat Sampah Kelas"
+                title="{{ __('Hapus permanen seluruh isi Tempat Sampah Kelas') }}"
                 {{ $trashedCount === 0 ? 'disabled' : '' }}>
-            Hapus Semua Kelas (Permanen)
+            {{ __('Hapus Semua Kelas (Permanen)') }}
         </button>
     </div>
     @endif
@@ -311,14 +311,14 @@
      */
     function confirmForceDeleteClass(id, name) {
         confirmUniversalDelete({
-            title: 'Hapus Permanen?',
+            title: {!! json_encode(__('Hapus Permanen?')) !!},
             icon: 'bx-error-circle',
-            html: `Data rombel kelas <strong>${name}</strong> akan dihapus permanen dan tidak dapat dikembalikan.`,
-            confirmText: 'Hapus Permanen',
-            cancelText: 'Batal',
+            html: {!! json_encode(__('Data rombel kelas')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus permanen dan tidak dapat dikembalikan.')) !!},
+            confirmText: {!! json_encode(__('Hapus Permanen')) !!},
+            cancelText: {!! json_encode(__('Batal')) !!},
             checks: [
-                'Saya memahami data yang dihapus permanen tidak dapat dikembalikan.',
-                'Saya yakin ingin menghapus data ini secara permanen.'
+                {!! json_encode(__('Saya memahami data yang dihapus permanen tidak dapat dikembalikan.')) !!},
+                {!! json_encode(__('Saya yakin ingin menghapus data ini secara permanen.')) !!}
             ],
             onConfirm: function () {
                 const form = document.getElementById('forceDeleteClassForm');
@@ -351,14 +351,14 @@
         if (total <= 0 || (btn && btn.disabled)) return;
 
         confirmUniversalDelete({
-            title: 'Hapus Semua dari Tempat Sampah?',
+            title: {!! json_encode(__('Hapus Semua dari Tempat Sampah?')) !!},
             icon: 'bx-error-circle',
-            html: `<strong>${total} kelas</strong> di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.`,
-            confirmText: 'Hapus Permanen',
-            cancelText: 'Batal',
+            html: '<strong>' + total + ' ' + {!! json_encode(__('kelas')) !!} + '</strong> ' + {!! json_encode(__('di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.')) !!},
+            confirmText: {!! json_encode(__('Hapus Permanen')) !!},
+            cancelText: {!! json_encode(__('Batal')) !!},
             checks: [
-                'Saya memahami data yang dihapus permanen tidak dapat dikembalikan.',
-                'Saya yakin ingin menghapus semua data di Tempat Sampah.'
+                {!! json_encode(__('Saya memahami data yang dihapus permanen tidak dapat dikembalikan.')) !!},
+                {!! json_encode(__('Saya yakin ingin menghapus semua data di Tempat Sampah.')) !!}
             ],
             onConfirm: function () {
                 const form = document.getElementById('deleteAllClassArchiveForm');

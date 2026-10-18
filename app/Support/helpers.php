@@ -214,27 +214,27 @@ if (!function_exists('render_compact_pagination')) {
 
         // Tombol Panah Kiri (‹)
         if ($isFirst || !$prevUrl) {
-            $html .= '<span class="pagination-arrow-btn is-disabled" aria-disabled="true" aria-label="Sebelumnya" title="Halaman Pertama">';
+            $html .= '<span class="pagination-arrow-btn is-disabled" aria-disabled="true" aria-label="' . __('Sebelumnya') . '" title="' . __('Halaman Pertama') . '">';
             $html .= '<i class="bx bx-chevron-left"></i>';
             $html .= '</span>';
         } else {
-            $html .= '<a href="' . e($prevUrl) . '" class="pagination-arrow-btn" aria-label="Sebelumnya" title="Halaman Sebelumnya">';
+            $html .= '<a href="' . e($prevUrl) . '" class="pagination-arrow-btn" aria-label="' . __('Sebelumnya') . '" title="' . __('Halaman Sebelumnya') . '">';
             $html .= '<i class="bx bx-chevron-left"></i>';
             $html .= '</a>';
         }
 
         // Teks Tengah: Halaman X dari Y
         $html .= '<div class="pagination-arrow-info">';
-        $html .= 'Halaman <span class="fw-bold text-dark">' . $currentPage . '</span> dari <span class="fw-bold text-dark">' . $lastPage . '</span>';
+        $html .= __('Halaman :current dari :last', ['current' => $currentPage, 'last' => $lastPage]);
         $html .= '</div>';
 
         // Tombol Panah Kanan (›)
         if ($isLast || !$nextUrl) {
-            $html .= '<span class="pagination-arrow-btn is-disabled" aria-disabled="true" aria-label="Berikutnya" title="Halaman Terakhir">';
+            $html .= '<span class="pagination-arrow-btn is-disabled" aria-disabled="true" aria-label="' . __('Berikutnya') . '" title="' . __('Halaman Terakhir') . '">';
             $html .= '<i class="bx bx-chevron-right"></i>';
             $html .= '</span>';
         } else {
-            $html .= '<a href="' . e($nextUrl) . '" class="pagination-arrow-btn" aria-label="Berikutnya" title="Halaman Berikutnya">';
+            $html .= '<a href="' . e($nextUrl) . '" class="pagination-arrow-btn" aria-label="' . __('Berikutnya') . '" title="' . __('Halaman Berikutnya') . '">';
             $html .= '<i class="bx bx-chevron-right"></i>';
             $html .= '</a>';
         }

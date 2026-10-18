@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>500 - Kesalahan Server | {{ \App\Models\Setting::getAppTitle() }}</title>
+    <title>500 - {{ __('Kesalahan Server') }} | {{ \App\Models\Setting::getAppTitle() }}</title>
     <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -105,9 +105,9 @@
             <i class='bx bx-error-circle'></i>
         </div>
         <div class="error-code">500</div>
-        <div class="error-title">Kesalahan Server</div>
+        <div class="error-title">{{ __('Kesalahan Server') }}</div>
         <p class="error-description">
-            Maaf, terjadi kesalahan yang tidak terduga di server. Silakan coba lagi atau hubungi administrator masalah berlanjut.
+            {{ __('Maaf, terjadi kesalahan yang tidak terduga di server. Silakan coba lagi atau hubungi administrator masalah berlanjut.') }}
         </p>
         <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
             @auth
@@ -119,17 +119,17 @@
                     };
                 @endphp
                 <a href="{{ $destRoute }}" class="btn-action btn-dashboard">
-                    <i class='bx bx-home-alt'></i> Ke Dashboard Saya
+                    <i class='bx bx-home-alt'></i> {{ __('Ke Dashboard Saya') }}
                 </a>
                 <form action="{{ route('logout') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn-action btn-logout w-100 w-md-auto">
-                        <i class='bx bx-log-out'></i> Keluar Akun
+                        <i class='bx bx-log-out'></i> {{ __('Keluar Akun') }}
                     </button>
                 </form>
             @else
                 <a href="{{ route('login') }}" class="btn-action btn-dashboard">
-                    <i class='bx bx-log-in'></i> Halaman Login
+                    <i class='bx bx-log-in'></i> {{ __('Halaman Login') }}
                 </a>
             @endauth
         </div>

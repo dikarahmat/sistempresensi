@@ -4,7 +4,8 @@
 
 <style>
     /* Overlay loading penuh layar: HITAM transparan (alpha 0.50) sehingga halaman
-       di belakang masih samar terlihat. Warna overlay INI TIDAK DIUBAH. */
+       di belakang masih samar terlihat. Warna overlay INI TIDAK DIUBAH - tetap
+       gelap supaya spinner putih di atasnya tetap kontras & terbaca. */
     .loader-overlay {
         position: fixed;
         inset: 0;
@@ -27,18 +28,24 @@
 
     /* Cincin loading halaman (satu CSS bersama untuk SEMUA layout: admin,
        guru, dan gerbang semuanya lewat satu include di layouts/app.blade.php).
-       Warna background: BIRU TEMA, bukan teal #25b09b.
-       --primary-blue = #3b62f6, persis warna tombol utama aplikasi
-       (tombol "Buka Scanner QR" / tombol submit login). Tidak ada variabel
-       --primary di project ini, jadi memakai variabel biru yang sudah ada. */
+       WARNA: PUTIH (#FFFFFF), bukan biru tema, karena latarnya overlay gelap
+       transparan (rgba(0,0,0,.50)) di atas - spinner putih selalu terbaca
+       di semua kondisi tampilan.
+       - `background`      : warna cincin (putih).
+       - Jejak (track)     : conic gradient mulai transparan, naik ke 25%
+                             (#00000040 = hitam alpha 25%) sebagai sisa
+                             jejak tipis, lalu ke opaque penuh untuk kepala
+                             spinner.
+       Ukuran (50px), rasio, dan kecepatan animasi (l3 1s linear) TIDAK
+       berubah - hanya warna yang diganti. */
     .loader {
         width: 50px;
         padding: 8px;
         aspect-ratio: 1;
         border-radius: 50%;
-        background: var(--primary-blue, #3b62f6);   /* biru tema, bukan #25b09b */
+        background: #ffffff;                  /* spinner putih            */
         --_m:
-            conic-gradient(#0000 10%,#000),
+            conic-gradient(#0000 10%, #00000040 25%, #000),
             linear-gradient(#000 0 0) content-box;
         -webkit-mask: var(--_m);
                 mask: var(--_m);

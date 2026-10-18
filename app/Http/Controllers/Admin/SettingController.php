@@ -112,9 +112,9 @@ class SettingController extends Controller
 
             return redirect()->route('admin.settings.index')
                 ->withInput()
-                ->with('error', 'Gagal menyimpan pengaturan. Coba lagi.');
+                ->with('error', __('Gagal menyimpan pengaturan. Coba lagi.'));
         }
 
-        return redirect()->route('admin.settings.index')->with('success', 'Pengaturan berhasil disimpan.');
+        return redirect()->route('admin.settings.index')->with('success', __('Pengaturan berhasil disimpan.'));
     }
 }

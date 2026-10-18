@@ -17,6 +17,37 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Bahasa aplikasi per request (id / en).
+     *
+     * Dipanggil dari middleware yang sudah ada
+     * (App\Http\Middleware\EnsureUserRole) supaya tidak perlu file middleware
+     * baru. Dijalankan di dalam group `web`, jadi session sudah tersedia.
+     *
+     * Default tetap Bahasa Indonesia (config app.locale = id): tanpa pilihan
+     * tersimpan, seluruh tampilan sama persis seperti sebelumnya.
+     */
+    public static function setLocale($request): void
+    {
+        $supported = ['id', 'en'];
+        $locale = $request->session()->get('locale');
+
+        if (! in_array($locale, $supported, true)) {
+            $locale = config('app.locale', 'id');
+        }
+
+        if (! in_array($locale, $supported, true)) {
+            $locale = 'id';
+        }
+
+        app()->setLocale($locale);
+
+        // Tanggal ikut bahasa aktif: "Minggu, 18 Oktober 2026" (id) menjadi
+        // "Sunday, 18 October 2026" (en).
+        \Carbon\Carbon::setLocale($locale);
+        \Carbon\CarbonImmutable::setLocale($locale);
+    }
+
+    /**
      * Bootstrap any application services.
      */
     public function boot(): void

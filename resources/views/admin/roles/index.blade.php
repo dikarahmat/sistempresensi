@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Role & Permission')
-@section('page_title', 'Manajemen Role & Permission')
-@section('page_subtitle', 'Ringkasan hak akses modul dan otoritas 3 role utama sistem presensi')
+@section('title', __('Manajemen Role & Permission'))
+@section('page_title', __('Manajemen Role & Permission'))
+@section('page_subtitle', __('Ringkasan hak akses modul dan otoritas 3 role utama sistem presensi'))
 
 @section('page_header_right')
 <!-- Widget Tanggal Real-time di Sisi Kanan -->
@@ -11,7 +11,7 @@
         <i class='bx bx-calendar-check'></i>
     </div>
     <div>
-        <span class="text-slate-400 fw-bold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.06em;">Tanggal Real-time</span>
+        <span class="text-slate-400 fw-bold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.06em;">{{ __('Tanggal Real-time') }}</span>
         <strong class="text-slate-800 fw-bold d-block" style="font-size: 0.88rem;" id="realtimeDateClock">
             {{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}
         </strong>
@@ -183,40 +183,40 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">Administrator</h5>
-                        <span class="text-slate-400" style="font-size: 0.74rem;">{{ $roleCounts['admin'] ?? 1 }} Akun Aktif</span>
+                        <span class="text-slate-400" style="font-size: 0.74rem;">{{ __(':count Akun Aktif', ['count' => $roleCounts['admin'] ?? 1]) }}</span>
                     </div>
                 </div>
                 <span class="status-badge-clean status-full-access">
-                    Full Akses
+                    {{ __('Full Akses') }}
                 </span>
             </div>
 
             <p class="text-slate-500 mb-3" style="font-size: 0.8rem; line-height: 1.45;">
-                Otoritas tertinggi dengan kontrol mutlak atas konfigurasi sistem presensi, database, dan manajemen sekolah.
+                {{ __('Otoritas tertinggi dengan kontrol mutlak atas konfigurasi sistem presensi, database, dan manajemen sekolah.') }}
             </p>
 
             <div class="border-top border-slate-100 pt-3 flex-grow-1">
-                <span class="text-slate-400 fw-bold d-block text-uppercase mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">Cakupan Izin Akses:</span>
+                <span class="text-slate-400 fw-bold d-block text-uppercase mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">{{ __('Cakupan Izin Akses:') }}</span>
                 <ul class="permission-simple-list">
                     <li>
                         <i class='bx bx-check-circle text-blue-600'></i>
-                        <span>Akses penuh seluruh modul aplikasi tanpa batasan</span>
+                        <span>{{ __('Akses penuh seluruh modul aplikasi tanpa batasan') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-blue-600'></i>
-                        <span>Pengaturan profil sekolah & batas jam toleransi</span>
+                        <span>{{ __('Pengaturan profil sekolah & batas jam toleransi') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-blue-600'></i>
-                        <span>Kelola tahun ajaran, hari libur, dan jadwal akademik</span>
+                        <span>{{ __('Kelola tahun ajaran, hari libur, dan jadwal akademik') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-blue-600'></i>
-                        <span>Master data siswa, guru, kelas, & kenaikan tingkat</span>
+                        <span>{{ __('Master data siswa, guru, kelas, & kenaikan tingkat') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-blue-600'></i>
-                        <span>Monitoring presensi, koreksi manual, & ekspor laporan</span>
+                        <span>{{ __('Monitoring presensi, koreksi manual, & ekspor laporan') }}</span>
                     </li>
                 </ul>
             </div>
@@ -231,8 +231,8 @@
                         <i class='bx bx-id-card'></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">Guru</h5>
-                        <span class="text-slate-400" style="font-size: 0.74rem;">{{ $roleCounts['guru'] ?? 0 }} Akun Aktif</span>
+                        <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">{{ __('Guru') }}</h5>
+                        <span class="text-slate-400" style="font-size: 0.74rem;">{{ __(':count Akun Aktif', ['count' => $roleCounts['guru'] ?? 0]) }}</span>
                     </div>
                 </div>
                 <span class="status-badge-clean status-rombel">
@@ -241,31 +241,31 @@
             </div>
 
             <p class="text-slate-500 mb-3" style="font-size: 0.8rem; line-height: 1.45;">
-                Portal Dashboard Guru dengan tampilan identik admin: pemantauan seluruh data sekolah dengan hak akses terbatas (read-only).
+                {{ __('Portal Dashboard Guru dengan tampilan identik admin: pemantauan seluruh data sekolah dengan hak akses terbatas (read-only).') }}
             </p>
 
             <div class="border-top border-slate-100 pt-3 flex-grow-1">
-                <span class="text-slate-400 fw-bold d-block text-uppercase mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">Cakupan Izin Akses:</span>
+                <span class="text-slate-400 fw-bold d-block text-uppercase mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">{{ __('Cakupan Izin Akses:') }}</span>
                 <ul class="permission-simple-list">
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Portal Dashboard Guru dengan tampilan identik admin</span>
+                        <span>{{ __('Portal Dashboard Guru dengan tampilan identik admin') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Scanner QR presensi & mode gerbang (kiosk) penuh fungsional</span>
+                        <span>{{ __('Scanner QR presensi & mode gerbang (kiosk) penuh fungsional') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Melihat seluruh data siswa, kelas, kehadiran, & rekap sekolah</span>
+                        <span>{{ __('Melihat seluruh data siswa, kelas, kehadiran, & rekap sekolah') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Rekap kehadiran & unduh laporan Excel/PDF seluruh kelas</span>
+                        <span>{{ __('Rekap kehadiran & unduh laporan Excel/PDF seluruh kelas') }}</span>
                     </li>
                     <li>
                         <i class='bx bx-check-circle text-purple-600'></i>
-                        <span>Detail siswa, unduh QR, & cetak kartu presensi massal</span>
+                        <span>{{ __('Detail siswa, unduh QR, & cetak kartu presensi massal') }}</span>
                     </li>
                 </ul>
             </div>
@@ -281,19 +281,19 @@
     <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom border-slate-100 bg-white">
         <div class="d-flex align-items-center gap-2">
             <i class='bx bx-grid-alt text-blue-600 fs-5'></i>
-            <h6 class="fw-bold text-slate-800 mb-0" style="font-size: 0.95rem;">Matriks Otoritas Hak Akses Per Modul</h6>
+            <h6 class="fw-bold text-slate-800 mb-0" style="font-size: 0.95rem;">{{ __('Matriks Otoritas Hak Akses Per Modul') }}</h6>
         </div>
-        <span class="text-slate-400 fw-semibold" style="font-size: 0.74rem;">Standar Keamanan Sistem Presensi</span>
+        <span class="text-slate-400 fw-semibold" style="font-size: 0.74rem;">{{ __('Standar Keamanan Sistem Presensi') }}</span>
     </div>
 
     <div class="table-responsive">
         <table class="matrix-table">
             <thead>
                 <tr>
-                    <th style="width: 26%;">Modul Sistem</th>
-                    <th style="width: 44%;">Cakupan Fungsi Fitur</th>
+                    <th style="width: 26%;">{{ __('Modul Sistem') }}</th>
+                    <th style="width: 44%;">{{ __('Cakupan Fungsi Fitur') }}</th>
                     <th style="width: 15%; text-align: center;">Admin</th>
-                    <th style="width: 15%; text-align: center;">Guru</th>
+                    <th style="width: 15%; text-align: center;">{{ __('Guru') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -306,10 +306,10 @@
                         </div>
                     </td>
                     <td class="text-slate-600">
-                        Statistik kehadiran, grafik perbandingan, pemantauan real-time, dan kalender hari efektif.
+                        {{ __('Statistik kehadiran, grafik perbandingan, pemantauan real-time, dan kalender hari efektif.') }}
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-full-access">Full Akses</span>
+                        <span class="status-badge-clean status-full-access">{{ __('Full Akses') }}</span>
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-rombel">Full Read-Only</span>
@@ -321,14 +321,14 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <i class='bx bx-calendar-check text-emerald-600 fs-5'></i>
-                            <strong class="text-slate-800">Presensi & Kehadiran</strong>
+                            <strong class="text-slate-800">{{ __('Presensi & Kehadiran') }}</strong>
                         </div>
                     </td>
                     <td class="text-slate-600">
-                        Scan QR presensi, mode gerbang (kiosk), input manual sakit/izin/alfa, dan override kehadiran.
+                        {{ __('Scan QR presensi, mode gerbang (kiosk), input manual sakit/izin/alfa, dan override kehadiran.') }}
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-full-access">Full Akses</span>
+                        <span class="status-badge-clean status-full-access">{{ __('Full Akses') }}</span>
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-rombel">Scan &amp; Kiosk</span>
@@ -340,17 +340,17 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <i class='bx bx-folder text-amber-600 fs-5'></i>
-                            <strong class="text-slate-800">Rekapitulasi Laporan</strong>
+                            <strong class="text-slate-800">{{ __('Rekapitulasi Laporan') }}</strong>
                         </div>
                     </td>
                     <td class="text-slate-600">
-                        Laporan harian/bulanan, ekspor lembar kerja Excel (.xlsx), dan cetak dokumen PDF resmi.
+                        {{ __('Laporan harian/bulanan, ekspor lembar kerja Excel (.xlsx), dan cetak dokumen PDF resmi.') }}
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-full-access">Semua Kelas</span>
+                        <span class="status-badge-clean status-full-access">{{ __('Semua Kelas') }}</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-rombel">Semua Kelas</span>
+                        <span class="status-badge-clean status-rombel">{{ __('Semua Kelas') }}</span>
                     </td>
                 </tr>
 
@@ -359,17 +359,17 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <i class='bx bx-data text-purple-600 fs-5'></i>
-                            <strong class="text-slate-800">Kalender & Master Data</strong>
+                            <strong class="text-slate-800">{{ __('Kalender & Master Data') }}</strong>
                         </div>
                     </td>
                     <td class="text-slate-600">
-                        Tahun ajaran, kalender libur, data siswa, mutasi kelas, kenaikan kelas, dan penugasan kelas.
+                        {{ __('Tahun ajaran, kalender libur, data siswa, mutasi kelas, kenaikan kelas, dan penugasan kelas.') }}
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-full-access">Kelola Penuh</span>
+                        <span class="status-badge-clean status-full-access">{{ __('Kelola Penuh') }}</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-rombel">Lihat Data</span>
+                        <span class="status-badge-clean status-rombel">{{ __('Lihat Data') }}</span>
                     </td>
                 </tr>
 
@@ -378,17 +378,17 @@
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <i class='bx bx-cog text-slate-600 fs-5'></i>
-                            <strong class="text-slate-800">Pengaturan Sistem</strong>
+                            <strong class="text-slate-800">{{ __('Pengaturan Sistem') }}</strong>
                         </div>
                     </td>
                     <td class="text-slate-600">
-                        Profil sekolah, jam toleransi keterlambatan, serta manajemen role & permission.
+                        {{ __('Profil sekolah, jam toleransi keterlambatan, serta manajemen role & permission.') }}
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-full-access">Otoritas Penuh</span>
+                        <span class="status-badge-clean status-full-access">{{ __('Otoritas Penuh') }}</span>
                     </td>
                     <td class="text-center">
-                        <span class="status-badge-clean status-no-access">Tidak Ada</span>
+                        <span class="status-badge-clean status-no-access">{{ __('Tidak Ada') }}</span>
                     </td>
                 </tr>
             </tbody>
@@ -398,7 +398,7 @@
     <div class="p-3 bg-slate-50 border-top border-slate-100 d-flex align-items-center justify-content-between flex-wrap gap-2">
         <span class="text-slate-500 small">
             <i class='bx bx-info-circle text-blue-600 me-1'></i>
-            Hak otoritas dikunci secara terstruktur untuk memastikan keamanan dan integritas rekam presensi.
+            {{ __('Hak otoritas dikunci secara terstruktur untuk memastikan keamanan dan integritas rekam presensi.') }}
         </span>
         <span class="badge bg-white text-slate-700 border border-slate-200 px-2.5 py-1 rounded-pill small">
             SMP PGRI Parung Panjang

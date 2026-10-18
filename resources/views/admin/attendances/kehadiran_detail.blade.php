@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Histori Kehadiran Kelas ' . ($schoolClass->name ?? ''))
-@section('page_title', 'Histori Kehadiran: Kelas ' . ($schoolClass->name ?? '-'))
+@section('title', __('Histori Kehadiran Kelas') . ' ' . ($schoolClass->name ?? ''))
+@section('page_title', __('Histori Kehadiran: Kelas') . ' ' . ($schoolClass->name ?? '-'))
 @section('page_subtitle')
-    <span class="text-secondary fw-normal">Guru Kelas: {{ $schoolClass->teacher->name ?? 'Belum ditentukan' }}</span>
+    <span class="text-secondary fw-normal">{{ __('Guru Kelas:') }} {{ $schoolClass->teacher->name ?? __('Belum ditentukan') }}</span>
 @endsection
 
 @push('styles')
@@ -78,15 +78,15 @@
             <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
                 <thead class="bg-light">
                     <tr class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.03em;">
-                        <th class="text-center py-3" style="width: 5%;">No.</th>
-                        <th class="text-center py-3" style="width: 16%;">NISN</th>
-                        <th class="py-3" style="width: 27%;">Nama Siswa</th>
-                        <th class="text-center py-3" style="width: 8%;">Hadir</th>
-                        <th class="text-center" style="width: 8%;">Telat</th>
-                        <th class="text-center" style="width: 8%;">Sakit</th>
-                        <th class="text-center" style="width: 8%;">Izin</th>
-                        <th class="text-center" style="width: 8%;">Alpha</th>
-                        <th class="text-center" style="width: 12%;">Kehadiran</th>
+                        <th class="text-center py-3" style="width: 5%;">{{ __('No') }}.</th>
+                        <th class="text-center py-3" style="width: 16%;">{{ __('NISN') }}</th>
+                        <th class="py-3" style="width: 27%;">{{ __('Nama Siswa') }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ __('Hadir') }}</th>
+                        <th class="text-center" style="width: 8%;">{{ __('Telat') }}</th>
+                        <th class="text-center" style="width: 8%;">{{ __('Sakit') }}</th>
+                        <th class="text-center" style="width: 8%;">{{ __('Izin') }}</th>
+                        <th class="text-center" style="width: 8%;">{{ __('Alpha') }}</th>
+                        <th class="text-center" style="width: 12%;">{{ __('Kehadiran') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -115,7 +115,7 @@
                     <tr>
                         <td colspan="9" class="text-center py-5 text-muted fw-normal empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            Tidak ada siswa yang terdaftar di kelas ini.
+                            {{ __('Tidak ada siswa yang terdaftar di kelas ini.') }}
                         </td>
                     </tr>
                     @endforelse

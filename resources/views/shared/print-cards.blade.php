@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Kartu Presensi Siswa - {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
+    <title>{{ __('Cetak Kartu Presensi Siswa') }} - {{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</title>
 
     <style>
         /* Pengaturan Kertas A4 LANDSCAPE — margin 0 supaya background abu-abu
@@ -173,22 +173,22 @@
             <tr>
                 <td style="vertical-align: middle;">
                     <div style="font-size: 16px; font-weight: bold; color: #0f172a;">
-                        Pratinjau Kartu Presensi Siswa
+                        {{ __('Pratinjau Kartu Presensi Siswa') }}
                     </div>
                     <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                        Total: <strong>{{ $students->count() }} Kartu</strong> &bull; Kartu KTP (53,98 x 85,6 mm) &mdash; Kertas A4 Landscape (5 Kolom &times; 2 Baris = 10 Kartu / Lembar)
+                        {{ __('Total:') }} <strong>{{ $students->count() }} {{ __('Kartu') }}</strong> &bull; {{ __('Kartu KTP (53,98 x 85,6 mm) — Kertas A4 Landscape (5 Kolom × 2 Baris = 10 Kartu / Lembar)') }}
                     </div>
                 </td>
                 <td style="vertical-align: middle; text-align: right;">
                     <button type="button" 
                             onclick="if(window.history.length > 1) { window.history.back(); } else { window.close(); }" 
                             class="btn-action btn-back">
-                        Kembali
+                        {{ __('Kembali') }}
                     </button>
                     <button type="button" 
                             onclick="window.print()" 
                             class="btn-action btn-print">
-                        &#128438; Cetak / Simpan PDF
+                        &#128438; {{ __('Cetak / Simpan PDF') }}
                     </button>
                 </td>
             </tr>
@@ -256,8 +256,8 @@
         </div>
     @empty
         <div style="padding: 50px 20px; text-align: center; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 20px;">
-            <div style="font-size: 16px; font-weight: bold; color: #334155;">Tidak ada data siswa yang ditemukan</div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Pastikan data siswa telah diinput dan aktif pada kelas yang dipilih.</div>
+            <div style="font-size: 16px; font-weight: bold; color: #334155;">{{ __('Tidak ada data siswa yang ditemukan') }}</div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{{ __('Pastikan data siswa telah diinput dan aktif pada kelas yang dipilih.') }}</div>
         </div>
     @endforelse
 </div>

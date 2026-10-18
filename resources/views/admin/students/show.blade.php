@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Siswa')
-@section('page_title', 'Detail Siswa')
-@section('page_subtitle', 'Informasi biodata, kelas, dan kode QR presensi siswa')
+@section('title', __('Detail Siswa'))
+@section('page_title', __('Detail Siswa'))
+@section('page_subtitle', __('Informasi biodata, kelas, dan kode QR presensi siswa'))
 
 
 
@@ -123,7 +123,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -135,7 +135,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -143,26 +143,26 @@
         <!-- Informasi Siswa -->
         <div class="col-12 col-lg-7">
             <div class="card card-modern p-4">
-                <h5 class="fw-bold mb-4" style="color: #0f172a;">Informasi Siswa</h5>
+                <h5 class="fw-bold mb-4" style="color: #0f172a;">{{ __('Informasi Siswa') }}</h5>
 
-                <div class="info-label">Kelas</div>
-                <div class="info-value">Kelas {{ $student->schoolClass->name ?? '-' }}</div>
+                <div class="info-label">{{ __('Kelas') }}</div>
+                <div class="info-value">{{ __('Kelas ') }}{{ $student->schoolClass->name ?? '-' }}</div>
 
-                <div class="info-label">NISN</div>
+                <div class="info-label">{{ __('NISN') }}</div>
                 <div class="info-value">{{ $student->nisn ?: '-' }}</div>
 
-                <div class="info-label">Nama Lengkap</div>
+                <div class="info-label">{{ __('Nama Lengkap') }}</div>
                 <div class="info-value">{{ $student->name }}</div>
 
-                <div class="info-label">Jenis Kelamin</div>
-                <div class="info-value">{{ $student->gender ?? 'Laki-laki' }}</div>
+                <div class="info-label">{{ __('Jenis Kelamin') }}</div>
+                <div class="info-value">{{ __($student->gender ?? 'Laki-laki') }}</div>
             </div>
         </div>
 
         <!-- Box QR Code Siswa -->
         <div class="col-12 col-lg-5">
             <div class="card card-modern p-4">
-                <h5 class="fw-bold mb-3" style="color: #0f172a;">QR Code Siswa</h5>
+                <h5 class="fw-bold mb-3" style="color: #0f172a;">{{ __('QR Code Siswa') }}</h5>
 
                 <div class="qr-display-box d-flex justify-content-center align-items-center p-3 mb-3 bg-light rounded-3" style="border: 1px dashed #cbd5e1;">
                     {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($student->nisn ?: $student->qr_token) !!}
@@ -170,12 +170,12 @@
 
                 <!-- Tombol Download QR Saja (Tanpa Ikon) -->
                 <a href="{{ panel_route('students.download-qr', $student->id) }}" class="btn-download-blue btn-progress" data-download data-no-download data-dl-progress>
-                    Download QR Code
+                    {{ __('Download QR Code') }}
                 </a>
 
                 <!-- Tombol Download Kartu Presensi PDF (Tanpa Ikon) -->
                 <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green btn-progress" id="btnDownloadCard" style="text-decoration: none;" data-download data-no-download data-dl-progress>
-                    Download Kartu Presensi
+                    {{ __('Download Kartu Presensi') }}
                 </a>
             </div>
         </div>

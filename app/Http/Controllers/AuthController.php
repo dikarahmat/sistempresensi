@@ -44,7 +44,7 @@ class AuthController extends Controller
                 $request->session()->regenerateToken();
 
                 return view('auth.login')->withErrors([
-                    'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                    'login' => __('Akun tidak dapat digunakan. Hubungi admin sekolah.'),
                 ]);
             }
 
@@ -115,8 +115,8 @@ class AuthController extends Controller
             'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ], [
-            'login.required' => 'Email wajib diisi.',
-            'password.required' => 'Kata sandi wajib diisi.',
+            'login.required' => __('Email wajib diisi.'),
+            'password.required' => __('Kata sandi wajib diisi.'),
         ]);
 
         $loginInput = trim((string) $request->input('login'));
@@ -129,7 +129,7 @@ class AuthController extends Controller
             if ($user && $this->verifyUserCredentials($user, $password)) {
                 if (!$user->isActive()) {
                     return back()->withInput($request->only('login', 'remember'))->withErrors([
-                        'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                        'login' => __('Akun tidak dapat digunakan. Hubungi admin sekolah.'),
                     ]);
                 }
 
@@ -154,7 +154,7 @@ class AuthController extends Controller
         if ($user && $this->verifyUserCredentials($user, $password)) {
             if (!$user->isActive()) {
                 return back()->withInput($request->only('login', 'remember'))->withErrors([
-                    'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                    'login' => __('Akun tidak dapat digunakan. Hubungi admin sekolah.'),
                 ]);
             }
 
@@ -175,7 +175,7 @@ class AuthController extends Controller
                     $request->session()->regenerateToken();
 
                     return back()->withInput($request->only('login', 'remember'))->withErrors([
-                        'login' => 'Akun tidak dapat digunakan. Hubungi admin sekolah.',
+                        'login' => __('Akun tidak dapat digunakan. Hubungi admin sekolah.'),
                     ]);
                 }
 
@@ -187,7 +187,7 @@ class AuthController extends Controller
 
         // Autentikasi Gagal
         return back()->withInput($request->only('login', 'remember'))->withErrors([
-            'login' => 'Email atau kata sandi yang Anda masukkan salah.',
+            'login' => __('Email atau kata sandi yang Anda masukkan salah.'),
         ]);
     }
 
@@ -211,7 +211,7 @@ class AuthController extends Controller
             // tidak punya Dashboard dan aksesnya dibatasi Kehadiran+Presensi.
             'piket' => redirect()->intended(route('piket.absensi.index')),
             default => redirect()->route('login')->withErrors([
-                'login' => 'Role pengguna tidak dikenali atau tidak memiliki hak akses.',
+                'login' => __('Role pengguna tidak dikenali atau tidak memiliki hak akses.'),
             ]),
         };
     }

@@ -57,7 +57,7 @@ class SchoolClassController extends Controller
             'teacher_id' => !empty($validated['teacher_id']) ? $validated['teacher_id'] : null,
         ]);
 
-        return redirect()->route('admin.classes.index')->with('success', 'Data kelas berhasil ditambahkan!');
+        return redirect()->route('admin.classes.index')->with('success', __('Data kelas berhasil ditambahkan!'));
     }
 
     public function update(Request $request, SchoolClass $class): RedirectResponse
@@ -90,7 +90,7 @@ class SchoolClassController extends Controller
         $class->teacher_id = !empty($validated['teacher_id']) ? $validated['teacher_id'] : null;
         $class->save();
 
-        return redirect()->route('admin.classes.index')->with('success', 'Data kelas berhasil diperbarui!');
+        return redirect()->route('admin.classes.index')->with('success', __('Data kelas berhasil diperbarui!'));
     }
 
     /**
@@ -136,12 +136,12 @@ class SchoolClassController extends Controller
             // (alert-danger) dengan ikon tempat sampah - konsisten di seluruh
             // aplikasi. Flash 'success' (hijau) hanya untuk tambah/ubah.
             return redirect()->route('admin.classes.index')
-                ->with('deleted', "Rombel kelas {$className} berhasil dihapus dan dapat dipulihkan dari Tempat Sampah di Pengaturan.");
+                ->with('deleted', __('Rombel kelas :name berhasil dihapus dan dapat dipulihkan dari Tempat Sampah di Pengaturan.', ['name' => $className]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.classes.index')
-                ->with('error', 'Gagal menghapus kelas. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus kelas. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -196,7 +196,7 @@ class SchoolClassController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            return redirect()->route('admin.classes.index')->with('error', 'Gagal menghapus semua data kelas. Silakan coba lagi atau hubungi admin.');
+            return redirect()->route('admin.classes.index')->with('error', __('Gagal menghapus semua data kelas. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -241,13 +241,13 @@ class SchoolClassController extends Controller
 
         if ($duplikat) {
             return redirect()->route('admin.classes.trash')
-                ->with('error', "Gagal dipulihkan: kelas {$class->name} sudah dipakai data kelas yang aktif. Ubah nama kelas lebih dulu.");
+                ->with('error', __('Gagal dipulihkan: kelas :name sudah dipakai data kelas yang aktif. Ubah nama kelas lebih dulu.', ['name' => $class->name]));
         }
 
         $class->restore();
 
         return redirect()->route('admin.classes.trash')
-            ->with('success', "Rombel kelas {$class->name} berhasil dipulihkan!");
+            ->with('success', __('Rombel kelas :name berhasil dipulihkan!', ['name' => $class->name]));
     }
 
     /**
@@ -268,12 +268,12 @@ class SchoolClassController extends Controller
             DB::commit();
             // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.classes.trash')
-                ->with('deleted', "Rombel kelas {$className} berhasil dihapus permanen!");
+                ->with('deleted', __('Rombel kelas :name berhasil dihapus permanen!', ['name' => $className]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.classes.trash')
-                ->with('error', 'Gagal menghapus permanen kelas. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus permanen kelas. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -293,7 +293,7 @@ class SchoolClassController extends Controller
             if ($total === 0) {
                 DB::rollBack();
                 return redirect()->route('admin.classes.trash')
-                    ->with('error', 'Tempat Sampah Kelas sudah kosong, tidak ada yang bisa dihapus.');
+                    ->with('error', __('Tempat Sampah Kelas sudah kosong, tidak ada yang bisa dihapus.'));
             }
 
             SchoolClass::onlyTrashed()->forceDelete();
@@ -301,12 +301,12 @@ class SchoolClassController extends Controller
             DB::commit();
             // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.classes.trash')
-                ->with('deleted', "Seluruh data kelas di Tempat Sampah ({$total}) berhasil dihapus permanen!");
+                ->with('deleted', __('Seluruh data kelas di Tempat Sampah (:total) berhasil dihapus permanen!', ['total' => $total]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.classes.trash')
-                ->with('error', 'Gagal menghapus permanen data kelas dari Tempat Sampah. Silakan coba lagi atau hubungi admin.');
+                ->with('error', __('Gagal menghapus permanen data kelas dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
         }
     }
 
@@ -348,13 +348,13 @@ class SchoolClassController extends Controller
             // 1) Semua baris berhasil -> notifikasi hijau (sukses)
             if ($imported > 0 && $skipped === 0) {
                 return redirect()->route('admin.classes.index')
-                    ->with('success', "Import berhasil: {$imported} kelas diimpor.");
+                    ->with('success', __('Import berhasil: :imported kelas diimpor.', ['imported' => $imported]));
             }
 
             // 2) Sebagian berhasil -> notifikasi kuning (peringatan) + alasan per baris
             if ($imported > 0) {
                 return redirect()->route('admin.classes.index')
-                    ->with('warning', "Import sebagian berhasil: {$imported} diimpor, {$skipped} dilewati.")
+                    ->with('warning', __('Import sebagian berhasil: :imported diimpor, :skipped dilewati.', ['imported' => $imported, 'skipped' => $skipped]))
                     ->with('import_errors', $errors);
             }
 
@@ -364,7 +364,7 @@ class SchoolClassController extends Controller
                 : 'File tidak memiliki baris data.';
 
             return redirect()->route('admin.classes.index')
-                ->with('error', "Import gagal: tidak ada data yang diimpor. {$reason} Periksa format file Excel.")
+                ->with('error', __('Import gagal: tidak ada data yang diimpor. :reason Periksa format file Excel.', ['reason' => $reason]))
                 ->with('import_errors', $errors);
         } catch (\Throwable $e) {
             report($e);

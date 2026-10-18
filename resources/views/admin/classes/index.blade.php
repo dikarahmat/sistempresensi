@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Data Kelas')
-@section('page_title', 'Data Kelas')
-@section('page_subtitle', 'Kelola rombongan belajar dan penetapan wali kelas.')
+@section('title', __('Data Kelas'))
+@section('page_title', __('Data Kelas'))
+@section('page_subtitle', __('Kelola rombongan belajar dan penetapan wali kelas.'))
 
 @push('styles')
 <style>
@@ -299,7 +299,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -322,7 +322,7 @@
             </ul>
             @endif
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -345,7 +345,7 @@
             </ul>
             @endif
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -358,7 +358,7 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -376,7 +376,7 @@
                 @endforeach
             </ul>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -392,7 +392,7 @@
                 @endforeach
             </ul>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -422,12 +422,12 @@
                                name="search" 
                                id="classSearchInput"
                                class="form-control shadow-none" 
-                               placeholder="Cari nama kelas..." 
+                               placeholder="{{ __('Cari nama kelas...') }}" 
                                value="{{ request('search') }}"
-                               aria-label="Cari nama kelas"
+                               aria-label="{{ __('Cari nama kelas') }}"
                                autocomplete="off"
                                style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                        <button class="btn shadow-none" type="submit" title="Cari" aria-label="Cari">
+                        <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
@@ -435,10 +435,10 @@
                     <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang -->
                     <div class="filter-box-wrap">
                         <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="Pilih tingkat kelas">
-                            <option value="">Semua Tingkat</option>
-                            <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>Kelas 7</option>
-                            <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>Kelas 8</option>
-                            <option value="9" {{ request('grade') == '9' ? 'selected' : '' }}>Kelas 9</option>
+                            <option value="">{{ __('Semua Tingkat') }}</option>
+                            <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
+                            <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
+                            <option value="9" {{ request('grade') == '9' ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
                         </select>
                     </div>
 
@@ -450,18 +450,18 @@
                     @if(Route::has('admin.classes.import'))
                     <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importClassModal">
-                        <span>Import Excel</span>
+                        <span>{{ __('Import Excel') }}</span>
                     </button>
                     @endif
 
                     <!-- 2. Tambah Kelas (Solid Biru, Aksi Utama) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addClassModal">
-                        <span>Tambah Kelas</span>
+                        <span>{{ __('Tambah Kelas') }}</span>
                     </button>
 
                     <!-- 3. Hapus Semua Kelas (Solid Merah - Urutan Terakhir) -->
-                    <button type="button" class="btn-solid-pill btn-solid-red" title="Hapus Semua Kelas" onclick="confirmDeleteAllClasses()">
-                        <span>Hapus</span>
+                    <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Kelas') }}" onclick="confirmDeleteAllClasses()">
+                        <span>{{ __('Hapus') }}</span>
                     </button>
                 </div>
                 @endif
@@ -474,42 +474,42 @@
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">NO</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">NAMA KELAS</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">STATUS WALI KELAS</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">JUMLAH SISWA</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">{{ __('No') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">{{ __('Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Nama Kelas') }}</th>
+                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Status Wali Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Jumlah Siswa') }}</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">AKSI</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($classes as $index => $class)
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td data-label="No" class="text-center text-nowrap px-3">{{ $classes->firstItem() + $index }}</td>
-                        <td data-label="Kelas" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $classes->firstItem() + $index }}</td>
+                        <td data-label="{{ __('Kelas') }}" class="text-center text-nowrap px-3">
                             {{ $class->grade ?? ($class->level == 'VII' ? '7' : ($class->level == 'VIII' ? '8' : '9')) }}
                         </td>
-                        <td data-label="Nama Kelas" class="text-center text-nowrap fw-semibold text-dark px-3">
+                        <td data-label="{{ __('Nama Kelas') }}" class="text-center text-nowrap fw-semibold text-dark px-3">
                             {{ $class->name }}
                         </td>
-                        <td data-label="Status Wali Kelas" class="text-start text-nowrap indent-nama px-3 pe-4 text-secondary">
-                            {{ $class->teacher->name ?? 'Belum Ditentukan' }}
+                        <td data-label="{{ __('Status Wali Kelas') }}" class="text-start text-nowrap indent-nama px-3 pe-4 text-secondary">
+                            {{ $class->teacher->name ?? __('Belum Ditentukan') }}
                         </td>
-                        <td data-label="Jumlah Siswa" class="text-center text-nowrap px-3">
-                            {{ $class->students_count }} Siswa
+                        <td data-label="{{ __('Jumlah Siswa') }}" class="text-center text-nowrap px-3">
+                            {{ $class->students_count }} {{ __('Siswa') }}
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <td data-label="Aksi" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
-                                <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="Edit" aria-label="Edit">
+                                <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="{{ __('Edit') }}" aria-label="{{ __('Edit') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
-                                <button type="button" class="btn-row-action action-delete" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="Hapus" aria-label="Hapus">
+                                <button type="button" class="btn-row-action action-delete" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="{{ __('Hapus') }}" aria-label="{{ __('Hapus') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
                                 <form id="deleteClassForm-{{ $class->id }}" action="{{ panel_route('classes.destroy', $class->id) }}" method="POST" class="d-none">
@@ -525,9 +525,9 @@
                         <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted text-nowrap empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('grade'))
-                                Tidak ada data kelas yang cocok dengan pencarian/filter.
+                                {{ __('Tidak ada data kelas yang cocok dengan pencarian/filter.') }}
                             @else
-                                Belum ada data kelas yang terdaftar.
+                                {{ __('Belum ada data kelas yang terdaftar.') }}
                             @endif
                         </td>
                     </tr>
@@ -546,7 +546,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Edit Data Kelas {{ $class->name }}</h5>
+                <h5 class="fw-bold mb-0">{{ __('Edit Data Kelas') }} {{ $class->name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('classes.update', $class->id) }}" method="POST">
@@ -554,33 +554,33 @@
                 @method('PUT')
                 <div class="modal-body py-3">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Nama Kelas</label>
-                        <input type="text" name="name" class="form-control rounded-3" value="{{ $class->name }}" placeholder="Contoh: 7A, 8B, 9C" required>
+                        <label class="form-label small fw-semibold">{{ __('Nama Kelas') }}</label>
+                        <input type="text" name="name" class="form-control rounded-3" value="{{ $class->name }}" placeholder="{{ __('Contoh: 7A, 8B, 9C') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Pilih Kelas</label>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }}</label>
                         <select name="grade" class="form-select rounded-3" required>
-                            <option value="7" {{ ($class->grade == '7' || $class->level == 'VII') ? 'selected' : '' }}>Kelas 7</option>
-                            <option value="8" {{ ($class->grade == '8' || $class->level == 'VIII') ? 'selected' : '' }}>Kelas 8</option>
-                            <option value="9" {{ ($class->grade == '9' || $class->level == 'IX') ? 'selected' : '' }}>Kelas 9</option>
+                            <option value="7" {{ ($class->grade == '7' || $class->level == 'VII') ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
+                            <option value="8" {{ ($class->grade == '8' || $class->level == 'VIII') ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
+                            <option value="9" {{ ($class->grade == '9' || $class->level == 'IX') ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small fw-semibold">Wali Kelas</label>
+                        <label class="form-label small fw-semibold">{{ __('Wali Kelas') }}</label>
                         <select name="teacher_id" class="form-select rounded-3">
-                            <option value="">-- Belum Ditentukan --</option>
+                            <option value="">{{ __('-- Belum Ditentukan --') }}</option>
                             @foreach($teachers as $teacher)
                             <option value="{{ $teacher->id }}" {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
                                 {{ $teacher->name }} (NIP: {{ $teacher->nip }})
                             </option>
                             @endforeach
                         </select>
-                        <div class="form-text small text-muted">Wali kelas diambil dinamis dari master data guru.</div>
+                        <div class="form-text small text-muted">{{ __('Wali kelas diambil dinamis dari master data guru.') }}</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan Perubahan</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Perubahan') }}</button>
                 </div>
             </form>
         </div>
@@ -593,40 +593,40 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Tambah Kelas Baru</h5>
+                <h5 class="fw-bold mb-0">{{ __('Tambah Kelas Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('classes.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Nama Kelas</label>
-                        <input type="text" name="name" class="form-control rounded-3" placeholder="Contoh: 7A, 8B, 9C" required>
+                        <label class="form-label small fw-semibold">{{ __('Nama Kelas') }}</label>
+                        <input type="text" name="name" class="form-control rounded-3" placeholder="{{ __('Contoh: 7A, 8B, 9C') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Pilih Kelas</label>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }}</label>
                         <select name="grade" class="form-select rounded-3" required>
-                            <option value="7">Kelas 7</option>
-                            <option value="8">Kelas 8</option>
-                            <option value="9">Kelas 9</option>
+                            <option value="7">{{ __('Kelas 7') }}</option>
+                            <option value="8">{{ __('Kelas 8') }}</option>
+                            <option value="9">{{ __('Kelas 9') }}</option>
                         </select>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small fw-semibold">Pilih Wali Kelas (Opsional)</label>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Wali Kelas (Opsional)') }}</label>
                         <select name="teacher_id" class="form-select rounded-3">
-                            <option value="">-- Pilih Wali Kelas --</option>
+                            <option value="">{{ __('-- Pilih Wali Kelas --') }}</option>
                             @foreach($teachers as $teacher)
                             <option value="{{ $teacher->id }}">
                                 {{ $teacher->name }} (NIP: {{ $teacher->nip }})
                             </option>
                             @endforeach
                         </select>
-                        <div class="form-text small text-muted">Pilihan wali kelas diambil dinamis dari tabel guru.</div>
+                        <div class="form-text small text-muted">{{ __('Pilihan wali kelas diambil dinamis dari tabel guru.') }}</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">Simpan Kelas</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Kelas') }}</button>
                 </div>
             </form>
         </div>
@@ -639,7 +639,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header border-bottom-0">
-                <h5 class="fw-bold mb-0">Import Data Kelas Excel</h5>
+                <h5 class="fw-bold mb-0">{{ __('Import Data Kelas Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('classes.import') }}" method="POST" enctype="multipart/form-data">
@@ -647,18 +647,18 @@
                 <div class="modal-body">
                     <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
-                            Format kolom file Excel: <strong>Nama Kelas, Tingkat (7/8/9)</strong> (.xlsx atau .csv)
+                            {{ __('Format kolom file Excel:') }} <strong>{{ __('Nama Kelas') }}, {{ __('Tingkat (7/8/9)') }}</strong> (.xlsx {{ __('atau') }} .csv)
                         </div>
                         @if(Route::has('admin.classes.template'))
-                        <a href="{{ panel_route('classes.template') }}" class="btn-download-green w-100" data-download data-dl-progress>Unduh Template Excel</a>
+                        <a href="{{ panel_route('classes.template') }}" class="btn-download-green w-100" data-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                         @endif
                     </div>
-                    <label class="form-label small fw-semibold">Pilih File Excel</label>
+                    <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
                     <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>Unggah &amp; Import</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Unggah & Import') }}</button>
                 </div>
             </form>
         </div>
@@ -674,10 +674,10 @@
 <script>
     function confirmDeleteClass(id, name) {
         confirmUniversalDelete({
-            title: 'Hapus Data Kelas?',
-            html: `Rombel kelas <strong>${name}</strong> akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.`,
-            confirmText: 'Hapus',
-            cancelText: 'Tidak',
+            title: {!! json_encode(__('Hapus Data Kelas?')) !!},
+            html: {!! json_encode(__('Rombel kelas')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
+            confirmText: {!! json_encode(__('Hapus')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
             onConfirm: function() {
                 document.getElementById(`deleteClassForm-${id}`).submit();
             }
@@ -686,14 +686,14 @@
 
     function confirmDeleteAllClasses() {
         confirmUniversalDelete({
-            title: 'Hapus Seluruh Data Kelas?',
+            title: {!! json_encode(__('Hapus Seluruh Data Kelas?')) !!},
             icon: 'bx-error-circle',
-            html: 'Seluruh data kelas aktif akan dihapus dan dipindahkan ke <strong>Tempat Sampah</strong> di Pengaturan. Kelas yang masih memiliki siswa aktif akan dilewati.',
-            confirmText: 'Hapus Semua',
-            cancelText: 'Tidak',
+            html: {!! json_encode(__('Seluruh data kelas aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan. Kelas yang masih memiliki siswa aktif akan dilewati.')) !!},
+            confirmText: {!! json_encode(__('Hapus Semua')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
             checks: [
-                'Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.',
-                'Saya yakin ingin menghapus semua data kelas aktif.'
+                {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
+                {!! json_encode(__('Saya yakin ingin menghapus semua data kelas aktif.')) !!}
             ],
             onConfirm: function() {
                 document.getElementById('deleteAllClassesForm').submit();

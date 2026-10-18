@@ -319,7 +319,7 @@
             const response = await fetch(requestUrl, fetchOpts);
 
             if (!response.ok) {
-                let errorMsg = 'Kartu belum bisa diunduh, coba lagi';
+                let errorMsg = (window.__i18n && window.__i18n.id_kartu_belum_unduh) || 'Kartu belum bisa diunduh, coba lagi';
                 try {
                     const data = await response.json();
                     if (data && data.message) {
@@ -327,9 +327,9 @@
                     }
                 } catch (e) {
                     if (requestUrl.includes('card') || requestUrl.includes('kartu')) {
-                        errorMsg = 'Kartu belum bisa diunduh, coba lagi';
+                        errorMsg = (window.__i18n && window.__i18n.id_kartu_belum_unduh) || 'Kartu belum bisa diunduh, coba lagi';
                     } else {
-                        errorMsg = 'Gagal mengunduh berkas (Status: ' + response.status + ')';
+                        errorMsg = ((window.__i18n && window.__i18n.id_gagal_unduh_berkas) || 'Gagal mengunduh berkas (Status: :status)').replace(':status', response.status);
                     }
                 }
                 throw new Error(errorMsg);
@@ -406,11 +406,11 @@
             swipeFill.classList.add('dl-error');
             swipeFill.style.width = '100%';
 
-            const errorMsg = error.message || 'Gagal memproses unduhan';
+            const errorMsg = error.message || ((window.__i18n && window.__i18n.id_gagal_proses_unduh) || 'Gagal memproses unduhan');
             if (window.Swal) {
                 window.Swal.fire({
                     icon: 'error',
-                    title: 'Unduhan Gagal',
+                    title: (window.__i18n && window.__i18n.id_unduhan_gagal) || 'Unduhan Gagal',
                     text: errorMsg,
                     timer: 3500,
                     showConfirmButton: false,
@@ -516,7 +516,7 @@
                     swipeFill.classList.add('dl-error');
                     swipeFill.style.width = '100%';
 
-                    let errorMsg = 'Gagal memproses berkas import (Status ' + xhr.status + ')';
+                    let errorMsg = ((window.__i18n && window.__i18n.id_gagal_proses_import) || 'Gagal memproses berkas import (Status :status)').replace(':status', xhr.status);
                     try {
                         const res = JSON.parse(xhr.responseText);
                         if (res.errors) {
@@ -529,9 +529,9 @@
                     if (window.Swal) {
                         window.Swal.fire({
                             icon: 'error',
-                            title: 'Import Gagal',
+                            title: (window.__i18n && window.__i18n.id_import_gagal) || 'Import Gagal',
                             html: errorMsg,
-                            confirmButtonText: 'Tutup',
+                            confirmButtonText: (window.__i18n && window.__i18n.id_tutup) || 'Tutup',
                             customClass: { popup: 'swal2-modal-soft shadow-lg border-0' }
                         });
                     } else {
@@ -553,8 +553,8 @@
             if (window.Swal) {
                 window.Swal.fire({
                     icon: 'error',
-                    title: 'Import Gagal',
-                    text: 'Koneksi terputus saat mengunggah berkas.',
+                    title: (window.__i18n && window.__i18n.id_import_gagal) || 'Import Gagal',
+                    text: (window.__i18n && window.__i18n.id_koneksi_terputus) || 'Koneksi terputus saat mengunggah berkas.',
                     timer: 3500,
                     showConfirmButton: false
                 });

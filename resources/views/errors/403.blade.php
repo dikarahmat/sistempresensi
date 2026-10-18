@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>403 - Akses Ditolak | {{ \App\Models\Setting::getSchoolName() }}</title>
+    <title>403 - {{ __('Akses Ditolak') }} | {{ \App\Models\Setting::getSchoolName() }}</title>
 
     <!-- Global Favicon Dinamis -->
     <link rel="icon" type="image/webp" href="{{ asset(\App\Models\Setting::getLogo()) }}">
@@ -134,9 +134,9 @@
     </div>
 
     <div class="error-code">403</div>
-    <div class="error-title">Akses Ditolak (Unauthorized)</div>
+    <div class="error-title">{{ __('Akses Ditolak (Unauthorized)') }}</div>
     <p class="error-description">
-        Maaf, Anda tidak memiliki izin atau hak akses untuk membuka halaman ini. Silakan hubungi administrator jika Anda merasa ini adalah kesalahan.
+        {{ __('Maaf, Anda tidak memiliki izin atau hak akses untuk membuka halaman ini. Silakan hubungi administrator jika Anda merasa ini adalah kesalahan.') }}
     </p>
 
     <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
@@ -149,17 +149,17 @@
                 };
             @endphp
             <a href="{{ $destRoute }}" class="btn-action btn-dashboard">
-                <i class='bx bx-home-alt'></i> Ke Dashboard Saya
+                <i class='bx bx-home-alt'></i> {{ __('Ke Dashboard Saya') }}
             </a>
             <form action="{{ route('logout') }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn-action btn-logout w-100">
-                    <i class='bx bx-log-out'></i> Keluar Akun
+                    <i class='bx bx-log-out'></i> {{ __('Keluar Akun') }}
                 </button>
             </form>
         @else
             <a href="{{ route('login') }}" class="btn-action btn-dashboard">
-                <i class='bx bx-log-in'></i> Halaman Login
+                <i class='bx bx-log-in'></i> {{ __('Halaman Login') }}
             </a>
         @endauth
     </div>

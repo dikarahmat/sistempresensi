@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Pengaturan Sistem')
-@section('page_title', 'Pengaturan Sistem Dinamis')
-@section('page_subtitle', 'Sesuaikan profil sekolah, toleransi keterlambatan')
+@section('title', __('Pengaturan Sistem'))
+@section('page_title', __('Pengaturan Sistem Dinamis'))
+@section('page_subtitle', __('Sesuaikan profil sekolah, toleransi keterlambatan'))
 
 {{-- Kanvas dikunci setinggi satu layar dan isi form menggulir di dalam kanvas,
      sama seperti halaman acuan Presensi / Data Guru / Data Kelas. Class ini
@@ -315,7 +315,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -327,7 +327,7 @@
                 <span>{{ session('error') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -336,14 +336,14 @@
          memperbaikinya atau menekan tombol X. --}}
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs mb-4" role="alert" data-flash-persist>
         <div class="flash-notice-body">
-            <div class="fw-bold mb-1"><i class='bx bx-error-circle me-1'></i> Data belum bisa disimpan. Periksa isian yang bertanda merah.</div>
+            <div class="fw-bold mb-1"><i class='bx bx-error-circle me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}</div>
             <ul class="mb-0 small">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -358,17 +358,18 @@
            Tempat Sampah -> btn-danger  (merah)        TANPA ikon (ikon
                            tong sampah sudah dihapus, tidak ada sisa margin)
          Susunan dalam satu array $pengaturanModules supaya mudah ditambah
-         tombol lain tanpa mengubah struktur. -->
+         tombol lain tanpa mengubah struktur.
+
+         CATATAN: tombol "KELOLA AKUN" yang tadinya ada di baris ini SUDAH
+         DIHAPUS (21 Okt 2026) karena jalur masuknya dipindah ke item
+         "Kelola Akun" pada pop-up kartu akun di sidebar (sidebar.blade.php),
+         memakai route yang sama persis (admin.accounts.index). Route dan
+         halaman Kelola Akun (/admin/kelola-akun) TIDAK dihapus. -->
     @php
         $pengaturanModules = [
-            // KELOLA AKUN dulu (paling depan): ini jalur masuk utama pengelolaan
-            // akun login, jadi ditempatkan lebih dulu daripada modul lain.
-            // Warna: abu gelap (btn-secondary) - sengaja BUKAN merah supaya
-            // tidak bersaing secara visual dengan Tempat Sampah.
-            ['route' => 'admin.accounts.index', 'class' => 'btn-secondary', 'label' => 'KELOLA AKUN'],
-            ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => 'TAHUN AJARAN'],
-            ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => 'HARI LIBUR'],
-            ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => 'TEMPAT SAMPAH'], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
+            ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => __('TAHUN AJARAN')],
+            ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => __('HARI LIBUR')],
+            ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => __('TEMPAT SAMPAH')], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
         ];
     @endphp
     {{-- DULU: <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3">
@@ -379,8 +380,8 @@
     <div class="mb-5">
         <div class="section-header">
             <div>
-                <h5 class="fw-bold mb-0" style="color: #0f172a;">Pengelolaan Sistem</h5>
-                <div class="text-muted small">Kelola tahun ajaran, kalender libur, akun pengguna, dan tempat sampah data.</div>
+                <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Pengelolaan Sistem') }}</h5>
+                <div class="text-muted small">{{ __('Kelola tahun ajaran, kalender libur, akun pengguna, dan tempat sampah data.') }}</div>
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">
@@ -405,67 +406,67 @@
         <div class="mb-5">
             <div class="section-header">
                 <div>
-                    <h5 class="fw-bold mb-0" style="color: #0f172a;">Identitas &amp; Logo Sekolah</h5>
-                    <div class="text-muted small">Tampil pada Header Scanner QR, Cetak Kartu Pelajar, dan Rekap Laporan PDF.</div>
+                    <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Identitas & Logo Sekolah') }}</h5>
+                    <div class="text-muted small">{{ __('Tampil pada Header Scanner QR, Cetak Kartu Pelajar, dan Rekap Laporan PDF.') }}</div>
                 </div>
             </div>
 
             <div class="row g-4 identitas-grid">
                 <div class="col-12 col-md-8 identitas-main">
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">Nama Sekolah Resmi</label>
-                            <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name']) }}" required placeholder="Contoh: SMP Presensi PGRI">
+                            <label class="form-label small fw-semibold">{{ __('Nama Sekolah Resmi') }}</label>
+                            <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name']) }}" required placeholder="{{ __('Contoh: SMP Presensi PGRI') }}">
                             @error('school_name')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">Judul Aplikasi / Tab Browser</label>
-                            <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title']) }}" placeholder="Contoh: Sistem Presensi Sekolah">
+                            <label class="form-label small fw-semibold">{{ __('Judul Aplikasi / Tab Browser') }}</label>
+                            <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title']) }}" placeholder="{{ __('Contoh: Sistem Presensi Sekolah') }}">
                             @error('app_title')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">Alamat Sekolah</label>
-                            <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address']) }}" placeholder="Jl. Raya Pendidikan...">
+                            <label class="form-label small fw-semibold">{{ __('Alamat Sekolah') }}</label>
+                            <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address']) }}" placeholder="{{ __('Jl. Raya Pendidikan...') }}">
                             @error('school_address')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">No. Telepon / Kontak</label>
-                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone']) }}" placeholder="10-15 digit angka, tanpa spasi">
+                            <label class="form-label small fw-semibold">{{ __('No. Telepon / Kontak') }}</label>
+                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone']) }}" placeholder="{{ __('10-15 digit angka, tanpa spasi') }}">
                             @error('school_phone')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
-                            <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">Nomor telepon harus 10-15 digit angka.</div>
+                            <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">{{ __('Nomor telepon harus 10-15 digit angka.') }}</div>
                         </div>
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">Nama Kepala Sekolah</label>
-                            <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name']) }}" placeholder="Contoh: Drs. H. Ahmad Sudrajat, M.Pd">
+                            <label class="form-label small fw-semibold">{{ __('Nama Kepala Sekolah') }}</label>
+                            <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name']) }}" placeholder="{{ __('Contoh: Drs. H. Ahmad Sudrajat, M.Pd') }}">
                             @error('headmaster_name')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">NIP Kepala Sekolah</label>
-                            <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip']) }}" placeholder="18 digit angka tanpa spasi">
+                            <label class="form-label small fw-semibold">{{ __('NIP Kepala Sekolah') }}</label>
+                            <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip']) }}" placeholder="{{ __('18 digit angka tanpa spasi') }}">
                             @error('headmaster_nip')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
-                            <div id="nipClientError" class="text-danger small mt-1" style="display:none;">NIP harus 18 digit angka.</div>
+                            <div id="nipClientError" class="text-danger small mt-1" style="display:none;">{{ __('NIP harus 18 digit angka.') }}</div>
                         </div>
                 </div>
                 <div class="col-12 col-md-4 identitas-logo">
-                    <label class="form-label small fw-semibold">Logo Sekolah (.webp, .png, .jpg, .jpeg)</label>
+                    <label class="form-label small fw-semibold">{{ __('Logo Sekolah (.webp, .png, .jpg, .jpeg)') }}</label>
                     <div class="d-flex align-items-center gap-3 mb-2 identitas-logo-stack">
                         <div class="logo-preview-box">
-                            <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="Logo">
+                            <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="{{ __('Logo') }}">
                         </div>
                         <div class="flex-grow-1 w-100">
                             <input type="file" name="school_logo" id="school_logo" class="form-control rounded-3 w-100 @error('school_logo') is-invalid @enderror" accept=".webp,.png,.jpg,.jpeg">
-                            <span class="text-muted" style="font-size: 11px;">Ukuran rasio 1:1 disarankan. Maksimal 2MB.</span>
+                            <span class="text-muted" style="font-size: 11px;">{{ __('Ukuran rasio 1:1 disarankan. Maksimal 2MB.') }}</span>
                             @error('school_logo')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -476,9 +477,9 @@
                         <i class='bx bx-image me-1'></i><span id="logoFileName"></span>
                     </div>
                     <div id="logoNewPreviewWrap" class="mt-2" style="display:none;">
-                        <div class="text-muted" style="font-size: 11px;">Pratinjau logo baru:</div>
+                        <div class="text-muted" style="font-size: 11px;">{{ __('Pratinjau logo baru:') }}</div>
                         <div class="logo-preview-box mt-1">
-                            <img id="logoNewPreview" alt="Pratinjau logo baru">
+                            <img id="logoNewPreview" alt="{{ __('Pratinjau logo baru') }}">
                         </div>
                     </div>
                 </div>
@@ -494,14 +495,14 @@
              }">
             <div class="section-header">
                 <div>
-                    <h5 class="fw-bold mb-0" style="color: #0f172a;">Jadwal Presensi &amp; Toleransi Keterlambatan</h5>
-                    <div class="text-muted small">Menentukan status tepat waktu atau terlambat pada scanner dan rekap kehadiran.</div>
+                    <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Presensi & Toleransi Keterlambatan') }}</h5>
+                    <div class="text-muted small">{{ __('Menentukan status tepat waktu atau terlambat pada scanner dan rekap kehadiran.') }}</div>
                 </div>
             </div>
 
             <div class="row g-3">
                 <div class="col-12 col-md-6">
-                    <label class="form-label small fw-semibold">Jam Buka Masuk (Check-In)</label>
+                    <label class="form-label small fw-semibold">{{ __('Jam Buka Masuk (Check-In)') }}</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light"><i class='bx bx-log-in'></i></span>
                         <input type="time" name="check_in_time" x-model="checkIn" class="form-control rounded-end-3" value="{{ old('check_in_time', $settings['check_in_time']) }}" required>
@@ -509,7 +510,7 @@
                 </div>
 
                 <div class="col-12 col-md-6">
-                    <label class="form-label small fw-semibold">Batas Toleransi Keterlambatan</label>
+                    <label class="form-label small fw-semibold">{{ __('Batas Toleransi Keterlambatan') }}</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light text-danger"><i class='bx bx-alarm-exclamation'></i></span>
                         <input type="time" name="late_limit_time" x-model="lateLimit" class="form-control rounded-end-3" value="{{ old('late_limit_time', $settings['late_limit_time']) }}" required>
@@ -519,14 +520,14 @@
 
             <div class="p-3 mt-3 rounded-3 bg-light border small text-secondary">
                 <i class='bx bx-info-circle text-primary me-1'></i> 
-                Siswa yang melakukan scan antara <strong x-text="checkIn">{{ $settings['check_in_time'] }}</strong> hingga <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> tercatat <strong>Tepat Waktu</strong>. Scan di atas <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> otomatis tercatat <strong>Terlambat</strong> lengkap dengan selisih menit keterlambatannya.
+                {{ __('Siswa yang melakukan scan antara') }} <strong x-text="checkIn">{{ $settings['check_in_time'] }}</strong> {{ __('hingga') }} <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> {{ __('tercatat') }} <strong>{{ __('Tepat Waktu') }}</strong>. {{ __('Scan di atas') }} <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> {{ __('otomatis tercatat') }} <strong>{{ __('Terlambat') }}</strong> {{ __('lengkap dengan selisih menit keterlambatannya.') }}
             </div>
         </div>
 
         <div class="d-flex justify-content-end mb-4">
             <!-- Tombol SIMPAN: teks saja (tanpa ikon), desktop & mobile. -->
             <button type="submit" class="btn btn-primary btn-sm w-100 w-md-auto px-4 py-2 rounded-3 fw-semibold shadow-xs d-inline-flex align-items-center justify-content-center">
-                Simpan Semua Pengaturan
+                {{ __('Simpan Semua Pengaturan') }}
             </button>
         </div>
     </form>
@@ -565,7 +566,7 @@
                 var allowed = ['image/webp', 'image/png', 'image/jpeg'];
                 var extOk = /\.(webp|png|jpe?g)$/i.test(file.name || '');
                 if ((file.type && allowed.indexOf(file.type) === -1) || !extOk) {
-                    if (logoErr) { logoErr.textContent = 'Format logo harus .webp, .png, .jpg, atau .jpeg.'; logoErr.style.display = ''; }
+                    if (logoErr) { logoErr.textContent = {!! json_encode(__('Format logo harus .webp, .png, .jpg, atau .jpeg.')) !!}; logoErr.style.display = ''; }
                     logoInput.classList.add('is-invalid');
                     logoInput.value = '';
                     fileInfo.style.display = 'none';
@@ -573,7 +574,7 @@
                     return;
                 }
                 if (file.size > 2 * 1024 * 1024) {
-                    if (logoErr) { logoErr.textContent = 'Ukuran logo maksimal 2 MB.'; logoErr.style.display = ''; }
+                    if (logoErr) { logoErr.textContent = {!! json_encode(__('Ukuran logo maksimal 2 MB.')) !!}; logoErr.style.display = ''; }
                     logoInput.classList.add('is-invalid');
                     logoInput.value = '';
                     fileInfo.style.display = 'none';
@@ -624,7 +625,7 @@
 
                 if (!ok) {
                     e.preventDefault();
-                    alert('Data belum bisa disimpan. Periksa isian yang bertanda merah.');
+                    alert({!! json_encode(__('Data belum bisa disimpan. Periksa isian yang bertanda merah.')) !!});
                 }
             });
         }

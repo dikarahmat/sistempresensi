@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Hari Libur')
-@section('page_title', 'Hari Libur & Cuti')
-@section('page_subtitle', 'Daftar hari libur nasional')
+@section('title', __('Hari Libur'))
+@section('page_title', __('Hari Libur & Cuti'))
+@section('page_subtitle', __('Daftar hari libur nasional'))
 
 @push('styles')
 <style>
@@ -23,12 +23,12 @@
     <div class="d-flex align-items-center gap-2">
         <!-- Tombol Import Excel -->
         <button type="button" class="btn btn-green-excel btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#importHolidayModal">
-            Import Excel
+            {{ __('Import Excel') }}
         </button>
 
         <!-- Tombol Tambah Hari Libur -->
         <button type="button" class="btn btn-add-holiday btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
-            Tambah Hari Libur
+            {{ __('Tambah Hari Libur') }}
         </button>
     </div>
 </div>
@@ -170,7 +170,7 @@
                 <span>{{ session('success') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -187,12 +187,12 @@
                     <li>{{ $err }}</li>
                 @endforeach
                 @if(count(session('import_errors')) > 3)
-                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                    <li class="text-muted">{{ __('...dan :count alasan lainnya.', ['count' => count(session('import_errors')) - 3]) }}</li>
                 @endif
             </ul>
             @endif
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -209,12 +209,12 @@
                     <li>{{ $err }}</li>
                 @endforeach
                 @if(count(session('import_errors')) > 3)
-                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                    <li class="text-muted">{{ __('...dan :count alasan lainnya.', ['count' => count(session('import_errors')) - 3]) }}</li>
                 @endif
             </ul>
             @endif
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -227,7 +227,7 @@
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
@@ -240,12 +240,12 @@
             <div class="d-flex flex-column gap-2">
                 <div class="w-100">
                     <button type="button" class="btn btn-success btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#importHolidayModal">
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Import Excel</span>
+                        <span class="text-nowrap" style="font-size: 0.8rem;">{{ __('Import Excel') }}</span>
                     </button>
                 </div>
                 <div class="w-100">
                     <button type="button" class="btn btn-danger btn-sm w-100 rounded-3 shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 py-1.5 px-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
-                        <span class="text-nowrap" style="font-size: 0.8rem;">Tambah Hari Libur</span>
+                        <span class="text-nowrap" style="font-size: 0.8rem;">{{ __('Tambah Hari Libur') }}</span>
                     </button>
                 </div>
             </div>
@@ -255,7 +255,7 @@
 
             <!-- Catatan Integrasi Otomatis Presensi (Mobile) -->
             <p class="text-danger small mt-2 mb-0" style="font-size: 0.8rem; line-height: 1.4;">
-                <span class="fw-semibold">Catatan:</span> Hari libur yang didaftarkan di sini tidak akan dihitung sebagai "Alpha" dalam rekapitulasi presensi siswa.
+                <span class="fw-semibold">{{ __('Catatan:') }}</span> {{ __('Hari libur yang didaftarkan di sini tidak akan dihitung sebagai "Alpha" dalam rekapitulasi presensi siswa.') }}
             </p>
         </div>
     </div>
@@ -263,7 +263,7 @@
     <!-- Catatan Integrasi Otomatis Presensi Versi Desktop (>= 768px) -->
     <div class="d-none d-md-block mb-3">
         <p class="text-danger small mt-2 mb-0">
-            <span class="fw-semibold">Catatan:</span> Hari libur yang didaftarkan di sini tidak akan dihitung sebagai "Alpha" dalam rekapitulasi presensi siswa.
+            <span class="fw-semibold">{{ __('Catatan:') }}</span> {{ __('Hari libur yang didaftarkan di sini tidak akan dihitung sebagai "Alpha" dalam rekapitulasi presensi siswa.') }}
         </p>
     </div>
 
@@ -273,12 +273,12 @@
             <table class="table table-hover align-middle mb-0 table-holidays table-zebra-custom text-nowrap">
                 <thead class="bg-light text-nowrap">
                     <tr class="text-secondary fw-bold text-uppercase text-nowrap" style="letter-spacing: 0.03em; font-size: 0.78rem;">
-                        <th class="text-center py-3 px-3 text-nowrap" style="width: 6%;">NO</th>
-                        <th class="text-center py-3 px-3 text-nowrap" style="width: 14%;">Tipe</th>
-                        <th class="text-start indent-tanggal py-3 px-3 text-nowrap" style="width: 28%;">Tanggal / Periode</th>
-                        <th class="text-center py-3 px-3 text-nowrap" style="width: 12%;">Durasi</th>
-                        <th class="text-start indent-keterangan py-3 px-3 text-nowrap" style="width: 25%;">Keterangan Libur</th>
-                        <th class="text-center py-3 px-3 text-nowrap" style="width: 15%;">Aksi</th>
+                        <th class="text-center py-3 px-3 text-nowrap" style="width: 6%;">{{ __('No') }}</th>
+                        <th class="text-center py-3 px-3 text-nowrap" style="width: 14%;">{{ __('Tipe') }}</th>
+                        <th class="text-start indent-tanggal py-3 px-3 text-nowrap" style="width: 28%;">{{ __('Tanggal / Periode') }}</th>
+                        <th class="text-center py-3 px-3 text-nowrap" style="width: 12%;">{{ __('Durasi') }}</th>
+                        <th class="text-start indent-keterangan py-3 px-3 text-nowrap" style="width: 25%;">{{ __('Keterangan Libur') }}</th>
+                        <th class="text-center py-3 px-3 text-nowrap" style="width: 15%;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody class="text-nowrap">
@@ -290,33 +290,33 @@
                         $isRange = $daysDiff > 1;
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} text-nowrap">
-                        <td data-label="No" class="text-center px-3 text-nowrap">{{ $holidays->firstItem() + $index }}</td>
-                        <td data-label="Tipe" class="text-center px-3 text-nowrap">
-                            {{ $isRange ? 'Rentang' : 'Tunggal' }}
+                        <td data-label="{{ __('No') }}" class="text-center px-3 text-nowrap">{{ $holidays->firstItem() + $index }}</td>
+                        <td data-label="{{ __('Tipe') }}" class="text-center px-3 text-nowrap">
+                            {{ $isRange ? __('Rentang') : __('Tunggal') }}
                         </td>
-                        <td data-label="Tanggal" class="text-start indent-tanggal px-3 text-nowrap">
+                        <td data-label="{{ __('Tanggal') }}" class="text-start indent-tanggal px-3 text-nowrap">
                             @if($isRange)
                                 {{ $start->translatedFormat('d M Y') }} &mdash; {{ $end->translatedFormat('d M Y') }}
                             @else
                                 {{ $start->translatedFormat('l, d F Y') }}
                             @endif
                         </td>
-                        <td data-label="Durasi" class="text-center px-3 text-nowrap">
-                            {{ $daysDiff }} Hari
+                        <td data-label="{{ __('Durasi') }}" class="text-center px-3 text-nowrap">
+                            {{ $daysDiff }} {{ __('Hari') }}
                         </td>
-                        <td data-label="Keterangan" class="text-start indent-keterangan px-3 text-nowrap">
+                        <td data-label="{{ __('Keterangan') }}" class="text-start indent-keterangan px-3 text-nowrap">
                             {{ $holiday->description }}
                         </td>
-                        <td data-label="Aksi" class="text-center px-3 text-nowrap">
+                        <td data-label="{{ __('Aksi') }}" class="text-center px-3 text-nowrap">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
-                                <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editHolidayModal{{ $holiday->id }}" title="Edit">
-                                    Edit
+                                <button type="button" class="btn btn-sm btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editHolidayModal{{ $holiday->id }}" title="{{ __('Edit') }}">
+                                    {{ __('Edit') }}
                                 </button>
 
                                 <!-- Tombol Hapus Satuan -->
-                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteHoliday('{{ $holiday->id }}', '{{ addslashes($holiday->description) }}')" title="Hapus">
-                                    Hapus
+                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteHoliday('{{ $holiday->id }}', '{{ addslashes($holiday->description) }}')" title="{{ __('Hapus') }}">
+                                    {{ __('Hapus') }}
                                 </button>
                                 <form id="deleteHolidayForm-{{ $holiday->id }}" action="{{ panel_route('holidays.destroy', $holiday->id) }}" method="POST" class="d-none">
                                     @csrf
@@ -331,7 +331,7 @@
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content border-0 shadow-lg rounded-4">
                                 <div class="modal-header border-bottom-0 pb-0">
-                                    <h5 class="fw-bold mb-0">Edit Hari Libur</h5>
+                                    <h5 class="fw-bold mb-0">{{ __('Edit Hari Libur') }}</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <form action="{{ panel_route('holidays.update', $holiday->id) }}" method="POST">
@@ -339,45 +339,45 @@
                                     @method('PUT')
                                     <div class="modal-body py-3">
                                         <div class="mb-3">
-                                            <label class="form-label small fw-semibold">Pilih Tipe Tanggal Libur</label>
+                                            <label class="form-label small fw-semibold">{{ __('Pilih Tipe Tanggal Libur') }}</label>
                                             <div class="d-flex gap-3">
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="type" id="editTypeSingle{{ $holiday->id }}" value="single" {{ !$isRange ? 'checked' : '' }} onchange="toggleEditDateRange('{{ $holiday->id }}', false)">
-                                                    <label class="form-check-label small" for="editTypeSingle{{ $holiday->id }}">Tanggal Tunggal</label>
+                                                    <label class="form-check-label small" for="editTypeSingle{{ $holiday->id }}">{{ __('Tanggal Tunggal') }}</label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="type" id="editTypeRange{{ $holiday->id }}" value="range" {{ $isRange ? 'checked' : '' }} onchange="toggleEditDateRange('{{ $holiday->id }}', true)">
-                                                    <label class="form-check-label small" for="editTypeRange{{ $holiday->id }}">Rentang Tanggal</label>
+                                                    <label class="form-check-label small" for="editTypeRange{{ $holiday->id }}">{{ __('Rentang Tanggal') }}</label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <!-- Container Single Date -->
                                         <div id="editSingleDateContainer{{ $holiday->id }}" class="mb-3" style="{{ $isRange ? 'display:none;' : '' }}">
-                                            <label class="form-label small fw-semibold">Tanggal Libur</label>
+                                            <label class="form-label small fw-semibold">{{ __('Tanggal Libur') }}</label>
                                             <input type="date" name="date" class="form-control rounded-3" value="{{ $start->format('Y-m-d') }}">
                                         </div>
 
                                         <!-- Container Range Date -->
                                         <div id="editRangeDateContainer{{ $holiday->id }}" class="row g-2 mb-3" style="{{ !$isRange ? 'display:none;' : '' }}">
                                             <div class="col-6">
-                                                <label class="form-label small fw-semibold">Tanggal Mulai</label>
+                                                <label class="form-label small fw-semibold">{{ __('Tanggal Mulai') }}</label>
                                                 <input type="date" name="start_date" class="form-control rounded-3" value="{{ $start->format('Y-m-d') }}">
                                             </div>
                                             <div class="col-6">
-                                                <label class="form-label small fw-semibold">Tanggal Selesai</label>
+                                                <label class="form-label small fw-semibold">{{ __('Tanggal Selesai') }}</label>
                                                 <input type="date" name="end_date" class="form-control rounded-3" value="{{ $end->format('Y-m-d') }}">
                                             </div>
                                         </div>
 
                                         <div class="mb-2">
-                                            <label class="form-label small fw-semibold">Keterangan Libur</label>
-                                            <input type="text" name="description" class="form-control rounded-3" value="{{ $holiday->description }}" placeholder="Contoh: Libur Semester Ganjil" required>
+                                            <label class="form-label small fw-semibold">{{ __('Keterangan Libur') }}</label>
+                                            <input type="text" name="description" class="form-control rounded-3" value="{{ $holiday->description }}" placeholder="{{ __('Contoh: Libur Semester Ganjil') }}" required>
                                         </div>
                                     </div>
                                     <div class="modal-footer border-top-0 pt-0">
-                                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold">Simpan Perubahan</button>
+                                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                                        <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold">{{ __('Simpan Perubahan') }}</button>
                                     </div>
                                 </form>
                             </div>
@@ -388,7 +388,7 @@
                     <tr class="text-nowrap">
                         <td colspan="6" class="text-center py-5 text-muted text-nowrap empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            Belum ada agenda hari libur yang terdaftar.
+                            {{ __('Belum ada agenda hari libur yang terdaftar.') }}
                         </td>
                     </tr>
                     @endforelse
@@ -404,52 +404,52 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="fw-bold mb-0">Tambah Agenda Hari Libur</h5>
+                <h5 class="fw-bold mb-0">{{ __('Tambah Agenda Hari Libur') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('holidays.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Pilih Format Libur</label>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Format Libur') }}</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="type" id="addTypeSingle" value="single" checked onchange="toggleAddDateRange(false)">
-                                <label class="form-check-label small" for="addTypeSingle">Tanggal Tunggal (1 Hari)</label>
+                                <label class="form-check-label small" for="addTypeSingle">{{ __('Tanggal Tunggal (1 Hari)') }}</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="type" id="addTypeRange" value="range" onchange="toggleAddDateRange(true)">
-                                <label class="form-check-label small" for="addTypeRange">Rentang Tanggal (Cuti / Semester)</label>
+                                <label class="form-check-label small" for="addTypeRange">{{ __('Rentang Tanggal (Cuti / Semester)') }}</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Single Date Input -->
                     <div id="addSingleDateContainer" class="mb-3">
-                        <label class="form-label small fw-semibold">Tanggal Libur</label>
+                        <label class="form-label small fw-semibold">{{ __('Tanggal Libur') }}</label>
                         <input type="date" name="date" class="form-control rounded-3" value="{{ date('Y-m-d') }}">
                     </div>
 
                     <!-- Range Date Inputs -->
                     <div id="addRangeDateContainer" class="row g-2 mb-3" style="display: none;">
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">Tanggal Mulai</label>
+                            <label class="form-label small fw-semibold">{{ __('Tanggal Mulai') }}</label>
                             <input type="date" name="start_date" class="form-control rounded-3" value="{{ date('Y-m-d') }}">
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">Tanggal Selesai</label>
+                            <label class="form-label small fw-semibold">{{ __('Tanggal Selesai') }}</label>
                             <input type="date" name="end_date" class="form-control rounded-3" value="{{ date('Y-m-d') }}">
                         </div>
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label small fw-semibold">Keterangan / Nama Libur</label>
-                        <input type="text" name="description" class="form-control rounded-3" placeholder="Contoh: Hari Raya Idul Fitri / Libur Semester" required>
+                        <label class="form-label small fw-semibold">{{ __('Keterangan / Nama Libur') }}</label>
+                        <input type="text" name="description" class="form-control rounded-3" placeholder="{{ __('Contoh: Hari Raya Idul Fitri / Libur Semester') }}" required>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold">Simpan Hari Libur</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-danger rounded-3 px-4 fw-semibold">{{ __('Simpan Hari Libur') }}</button>
                 </div>
             </form>
         </div>
@@ -461,7 +461,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header border-bottom-0">
-                <h5 class="fw-bold mb-0">Import Data Hari Libur Excel</h5>
+                <h5 class="fw-bold mb-0">{{ __('Import Data Hari Libur Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ panel_route('holidays.import') }}" method="POST" enctype="multipart/form-data">
@@ -469,16 +469,16 @@
                 <div class="modal-body">
                     <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
-                            Format kolom file Excel: <strong>Tanggal, Keterangan</strong> (.xlsx atau .csv)
+                            {{ __('Format kolom file Excel:') }} <strong>{{ __('Tanggal, Keterangan') }}</strong> {{ __('(.xlsx atau .csv)') }}
                         </div>
-                        <a href="{{ panel_route('holidays.template') }}" class="btn-download-green btn-progress w-100" data-download data-no-download data-dl-progress>Unduh Template Excel</a>
+                        <a href="{{ panel_route('holidays.template') }}" class="btn-download-green btn-progress w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                     </div>
-                    <label class="form-label small fw-semibold">Pilih File Excel</label>
+                    <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
                     <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
                 </div>
                 <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>Unggah &amp; Import</button>
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Unggah & Import') }}</button>
                 </div>
             </form>
         </div>
@@ -501,10 +501,10 @@
 
     function confirmDeleteHoliday(id, description) {
         confirmUniversalDelete({
-            title: 'Hapus Hari Libur?',
-            html: `Tindakan ini bersifat permanen. Anda akan menghapus agenda libur <b class="text-dark">${description}</b> dari kalender presensi sekolah.`,
-            confirmText: 'Hapus',
-            cancelText: 'Tidak',
+            title: {!! json_encode(__('Hapus Hari Libur?')) !!},
+            html: {!! json_encode(__('Tindakan ini bersifat permanen. Anda akan menghapus agenda libur')) !!} + ' <b class="text-dark">' + description + '</b> ' + {!! json_encode(__('dari kalender presensi sekolah.')) !!},
+            confirmText: {!! json_encode(__('Hapus')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
             onConfirm: function() {
                 document.getElementById(`deleteHolidayForm-${id}`).submit();
             }
