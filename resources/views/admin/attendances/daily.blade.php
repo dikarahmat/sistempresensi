@@ -586,8 +586,10 @@
 
 @section('content')
 {{-- Padding atas konten DISAMAKAN dengan halaman Data Siswa/Guru/Kelas (tanpa
-     pt tambahan); jarak antar blok tetap memakai space-y. --}}
-<div class="space-y-2 sm:space-y-3">
+     pt tambahan); jarak antar blok tetap memakai space-y.
+     pb-4 mobile-only: ruang napas tambah 16px di bawah konten supaya elemen
+     terakhir (tabel/baris) tidak nyentuh bottom nav di halaman Presensi. --}}
+<div class="space-y-2 sm:space-y-3 pb-4 lg:pb-0">
 
     <!-- AMBIL DATA DARI CONTROLLER & HITUNG TOTAL OTOMATIS JIKA KOSONG -->
     @php

@@ -431,9 +431,7 @@
                 flex-direction: column;
                 position: relative;
                 width: 100%;
-                height: 100vh;
-                height: 100svh;
-                min-height: 0;
+                min-height: 100dvh;
                 margin: 0;
                 padding: 0;
                 overflow: hidden;
@@ -466,7 +464,7 @@
                 margin: 0;
                 background: #ffffff;
                 border-radius: 10px;
-                padding: 4.1rem 1.25rem 3.9rem;
+                padding: 1.5rem 1.25rem 1.5rem;
                 border: 1px solid rgba(255, 255, 255, .6);
                 box-shadow: 0 24px 60px rgba(10, 30, 120, .35);
             }
@@ -478,13 +476,13 @@
                 align-items: center;
                 text-align: center;
                 width: fit-content;
-                margin: 0 auto 2.25rem;
+                margin: 0 auto 1.25rem;
             }
             .card-brand-logo {
-                width: 72px;
-                height: 72px;
+                width: 56px;
+                height: 56px;
                 object-fit: contain;
-                margin-bottom: .9rem;
+                margin-bottom: .6rem;
                 border-radius: 8px;
                 filter: drop-shadow(0 1px 2px rgba(5, 15, 90, .5));
             }
@@ -512,7 +510,7 @@
             .form-heading, .form-subtext { display: none; }
 
             /* ---------- FIELD ---------- */
-            .form-group-item { margin-bottom: 1rem; }
+            .form-group-item { margin-bottom: .8rem; }
             .input-label-custom {
                 font-size: .8rem;
                 font-weight: 700;
@@ -544,7 +542,7 @@
             }
 
             /* ---------- INGAT SAYA ---------- */
-            .row-extra { margin-top: .7rem; margin-bottom: 1.25rem; gap: .5rem; }
+            .row-extra { margin-top: .5rem; margin-bottom: .8rem; gap: .4rem; }
             .remember-label { font-size: .8rem; color: #334155; }
             .remember-checkbox {
                 appearance: none;

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -197,9 +197,11 @@
         }
 
         /* Wrapper kanvas aplikasi: satu-satunya sumber "celah" di belakang
-           sidebar, jadi WAJIB warna identik dengan sidebar. */
-        body > .app-canvas,
-        .app-canvas {
+           sidebar, jadi WAJIB warna identik dengan sidebar.
+           Selector HANYA body > .app-canvas (wrapper div), bukan .app-canvas bare
+           supaya tidak menimpa <body class="app-canvas"> dan media query mobile
+           html,body{background:white!important} bisa menang. */
+        body > .app-canvas {
             background-color: #3b62f6 !important;
         }
 
@@ -1011,6 +1013,10 @@
             .content-scroll-wrapper > main > .flex-1 {
                 scrollbar-width: none !important;
                 -ms-overflow-style: none !important;
+                /* Override presensi-tokens.css yang memaksa overflow:visible pada flex-1.
+                   Layout ini pakai main sebagai scroller, jadi flex-1 harus terpotong oleh
+                   padding-bottom main supaya ruang nav dihormati. */
+                overflow: hidden !important;
             }
 
             .content-scroll-wrapper > main > .flex-1::-webkit-scrollbar {
@@ -1026,9 +1032,11 @@
                 background-color: #ffffff !important;
             }
 
-            main,
-            .content-scroll-wrapper > main,
-            main.w-full {
+            /* Override presensi-tokens.css rule yang memaksa padding-bottom:0 pada main.
+               Selector SAMA PERSIS (body .content-scroll-wrapper > main, body .content-scroll-wrapper > main.w-full)
+               supaya specificity sama (0,2,2), dan karena inline style load terakhir -> menang. */
+            body .content-scroll-wrapper > main,
+            body .content-scroll-wrapper > main.w-full {
                 min-height: 100vh !important;
                 min-height: 100dvh !important;
                 width: 100% !important;
@@ -1041,6 +1049,19 @@
                    padding-bottom: tinggi bottom nav (--bottom-nav-h) + ruang napas 1rem (16px) + safe area inset
                    supaya tombol paling bawah (Detail Siswa, Pengaturan, dll.) tidak terpotong saat di-scroll mentok. */
                 padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-h) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
+            }
+
+            /* Override presensi-tokens.css @media (max-width: 640px) yang memaksa
+               flex-1 jadi overflow:visible & flex-shrink:0 (model scroll di main).
+               Layout ini pakai model: main fixed height + flex-1 sebagai scroller.
+               Selector body .content-scroll-wrapper > main > .flex-1 specificity (0,3,1)
+               sama dengan rule di presensi-tokens.css, inline style load terakhir -> menang. */
+            body .content-scroll-wrapper > main > .flex-1 {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
             body {
