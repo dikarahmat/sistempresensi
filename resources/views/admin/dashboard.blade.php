@@ -159,7 +159,42 @@
         color: #0f172a;
         text-decoration: none;
         -webkit-tap-highlight-color: transparent;
-        transition: background-color 0.15s ease;
+        /* Kartu statistik TIDAK PERNAH jadi kotak: tanpa background, tanpa
+           border, tanpa bayangan, tanpa outline - di keadaan normal, hover,
+           focus, maupun active. Efeknya hanya "naik sedikit" (lihat di
+           bawah), persis seperti kartu Pintasan Cepat. */
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Kartu statistik yang berupa tautan: pointer + efek hover halus
+       (angka & label naik sedikit). TIDAK ada kotak/bayang. */
+    .dashboard-section a.dash-stat-cell,
+    .dashboard-section a.dash-stat-cell:hover,
+    .dashboard-section a.dash-stat-cell:visited {
+        cursor: pointer;
+        color: inherit;
+        text-decoration: none;
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    .dashboard-section a.dash-stat-cell .dash-stat-value,
+    .dashboard-section a.dash-stat-cell .dash-stat-label {
+        transition: transform 0.15s ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .dashboard-section a.dash-stat-cell:hover .dash-stat-value,
+        .dashboard-section a.dash-stat-cell:hover .dash-stat-label {
+            transform: translateY(-2px);
+        }
     }
 
     .dashboard-section .dash-stat-label {
@@ -229,10 +264,24 @@
             transform: translateY(-2px) scale(1.05);
         }
     }
-    .dashboard-section .dash-stat-cell:focus-visible,
     .dashboard-section .dash-shortcut-item:focus-visible {
         outline: 2px solid var(--dash-accent);
         outline-offset: 2px;
+    }
+
+    /* Fokus keyboard pada kartu Data Sekolah: halus, TANPA kotak tebal.
+       Angka naik sedikit & label diberi garis bawah tipis. */
+    .dashboard-section a.dash-stat-cell:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    .dashboard-section a.dash-stat-cell:focus-visible .dash-stat-value {
+        transform: translateY(-2px);
+    }
+    .dashboard-section a.dash-stat-cell:focus-visible .dash-stat-label {
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 
     /* ------------------------------------------------------------------
@@ -357,8 +406,9 @@
         box-shadow: none;
     }
 
+    /* Angka + label (Sakit/Izin/Alpha) sekarang TIDAK bisa diklik, jadi
+       tidak ada lagi pointer maupun efek hover di baris tersebut. */
     .absence-row-interactive {
-        cursor: pointer;
         transition: background-color 0.15s ease;
     }
 
@@ -466,22 +516,6 @@
         text-decoration: none;
     }
 
-    /* Badge "Aktif" pada judul Jadwal: pill hijau muda, tanpa titik. */
-    body .dashboard-section .dash-active-badge {
-        display: inline-flex;
-        align-items: center;
-        flex-shrink: 0;
-        background-color: #dcfce7;
-        color: #15803d;
-        border-radius: 9999px;
-        padding: 2px 10px;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        line-height: 1.45;
-        letter-spacing: 0.02em;
-        white-space: nowrap;
-    }
-
     /* Jam besar + "WIB" dalam SATU BARIS (WIB sedikit lebih kecil),
        bukan lagi baris terpisah di bawahnya. */
     body .dashboard-section .dashboard-clock .clock-value {
@@ -566,11 +600,10 @@
         }
     }
 
-    /* Hover baris ketidakhadiran: aksen biru tipis (bukan abu). */
-    .dashboard-section .absence-row-interactive:hover,
-    .dashboard-section .absence-row-interactive:active,
-    .dashboard-section .absence-row-interactive:focus,
-    .dashboard-section .absence-row-interactive.absence-row-active {
+    /* Baris ketidakhadiran: TIDAK ada efek hover lagi (baris ini hanya
+       teks, bukan tautan). Yang tersisa adalah penanda "sedang difilter"
+       (.absence-row-active) - itu status, bukan efek klik. */
+    .dashboard-section .absence-row-active {
         background-color: rgba(37, 99, 235, 0.05);
         border: 0;
         box-shadow: none;
@@ -745,23 +778,36 @@
             box-shadow: none !important;
             cursor: pointer;
             transition: background-color 0.15s ease, color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
         }
         .dash-seg .dash-seg__btn:first-child {
             border-left: 0;
         }
-        .dash-seg .dash-seg__btn:hover {
-            background-color: rgba(37, 99, 235, 0.06);
-            color: #0f172a;
+        @media (hover: hover) {
+            .dash-seg .dash-seg__btn:hover {
+                background-color: rgba(37, 99, 235, 0.06);
+                color: #0f172a;
+            }
+        }
+        .dash-seg .dash-seg__btn:active {
+            background-color: #e2e8f0;
         }
         .dash-seg .dash-seg__btn.is-active,
-        .dash-seg .dash-seg__btn--solid {
-            background-color: #2563eb;
-            color: #ffffff;
-        }
+        .dash-seg .dash-seg__btn--solid,
         .dash-seg .dash-seg__btn.is-active:hover,
-        .dash-seg .dash-seg__btn--solid:hover {
-            background-color: #1d4ed8;
-            color: #ffffff;
+        .dash-seg .dash-seg__btn--solid:hover,
+        .dash-seg .dash-seg__btn.is-active:active,
+        .dash-seg .dash-seg__btn--solid:active,
+        .dash-seg .dash-seg__btn.is-active:focus,
+        .dash-seg .dash-seg__btn--solid:focus,
+        .dash-seg .dash-seg__btn.is-active:focus-visible,
+        .dash-seg .dash-seg__btn--solid:focus-visible {
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+        }
+        .dash-seg .dash-seg__btn:focus-visible {
+            outline: 2px solid #2563eb;
+            outline-offset: -2px;
         }
 
         /* Tanggal periode grafik: teks biasa, tanpa badge/kotak. */
@@ -788,6 +834,24 @@
         .dashboard-section {
             --dash-pad-x: 1.5rem;
         }
+    }
+
+    /* ------------------------------------------------------------------
+       AREA GRAFIK: canvas dijaga tetap DI DALAM kartu.
+       - overflow: hidden -> garis/label grafik tidak pernah meluber ke
+         luar kartu (dulu bisa memotong sidebar di sisi kiri);
+       - canvas display:block -> tidak ada celah baseline inline yang
+         membuat tinggi area melebar.
+       ------------------------------------------------------------------ */
+    .chart-canvas-wrap {
+        overflow: hidden;
+        /* Ruang tambahan di bawah area gambar untuk label sumbu X, supaya
+           garis tren 0% tidak pernah menempel pada labelnya. */
+        padding-bottom: 6px;
+    }
+    .chart-canvas-wrap canvas {
+        display: block;
+        max-width: 100%;
     }
 
     /* ------------------------------------------------------------------
@@ -845,6 +909,8 @@
     /* Hormati preferensi pengguna yang mengurangi animasi. */
     @media (prefers-reduced-motion: reduce) {
         .dashboard-section .dash-stat-cell,
+        .dashboard-section a.dash-stat-cell .dash-stat-value,
+        .dashboard-section a.dash-stat-cell .dash-stat-label,
         .dashboard-section .dash-shortcut-item,
         .dashboard-section .dash-sc-icon,
         .absence-row-interactive,
@@ -872,23 +938,36 @@
 
             <div class="dash-stats-grid">
 
-                <!-- 1. Siswa Aktif (angka memakai warna ikon "Data Siswa") -->
-                <a href="{{ panel_route('students.index') }}" class="dash-stat-cell" title="{{ __('Buka data siswa aktif') }}">
+                <!-- 1. Siswa Aktif (angka memakai warna ikon "Data Siswa")
+                     Link ke halaman Data Siswa (route helper panel_route). -->
+                <a href="{{ panel_route('students.index') }}"
+                   class="dash-stat-cell"
+                   aria-label="{{ __('Buka data siswa') }}"
+                   title="{{ __('Buka data siswa') }}">
                     <strong class="dash-stat-value is-sidebar-blue">{{ number_format($totalStudents ?? 0, 0, ',', '.') }}</strong>
                     <span class="dash-stat-label">{{ __('Siswa Aktif') }}</span>
                 </a>
 
-                <!-- 2. Rombongan Belajar (angka memakai warna ikon "Data Kelas") -->
-                <a href="{{ panel_route('classes.index') }}" class="dash-stat-cell" title="{{ __('Buka data rombongan belajar') }}">
+                <!-- 2. Rombongan Belajar (angka memakai warna ikon "Data Kelas")
+                     Link ke halaman Data Kelas. -->
+                <a href="{{ panel_route('classes.index') }}"
+                   class="dash-stat-cell"
+                   aria-label="{{ __('Buka data kelas') }}"
+                   title="{{ __('Buka data kelas') }}">
                     <strong class="dash-stat-value is-yellow">{{ number_format($totalClasses ?? 0, 0, ',', '.') }}</strong>
                     <span class="dash-stat-label">{{ __('Rombongan Belajar') }}</span>
                 </a>
 
-                <!-- 3. Guru Aktif (admin bisa klik, guru hanya lihat) -->
+                <!-- 3. Guru Aktif (angka memakai warna ikon "Data Guru")
+                     Halaman Data Guru hanya ada di panel ADMIN, jadi untuk role
+                     lain kartu ini tetap berupa teks biasa (tidak bisa diklik). -->
                 @if(is_admin())
-                <a href="{{ route('admin.guru.index') }}" class="dash-stat-cell" title="{{ __('Buka data guru') }}">
+                <a href="{{ route('admin.guru.index') }}"
+                   class="dash-stat-cell"
+                   aria-label="{{ __('Buka data guru') }}"
+                   title="{{ __('Buka data guru') }}">
                 @else
-                <div class="dash-stat-cell" title="{{ __('Buka data guru') }}">
+                <div class="dash-stat-cell">
                 @endif
                     <strong class="dash-stat-value is-green">{{ number_format($totalTeachers ?? 0, 0, ',', '.') }}</strong>
                     <span class="dash-stat-label">{{ __('Guru Aktif') }}</span>
@@ -898,8 +977,14 @@
                 </div>
                 @endif
 
-                <!-- 4. Tidak Hadir (angka memakai warna ikon "Hari Libur") -->
-                <a href="{{ panel_route('presensi.index', ['tanggal' => $dateString]) }}" class="dash-stat-cell" title="{{ __('Lihat ketidakhadiran hari ini') }}">
+                <!-- 4. Tidak Hadir (angka memakai warna ikon "Hari Libur")
+                     Link ke halaman KEHADIRAN - sama dengan menu "Kehadiran"
+                     di sidebar. Halaman itu tidak menerima parameter tanggal
+                     (selalu memakai hari ini), jadi tidak ada ?tanggal= di sini. -->
+                <a href="{{ panel_route('kehadiran') }}"
+                   class="dash-stat-cell"
+                   aria-label="{{ __('Buka halaman kehadiran') }}"
+                   title="{{ __('Buka halaman kehadiran') }}">
                     <strong class="dash-stat-value is-red">{{ number_format($totalKetidakhadiran ?? 0, 0, ',', '.') }}</strong>
                     <span class="dash-stat-label">{{ __('Tidak Hadir') }}</span>
                 </a>
@@ -1053,28 +1138,16 @@
                         </div>
                     </div>
 
-                    <!-- Area Grafik: canvas digambar begitu periodenya punya titik -
-                         mode Harian (7 hari), Mingguan (per rombel), maupun
-                         Bulanan (12 bulan) SELALU punya titik, sehingga ketiga
-                         mode benar-benar menggambar grafik. Status "belum ada
-                         catatan" hanya jadi keterangan singkat di bawah grafik,
-                         BUKAN ikon error (ikon bx-error sebelumnya membuat
-                         grafik yang isinya kosong terlihat seperti error). -->
+                    <!-- Area Grafik: canvas SELALU digambar di semua mode
+                         (Harian / Mingguan / Bulanan), walaupun semua
+                         nilainya 0 - garis tren tetap tergambar datar di 0%
+                         dan label sumbu X tetap terbaca. Tinggi canvas
+                         dikunci (280px) supaya layout kartu tidak lompat
+                         saat pindah mode. -->
                     <div class="pt-1 pb-1">
-                        @if(($totalChartPoints ?? 0) > 0)
-                            <div class="chart-canvas-wrap" style="position: relative; height: 240px; width: 100%;">
-                                <canvas id="attendanceLineChart"></canvas>
-                            </div>
-                            @unless($chartHasData ?? false)
-                                <p class="chart-empty-note text-center text-muted mb-0 mt-1">
-                                    {{ __($chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.') }}
-                                </p>
-                            @endunless
-                        @else
-                            <p class="w-100 text-center text-muted small empty-state mb-0 py-4">
-                                {{ __($chartEmptyText ?? 'Belum ada data kehadiran pada periode ini.') }}
-                            </p>
-                        @endif
+                        <div class="chart-canvas-wrap" style="position: relative; height: 280px; width: 100%;">
+                            <canvas id="attendanceLineChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -1127,52 +1200,43 @@
         <div class="dash-col flex flex-col h-full min-w-0">
             <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column dashboard-panel dashboard-box">
 
-                <!-- Judul + subjudul (tanpa teks "0 Siswa" di kanan). -->
+                <!-- Judul (tanpa subjudul "Siswa yang berhalangan hadir").
+                     min-height pada .dash-col-head tetap dipakai supaya judul
+                     kolom ini tetap sejajar dengan judul kolom kanan. -->
                 <div class="d-flex items-start justify-between gap-2 clean-line-off dash-col-head">
                     <div class="min-w-0">
                         <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">{{ __('Ketidakhadiran Hari Ini') }}</h6>
-                        <p class="text-secondary small mb-0 dashboard-box-sub">{{ __('Siswa yang berhalangan hadir') }}</p>
                     </div>
                 </div>
 
-                <!-- 3 item Ketidakhadiran Hari Ini: 3 kolom sejajar 1 baris -->
+                <!-- 3 item Ketidakhadiran Hari Ini: 3 kolom sejajar 1 baris.
+                     Angka + label saja (TIDAK bisa diklik): satu-satunya aksi di
+                     kartu ini adalah tombol "Buka Tabel Presensi Hari Ini". -->
                 <div class="dash-absence-grid grid grid-cols-3">
 
                     <!-- 1. Sakit -->
-                    {{-- Baris Absence -> REKAP HARIAN (tanggal yang sedang ditampilkan), BUKAN
-                         kembali ke dashboard. Halaman Rekap BELUM punya
-                         filter status (RekapController hanya membaca
-                         type/class_id/date/month/year), jadi parameter
-                         ?status= sengaja TIDAK ditambahkan - tidak ada
-                         backend yang diubah. --}}
-                    <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
-                       class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}"
-                       title="{{ __('Buka Rekap Presensi harian untuk siswa sakit') }}">
+                    <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
                             <span class="dash-att-value is-sidebar-blue font-monospace">{{ $countSakit ?? 0 }}</span>
                         </span>
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
-                    </a>
+                    </div>
 
                     <!-- 2. Izin -->
-                    <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
-                       class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}"
-                       title="{{ __('Buka Rekap Presensi harian untuk siswa izin') }}">
+                    <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
                             <span class="dash-att-value is-yellow font-monospace">{{ $countIzin ?? 0 }}</span>
                         </span>
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
-                    </a>
+                    </div>
 
                     <!-- 3. Alpha -->
-                    <a href="{{ panel_route('rekap', ['type' => 'harian', 'date' => $dateString]) }}"
-                       class="absence-row-interactive dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}"
-                       title="{{ __('Buka Rekap Presensi harian untuk siswa alpha') }}">
+                    <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
                             <span class="dash-att-value is-red font-monospace">{{ $countAlfa ?? 0 }}</span>
                         </span>
-                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Alpha') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
-                    </a>
+                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Alfa') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                    </div>
 
                 </div>
 
@@ -1192,15 +1256,14 @@
         <div class="dash-col flex flex-col h-full min-w-0">
             <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column dashboard-panel dashboard-box">
 
-                <!-- Judul + badge pill "Aktif" di kanan judul, satu baris.
+                <!-- Judul saja: badge pill "Aktif" di pojok kanan sudah dihapus.
                      `d-block` dipakai supaya judul kolom kanan menjadi kotak
                      blok seperti <h6> kolom kiri, sehingga keduanya tepat
-                     pada satu garis atas despite kolom kiri punya subjudul. -->
+                     pada satu garis atas. -->
                 <div class="d-flex items-start justify-between gap-2 dashboard-divider-off dash-col-head">
                     <div class="min-w-0">
                         <span class="d-block fw-bold text-dark dashboard-box-title">{{ __('Jadwal Operasional Sekolah') }}</span>
                     </div>
-                    <span class="dash-active-badge">{{ __('Aktif') }}</span>
                 </div>
 
                 <!-- Dua kotak jam: 2 kolom sama lebar, isi rata tengah.
@@ -1208,35 +1271,19 @@
                      diambil dari pengaturan yang sama ($checkInTime /
                      $lateLimitTime) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tidak ada data yang di-hardcode. -->
                 <div class="dash-clock-grid grid grid-cols-2 gap-3">
-                    @if(is_admin())
-                    <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Ubah jam masuk') }}">
-                    @else
                     <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Jam masuk sekolah') }}">
-                    @endif
                         <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Jam Masuk') }}</span>
                         <strong class="text-dark mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
-                            {{ $checkInTime ?? '06:45' }}<span class="clock-wib">WIB</span>
+                            {{ $checkInTime }}<span class="clock-wib">WIB</span>
                         </strong>
-                    @if(is_admin())
-                    </a>
-                    @else
                     </div>
-                    @endif
 
-                    @if(is_admin())
-                    <a href="{{ route('admin.pengaturan.jadwal') }}" class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Ubah batas terlambat') }}">
-                    @else
-                    <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operacional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Batas keterlambatan sekolah') }}">
-                    @endif
+                    <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Batas keterlambatan sekolah') }}">
                         <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Batas Terlambat') }}</span>
                         <strong class="text-amber-600 mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
-                            {{ $lateLimitTime ?? '07:15' }}<span class="clock-wib">WIB</span>
+                            {{ $lateLimitTime }}<span class="clock-wib">WIB</span>
                         </strong>
-                    @if(is_admin())
-                    </a>
-                    @else
                     </div>
-                    @endif
                 </div>
 
                 @if(is_admin())
@@ -1331,13 +1378,27 @@
 
         // Label & data sudah dihitung server-side sesuai mode aktif
         // (harian / mingguan / bulanan) - lihat AdminDashboardController.
-        const chartLabels = {!! json_encode($chartLabels ?? []) !!};
-        const chartData = {!! json_encode($chartValues ?? []) !!};
+        let chartLabels = {!! json_encode($chartLabels ?? []) !!};
+        let chartData = {!! json_encode($chartValues ?? []) !!};
 
-        // Guard tambahan: kalau label kosong, jangan instantiate Chart.js
-        // supaya tidak error (kartu sudah menampilkan "Belum ada data").
-        if (!Array.isArray(chartLabels) || chartLabels.length === 0) {
-            return;
+        // Data kosong / null / NaN diubah jadi 0 supaya garis tren SELALU
+        // tergambar (datar di 0% saat belum ada data) dan tidak ada error
+        // di console.
+        if (!Array.isArray(chartLabels)) {
+            chartLabels = [];
+        }
+        if (!Array.isArray(chartData)) {
+            chartData = [];
+        }
+        chartData = chartData.map(function (v) {
+            const n = Number(v);
+            return (v === null || v === undefined || isNaN(n)) ? 0 : n;
+        });
+        if (chartLabels.length === 0) {
+            chartLabels = ['-'];
+        }
+        if (chartData.length !== chartLabels.length) {
+            chartData = chartLabels.map(function () { return 0; });
         }
 
         const canvasContext = ctx.getContext('2d');
@@ -1393,6 +1454,12 @@
                         grid: {
                             display: false
                         },
+                        /* Garis sumbu X DIMATIKAN: kalau tetap digambar, garis
+                           itu menempel tepat di garis tren 0% dan terlihat
+                           seperti garis nyasar di area label. */
+                        border: {
+                            display: false
+                        },
                         ticks: {
                             color: '#475569',
                             font: {
@@ -1400,7 +1467,9 @@
                                 size: 12,
                                 weight: '600'
                             },
-                            padding: 8
+                            /* Jarak label sumbu X dari area gambar, supaya
+                               garis tren tidak pernah menyentuh labelnya. */
+                            padding: 12
                         }
                     },
                     y: {
@@ -1408,6 +1477,11 @@
                         max: 100,
                         grid: {
                             color: '#f1f5f9'
+                        },
+                        /* Garis sumbu Y juga dimatikan (cuma grid + label
+                           persen yang tampil). */
+                        border: {
+                            display: false
                         },
                         ticks: {
                             stepSize: 25,

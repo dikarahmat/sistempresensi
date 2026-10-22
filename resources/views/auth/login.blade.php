@@ -117,7 +117,7 @@
         }
 
         /* Teks header (DESKTOP & MOBILE satu gaya): semua uppercase, putih,
-           semi-bold, satu baris, rata tengah. Urutan: judul aplikasi dulu,
+           bold, satu baris, rata tengah. Urutan: judul aplikasi dulu,
            lalu nama sekolah (sedikit lebih besar), lalu ikon fitur.
            Keterangan "Presensi digital ..." disembunyikan di semua layar.
            Mobile hanya menyesuaikan ukuran mengikuti lebar layar (lihat
@@ -126,7 +126,7 @@
             order: 1;
             margin: 0;
             font-size: 26px;
-            font-weight: 600;
+            font-weight: 700;
             line-height: 1.3;
             letter-spacing: .06em;
             padding-left: .06em; /* kompensasi letter-spacing agar tetap center */
@@ -138,7 +138,7 @@
             order: 2;
             margin: .65rem 0 0;
             font-size: 30px;
-            font-weight: 600;
+            font-weight: 700;
             line-height: 1.3;
             letter-spacing: .06em;
             padding-left: .06em;
@@ -425,7 +425,7 @@
             /* Urutan MOBILE: judul aplikasi dulu, lalu nama sekolah, lalu
                keterangan. Hanya urutan tampil (flex order); markup & urutan
                desktop tidak berubah. */
-            /* Skala ukuran menurun, semua semi-bold (600) kecuali keterangan:
+            /* Skala ukuran menurun, semua bold (700) kecuali keterangan:
                  1. SISTEM PRESENSI SEKOLAH  maks 17px
                  2. SMP PGRI PARUNG PANJANG  maks 19px (terbesar)
                  3. keterangan               disembunyikan di mobile */
@@ -433,13 +433,13 @@
                 order: 1;
                 margin-top: 0;
                 font-size: clamp(13px, 4.2vw, 17px);
-                font-weight: 600;
+                font-weight: 700;
             }
             .brand-school {
                 order: 2;
                 margin-top: .5rem; /* gap judul -> sekolah */
                 font-size: clamp(14px, 4.8vw, 19px);
-                font-weight: 600;
+                font-weight: 700;
             }
             .brand-subtitle {
                 margin-top: .5rem; /* gap sekolah -> keterangan: SAMA dengan gap di atasnya */

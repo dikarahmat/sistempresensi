@@ -53,6 +53,7 @@
 
     .table-zebra-custom {
         width: 100%;
+        table-layout: fixed;
         /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
            kolom-kolomnya dipipihkan. Semua kolom (termasuk Jenis Kelamin)
            ikut dihitung; nilai desktop tidak berubah karena tabel
@@ -64,6 +65,8 @@
     .table-zebra-custom th,
     .table-zebra-custom td {
         vertical-align: middle;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
     }
     .table-zebra-custom tbody td {
         color: #1e293b !important;
@@ -80,6 +83,15 @@
         .indent-nama {
             padding-left: 2rem !important;
         }
+    }
+
+    .nama-siswa-wrapper {
+        display: inline-block;
+        width: auto;
+        max-width: none;
+        padding-left: 183px;
+        text-align: left;
+        white-space: nowrap;
     }
 
     .crud-center-wrapper {
@@ -525,14 +537,22 @@
         <!-- Tabel Data Siswa -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
+                <colgroup>
+                    <col style="width: 5%;">
+                    <col style="width: 10%;">
+                    <col style="width: 15%;">
+                    <col style="width: 35%;">
+                    <col style="width: 15%;">
+                    <col style="width: 20%;">
+                </colgroup>
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 45px;">{{ __('No') }}</th>
-                        <th class="text-center" style="width: 80px;">{{ __('Kelas') }}</th>
+                        <th class="text-center">{{ __('No') }}</th>
+                        <th class="text-center">{{ __('Kelas') }}</th>
                         <th class="text-center">{{ __('NISN') }}</th>
-                        <th class="text-start indent-nama">{{ __('Nama Siswa') }}</th>
-                        <th class="text-start">{{ __('Jenis Kelamin') }}</th>
-                        <th class="text-center" style="min-width: 180px;">{{ __('Aksi') }}</th>
+                        <th class="text-center">{{ __('Nama Siswa') }}</th>
+                        <th class="text-center">{{ __('Jenis Kelamin') }}</th>
+                        <th class="text-center">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -544,9 +564,11 @@
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td data-label="{{ __('No') }}" class="text-center">{{ $loop->iteration + ($students->firstItem() ? $students->firstItem() - 1 : 0) }}</td>
                         <td data-label="{{ __('Kelas') }}" class="text-center">{{ $student->schoolClass->name ?? $student->kelas ?? '-' }}</td>
-                        <td data-label="{{ __('NISN') }}" class="text-center font-monospace">{{ $student->nisn ?: '-' }}</td>
-                        <td data-label="{{ __('Nama Siswa') }}" class="text-start indent-nama fw-semibold text-dark">{{ $student->nama ?? $student->name }}</td>
-                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-start">{{ $isMale ? __('Laki-laki') : __('Perempuan') }}</td>
+                        <td data-label="{{ __('NISN') }}" class="text-center">{{ $student->nisn ?: '-' }}</td>
+                        <td data-label="{{ __('Nama Siswa') }}" class="text-start fw-semibold text-dark">
+                            <div class="nama-siswa-wrapper">{{ $student->nama ?? $student->name }}</div>
+                        </td>
+                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-center">{{ $isMale ? __('Laki-laki') : __('Perempuan') }}</td>
                         <td data-label="{{ __('Aksi') }}" class="text-center">
                             <div class="crud-center-wrapper">
                                 <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">

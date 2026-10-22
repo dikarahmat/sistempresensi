@@ -28,34 +28,64 @@ class SchoolClassController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $classes = $query->orderBy('name')->paginate(20)->withQueryString();
-        $teachers = Teacher::orderBy('name')->get();
+        $classes = $query->orderBy('grade')->orderBy('name')->paginate(20)->withQueryString();
+        
+        // Ambil tingkat yang tersedia dari database (aktif saja), urut naik
+        $availableGrades = SchoolClass::select('grade')
+            ->whereNotNull('grade')
+            ->distinct()
+            ->orderBy('grade')
+            ->pluck('grade');
+        
+        $teachers = Teacher::whereNotNull('name')->orderBy('name')->get();
 
-        return view('admin.classes.index', compact('classes', 'teachers'));
+        return view('admin.classes.index', compact('classes', 'teachers', 'availableGrades'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:school_classes,name',
-            'grade' => 'nullable|string|max:10',
+            'grade' => 'required|string|in:7,8,9',
             'teacher_id' => 'nullable|exists:teachers,id',
+        ], [
+            'name.required' => 'Nama kelas wajib diisi.',
+            'name.unique' => 'Nama kelas sudah terdaftar.',
+            'grade.required' => 'Tingkat kelas wajib dipilih.',
+            'grade.in' => 'Tingkat kelas tidak valid.',
+            'teacher_id.exists' => 'Wali kelas tidak valid.',
         ]);
+
+        // Validasi konsistensi nama kelas dengan tingkat
+        $nameGrade = substr(trim($request->name), 0, 1);
+        if (!in_array($nameGrade, ['7', '8', '9']) || $nameGrade !== $request->grade) {
+            $validator->errors()->add('name', 'Nama kelas harus dimulai dengan angka tingkat yang sesuai (contoh: 7A untuk tingkat 7).');
+        }
+
+        if ($validator->fails()) {
+            return back()->withInput()
+                ->withErrors($validator)
+                ->with('open_modal', 'add');
+        }
 
         $activeYear = \App\Models\AcademicYear::getActive();
 
-        SchoolClass::create([
-            'name' => $validated['name'],
-            'grade' => $validated['grade'] ?? null,
-            'level' => match($validated['grade'] ?? null) {
+        $class = SchoolClass::create([
+            'name' => $request->name,
+            'grade' => $request->grade,
+            'level' => match($request->grade) {
                 '7' => 'VII',
                 '8' => 'VIII',
                 '9' => 'IX',
-                default => 'VII',
             },
             'academic_year_id' => $activeYear?->id,
-            'teacher_id' => !empty($validated['teacher_id']) ? $validated['teacher_id'] : null,
+            'teacher_id' => !empty($request->teacher_id) ? $request->teacher_id : null,
         ]);
+
+        // Sinkronkan wali kelas ke Data Guru (TUGAS KELAS)
+        if (!empty($request->teacher_id)) {
+            $this->syncWaliKelas($class, $request->teacher_id);
+        }
 
         return redirect()->route('admin.classes.index')->with('success', __('Data kelas berhasil ditambahkan!'));
     }
@@ -70,27 +100,91 @@ class SchoolClassController extends Controller
             }
         }
 
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:50|unique:school_classes,name,' . $class->id,
-            'grade' => 'nullable|string|max:10',
+            'grade' => 'required|string|in:7,8,9',
             'teacher_id' => 'nullable|exists:teachers,id',
+        ], [
+            'name.required' => 'Nama kelas wajib diisi.',
+            'name.unique' => 'Nama kelas sudah terdaftar.',
+            'grade.required' => 'Tingkat kelas wajib dipilih.',
+            'grade.in' => 'Tingkat kelas tidak valid.',
+            'teacher_id.exists' => 'Wali kelas tidak valid.',
         ]);
 
-        // Eksekusi update langsung secara eksplisit
-        $class->name = $validated['name'];
-        $class->grade = $validated['grade'] ?? null;
-        if (!empty($validated['grade'])) {
-            $class->level = match($validated['grade']) {
-                '7' => 'VII',
-                '8' => 'VIII',
-                '9' => 'IX',
-                default => $class->level ?? 'VII',
-            };
+        // Validasi konsistensi nama kelas dengan tingkat
+        $nameGrade = substr(trim($request->name), 0, 1);
+        if (!in_array($nameGrade, ['7', '8', '9']) || $nameGrade !== $request->grade) {
+            $validator->errors()->add('name', 'Nama kelas harus dimulai dengan angka tingkat yang sesuai (contoh: 7A untuk tingkat 7).');
         }
-        $class->teacher_id = !empty($validated['teacher_id']) ? $validated['teacher_id'] : null;
+
+        // Cek apakah wali kelas berubah
+        $oldTeacherId = $class->teacher_id;
+        $newTeacherId = !empty($request->teacher_id) ? $request->teacher_id : null;
+
+        // Validasi: guru baru belum menjadi wali kelas lain (kecuali kelas ini sendiri)
+        if ($newTeacherId && $newTeacherId != $oldTeacherId) {
+            $otherClass = SchoolClass::where('teacher_id', $newTeacherId)
+                ->where('id', '!=', $class->id)
+                ->first();
+            if ($otherClass) {
+                $teacher = Teacher::find($newTeacherId);
+                $validator->errors()->add('teacher_id', "Guru {$teacher->name} sudah menjadi wali kelas {$otherClass->name}. Satu guru hanya bisa menjadi wali satu kelas.");
+            }
+        }
+
+        if ($validator->fails()) {
+            return back()->withInput()
+                ->withErrors($validator)
+                ->with('open_modal', 'edit')
+                ->with('open_class_id', $class->id);
+        }
+
+        // Eksekusi update langsung secara eksplisit
+        $class->name = $request->name;
+        $class->grade = $request->grade;
+        $class->level = match($request->grade) {
+            '7' => 'VII',
+            '8' => 'VIII',
+            '9' => 'IX',
+        };
+        $class->teacher_id = $newTeacherId;
         $class->save();
 
+        // Sinkronkan wali kelas ke Data Guru (TUGAS KELAS)
+        if ($newTeacherId !== $oldTeacherId) {
+            // Lepaskan tugas guru lama jika ada
+            if ($oldTeacherId) {
+                SchoolClass::where('teacher_id', $oldTeacherId)->update(['teacher_id' => null]);
+            }
+            // Berikan tugas ke guru baru
+            if ($newTeacherId) {
+                $this->syncWaliKelas($class, $newTeacherId);
+            }
+        }
+
         return redirect()->route('admin.classes.index')->with('success', __('Data kelas berhasil diperbarui!'));
+    }
+
+    /**
+     * Sinkronkan wali kelas antara SchoolClass dan Teacher.
+     * Sumber data tunggal: SchoolClass.teacher_id -> Teacher.schoolClass (TUGAS KELAS).
+     * Teacher tidak punya kolom school_class_id; relasi diatur lewat SchoolClass.teacher_id.
+     */
+    private function syncWaliKelas(SchoolClass $class, int $teacherId): void
+    {
+        DB::transaction(function () use ($class, $teacherId) {
+            // Lepaskan kelas lain yang mungkin ditugaskan ke guru ini
+            SchoolClass::where('teacher_id', $teacherId)
+                ->where('id', '!=', $class->id)
+                ->update(['teacher_id' => null]);
+
+            // Set guru ini sebagai wali kelas ini
+            SchoolClass::where('id', $class->id)->update(['teacher_id' => $teacherId]);
+
+            // Catatan: Teacher tidak punya kolom school_class_id.
+            // Relasi diatur lewat SchoolClass.teacher_id.
+        });
     }
 
     /**

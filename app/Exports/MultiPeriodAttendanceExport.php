@@ -205,7 +205,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     {
         return [
             'KETERANGAN:',
-            'H = Hadir, T = Terlambat, S = Sakit, I = Izin, A = Alfa, L = Libur',
+            'H = Hadir, T = Terlambat, S = Sakit, I = Izin, A = Alfa, L = Libur, - = Belum',
             'Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".',
         ];
     }
@@ -277,6 +277,8 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
 
             foreach ($rows as $row) {
                 $student = $row['student'];
+                $status = $row['status'];
+                $displayStatus = (is_string($status) && str_contains($status, 'Belum')) ? '-' : $status;
                 $dataLines[] = array_merge([$row['no'] ?? 0], [
                     $student->nisn ?: '-',
                     $student->name,
@@ -284,7 +286,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
                     $row['check_in'],
                     $row['late_text'],
-                    $row['status'],
+                    $displayStatus,
                     $row['notes'],
                 ]);
             }
@@ -546,7 +548,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $notes = '-';
 
                 if ($att) {
-                    $status = $att->status;
+                    $status = $att->effective_status;
                     $notes = $att->notes ?? '-';
                     if ($status === 'Hadir') {
                         $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
@@ -561,13 +563,15 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         }
                     }
                 } else {
-                    if ($isHoliday) {
-                        $status = 'Libur';
-                    } elseif ($date < $now->toDateString()) {
-                        $status = 'Alfa';
-                    } elseif ($date === $now->toDateString() && $now->format('H:i') > $lateLimitTime) {
-                        $status = 'Alfa';
-                    }
+                    /*
+                     * Tanpa catatan presensi:
+                     * - tanggal lampau (bukan hari libur/akhir pekan) -> ALFA
+                     *   (hitungan tampilan, tidak ditulis ke database);
+                     * - hari ini / masa depan -> BELUM;
+                     * - hari libur / akhir pekan -> LIBUR.
+                     * Sama dengan halaman Rekap & halaman Presensi.
+                     */
+                    $status = Attendance::statusOf(null, $date, $isHoliday);
                 }
 
                 $rows[] = [
@@ -602,22 +606,21 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $code = '-';
 
                     if ($att) {
-                        if ($att->status === 'Hadir') {
-                            if ($att->time_remark === 'Terlambat') {
-                                $code = 'T';
-                                $t++;
-                                $h++;
-                            } else {
-                                $code = 'H';
-                                $h++;
-                            }
-                        } elseif ($att->status === 'Sakit') {
+                        $status = $att->effective_status;
+                        if ($status === 'Hadir') {
+                            $code = 'H';
+                            $h++;
+                        } elseif ($status === 'Terlambat') {
+                            $code = 'T';
+                            $t++;
+                            $h++;
+                        } elseif ($status === 'Sakit') {
                             $code = 'S';
                             $s++;
-                        } elseif ($att->status === 'Izin') {
+                        } elseif ($status === 'Izin') {
                             $code = 'I';
                             $i++;
-                        } elseif ($att->status === 'Alfa') {
+                        } elseif ($status === 'Alfa') {
                             $code = 'A';
                             $a++;
                         }
@@ -625,9 +628,13 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         $dObj = Carbon::parse($dStr);
                         if ($dObj->isWeekend() || Holiday::isHoliday($dStr)) {
                             $code = 'L';
-                        } elseif ($dStr <= $now->toDateString()) {
-                            $code = 'A';
-                            $a++;
+                        } else {
+                            // Tanpa catatan: tanggal lampau -> ALFA
+                            // (hitungan tampilan, tidak ditulis ke database).
+                            $code = Attendance::statusOf(null, $dStr) === 'Alfa' ? 'A' : '-';
+                            if ($code === 'A') {
+                                $a++;
+                            }
                         }
                     }
 
@@ -679,22 +686,21 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $code = '-';
 
                 if ($att) {
-                    if ($att->status === 'Hadir') {
-                        if ($att->time_remark === 'Terlambat') {
-                            $code = 'T';
-                            $t++;
-                            $h++;
-                        } else {
-                            $code = 'H';
-                            $h++;
-                        }
-                    } elseif ($att->status === 'Sakit') {
+                    $status = $att->effective_status;
+                    if ($status === 'Hadir') {
+                        $code = 'H';
+                        $h++;
+                    } elseif ($status === 'Terlambat') {
+                        $code = 'T';
+                        $t++;
+                        $h++;
+                    } elseif ($status === 'Sakit') {
                         $code = 'S';
                         $s++;
-                    } elseif ($att->status === 'Izin') {
+                    } elseif ($status === 'Izin') {
                         $code = 'I';
                         $i++;
-                    } elseif ($att->status === 'Alfa') {
+                    } elseif ($status === 'Alfa') {
                         $code = 'A';
                         $a++;
                     }
@@ -702,9 +708,13 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $dObj = Carbon::createFromDate($year, $month, $d);
                     if ($dObj->isWeekend() || Holiday::isHoliday($cDate)) {
                         $code = 'L';
-                    } elseif ($cDate <= $nowDateStr) {
-                        $code = 'A';
-                        $a++;
+                    } else {
+                        // Tanpa catatan: tanggal lampau -> ALFA
+                        // (hitungan tampilan, tidak ditulis ke database).
+                        $code = Attendance::statusOf(null, $cDate) === 'Alfa' ? 'A' : '-';
+                        if ($code === 'A') {
+                            $a++;
+                        }
                     }
                 }
 

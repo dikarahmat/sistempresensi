@@ -427,6 +427,14 @@
         letter-spacing: 0.02em;
     }
 
+    /* Keterangan periode angka pada tabel (sama seperti di halaman Riwayat). */
+    .kehadiran-period-caption {
+        margin: 0 0 0.5rem;
+        font-size: 0.85rem;
+        color: #64748b;
+        letter-spacing: 0.02em;
+    }
+
     /* ==========================================================================
        PERBAIKAN MOBILE: rapatkan tabel & aksi agar tidak neurotransisi
        ========================================================================== */
@@ -532,6 +540,12 @@
             </form>
         </div>
 
+        <!-- Periode angka pada tabel (sama dengan mode "Semua" di Riwayat
+             Presensi) supaya user tahu angka mana yang sedang ditampilkan. -->
+        <div class="kehadiran-period-caption">
+            {{ __('Periode:') }} <strong>{{ $periodeLabel ?? '-' }}</strong>
+        </div>
+
         <!-- Tabel Histori Kehadiran per Siswa -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
@@ -542,10 +556,10 @@
                         <th class="text-start py-3" style="width: 25%;">{{ __('Nama Siswa') }}</th>
                         <th class="text-center py-3" style="width: 10%;">{{ __('Kelas') }}</th>
                         <th class="text-center py-3" style="width: 8%;">{{ __('Hadir') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Telat') }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ __('Terlambat') }}</th>
                         <th class="text-center py-3" style="width: 8%;">{{ __('Sakit') }}</th>
                         <th class="text-center py-3" style="width: 8%;">{{ __('Izin') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Alpha') }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ __('Alfa') }}</th>
                         <th class="text-center py-3" style="width: 10%;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
@@ -567,7 +581,7 @@
                         <td class="text-center fw-normal" style="color: #7e22ce;">{{ $item->izin }}</td>
                         <td class="text-center fw-normal" style="color: #ef4444;">{{ $item->alfa }}</td>
                         <td class="text-center text-nowrap">
-                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat') }}" aria-label="{{ __('Lihat') }}">
+                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                             </a>
                         </td>

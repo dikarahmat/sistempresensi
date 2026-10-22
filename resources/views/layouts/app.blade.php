@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -145,7 +145,7 @@
 
     <style>
         :root {
-            --sidebar-width: 238px;
+            --sidebar-width: 218px;
             /* Lebar sidebar saat collapsed (desktop). 76px comfortably berada
                di rentang 72-80px yang diminta: cukup untuk ikon + highlight. */
             --sidebar-width-collapsed: 76px;
@@ -1139,7 +1139,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 
         /* --------------------------------------------------------------------------
            3.B LAPISAN MOBILE: SAFE-AREA 16px, CLEAN LOOK & PERFORMA RENDER
-           Aktif HANYA di < 768px ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â tampilan desktop tetap 100% identik
+           Aktif HANYA di < 768px ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â tampilan desktop tetap 100% identik
            -------------------------------------------------------------------------- */
         @media (max-width: 767.98px) {
             /* Cegah auto-zoom iOS saat fokus input (font < 16px memicu zoom Safari) */
@@ -2061,7 +2061,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 
         /* Kartu akun: satu baris, seluruh area bisa diklik. Tanpa border, tanpa
            shadow; hover hanya latar putih transparan 10% + radius 12px.
-           Padding 8px 10px supaya kartu tetap ringkas di sidebar 238px. */
+           Padding 8px 10px supaya kartu tetap ringkas di sidebar 218px. */
         .app-sidebar-drawer .sidebar-account-btn {
             display: flex !important;
             align-items: center !important;
@@ -2361,7 +2361,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 
            Seluruh blok ini dikunci di media query min-width: 1024px dengan begitu
            tampilan MOBILE (< 1024px) tidak tersentuh sama sekali - drawer, margin
-           0.75rem, dan lebar 238px tetap persis seperti sebelumnya.
+           0.75rem, dan lebar 218px tetap persis seperti sebelumnya.
 
            State berasal dari class `sidebar-collapsed` pada elemen <html>, yang
            sudah dipasang oleh script anti-kedip di <head> sebelum render pertama.
@@ -2643,14 +2643,21 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
                 min-height: 46px !important;
                 width: 100% !important;
                 padding-bottom: 10px !important;
+                /* Geser logo 4px ke kanan supaya pusat logo sejajar dengan pusat ikon menu.
+                   Kurangi gap 4px (10px -> 6px) agar tulisan sekolah tidak ikut bergeser. */
+                gap: 6px !important;
             }
 
-            /* Nama sekolah boleh turun ke baris berikutnya, tidak terpotong dan
-               tidak keluar dari batas sidebar. */
+            /* Logo: geser 4px ke kanan hanya pada mode expanded (bukan collapsed).
+               Di mode collapsed logo sudah di-center oleh margin: 0 auto. */
+            html:not(.sidebar-collapsed) .sidebar-brand-logo {
+                margin-left: 4px !important;
+            }
+
+            /* Nama sekolah: biarkan JS mengontrol white-space (nowrap untuk alignment).
+               min-width:0 agar flex-item bisa mengecil di sidebar sempit. */
             .sidebar-brand-text {
                 min-width: 0 !important;
-                white-space: normal !important;
-                overflow-wrap: break-word !important;
                 overflow: hidden !important;
             }
         }
@@ -3255,7 +3262,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 
         /* ==========================================================================
            PAGINASI TEKS MURNI BERSAMA (Single Source of Truth)
-           Susunan "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Sebelumnya  1 2 3 4 5  Berikutnya ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº" + info "Menampilkan ...".
+           Susunan "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Sebelumnya  1 2 3 4 5  Berikutnya ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº" + info "Menampilkan ...".
            Tanpa container/border/shadow/pill; halaman aktif biru tebal bergaris
            bawah tipis; "Sebelumnya/Berikutnya" redup di ujung.
 
@@ -4105,7 +4112,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
            Final: desktop 440px; mobile min(calc(100vw - 44px), 400px)
            (viewport 502px -> 400px; 390px -> 346px). Sempat ditimbang 380
            (masih sempit) dan desktop 420 (kurang lega untuk dua kolom).
-           .modal-lg ikut 440px ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â form dua kolom dilaporkan terpisah. */
+           .modal-lg ikut 440px ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â form dua kolom dilaporkan terpisah. */
         .modal-dialog {
             max-width: 440px !important;
             width: min(calc(100vw - 44px), 440px) !important;
@@ -5423,12 +5430,35 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 
         /* Pill periode (Rekap & Riwayat): putih + garis tipis, hover ringan */
         .period-nav {
-            background-color: #ffffff !important;
-            border: 1px solid var(--clean-line) !important;
+            background-color: #f1f5f9 !important;
+            border: none !important;
+            border-radius: 10px !important;
+            padding: 3px !important;
+            gap: 3px !important;
             box-sizing: border-box;
         }
-        .period-link:hover {
-            background-color: var(--clean-hover) !important;
+        .period-link {
+            display: inline-flex !important; align-items: center; gap: 0.35rem; padding: 0.42rem 0.9rem;
+            font-size: 0.82rem; font-weight: 500; color: #64748b; text-decoration: none;
+            border-radius: 8px; background-color: transparent; transition: background-color 0.15s ease, color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media (hover: hover) {
+            .period-link:hover { color: #1e293b; background-color: #e2e8f0; }
+        }
+        .period-link:active { background-color: #cbd5e1; }
+        .period-link.active {
+            background-color: #2563eb !important; color: #ffffff !important; font-weight: 600;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        }
+        .period-link.active:hover,
+        .period-link.active:active,
+        .period-link.active:focus,
+        .period-link.active:focus-visible {
+            background-color: #2563eb !important; color: #ffffff !important;
+        }
+        .period-link:focus-visible {
+            outline: 2px solid #2563eb; outline-offset: 2px;
         }
         .rekap-filter-submit:hover {
             background: var(--clean-hover) !important;
@@ -6061,7 +6091,7 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
      SIDEBAR COLLAPSIBLE - DESKTOP (>= 1024px)
      Script ini HANYA mengatur state collapse & posisi tooltip. Seluruh
      tampilan (lebar, ikon, warna, tooltip) dikerjakan oleh CSS.
-     PÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rilaku mobile TIDAK diubah: di bawah 1024px tombol ini tidak melakukan
+     PÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rilaku mobile TIDAK diubah: di bawah 1024px tombol ini tidak melakukan
      apa-apa dan Alpine @click yang Handles drawer berjalan seperti semula.
      ========================================================================== -->
 <script>
@@ -6181,6 +6211,130 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
     }
 
     window.addEventListener('resize', syncOnResize);
+})();
+</script>
+
+<!-- ==========================================================================
+     SIDEBAR BRAND TEXT ALIGNMENT - DESKTOP (>= 1024px)
+     Melebarkan baris pertama ("SMP PGRI") agar ujung kanannya sejajar
+     dengan baris kedua ("PARUNG PANJANG") seperti satu blok utuh.
+     ========================================================================== -->
+<script>
+(function () {
+    'use strict';
+
+    var DESKTOP_QUERY = window.matchMedia('(min-width: 1024px)');
+
+    function isDesktop() {
+        return DESKTOP_QUERY.matches;
+    }
+
+    function alignBrandLines() {
+        // Hanya jalankan di desktop dan saat sidebar tidak collapsed
+        if (!isDesktop()) {
+            // Reset di mobile/collapsed
+            var line1 = document.getElementById('sidebar-brand-line1');
+            if (line1) {
+                line1.style.letterSpacing = '0';
+                line1.style.transform = 'none';
+                line1.style.fontWeight = '';
+                line1.style.whiteSpace = '';
+            }
+            return;
+        }
+        if (document.documentElement.classList.contains('sidebar-collapsed')) {
+            return;
+        }
+
+        var line1 = document.getElementById('sidebar-brand-line1');
+        var line2 = document.getElementById('sidebar-brand-line2');
+        if (!line1 || !line2) {
+            return;
+        }
+
+        // Pastikan text tidak wrap dan baseline konsisten
+        line1.style.whiteSpace = 'nowrap';
+        line2.style.whiteSpace = 'nowrap';
+
+        // Reset style sebelum mengukur
+        line1.style.letterSpacing = '0';
+        line1.style.transform = 'none';
+        line1.style.transformOrigin = 'left center';
+        line1.style.display = 'inline-block';
+        line1.style.fontWeight = '800'; // ExtraBold untuk lebar lebih
+
+        // Ukur lebar alami (tanpa stretching)
+        var w1 = line1.getBoundingClientRect().width;
+        var w2 = line2.getBoundingClientRect().width;
+
+        // Jika baris 1 sudah sama lebar atau lebih lebar, tidak perlu stretching
+        if (w1 >= w2 - 1) {
+            return;
+        }
+
+        var diff = w2 - w1;
+        var maxLetterSpacingEm = 0.18;
+        var fontSize = parseFloat(getComputedStyle(line1).fontSize);
+        var maxLetterSpacingPx = maxLetterSpacingEm * fontSize;
+        var letterSpacingPx = Math.min(diff, maxLetterSpacingPx);
+
+        // Terapkan letter-spacing
+        if (letterSpacingPx > 0) {
+            line1.style.letterSpacing = letterSpacingPx + 'px';
+        }
+
+        // Ukur ulang setelah letter-spacing
+        var w1AfterLS = line1.getBoundingClientRect().width;
+        var remainingDiff = w2 - w1AfterLS;
+
+        // Tahap 2: scaleX untuk sisa selisih (max ratio 2.0 untuk menghindari kepipihan berlebihan)
+        if (remainingDiff > 1) {
+            var ratio = w2 / w1AfterLS;
+            var maxRatio = 2.0;
+            if (ratio > maxRatio) {
+                ratio = maxRatio;
+            }
+            line1.style.transform = 'scaleX(' + ratio + ')';
+            line1.style.transformOrigin = 'left center';
+        }
+    }
+
+    // Jalankan setelah font siap dan DOM siap
+    function runAlignment() {
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () {
+                alignBrandLines();
+            });
+        } else {
+            // Fallback untuk browser lama
+            setTimeout(alignBrandLines, 0);
+        }
+    }
+
+    // Initial run
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runAlignment);
+    } else {
+        runAlignment();
+    }
+
+    // Recalculate on resize
+    window.addEventListener('resize', function () {
+        // Debounce resize
+        clearTimeout(window._brandAlignResizeTimer);
+        window._brandAlignResizeTimer = setTimeout(runAlignment, 100);
+    });
+
+    // Recalculate when sidebar toggle changes
+    var originalToggle = window.__presensiToggleSidebar;
+    if (typeof originalToggle === 'function') {
+        window.__presensiToggleSidebar = function (event) {
+            var result = originalToggle.apply(this, arguments);
+            // Tunggu transisi CSS selesai (0ms transisi tapi pastikan DOM update)
+            setTimeout(runAlignment, 50);
+            return result;
+        };
+    }
 })();
 </script>
 
@@ -6393,3 +6547,7 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
 @stack('scripts')
 </body>
 </html>
+
+
+
+

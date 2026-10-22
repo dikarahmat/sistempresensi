@@ -111,14 +111,14 @@
         <td style="height: 11.2mm; padding: 0; vertical-align: middle; background-color: #1e3a8a; border-top-left-radius: 3.18mm; border-top-right-radius: 3.18mm;">
             <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                 <tr>
-                    <td style="width: 20%; padding: 1.5mm 0 1.5mm 2.2mm; vertical-align: middle; text-align: left;">
-                        <img src="{{ $logoSrc }}" style="width: 8mm; height: 8mm; vertical-align: middle; display: block;" alt="Logo">
+                    <td style="width: 23%; padding: 1.5mm 0 1.5mm 4.5mm; vertical-align: middle; text-align: left;">
+                        <img src="{{ $logoSrc }}" style="width: 6mm; height: 6mm; vertical-align: middle; display: block;" alt="Logo">
                     </td>
-                    <td style="width: 80%; padding: 1.5mm 2mm 1.5mm 1.5mm; vertical-align: middle; text-align: left;">
-                        <div style="font-size: 6pt; font-weight: bold; text-transform: uppercase; color: #ffffff; line-height: 1.15; word-wrap: break-word; overflow-wrap: break-word; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+                    <td style="width: 77%; padding: 1.2mm 2mm 1.2mm 0; vertical-align: middle; text-align: left;">
+                        <div style="font-size: 7pt; font-weight: bold; text-transform: uppercase; color: #ffffff; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
                             {{ strtoupper($schoolName) }}
                         </div>
-                        <div style="font-size: 4.2pt; font-weight: bold; color: #fcd34d; text-transform: uppercase; margin-top: 0.5mm; letter-spacing: 0.4px; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+                        <div style="font-size: 4.9pt; font-weight: bold; color: #fcd34d; text-transform: uppercase; margin-top: 0.4mm; letter-spacing: 0.4px; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
                             {{ __('KARTU PRESENSI DIGITAL') }}
                         </div>
                     </td>
@@ -135,8 +135,9 @@
     <!-- 2. NAMA SISWA, NISN & KELAS (18,0 mm, center, tanpa label "NAMA"/"NISN"/"KELAS") -->
     <tr>
         <td style="height: 18mm; padding: 1.5mm 2.5mm 1mm 2.5mm; vertical-align: middle; text-align: center; background-color: #ffffff; overflow: hidden;">
-            <!-- NAMA SISWA: ukuran TETAP, SATU BARIS, bold, kapital, hitam -->
-            <div style="font-size: {{ $nameFontSize }}; font-weight: bold; text-transform: uppercase; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: clip; text-align: center; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+            <!-- NAMA SISWA: ukuran tetap 7pt, max 2 baris, bold, kapital, hitam.
+                 Nama terpanjang otomatis dibungkus ke 2 baris dengan line-height rapat. -->
+            <div style="font-size: {{ $nameFontSize }}; font-weight: bold; text-transform: uppercase; color: #0f172a; line-height: 1.15; text-align: center; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', Arial, sans-serif; word-wrap: break-word; overflow-wrap: break-word; max-height: 2.3em; overflow: hidden;">
                 {{ mb_strtoupper($studentName) }}
             </div>
             <!-- NISN: Tepat di bawah nama (jarak 2px), tidak ada margin/padding lain di antaranya -->
@@ -154,12 +155,12 @@
 
     <!-- 4. QR CODE & TEKS "SCAN PRESENSI" (49,0 mm, center) -->
     <tr>
-        <td style="height: 49mm; padding: 1mm 0 0 0; vertical-align: top; text-align: center; background-color: #ffffff;">
+        <td style="height: 49mm; padding: 0.5mm 0 0 0; vertical-align: top; text-align: center; background-color: #ffffff;">
             <div class="qr-pure-white" style="width: 34mm; height: 34mm; margin: 0 auto; text-align: center; padding: 1mm; background-color: #ffffff;">
                 <img src="{{ $qrSrc }}" style="width: 32mm; height: 32mm; display: block; margin: 0 auto;" alt="QR Code">
             </div>
             <!-- TEKS "SCAN PRESENSI": Tepat di bawah QR, center, bold, kecil -->
-            <div style="font-size: 5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-top: 1.5mm; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
+            <div style="font-size: 5pt; font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-top: 1mm; font-family: 'Plus Jakarta Sans', Arial, sans-serif;">
                 {{ __('SCAN PRESENSI') }}
             </div>
         </td>

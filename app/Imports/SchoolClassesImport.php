@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\AcademicYear;
 use App\Models\SchoolClass;
+use App\Models\Teacher;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -53,6 +54,7 @@ class SchoolClassesImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            // Validasi konsistensi nama kelas dengan tingkat (akan divalidasi setelah resolveGrade)
             // 2. Kolom tingkat (opsional: 7/8/9 atau VII/VIII/IX), fallback derive dari nama
             $rawGrade = trim((string) ($row['tingkat'] ?? $row['grade'] ?? $row['level'] ?? ''));
             $grade = $this->resolveGrade($rawGrade, $name);
@@ -60,6 +62,14 @@ class SchoolClassesImport implements ToCollection, WithHeadingRow
             if ($grade === null) {
                 $this->skippedCount++;
                 $this->errors[] = "Baris {$rowIndex} ({$name}): tingkat kelas tidak dikenali. Isi kolom tingkat dengan 7, 8, atau 9.";
+                continue;
+            }
+
+            // Validasi konsistensi nama dengan tingkat
+            $nameGrade = substr($name, 0, 1);
+            if (!in_array($nameGrade, ['7', '8', '9']) || $nameGrade !== $grade) {
+                $this->skippedCount++;
+                $this->errors[] = "Baris {$rowIndex} ({$name}): nama kelas harus dimulai dengan angka tingkat yang sesuai (contoh: 7A untuk tingkat 7).";
                 continue;
             }
 
@@ -75,6 +85,37 @@ class SchoolClassesImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            // 3. Kolom wali kelas (opsional: nama atau NIP guru)
+            $teacherId = null;
+            $rawTeacher = trim((string) ($row['wali_kelas'] ?? $row['walikelas'] ?? $row['teacher'] ?? $row['guru'] ?? ''));
+            if ($rawTeacher !== '') {
+                // Cari guru berdasarkan NIP (18 digit) atau nama
+                if (preg_match('/^[0-9]{18}$/', $rawTeacher)) {
+                    $teacher = Teacher::where('nip', $rawTeacher)->first();
+                } else {
+                    $teacher = Teacher::where('name', $rawTeacher)->first();
+                }
+
+                if (!$teacher) {
+                    $this->skippedCount++;
+                    $this->errors[] = "Baris {$rowIndex} ({$name}): wali kelas \"{$rawTeacher}\" tidak ditemukan.";
+                    continue;
+                }
+
+                // Cek apakah guru sudah menjadi wali kelas lain (kecuali jika kelas ini sudah punya guru itu)
+                $existingClass = SchoolClass::withTrashed()
+                    ->where('teacher_id', $teacher->id)
+                    ->where('name', '!=', $name)
+                    ->first();
+                if ($existingClass) {
+                    $this->skippedCount++;
+                    $this->errors[] = "Baris {$rowIndex} ({$name}): guru {$teacher->name} sudah menjadi wali kelas {$existingClass->name}. Satu guru hanya bisa menjadi wali satu kelas.";
+                    continue;
+                }
+
+                $teacherId = $teacher->id;
+            }
+
             try {
                 // updateOrCreate berdasarkan nama kelas (termasuk yang ter-arsip agar
                 // tidak melanggar unique (name + academic_year_id))
@@ -85,18 +126,30 @@ class SchoolClassesImport implements ToCollection, WithHeadingRow
                 if ($schoolClass) {
                     $schoolClass->grade = $grade;
                     $schoolClass->level = $level;
+                    $schoolClass->teacher_id = $teacherId;
                     if ($schoolClass->trashed()) {
                         $schoolClass->restore();
                     } else {
                         $schoolClass->save();
                     }
                 } else {
-                    SchoolClass::create([
+                    $schoolClass = SchoolClass::create([
                         'name' => $name,
                         'grade' => $grade,
                         'level' => $level,
                         'academic_year_id' => $activeYear->id,
+                        'teacher_id' => $teacherId,
                     ]);
+                }
+
+                // Sinkronkan wali kelas ke Data Guru (TUGAS KELAS)
+                if ($teacherId) {
+                    // Lepaskan guru lama dari kelas ini (jika ada)
+                    SchoolClass::where('id', $schoolClass->id)->update(['teacher_id' => $teacherId]);
+                    // Lepaskan kelas lama dari guru ini (jika ada)
+                    SchoolClass::where('teacher_id', $teacherId)->where('id', '!=', $schoolClass->id)->update(['teacher_id' => null]);
+                    // Update Teacher
+                    Teacher::where('id', $teacherId)->update(['school_class_id' => $schoolClass->id]);
                 }
 
                 $this->importedCount++;

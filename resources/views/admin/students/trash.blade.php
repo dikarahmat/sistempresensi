@@ -218,7 +218,7 @@
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $students->firstItem() + $loop->index }}</td>
                         <td data-label="{{ __('Kelas') }}" class="text-center text-nowrap px-3">{{ $student->schoolClass->name ?? '-' }}</td>
-                        <td data-label="{{ __('NISN') }}" class="text-center text-nowrap font-monospace px-3">{{ $student->nisn ?: '-' }}</td>
+                        <td data-label="{{ __('NISN') }}" class="text-center text-nowrap px-3">{{ $student->nisn ?: '-' }}</td>
                         <td data-label="{{ __('Nama Siswa') }}" class="text-start text-nowrap px-3">{{ $student->name }}</td>
                         <td data-label="{{ __('Tanggal Dihapus') }}" class="text-center text-nowrap px-3">
                             {{-- Tampilan tanggal hapus: dd MMM yyyy, HH:mm WIB

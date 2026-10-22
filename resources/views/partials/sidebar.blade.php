@@ -54,11 +54,15 @@
          jarak logo & nama sekolah bisa dirapikan HANYA di desktop tanpa
          mengubah tampilan mobile (utility class tetap sama). -->
     <div class="sidebar-brand flex-shrink-0">
-        <div class="sidebar-brand-row d-flex align-items-center gap-2 pb-3 border-bottom border-light border-opacity-25">
-            <!-- Pure Logo dibesarkan sedikit jadi 46px -->
+        <div class="sidebar-brand-row d-flex align-items-center gap-2.5 pb-3 border-bottom border-light border-opacity-25">
+            <!-- Logo sekolah: dikecilkan jadi 36px supaya tingginya sama
+                 dengan DUA baris teks nama sekolah di sampingnya
+                 (0.9rem x line-height 1.2 x 2 baris ~ 35px). object-fit
+                 dipakai supaya logo tidak gepeng. Garis pemisah di bawah
+                 baris ini tetap. -->
             <img src="{{ \App\Models\Setting::getLogoUrl() }}" 
                  alt="{{ __('Logo Sekolah') }}" 
-                 class="sidebar-brand-logo" style="width: 46px; height: 46px; object-fit: contain;"
+                 class="sidebar-brand-logo" style="width: 36px; height: 36px; object-fit: contain;"
                  loading="lazy"
                  onerror="this.style.display='none'">
             @php
@@ -79,10 +83,10 @@
             <!-- Font-size dinaikkan halus ke 0.9rem.
                  .sidebar-brand-text disembunyikan saat sidebar collapsed (desktop),
                  menyisakan logo saja di bagian atas sidebar. -->
-            <div class="sidebar-brand-text d-flex flex-column text-uppercase fw-medium text-nowrap" style="font-size: 0.9rem; letter-spacing: 0px; line-height: 1.2;">
-                <span>{{ $brandLine1 }}</span>
+            <div class="sidebar-brand-text d-flex flex-column text-uppercase fw-bold text-nowrap" style="font-size: 0.9rem; letter-spacing: 0px; line-height: 1.2;">
+                <span id="sidebar-brand-line1" style="display: inline-block;">{{ $brandLine1 }}</span>
                 @if(!empty($brandLine2))
-                <span>{{ $brandLine2 }}</span>
+                <span id="sidebar-brand-line2" style="display: inline-block;">{{ $brandLine2 }}</span>
                 @endif
             </div>
         </div>

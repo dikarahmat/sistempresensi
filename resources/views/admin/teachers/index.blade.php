@@ -14,11 +14,7 @@
         display: block !important;
         width: 100% !important;
     }
-</style>
-@endpush
 
-@push('styles')
-<style>
     /* Zebra Striping Khusus (disamakan persis dengan Data Siswa) */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
@@ -42,6 +38,7 @@
            nilai desktop tidak berubah karena tabel selalu lebih lebar dari ini. */
         min-width: 760px;
         margin-bottom: 0;
+        table-layout: fixed;
     }
 
     .table-responsive {
@@ -67,8 +64,24 @@
     }
     @media (min-width: 992px) {
         .indent-nama {
-            padding-left: 2rem !important;
+            padding-left: 4rem !important;
         }
+    }
+
+    /* ===== Kolom NO & NIP: font biasa, bukan monospace ===== */
+    .no-col, .nip-col {
+        font-family: 'Poppins', 'Roboto', sans-serif !important;
+    }
+
+    /* ===== JENIS KELAMIN & TUGAS KELAS: rata tengah ===== */
+    .jk-col, .tugas-col {
+        text-align: center !important;
+    }
+
+    /* ===== NO. TELEPON: font biasa, rata tengah ===== */
+    .phone-col {
+        text-align: center !important;
+        font-family: 'Poppins', 'Roboto', sans-serif !important;
     }
 
     .crud-center-wrapper {
@@ -434,16 +447,25 @@
         {{-- Tabel Data Guru (Alignment & style disamakan persis dengan Data Siswa) --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
+                <colgroup>
+                    <col style="width: 5%;">
+                    <col style="width: 15%;">
+                    <col style="width: 19%;">
+                    <col style="width: 15%;">
+                    <col style="width: 17%;">
+                    <col style="width: 18%;">
+                    <col style="width: 11%;">
+                </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">{{ __('No') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">{{ __('NIP') }}</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Nama Lengkap Guru') }}</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Jenis Kelamin') }}</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Tugas Kelas') }}</th>
-                        <th class="text-start py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('No. Telepon / WA') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 5%;">{{ __('No') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('NIP') }}</th>
+                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 19%;">{{ __('Nama Lengkap Guru') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('Jenis Kelamin') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 17%;">{{ __('Tugas Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 18%;">{{ __('No. Telepon / WA') }}</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">{{ __('Aksi') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 11%;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -454,19 +476,19 @@
                     @endphp
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $teachers->firstItem() + $index }}</td>
-                        <td data-label="{{ __('NIP') }}" class="text-center text-nowrap font-monospace px-3">{{ $teacher->nip ?? '-' }}</td>
+                        <td data-label="{{ __('NIP') }}" class="text-center text-nowrap px-3">{{ $teacher->nip ?? '-' }}</td>
                         <td data-label="{{ __('Nama Guru') }}" class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $teacher->name }}</td>
-                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-start text-nowrap px-3">
+                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-center text-nowrap px-3">
                             {{ ($teacher->gender == 'Perempuan' || $teacher->gender == 'P') ? __('Perempuan') : __('Laki-laki') }}
                         </td>
-                        <td data-label="{{ __('Tugas Kelas') }}" class="text-start text-nowrap px-3 text-secondary">
+                        <td data-label="{{ __('Tugas Kelas') }}" class="text-center text-nowrap px-3">
                             @if($assignedClass)
                                 {{ __('Kelas ') }}{{ $assignedClass->name }}
                             @else
                                 {{ __('Guru Pengajar') }}
                             @endif
                         </td>
-                        <td data-label="{{ __('No. Telepon / WA') }}" class="text-start text-nowrap px-3 text-secondary">
+                        <td data-label="{{ __('No. Telepon / WA') }}" class="text-center text-nowrap px-3">
                             {{ $teacher->phone_number ?? $teacher->phone ?? '-' }}
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')

@@ -469,35 +469,132 @@
         }
     }
 
-    /* Switcher Pill di Atas Card */
-    .kiosk-switcher {
-        display: inline-flex;
-        background: #f8fafc;
-        padding: 4px;
-        border-radius: 50rem;
-        border: 1px solid #e2e8f0;
+    /* Tab Kamera / Alat Scanner (hanya halaman Presensi Hari Ini).
+       Dua tombol MENYATU jadi satu segmented control: menempel tanpa celah
+       (gap 0), pembungkus selebar dua tombol saja dan tetap rata tengah
+       terhadap panel scanner. Pembungkus tidak punya padding/background
+       tambahan, hanya border 1px abu terang + radius 12px + overflow hidden
+       supaya sudut membulat hanya di ujung luar gabungan.
+       Aturan memakai !important karena layout bersama memberi
+       .kiosk-switcher background putih !important. */
+    .presensi-hari-ini-scanner-col .kiosk-switcher {
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        gap: 0;
+        width: fit-content;
+        max-width: 100%;
+        margin-inline: auto;
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
         margin-bottom: 1.15rem;
     }
 
-    .kiosk-switch-btn {
-        background: transparent;
-        border: none;
+    /* Kedua tombol sama persis ukurannya (tinggi, padding, font, ikon) supaya
+       tidak ada yang bergeser saat tab berpindah. Tombol KIRI membulat di
+       kiri saja, tombol KANAN membulat di kanan saja. */
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn {
+        background: #ffffff;
+        border: 0;
+        border-radius: 0;
         padding: 0.42rem 1.1rem;
-        border-radius: 50rem;
         font-size: 0.82rem;
         font-weight: 600;
         color: #64748b;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.4rem;
-        transition: all 0.15s ease;
+        transition: background-color 0.15s ease, color 0.15s ease;
         cursor: pointer;
     }
 
-    .kiosk-switch-btn.active {
+    /* Garis pemisah tipis hanya di antara dua tombol. */
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn:first-child {
+        border-right: 1px solid #e2e8f0;
+        border-radius: 11px 0 0 11px;
+    }
+
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn:last-child {
+        border-radius: 0 11px 11px 0;
+    }
+
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn:hover {
+        background: #f1f5f9;
+    }
+
+    /* Tombol AKTIF: biru penuh sampai ke tepi pembungkus. */
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn.active {
         background: #2563eb;
         color: #ffffff;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        border-right-color: transparent;
+    }
+
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn.active:hover {
+        background: #1d4ed8;
+        color: #ffffff;
+    }
+
+    /* Fokus keyboard: outline tipis biru di dalam tombol (z-index naik
+       supaya tidak terpotong overflow:hidden pembungkus). */
+    .presensi-hari-ini-scanner-col .kiosk-switch-btn:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: -2px;
+        z-index: 1;
+    }
+
+    /* Mode Alat Scanner: isi kotak hitam (latar #000 dari tokens.css) rata
+       tengah - ikon, teks petunjuk, lalu kotak status input.
+       :not(.d-none) dipakai supaya class "d-none" milik JS (untuk
+       menyembunyikan/menampilkan panel) tetap menang seperti semula. */
+    .hardware-view-panel:not(.d-none) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.9rem;
+    }
+    .hardware-view-panel .hardware-scan-icon {
+        font-size: 4.25rem !important;
+        line-height: 1;
+    }
+    .hardware-view-panel .hardware-hint {
+        color: rgba(255, 255, 255, 0.72) !important;
+        max-width: 90%;
+    }
+    .hardware-view-panel .hardware-input-wrap {
+        width: 100%;
+        max-width: 85%;
+    }
+
+    /* Teks jam di bawah panel scanner: rata tengah, label normal & angka
+       tebal. Nilai jam diambil dari pengaturan (bukan hardcode). */
+    .scanner-time-text {
+        text-align: center;
+    }
+
+    /* Layar kecil: tab tetap menyatu & di tengah, tidak overflow; teks jam
+       boleh turun baris tapi tetap rata tengah. */
+    @media (max-width: 575.98px) {
+        .presensi-hari-ini-scanner-col .kiosk-switcher {
+            flex-wrap: nowrap;
+            gap: 0;
+        }
+        .presensi-hari-ini-scanner-col .kiosk-switch-btn {
+            flex: 0 1 auto;
+            justify-content: center;
+            padding: 0.42rem 0.65rem;
+            font-size: 0.78rem;
+        }
+        .scanner-time-text {
+            text-align: center;
+        }
     }
 
     /* Viewport / Area Scanner — SATU SUMBER GAYA: presensi-tokens.css
@@ -658,8 +755,11 @@
 
     <!-- MAIN CONTENT LAYOUT -->
     <div class="row g-2 sm:g-3 align-items-start">
-        <!-- Kolom Scanner Kiri -->
-        <div class="col-12 col-lg-5 col-xl-4" id="scannerColumn" style="display: none;">
+        <!-- Kolom Scanner Kiri.
+             Class .presensi-hari-ini-scanner-col dipakai HANYA untuk style
+             tab Kamera/Alat Scanner di halaman ini (pembungkus visualnya
+             dihilangkan); id & class lain tidak diubah. -->
+        <div class="col-12 col-lg-5 col-xl-4 presensi-hari-ini-scanner-col" id="scannerColumn" style="display: none;">
             <div class="scanner-kiosk-card mb-3 mb-lg-0">
                 
                 <!-- Switcher Button (Kamera / Alat Scanner) -->
@@ -693,11 +793,13 @@
                         </div>
                     </div>
 
-                    <!-- Mode Alat Scanner -->
-                    <div id="hardwareView" class="d-none w-100 py-3">
-                        <i class='bx bx-scan text-primary' style="font-size: 3rem;"></i>
-                        <p class="text-dark fw-semibold small mt-2 mb-3">{{ __('Arahkan fokus tetap di sini, lalu scan kartu dengan alat') }}</p>
-                        <div class="px-3">
+                    <!-- Mode Alat Scanner: isi kotak hitam rata tengah.
+                         Class .d-none tetap dipakai JS untuk
+                         menyembunyikan/menampilkan panel ini. -->
+                    <div id="hardwareView" class="d-none w-100 py-3 hardware-view-panel">
+                        <i class='bx bx-scan text-primary hardware-scan-icon'></i>
+                        <p class="hardware-hint fw-semibold small mb-0 px-2">{{ __('Arahkan fokus tetap di sini, lalu scan kartu dengan alat') }}</p>
+                        <div class="hardware-input-wrap">
                             <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Siap menerima scan...') }}" autofocus autocomplete="off">
                         </div>
                     </div>
@@ -729,9 +831,12 @@
 
                 </div>
 
-                <!-- Jam Operasional di Bawah Kotak -->
-                <div class="text-secondary" style="font-size: 0.78rem;">
-                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jam_masuk ?? $checkInTime ?? '07:00' }}</span> · {{ __('Jam pulang') }} <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? $jam_pulang ?? $checkOutTime ?? '14:00' }}</span>
+                <!-- Jam Operasional di Bawah Kotak.
+                     Nilai diambil dari Pengaturan Jadwal (Setting::getCheckInTime /
+                     getCheckOutTime, sama seperti Dashboard) - TANPA nilai
+                     hardcode, format HH:mm WIB tanpa detik. -->
+                <div class="text-secondary scanner-time-text" style="font-size: 0.78rem;">
+                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ substr((string) ($formattedCheckIn ?? $jam_masuk ?? $checkInTime ?? ''), 0, 5) }} WIB</span>
                 </div>
 
             </div>
@@ -821,7 +926,7 @@
                                 <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Hadir') }}</th>
                                 <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Sakit') }}</th>
                                 <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Izin') }}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Alpha') }}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Alfa') }}</th>
                                 <th class="text-center align-middle col-th-kehadiran text-nowrap" style="width: 22%;">{{ __('Kehadiran') }}</th>
                                 <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 17%;">{{ __('Aksi') }}</th>
                             </tr>
@@ -832,17 +937,22 @@
                                 $clsId = is_array($cls) ? ($cls['id'] ?? null) : ($cls->id ?? null);
                                 $clsName = is_array($cls) ? ($cls['nama_kelas'] ?? $cls['name'] ?? '-') : ($cls->name ?? $cls->nama_kelas ?? '-');
                                 $totSiswa = is_array($cls) ? ($cls['total_siswa'] ?? 0) : ($cls->total_students ?? $cls->total_siswa ?? $cls->students_count ?? 0);
-                                $hadir = is_array($cls) ? ($cls['hadir'] ?? 0) : ($cls->hadir_count ?? $cls->hadir ?? 0);
+                                $hadirTepat = is_array($cls) ? ($cls['hadir'] ?? 0) : ($cls->hadir_count ?? $cls->hadir ?? 0);
+                                $terlambat = is_array($cls) ? ($cls['terlambat'] ?? 0) : ($cls->terlambat_count ?? $cls->terlambat ?? 0);
                                 $sakit = is_array($cls) ? ($cls['sakit'] ?? 0) : ($cls->sakit_count ?? $cls->sakit ?? 0);
                                 $izin = is_array($cls) ? ($cls['izin'] ?? 0) : ($cls->izin_count ?? $cls->izin ?? 0);
                                 $alpha = is_array($cls) ? ($cls['alpha'] ?? 0) : ($cls->alfa_count ?? $cls->alpha ?? $cls->alfa ?? 0);
-                                $sudah = is_array($cls) ? ($cls['sudah_absen'] ?? 0) : ($cls->sudah_absen ?? ($hadir + $sakit + $izin + $alpha));
-                                $persentase = is_array($cls) 
+                                $sudah = is_array($cls) ? ($cls['sudah_absen'] ?? 0) : ($cls->sudah_absen ?? ($hadirTepat + $terlambat + $sakit + $izin + $alpha));
+                                /* HADIR di daftar kelas = siswa yang HADIR, termasuk yang
+                                     TERLAMBAT (aturan yang sama dipakai Rekap,
+                                     Dashboard, dan ringkasan per kelas). */
+                                $hadir = $hadirTepat + $terlambat;
+                                /* Persentase diambil apa adanya dari DailyAttendanceSummary
+                                     (rumus yang sama dengan Rekap & Dashboard):
+                                     round((hadir + terlambat) / total siswa x 100). */
+                                $persentase = is_array($cls)
                                     ? ($cls['persentase'] ?? ($totSiswa > 0 ? round(($hadir / $totSiswa) * 100) : 0))
                                     : ($cls->percentage ?? ($totSiswa > 0 ? round(($hadir / $totSiswa) * 100) : 0));
-                                if ($totSiswa > 0 && $hadir > 0) {
-                                    $persentase = round(($hadir / $totSiswa) * 100);
-                                }
                             @endphp
                             <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} text-nowrap">
                                 <td class="text-center align-middle col-td-kelas text-nowrap">
@@ -909,9 +1019,13 @@
 </div>
 @endsection
 
-<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
-
 @push('scripts')
+{{-- Elemen <audio> beep scanner. Dulu diletakkan DI LUAR section sehingga
+     tercetak SEBELUM <!DOCTYPE html> dari layout - itu membuat browser
+     mengabaikan blok <head> (favicon, title, meta) dan ikon tab jadi globe
+     polos. Sekarang ikut di dalam stack scripts => dokumen tetap dimulai
+     dengan <!DOCTYPE html> dan <head> terbaca normal. --}}
+<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
 <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 <script src="{{ asset('js/camera-select.js') }}?v={{ file_exists(public_path('js/camera-select.js')) ? filemtime(public_path('js/camera-select.js')) : config('app.version', '1') }}"></script>

@@ -76,12 +76,25 @@
     .period-link {
         display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.42rem 0.9rem;
         font-size: 0.82rem; font-weight: 500; color: #64748b; text-decoration: none;
-        border-radius: 8px; background-color: transparent; transition: all 0.15s ease;
+        border-radius: 8px; background-color: transparent; transition: background-color 0.15s ease, color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
     }
-    .period-link:hover { color: #1e293b; background-color: #e2e8f0; }
+    @media (hover: hover) {
+        .period-link:hover { color: #1e293b; background-color: #e2e8f0; }
+    }
+    .period-link:active { background-color: #cbd5e1; }
     .period-link.active {
-        background-color: #2563eb; color: #ffffff; font-weight: 600;
+        background-color: #2563eb !important; color: #ffffff !important; font-weight: 600;
         box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+    .period-link.active:hover,
+    .period-link.active:active,
+    .period-link.active:focus,
+    .period-link.active:focus-visible {
+        background-color: #2563eb !important; color: #ffffff !important;
+    }
+    .period-link:focus-visible {
+        outline: 2px solid #2563eb; outline-offset: 2px;
     }
 
     @media (max-width: 575.98px) {
@@ -116,7 +129,7 @@
 
     /* Tables */
     .table-responsive { -webkit-overflow-scrolling: touch; overflow-x: auto; width: 100%; }
-    .table-matrix { margin-bottom: 0; width: 100%; min-width: 800px; border-collapse: collapse; font-size: 0.82rem; }
+    .table-matrix { margin-bottom: 0; width: 100%; min-width: 800px; border-collapse: collapse; font-size: 0.82rem; table-layout: fixed; }
     .table-matrix thead th {
         background-color: #f8fafc; color: #475569; font-weight: 600; padding: 0.75rem 0.5rem;
         border-bottom: 1.5px solid #edf2f7; text-align: center; vertical-align: middle; white-space: nowrap;
@@ -127,7 +140,7 @@
     .table-matrix tbody tr:nth-child(even) > td, .table-matrix tbody tr.baris-abu > td { background-color: #f1f5f9 !important; }
     .table-matrix tbody tr:nth-child(odd) > td, .table-matrix tbody tr.baris-putih > td { background-color: #ffffff !important; }
     .table-matrix tbody tr:hover > td { background-color: #e2e8f0 !important; }
-    .table-matrix tbody td { padding: 0.7rem 0.5rem; text-align: center; vertical-align: middle; border-right: 1px solid #f1f5f9; color: #1e293b; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em; font-family: 'Poppins', 'Roboto', sans-serif; font-weight: 400; }
+    .table-matrix tbody td { padding: 0.7rem 0.5rem; text-align: center; vertical-align: middle; border-right: 1px solid #f1f5f9; color: #1e293b; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em; font-family: 'Poppins', 'Roboto', sans-serif; font-weight: 400; overflow: hidden; text-overflow: ellipsis; }
 
     /* Status Colors */
     .cell-present { color: #16a34a !important; font-weight: 700; }
@@ -570,7 +583,7 @@
             <span class="rekap-legend-item"><strong style="color: #7e22ce;">I</strong> {{ __('Izin') }}</span>
             <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> {{ __('Alfa') }}</span>
             <span class="rekap-legend-item"><strong style="color: #64748b;">L</strong> {{ __('Libur') }}</span>
-            <span class="rekap-legend-item"><strong style="color: #94a3b8;">-</strong> {{ __('Belum Hadir') }}</span>
+            <span class="rekap-legend-item"><strong style="color: #94a3b8;">-</strong> {{ __('Belum') }}</span>
         </div>
     </div>
     @endif
@@ -580,16 +593,28 @@
         <div class="table-responsive">
             @if($type === 'harian')
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
+                    <colgroup>
+                        <col style="width: 45px;">
+                        <col style="width: 85px;">
+                        <col style="width: 170px;">
+                        <col style="width: 80px;">
+                        <col style="width: 35px;">
+                        <col style="width: 100px;">
+                        <col style="width: 115px;">
+                        <col style="width: 100px;">
+                        <col style="width: auto;">
+                    </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 45px;">{{ __('No') }}</th>
-                            <th style="width: 85px;">{{ __('NISN') }}</th>
-                            <th class="text-start" style="min-width: 170px;">{{ __('Nama Siswa') }}</th>
-                            <th style="width: 80px;">{{ __('Kelas') }}</th>
-                            <th style="width: 100px;">{{ __('Jam Masuk') }}</th>
-                            <th style="width: 115px;">{{ __('Keterlambatan') }}</th>
-                            <th style="width: 100px;">{{ __('Status') }}</th>
-                            <th class="text-start" style="min-width: 140px;">{{ __('Keterangan') }}</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('NISN') }}</th>
+                            <th class="text-start">{{ __('Nama Siswa') }}</th>
+                            <th>{{ __('Kelas') }}</th>
+                            <th>{{ __('JK') }}</th>
+                            <th>{{ __('Jam Masuk') }}</th>
+                            <th>{{ __('Keterlambatan') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="text-start">{{ __('Keterangan') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -613,6 +638,11 @@
                                 {{ $st->name }}
                             </td>
                             <td>{{ $st->schoolClass ? $st->schoolClass->name : '-' }}</td>
+                            <td class="text-center">
+                                <span class="rekap-jk {{ optional($st)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
+                                    {{ optional($st)->gender == 'Perempuan' ? 'P' : 'L' }}
+                                </span>
+                            </td>
                             <td class="text-center">{{ $checkIn }}</td>
                             <td class="text-center">
                                 @if($lateText === 'Tepat Waktu')
@@ -629,8 +659,9 @@
                                 @elseif($status === 'Terlambat') <span class="cell-late">{{ __('Terlambat') }}</span>
                                 @elseif($status === 'Sakit') <span class="cell-sick">{{ __('Sakit') }}</span>
                                 @elseif($status === 'Izin') <span class="cell-permission">{{ __('Izin') }}</span>
-                                @elseif($status === 'Alpha') <span class="cell-alpha">{{ __('Alpha') }}</span>
+                                @elseif($status === 'Alfa') <span class="cell-alpha">{{ __('Alfa') }}</span>
                                 @elseif($status === 'Libur') <span class="cell-holiday">{{ __('Libur') }}</span>
+                                @elseif(str_contains($status, 'Belum')) <span class="text-muted">-</span>
                                 @else <span class="text-secondary">{{ $status }}</span> @endif
                             </td>
                             <td class="text-start">
@@ -643,7 +674,7 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-secondary empty-state">
+                            <td colspan="9" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ __('Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.') }}
                             </td>
@@ -654,21 +685,30 @@
 
             @elseif($type === 'mingguan')
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
+                    <colgroup>
+                        <col style="width: 45px;">
+                        <col style="width: 85px;">
+                        <col style="width: 170px;">
+                        <col style="width: 80px;">
+                        <col style="width: 35px;">
+                        <col style="width: auto;" span="{{ count($dateColumns) + 6 }}">
+                    </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 45px;">{{ __('No') }}</th>
-                            <th style="width: 85px;">{{ __('NISN') }}</th>
-                            <th class="text-start" style="min-width: 170px;">{{ __('Nama Siswa') }}</th>
-                            <th style="width: 80px;">{{ __('Kelas') }}</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('NISN') }}</th>
+                            <th class="text-start">{{ __('Nama Siswa') }}</th>
+                            <th>{{ __('Kelas') }}</th>
+                            <th>{{ __('JK') }}</th>
                             @foreach($dateColumns as $col)
-                                <th class="{{ $col['is_holiday'] ? 'th-holiday' : '' }}" style="min-width: 65px;">{{ $col['label'] }}</th>
+                                <th class="{{ $col['is_holiday'] ? 'th-holiday' : '' }}">{{ $col['label'] }}</th>
                             @endforeach
-                            <th style="width: 35px;" class="text-success">H</th>
-                            <th style="width: 35px; color: #d97706;">T</th>
-                            <th style="width: 35px;" class="text-primary">S</th>
-                            <th style="width: 35px; color: #7e22ce;">I</th>
-                            <th style="width: 35px; color: #ef4444;">A</th>
-                            <th style="width: 55px;" class="text-secondary">%</th>
+                            <th class="text-success">H</th>
+                            <th style="color: #d97706;">T</th>
+                            <th class="text-primary">S</th>
+                            <th style="color: #7e22ce;">I</th>
+                            <th style="color: #ef4444;">A</th>
+                            <th class="text-secondary">%</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -688,6 +728,11 @@
                                 {{ $student->name }}
                             </td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
+                            <td class="text-center">
+                                <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
+                                    {{ optional($student)->gender == 'Perempuan' ? 'P' : 'L' }}
+                                </span>
+                            </td>
                             @foreach($dateColumns as $col)
                                 @php $code = $days[$col['date']] ?? '-'; @endphp
                                 <td>
@@ -710,7 +755,7 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="{{ 4 + count($dateColumns) + 6 }}" class="text-center py-5 text-secondary empty-state">
+                            <td colspan="{{ 5 + count($dateColumns) + 6 }}" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ __('Tidak ada data siswa untuk rentang tanggal dan kelas yang dipilih.') }}
                             </td>
@@ -721,23 +766,31 @@
 
             @else
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
+                    <colgroup>
+                        <col style="width: 45px;">
+                        <col style="width: 85px;">
+                        <col style="width: 170px;">
+                        <col style="width: 80px;">
+                        <col style="width: 35px;">
+                        <col style="width: auto;" span="{{ $daysInMonth + 6 }}">
+                    </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 45px;">{{ __('No') }}</th>
-                            <th style="width: 85px;">{{ __('NISN') }}</th>
-                            <th class="text-start" style="min-width: 170px;">{{ __('Nama Siswa') }}</th>
-                            <th style="width: 80px;">{{ __('Kelas') }}</th>
-                            <th style="width: 35px;">{{ __('JK') }}</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('NISN') }}</th>
+                            <th class="text-start">{{ __('Nama Siswa') }}</th>
+                            <th>{{ __('Kelas') }}</th>
+                            <th>{{ __('JK') }}</th>
                             @for($d = 1; $d <= $daysInMonth; $d++)
                                 @php $isHol = isset($holidayMap[$d]); @endphp
-                                <th class="{{ $isHol ? 'th-holiday' : '' }}" style="width: 28px;">{{ $d }}</th>
+                                <th class="{{ $isHol ? 'th-holiday' : '' }}">{{ $d }}</th>
                             @endfor
-                            <th style="width: 35px;" class="text-success">H</th>
-                            <th style="width: 35px; color: #d97706;">T</th>
-                            <th style="width: 35px;" class="text-primary">S</th>
-                            <th style="width: 35px; color: #7e22ce;">I</th>
-                            <th style="width: 35px; color: #ef4444;">A</th>
-                            <th style="width: 55px;" class="text-secondary">%</th>
+                            <th class="text-success">H</th>
+                            <th style="color: #d97706;">T</th>
+                            <th class="text-primary">S</th>
+                            <th style="color: #7e22ce;">I</th>
+                            <th style="color: #ef4444;">A</th>
+                            <th class="text-secondary">%</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -924,6 +977,14 @@
             const formatLabel = (format === 'excel') ? 'Excel (.xlsx)' : 'PDF';
             const infoText = document.getElementById('rekapInfoText');
             if (!infoText) return;
+
+            // Deskripsi modal berdasarkan format yang dipilih
+            const descText = document.getElementById('rekapInfoDesc');
+            if (descText) {
+                descText.textContent = format === 'excel'
+                    ? {!! json_encode(__('Pilih opsi cetak rekap presensi. Hasil akan diunduh sebagai file Excel.')) !!}
+                    : {!! json_encode(__('Pilih opsi cetak rekap presensi. Hasil akan diunduh sebagai file PDF.')) !!};
+            }
 
             const range = computeRekapRange();
             const rangeText = range ? range.text : '-';
@@ -1912,13 +1973,12 @@
             });
         });
 
-        // Initialize modal when shown
+        // Initialize modal when shown - tugas ringan + inisialisasi yang diekspeksikan test
         document.getElementById('printRekapModal')?.addEventListener('show.bs.modal', function(event) {
             // Format sudah diambil saat klik tombol; relatedTarget hanya cadangan.
             setRekapPrintFormatFromButton(event.relatedTarget);
-            const format = window.rekapPrintFormat;
 
-            // Set default period based on current tab
+            // Set periode berdasarkan tab aktif (harian/mingguan/bulanan) — ringan.
             const currentType = '{{ $type }}';
             const periodMap = { harian: 'harian', mingguan: 'mingguan', bulanan: 'bulanan' };
             const periodSelect = document.getElementById('rekapPeriodType');
@@ -1926,36 +1986,44 @@
                 periodSelect.value = periodMap[currentType];
             }
 
-            // Paksa ke mode "Cetak per Kelas" setiap popup dibuka.
+            // Paksa ke mode "Cetak per Kelas" setiap popup dibuka (diekspeksikan test).
             document.getElementById('printModeClass').checked = true;
             document.getElementById('scopeSingle').checked = true;
             document.getElementById('rekapPeriodType').value = periodMap[currentType] || 'bulanan';
 
-            toggleRekapPeriodFields();
-            // Dulu handler ini memanggil toggleRekapStudentScope() secara
-            // tak bersyarat; karena scope masih "single", blok "Cari Siswa"
-            // langsung dimunculkan lagi meski radionya Per Kelas.
-            // Sekarang satu fungsi syncModeUI() yang menentukan semuanya.
+            // syncModeUI() diekspeksikan test dipanggil saat buka popup.
             syncModeUI();
-            rekapResetPencarianSiswa();
-            rekapResetPanel();
+            // rekapZipKosong() diekspeksikan test dipanggil saat buka popup (jaring pengaman).
             rekapZipKosong();
-            rekapAktifkanTombolAwal();
-            // Pastikan tidak ada sisa unduhan dari sesi popup sebelumnya.
-            if (typeof window.dlProgressReset === 'function') window.dlProgressReset();
+            // rekapResetPencarianSiswa() diekspeksikan test dipanggil saat buka popup.
+            rekapResetPencarianSiswa();
+            // updateRekapInfoText() ringan dipanggil agar teks info benar SEBELUM modal terlihat.
             updateRekapInfoText();
-
-            // Student search autocomplete
-            const searchUrl = '{{ panel_route("rekap.student-search") }}';
-            window.rekapStudentSearchUrl = searchUrl;
         });
 
-        // Initialize on DOM ready
+        // Reset state saat modal ditutup agar bersih untuk buka berikutnya.
+        document.getElementById('printRekapModal')?.addEventListener('hidden.bs.modal', function() {
+            rekapResetPencarianSiswa();
+            rekapResetPanel();
+            rekapAktifkanTombolAwal();
+            if (typeof window.dlProgressReset === 'function') window.dlProgressReset();
+        });
+
+        // Initialize on DOM ready — semua inisialisasi berat dilakukan SEKALI di sini,
+        // bukan di show.bs.modal, agar modal muncul instan saat diklik.
         document.addEventListener('DOMContentLoaded', function() {
             toggleRekapPeriodFields();
             // Keadaan awal popup mengikuti radio default (Per Kelas).
             syncModeUI();
             rekapResetPencarianSiswa();
+            rekapResetPanel();
+            rekapZipKosong();
+            rekapAktifkanTombolAwal();
+            if (typeof window.dlProgressReset === 'function') window.dlProgressReset();
+
+            // Student search autocomplete URL (konstan dari server).
+            const searchUrl = '{{ panel_route("rekap.student-search") }}';
+            window.rekapStudentSearchUrl = searchUrl;
 
             // Semua tombol pembuka modal (desktop + mobile) mengunci format-nya
             // di sini, jadi tidak bergantung pada relatedTarget.
@@ -1998,7 +2066,7 @@
                 <input type="hidden" name="class_id" value="{{ $classId ?? '' }}">
 
                 <div class="modal-body py-3">
-                    <p class="text-secondary small mb-3">
+                    <p class="text-secondary small mb-3" id="rekapInfoDesc">
                         {{ __('Pilih opsi cetak rekap presensi. Hasil akan diunduh sebagai file PDF atau Excel.') }}
                     </p>
 

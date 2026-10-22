@@ -93,10 +93,11 @@ class TeacherController extends Controller
 
             $teacher = Teacher::create($validated);
 
-            if ($classId) {
-                SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
-                SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
-            }
+            // Sinkronkan TUGAS KELAS ke Data Kelas (SchoolClass)
+            $this->syncTugasKelas($teacher, $classId);
+        } catch (ValidationException $e) {
+            // Tangani ValidationException dari syncTugasKelas
+            return $this->formErrorRedirect($e, 'add');
         } catch (\Throwable $ex) {
             report($ex);
             return redirect()->route('admin.guru.index')
@@ -143,12 +144,11 @@ class TeacherController extends Controller
 
             $teacher->update($validated);
 
-            if ($classId) {
-                SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
-                SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
-            } else {
-                SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
-            }
+            // Sinkronkan TUGAS KELAS ke Data Kelas (SchoolClass)
+            $this->syncTugasKelas($teacher, $classId);
+        } catch (ValidationException $e) {
+            // Tangani ValidationException dari syncTugasKelas
+            return $this->formErrorRedirect($e, 'edit', $teacher->id);
         } catch (\Throwable $ex) {
             report($ex);
             return redirect()->route('admin.guru.index')
@@ -159,6 +159,51 @@ class TeacherController extends Controller
         }
 
         return redirect()->route('admin.guru.index')->with('success', __('Data guru :name berhasil disimpan.', ['name' => $teacher->name]));
+    }
+
+    /**
+     * Sinkronkan tugas kelas antara Teacher dan SchoolClass.
+     * Sumber data tunggal: SchoolClass.teacher_id -> Teacher.schoolClass (TUGAS KELAS).
+     * Dipanggil dari TeacherController (Data Guru) dan SchoolClassController (Data Kelas).
+     */
+    private function syncTugasKelas(Teacher $teacher, ?int $classId): void
+    {
+        DB::transaction(function () use ($teacher, $classId) {
+            $oldClassId = $teacher->schoolClass?->id;
+
+            if ($classId) {
+                // Cek apakah kelas sudah punya wali kelas lain
+                $existingClass = SchoolClass::where('id', $classId)
+                    ->where('teacher_id', '!=', $teacher->id)
+                    ->whereNotNull('teacher_id')
+                    ->first();
+
+                if ($existingClass) {
+                    // Kelas sudah punya wali lain - tidak boleh menimpa
+                    throw new \Illuminate\Validation\ValidationException(
+                        \Illuminate\Validation\Validator::make([], [
+                            'school_class_id' => 'Kelas sudah memiliki wali kelas lain. Satu kelas hanya bisa memiliki satu wali kelas.',
+                        ])
+                    );
+                }
+
+                // Lepaskan wali kelas lama dari guru ini (jika ada)
+                if ($oldClassId && $oldClassId != $classId) {
+                    SchoolClass::where('id', $oldClassId)->update(['teacher_id' => null]);
+                }
+
+                // Lepaskan guru lama dari kelas baru (jika ada)
+                SchoolClass::where('id', $classId)->where('teacher_id', '!=', $teacher->id)->update(['teacher_id' => null]);
+
+                // Assign guru ke kelas
+                SchoolClass::where('id', $classId)->update(['teacher_id' => $teacher->id]);
+            } else {
+                // Tidak ditugaskan - lepaskan dari kelas lama
+                if ($oldClassId) {
+                    SchoolClass::where('id', $oldClassId)->update(['teacher_id' => null]);
+                }
+            }
+        });
     }
 
     /**
@@ -179,7 +224,7 @@ class TeacherController extends Controller
         try {
             $name = $teacher->name;
 
-            // Lepaskan penugasan kelas
+            // Lepaskan penugasan kelas (sinkronkan ke SchoolClass)
             SchoolClass::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
 
             // Soft delete: data masih bisa dipulihkan dari halaman Arsip
@@ -326,9 +371,9 @@ class TeacherController extends Controller
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
             'birth_place' => ['nullable', 'string', 'max:100'],
             'birth_date' => ['nullable', 'date'],
-            'phone_number' => ['required', 'regex:/^[0-9]{10,15}$/'],
+            'phone_number' => ['required', 'regex:/^(\+62|0)[0-9]{9,14}$/'],
             'email' => ['nullable', 'email', 'max:255'],
-            'school_class_id' => $teacher ? ['nullable'] : ['nullable', 'exists:school_classes,id'],
+            'school_class_id' => ['nullable', 'exists:school_classes,id'],
         ];
     }
 

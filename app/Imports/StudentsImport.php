@@ -49,7 +49,7 @@ class StudentsImport implements ToCollection, WithHeadingRow
         $rowIndex = 1; // Row 1 is header, data starts at row 2
 
         // NISN yang sudah dipakai file ini (deteksi duplikat di dalam file) dan
-        // NISN yang sudah ada di database (deteksi duplikat terhadap data lama).
+        // NISN yang sudah ada di database (termasuk yang di Tempat Sampah / soft deleted).
         $seenNisnInFile = [];
         $existingNisn = Student::withTrashed()->pluck('nisn')
             ->filter(fn ($v) => $v !== null && $v !== '')

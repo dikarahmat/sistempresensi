@@ -90,7 +90,7 @@ class DownloadCacheService
             $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.png";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-            $downloadFileName = 'Kartu_Presensi_' . $student->nisn . '_' . Str::slug($student->name) . '.png';
+            $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.png';
 
             // Bersihkan file cache jika ada file 0-byte atau rusak
             if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
@@ -133,7 +133,7 @@ class DownloadCacheService
     /**
      * Render Single Student Card PNG menggunakan PHP GD murni.
      * Standar CR80 Portrait: 1086 x 1725 px (~500 DPI), sudut lengkung 64 px (~3.18mm),
-     * latar transparan di luar sudut, desain identik dengan card.blade.php.
+     * latar transparan di luar sudut, desain IDENTIK dengan card.blade.php (massal).
      */
     public static function renderCardPngWithGd(Student $student, string $outputPath): void
     {
@@ -159,13 +159,17 @@ class DownloadCacheService
         $grayBorder = imagecolorallocate($img, 226, 232, 240); // #e2e8f0 (Garis atas footer)
         $grayText = imagecolorallocate($img, 100, 116, 139);   // #64748b (Teks footer)
 
-        // Proporsi tinggi elemen (total 1725 px)
-        $headerH = 226; // 11.2mm
-        $accentH = 16;  // 0.8mm
-        $footerH = 134; // 6.6mm
-        $footerY = $h - $footerH; // 1591
+        // Proporsi tinggi elemen (total 1725 px) - SAMA DENGAN card.blade.php
+        // Header 11.2mm = 226px, Accent 0.8mm = 16px, Identity 18mm = 363px, QR 49mm = 987px, Footer 6.6mm = 133px
+        // Total: 226 + 16 + 363 + 987 + 133 = 1725px ✓
+        $headerH = 226;    // 11.2mm
+        $accentH = 16;     // 0.8mm
+        $identityH = 363;  // 18mm (nama + NISN + kelas, vertikal tengah)
+        $qrAreaH = 987;    // 49mm
+        $footerH = 133;    // 6.6mm
+        $footerY = $h - $footerH; // 1592
 
-        // 1. Gambar badan kartu putih
+        // 1. Gambar badan kartu putih (di bawah header + accent)
         imagefilledrectangle($img, 0, $headerH + $accentH, $w - 1, $footerY - 1, $white);
 
         // 2. Garis aksen oranye
@@ -211,11 +215,12 @@ class DownloadCacheService
         $fontOblique = base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Oblique.ttf');
 
         // 7. Render Header: Logo Sekolah + Nama Sekolah + KARTU PRESENSI DIGITAL
+        // SAMA DENGAN card.blade.php: logo 6mm (~62px), teks di sebelah kanan, gap ~8-10px
         $logoPath = public_path(Setting::getLogo());
-        $logoSize = 160;
-        $logoX = 45;
-        $logoY = (int) round(($headerH - $logoSize) / 2);
-        $textStartX = $logoX;
+        $logoSize = 62;                    // 6mm ≈ 62px (massal: 6mm)
+        $logoX = 45;                       // padding kiri ~4.3mm
+        $logoY = (int) round(($headerH - $logoSize) / 2); // vertikal tengah di header
+        $textStartX = $logoX + $logoSize + 10; // gap ~10px (massal: ~2.2mm + 1.5mm ≈ 8-10px)
 
         if (file_exists($logoPath)) {
             $logoInfo = @getimagesize($logoPath);
@@ -229,13 +234,12 @@ class DownloadCacheService
                 if ($logoSrcImg) {
                     imagecopyresampled($img, $logoSrcImg, $logoX, $logoY, 0, 0, $logoSize, $logoSize, imagesx($logoSrcImg), imagesy($logoSrcImg));
                     imagedestroy($logoSrcImg);
-                    $textStartX = $logoX + $logoSize + 30;
                 }
             }
         }
 
         $schoolName = mb_strtoupper(Setting::getSchoolName() ?: 'SMP PGRI PARUNGPANJANG');
-        $schoolFontSize = 32;
+        $schoolFontSize = 32; // massal: 6pt ≈ 32px @ 500 DPI
         while ($schoolFontSize > 20) {
             $bbox = imagettfbbox($schoolFontSize, 0, $fontBold, $schoolName);
             $textW = abs($bbox[4] - $bbox[0]);
@@ -244,12 +248,34 @@ class DownloadCacheService
             }
             $schoolFontSize -= 2;
         }
-        imagettftext($img, $schoolFontSize, 0, $textStartX, 105, $white, $fontBold, $schoolName);
-        imagettftext($img, 24, 0, $textStartX, 160, $gold, $fontBold, 'KARTU PRESENSI DIGITAL');
+        // Baseline: vertikal tengah header (11.2mm = 226px) → baseline ≈ 226/2 + 6pt/2 ≈ 113 + 11 ≈ 124
+        // card.blade.php: padding 1.5mm top/bottom, font 6pt, line-height 1.15
+        $schoolBaseline = 124;
+        imagettftext($img, $schoolFontSize, 0, $textStartX, $schoolBaseline, $white, $fontBold, $schoolName);
 
-        // 8. Render Nama Siswa (UKURAN TETAP, maksimal 2 baris, vertikal tengah, Bold)
+        // Subtitle "KARTU PRESENSI DIGITAL" - massal: 4.2pt ≈ 22px, margin-top 0.5mm ≈ 5px
+        $subtitleFontSize = 22;
+        $subtitleBaseline = $schoolBaseline + 26; // 6pt + 0.5mm gap + 4.2pt ≈ 16 + 5 + 15 = 36, tapi baseline offset
+        imagettftext($img, $subtitleFontSize, 0, $textStartX, $subtitleBaseline, $gold, $fontBold, 'KARTU PRESENSI DIGITAL');
+
+        // 8. Blok Identitas (Nama, NISN, Kelas) - 18mm = 363px, vertikal tengah
+        // card.blade.php: height 18mm, vertical-align: middle, padding 1.5mm top/bottom
+        // Blok dimulai setelah header + accent = 226 + 16 = 242px
+        // Blok berakhir sebelum QR area = 242 + 363 = 605px
+        $identityTop = $headerH + $accentH; // 242px
+        $identityBottom = $identityTop + $identityH; // 605px
+        $identityMiddle = ($identityTop + $identityBottom) / 2; // 423.5px
+
         $studentName = mb_strtoupper(trim($student->name));
-        $maxNameWidth = $w - 120; // Margin kiri-kanan 60 px
+        $studentNisn = trim((string) ($student->nisn ?? ''));
+        $className = mb_strtoupper($student->schoolClass->name ?? ($student->kelas ?? '-'));
+
+        // Font sizes - SAMA DENGAN card.blade.php (7pt, 6.8pt, 8pt @ 500 DPI)
+        $nameFontSize = 37;   // 7pt ≈ 37px
+        $nisnFontSize = 36;   // 6.8pt ≈ 36px
+        $classFontSize = 42;  // 8pt ≈ 42px
+
+        $maxNameWidth = $w - 120; // Margin kiri-kanan 60px
 
         $wrapLines = function(string $text, int $size, string $font, int $maxWidth): array {
             $words = explode(' ', $text);
@@ -272,57 +298,87 @@ class DownloadCacheService
             return $lines;
         };
 
-        // UKURAN TETAP — sama untuk semua kartu (nama 37px ≈ 7pt kartu PDF).
-        // Nama tampil SATU BARIS; nama terpanjang tetap muat karena ukuran sudah
-        // diturunkan untuk SEMUA kartu (bukan per kartu).
-        $nameFontSize = 37;
-        $lineStep = (int) round($nameFontSize * 1.2);   // tinggi baris rapat (line-height 1.2)
-        $nameBaseline = 336;                             // posisi tetap (nama satu baris)
-
+        // Nama: max 2 baris, line-height 1.15, vertikal tengah di blok identitas
+        $nameLineHeight = (int) round($nameFontSize * 1.15); // ≈ 43px
         $lines = $wrapLines($studentName, $nameFontSize, $fontBold, $maxNameWidth);
-        $nameText = count($lines) === 1 ? $lines[0] : implode(' ', $lines); // selalu 1 baris
+        
+        // Hitung total tinggi teks nama (1 atau 2 baris)
+        $totalNameHeight = count($lines) * $nameLineHeight;
+        
+        // NISN: line-height 1.2, gap 0.53mm ≈ 11px dari nama
+        $nisnLineHeight = (int) round($nisnFontSize * 1.2); // ≈ 43px
+        $nisnGap = 11; // 0.53mm ≈ 11px
+        
+        // Kelas: line-height 1.2, gap 11px dari NISN
+        $classLineHeight = (int) round($classFontSize * 1.2); // ≈ 50px
+        $classGap = 11;
 
-        $bbox = imagettfbbox($nameFontSize, 0, $fontBold, $nameText);
-        $lineW = abs($bbox[4] - $bbox[0]);
-        $lx = (int) round(($w - $lineW) / 2);
-        imagettftext($img, $nameFontSize, 0, $lx, $nameBaseline, $dark, $fontBold, $nameText);
-
-        // 9. Render NISN Siswa (ukuran tetap ~85% nama, bold & warna sama dengan nama/kelas)
-        $studentNisn = trim((string) ($student->nisn ?? ''));
-        $nisnFontSize = 36;                       // tetap (≈6,8pt)
-        $nisnBaseline = $nameBaseline + 46;       // posisi tetap, jarak rapat antar baris
-
+        // Total tinggi blok teks (nama + gap + NISN + gap + kelas)
+        $totalTextHeight = $totalNameHeight;
         if ($studentNisn !== '') {
-            $nisnColor = imagecolorallocate($img, 15, 23, 42);  // #0f172a (sama dengan nama/kelas)
+            $totalTextHeight += $nisnGap + $nisnLineHeight + $classGap + $classLineHeight;
+        } else {
+            $totalTextHeight += $classGap + $classLineHeight;
+        }
+
+        // Posisi baseline nama (baris pertama) agar seluruh blok vertikal tengah
+        $nameBaseline = $identityMiddle - ($totalTextHeight / 2) + $nameFontSize * 0.8; // baseline offset
+
+        // Render Nama (1 atau 2 baris)
+        $y = $nameBaseline;
+        foreach ($lines as $line) {
+            $bbox = imagettfbbox($nameFontSize, 0, $fontBold, $line);
+            $lineW = abs($bbox[4] - $bbox[0]);
+            $lx = (int) round(($w - $lineW) / 2);
+            imagettftext($img, $nameFontSize, 0, $lx, $y, $dark, $fontBold, $line);
+            $y += $nameLineHeight;
+        }
+
+        // Render NISN
+        if ($studentNisn !== '') {
+            $y += $nisnGap;
             $nisnBbox = imagettfbbox($nisnFontSize, 0, $fontBold, $studentNisn);
             $nisnW = abs($nisnBbox[4] - $nisnBbox[0]);
             $nisnX = (int) round(($w - $nisnW) / 2);
-            imagettftext($img, $nisnFontSize, 0, $nisnX, $nisnBaseline, $nisnColor, $fontBold, $studentNisn);
+            imagettftext($img, $nisnFontSize, 0, $nisnX, $y, $dark, $fontBold, $studentNisn);
+            $y += $nisnLineHeight;
         }
 
-        // 10. Render Kelas Siswa (posisi TETAP di bawah NISN)
-        $className = mb_strtoupper($student->schoolClass->name ?? ($student->kelas ?? '-'));
-        $classFontSize = 42;   // tetap (≈8pt)
+        // Render Kelas
+        $y += $classGap;
         $classBbox = imagettfbbox($classFontSize, 0, $fontBold, $className);
         $classW = abs($classBbox[4] - $classBbox[0]);
         $classX = (int) round(($w - $classW) / 2);
-        $classY = $nisnBaseline + 48;
-        imagettftext($img, $classFontSize, 0, $classX, $classY, $dark, $fontBold, $className);
+        imagettftext($img, $classFontSize, 0, $classX, $y, $dark, $fontBold, $className);
 
-        // 11. Render QR Code (Matrix BaconQrCode, Tajam & Presisi)
+        // 9. QR Code Area - 49mm = 987px
+        // card.blade.php: QR 32mm x 32mm dalam container 34mm dengan padding 1mm
+        // Massal: QR area dimulai setelah identity block (605px), tinggi 987px → berakhir di 1592px
+        // QR code 32mm = 326px, container 34mm = 346px dengan padding 1mm = 10px
+        $qrAreaTop = $identityBottom; // 605px
+        $qrAreaMiddle = $qrAreaTop + ($qrAreaH / 2); // 605 + 493.5 = 1098.5px
+        
         $token = $student->nisn ?: $student->qr_token;
         $qrMatrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::M())->getMatrix();
         $mW = $qrMatrix->getWidth();
         $mH = $qrMatrix->getHeight();
 
-        $qrTargetSize = 680;
-        $moduleSize = (int) floor($qrTargetSize / $mW);
+        $qrCodeSize = 326; // 32mm ≈ 326px (massal: 32mm)
+        $moduleSize = (int) floor($qrCodeSize / $mW);
         $qrActualSize = $moduleSize * $mW;
         $qrStartX = (int) round(($w - $qrActualSize) / 2);
-        $qrStartY = 640;
+        
+        // Container 34mm = 346px dengan padding 1mm = 10px
+        $containerSize = $qrActualSize + 20; // padding 10px each side
+        $containerX = (int) round(($w - $containerSize) / 2);
+        $containerY = (int) round($qrAreaMiddle - ($containerSize / 2));
 
-        // Background putih quiet zone
-        imagefilledrectangle($img, $qrStartX - 15, $qrStartY - 15, $qrStartX + $qrActualSize + 14, $qrStartY + $qrActualSize + 14, $white);
+        // Background putih quiet zone (container)
+        imagefilledrectangle($img, $containerX, $containerY, $containerX + $containerSize, $containerY + $containerSize, $white);
+        
+        // Draw QR modules centered in container
+        $qrStartX = $containerX + 10; // 10px padding
+        $qrStartY = $containerY + 10;
 
         $black = imagecolorallocate($img, 0, 0, 0);
         for ($my = 0; $my < $mH; $my++) {
@@ -337,22 +393,25 @@ class DownloadCacheService
             }
         }
 
-        // 12. Render Teks "SCAN PRESENSI"
-        $scanBbox = imagettfbbox(28, 0, $fontBold, 'SCAN PRESENSI');
+        // 10. Teks "SCAN PRESENSI" - massal: 5pt ≈ 17px, margin-top 1mm ≈ 10px dari QR
+        $scanFontSize = 17; // 5pt ≈ 17px
+        $scanBbox = imagettfbbox($scanFontSize, 0, $fontBold, 'SCAN PRESENSI');
         $scanW = abs($scanBbox[4] - $scanBbox[0]);
         $scanX = (int) round(($w - $scanW) / 2);
-        $scanY = $qrStartY + $qrActualSize + 65;
-        imagettftext($img, 28, 0, $scanX, $scanY, $dark, $fontBold, 'SCAN PRESENSI');
+        $scanY = $containerY + $containerSize + 10; // 10px gap dari container QR
+        imagettftext($img, $scanFontSize, 0, $scanX, $scanY, $dark, $fontBold, 'SCAN PRESENSI');
 
-        // 13. Render Footer Text
+        // 11. Footer - massal: 4.5pt ≈ 15px, italic, #64748b, vertical-align middle in 6.6mm footer
         $footerText = 'Tunjukkan kartu saat presensi masuk';
-        $footBbox = imagettfbbox(24, 0, $fontOblique, $footerText);
+        $footerFontSize = 15; // 4.5pt ≈ 15px
+        $footBbox = imagettfbbox($footerFontSize, 0, $fontOblique, $footerText);
         $footW = abs($footBbox[4] - $footBbox[0]);
         $footX = (int) round(($w - $footW) / 2);
-        $footY = $footerY + 78;
-        imagettftext($img, 24, 0, $footX, $footY, $grayText, $fontOblique, $footerText);
+        // Footer vertikal tengah: footerY (1592) + footerH/2 (66.5) + fontSize/2 adjustment
+        $footY = $footerY + ($footerH / 2) + ($footerFontSize / 3);
+        imagettftext($img, $footerFontSize, 0, $footX, $footY, $grayText, $fontOblique, $footerText);
 
-        // 14. Tulis file PNG dengan kompresi maksimal (9)
+        // 12. Tulis file PNG dengan kompresi maksimal (9)
         imagepng($img, $outputPath, 9);
         imagedestroy($img);
     }

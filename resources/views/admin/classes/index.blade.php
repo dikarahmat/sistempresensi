@@ -23,11 +23,12 @@
 
     .table-zebra-custom {
         width: 100%;
+        table-layout: fixed;
         /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
            kolom-kolomnya dipipihkan. Semua kolom (NO, KELAS, NAMA KELAS,
            STATUS WALI KELAS, JUMLAH SISWA, AKSI) ikut dihitung; nilai desktop
            tidak berubah karena tabel selalu lebih lebar dari ini. */
-        min-width: 720px;
+        min-width: 880px;
         margin-bottom: 0;
     }
 
@@ -39,6 +40,8 @@
     .table-zebra-custom th,
     .table-zebra-custom td {
         vertical-align: middle;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
     }
     .table-zebra-custom tbody td {
         color: #1e293b !important;
@@ -116,17 +119,16 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.6rem 1rem;
+        gap: 0.5rem; /* 8px */
     }
 
     .action-bar-section .action-search-form {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
         gap: 0.5rem;
-        flex: 1 1 380px;
+        flex: 1 1 auto;
         min-width: 0;
-        width: auto;
         margin: 0;
     }
 
@@ -135,8 +137,8 @@
         display: flex;
         flex-wrap: nowrap;
         align-items: stretch;
-        flex: 1 1 240px;
-        min-width: 170px;
+        flex: 1 1 auto;
+        min-width: 0;
         width: auto;
         max-width: none;
         height: 38px;
@@ -154,26 +156,36 @@
     }
 
     .action-bar-section .filter-box-wrap {
-        flex: 0 1 200px;
-        min-width: 150px;
-        max-width: 200px;
-        width: auto;
+        flex: 0 0 auto;
+        min-width: 170px;
+        width: 170px;
+        margin-right: 2rem; /* 32px geser dropdown ke kiri, 8px gap ke tombol IMPORT EXCEL */
     }
     .action-bar-section .filter-box-wrap select.form-select {
         height: 38px;
+        width: 100%;
+        min-width: 170px;
+        padding-left: 12px;
+        padding-right: 40px; /* ruang untuk panah dropdown */
+        font-size: 0.85rem;
+        letter-spacing: 0.03em;
+        text-overflow: clip;
+        overflow: visible;
+    }
+    .action-bar-section .filter-box-wrap select.form-select option {
+        font-size: 0.85rem;
+        padding: 0.375rem 0.75rem;
     }
 
-    /* Deretan tombol aksi di kanan: lebar mengikuti isi (padding sama seperti Siswa/Guru),
-       bukan melebar mengisi ruang. Input yang fleksibel mengisi sisa lebar. */
+    /* Deretan tombol aksi di kanan: tidak mengecil dan tidak menumpuk */
     .action-bar-section .action-buttons-wrap {
         display: flex;
-        flex: 0 1 auto;
         flex-wrap: wrap;
         align-items: center;
         justify-content: flex-end;
         gap: 0.5rem;
+        flex: 0 1 auto;
         margin-left: auto;
-        width: auto;
     }
     .action-bar-section .action-buttons-wrap .btn-solid-pill {
         flex: 0 0 auto;
@@ -285,6 +297,32 @@
         border-radius: var(--clean-radius) !important;
         height: 38px;
         font-size: 0.85rem;
+    }
+
+    /* Kolom STATUS WALI KELAS: rata tengah, teks biasa, nama panjang wrap rapi */
+    .wali-kelas-col {
+        text-align: center !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+    }
+    .wali-kelas-col .belum-ditentukan {
+        color: #94a3b8 !important;
+    }
+
+    /* Kolom JUMLAH SISWA: format konsisten "29 SISWA" */
+    .jumlah-siswa-col {
+        text-align: center !important;
+        white-space: nowrap !important;
+    }
+
+    /* Kolom AKSI: ikon rata tengah, jarak sama, tooltip ready */
+    .aksi-col {
+        text-align: center !important;
+        white-space: nowrap !important;
+    }
+    .aksi-col .crud-center-wrapper {
+        gap: 0.5rem !important;
     }
 </style>
 @endpush
@@ -413,7 +451,7 @@
         <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
-
+                
                 <!-- Sisi Kiri: Form Pencarian & Dropdown Tingkat Kelas (satu baris sejajar) -->
                 <form method="GET" action="{{ url()->current() }}" class="action-search-form">
                     <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
@@ -432,20 +470,19 @@
                         </button>
                     </div>
 
-                    <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang -->
+                    <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang (pola Catatan Kehadiran) -->
                     <div class="filter-box-wrap">
-                        <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="Pilih tingkat kelas">
+                        <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal" aria-label="{{ __('Pilih tingkat kelas') }}">
                             <option value="">{{ __('Semua Tingkat') }}</option>
-                            <option value="7" {{ request('grade') == '7' ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
-                            <option value="8" {{ request('grade') == '8' ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
-                            <option value="9" {{ request('grade') == '9' ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
+                            @foreach($availableGrades as $grade)
+                            <option value="{{ $grade }}" {{ request('grade') == $grade ? 'selected' : '' }}>{{ __('Kelas :grade', ['grade' => $grade]) }}</option>
+                            @endforeach
                         </select>
                     </div>
 
                 </form>
 
-                @if(Auth::check() && Auth::user()->role === 'admin')
-                <!-- Sisi Kanan: Deretan Tombol Aksi (Stacked Layout di Mobile) -->
+                <!-- Sisi Kanan: Deretan Tombol Aksi -->
                 <div class="action-buttons-wrap">
                     @if(Route::has('admin.classes.import'))
                     <!-- 1. Import Excel (Solid Hijau) -->
@@ -464,23 +501,38 @@
                         <span>{{ __('Hapus') }}</span>
                     </button>
                 </div>
-                @endif
 
             </div>
         </div>
 
         {{-- Tabel Master Data Kelas (Alignment & style disamakan persis dengan Data Guru & Data Siswa) --}}
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
+            <table class="table table-hover align-middle mb-0 table-zebra-custom">
+                <colgroup>
+                    <col style="width: 6%; min-width: 50px;">     {{-- NO --}}
+                    <col style="width: 12%; min-width: 80px;">   {{-- KELAS --}}
+                    <col style="width: 14%; min-width: 100px;">  {{-- NAMA KELAS --}}
+                    <col style="width: 30%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
+                    <col style="width: 20%; min-width: 140px;">  {{-- JUMLAH SISWA --}}
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                    <col style="width: 18%; min-width: 120px;">  {{-- AKSI --}}
+                    @else
+                    <col style="width: 6%; min-width: 50px;">    {{-- NO --}}
+                    <col style="width: 12%; min-width: 80px;">   {{-- KELAS --}}
+                    <col style="width: 14%; min-width: 100px;">  {{-- NAMA KELAS --}}
+                    <col style="width: 30%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
+                    <col style="width: 26%; min-width: 160px;">  {{-- JUMLAH SISWA --}}
+                    @endif
+                </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 45px;">{{ __('No') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 1%; min-width: 80px;">{{ __('Kelas') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Nama Kelas') }}</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Status Wali Kelas') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100">{{ __('Jumlah Siswa') }}</th>
+                        <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 6%;">{{ __('No') }}</th>
+                        <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">{{ __('Kelas') }}</th>
+                        <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Nama Kelas') }}</th>
+                        <th class="text-center py-3 px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 30%;">{{ __('Status Wali Kelas') }}</th>
+                        <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 20%;">{{ __('Jumlah Siswa') }}</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 180px;">{{ __('Aksi') }}</th>
+                        <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 18%;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -494,14 +546,18 @@
                         <td data-label="{{ __('Nama Kelas') }}" class="text-center text-nowrap fw-semibold text-dark px-3">
                             {{ $class->name }}
                         </td>
-                        <td data-label="{{ __('Status Wali Kelas') }}" class="text-start text-nowrap indent-nama px-3 pe-4 text-secondary">
-                            {{ $class->teacher->name ?? __('Belum Ditentukan') }}
+                        <td data-label="{{ __('Status Wali Kelas') }}" class="wali-kelas-col text-center px-3 pe-4">
+                            @if($class->teacher)
+                                {{ $class->teacher->name }}
+                            @else
+                                <span class="belum-ditentukan">{{ __('Belum Ditentukan') }}</span>
+                            @endif
                         </td>
-                        <td data-label="{{ __('Jumlah Siswa') }}" class="text-center text-nowrap px-3">
-                            {{ $class->students_count }} {{ __('Siswa') }}
+                        <td data-label="{{ __('Jumlah Siswa') }}" class="jumlah-siswa-col px-3">
+                            {{ $class->students_count }} {{ __('SISWA') }}
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Aksi') }}" class="aksi-col px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="{{ __('Edit') }}" aria-label="{{ __('Edit') }}">
@@ -522,10 +578,10 @@
                     </tr>
                     @empty
                     <tr class="align-middle">
-                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted text-nowrap empty-state">
+                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('grade'))
-                                {{ __('Tidak ada data kelas yang cocok dengan pencarian/filter.') }}
+                                {{ __('Tidak ada kelas yang cocok dengan pencarian/filter.') }}
                             @else
                                 {{ __('Belum ada data kelas yang terdaftar.') }}
                             @endif
@@ -553,30 +609,54 @@
                 @csrf
                 @method('PUT')
                 <div class="modal-body py-3">
+                    @if($errors->any() && old('class_id') == $class->id)
+                    <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
+                        <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Periksa isian yang bertanda merah.') }}
+                    </div>
+                    @endif
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">{{ __('Nama Kelas') }}</label>
-                        <input type="text" name="name" class="form-control rounded-3" value="{{ $class->name }}" placeholder="{{ __('Contoh: 7A, 8B, 9C') }}" required>
+                        <label class="form-label small fw-semibold">{{ __('Nama Kelas') }} <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control rounded-3 {{ $errors->has('name') && old('class_id') == $class->id ? 'is-invalid' : '' }}" value="{{ old('name', $class->name) }}" placeholder="{{ __('Contoh: 7A, 8B, 9C') }}" required maxlength="50">
+                        @if($errors->has('name') && old('class_id') == $class->id)
+                        <div class="invalid-feedback d-block">{{ $errors->first('name') }}</div>
+                        @endif
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }}</label>
-                        <select name="grade" class="form-select rounded-3" required>
-                            <option value="7" {{ ($class->grade == '7' || $class->level == 'VII') ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
-                            <option value="8" {{ ($class->grade == '8' || $class->level == 'VIII') ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
-                            <option value="9" {{ ($class->grade == '9' || $class->level == 'IX') ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }} <span class="text-danger">*</span></label>
+                        <select name="grade" class="form-select rounded-3 {{ $errors->has('grade') && old('class_id') == $class->id ? 'is-invalid' : '' }}" required>
+                            <option value="7" {{ (old('grade', $class->grade) == '7') ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
+                            <option value="8" {{ (old('grade', $class->grade) == '8') ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
+                            <option value="9" {{ (old('grade', $class->grade) == '9') ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
                         </select>
+                        @if($errors->has('grade') && old('class_id') == $class->id)
+                        <div class="invalid-feedback d-block">{{ $errors->first('grade') }}</div>
+                        @endif
                     </div>
                     <div class="mb-2">
                         <label class="form-label small fw-semibold">{{ __('Wali Kelas') }}</label>
-                        <select name="teacher_id" class="form-select rounded-3">
+                        <select name="teacher_id" class="form-select rounded-3 {{ $errors->has('teacher_id') && old('class_id') == $class->id ? 'is-invalid' : '' }}">
                             <option value="">{{ __('-- Belum Ditentukan --') }}</option>
+                            @php
+                                $assignedTeacherIds = $classes->where('id', '!=', $class->id)->whereNotNull('teacher_id')->pluck('teacher_id')->toArray();
+                            @endphp
                             @foreach($teachers as $teacher)
-                            <option value="{{ $teacher->id }}" {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
+                            @php
+                                $isCurrentTeacher = $class->teacher_id == $teacher->id;
+                                $isAssignedElsewhere = in_array($teacher->id, $assignedTeacherIds);
+                            @endphp
+                            @if(!$isAssignedElsewhere || $isCurrentTeacher)
+                            <option value="{{ $teacher->id }}" {{ (old('teacher_id', $class->teacher_id) == $teacher->id) ? 'selected' : '' }}>
                                 {{ $teacher->name }} (NIP: {{ $teacher->nip }})
                             </option>
+                            @endif
                             @endforeach
                         </select>
-                        <div class="form-text small text-muted">{{ __('Wali kelas diambil dinamis dari master data guru.') }}</div>
+                        @if($errors->has('teacher_id') && old('class_id') == $class->id)
+                        <div class="invalid-feedback d-block">{{ $errors->first('teacher_id') }}</div>
+                        @endif
+                        <div class="form-text small text-muted">{{ __('Wali kelas diambil dinamis dari master data guru. Guru yang sudah menjadi wali kelas lain tidak ditampilkan.') }}</div>
                     </div>
+                    <input type="hidden" name="class_id" value="{{ $class->id }}">
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
@@ -599,29 +679,48 @@
             <form action="{{ panel_route('classes.store') }}" method="POST">
                 @csrf
                 <div class="modal-body py-3">
+                    @if($errors->any() && session('open_modal') === 'add')
+                    <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
+                        <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Periksa isian yang bertanda merah.') }}
+                    </div>
+                    @endif
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">{{ __('Nama Kelas') }}</label>
-                        <input type="text" name="name" class="form-control rounded-3" placeholder="{{ __('Contoh: 7A, 8B, 9C') }}" required>
+                        <label class="form-label small fw-semibold">{{ __('Nama Kelas') }} <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" value="{{ old('name') }}" placeholder="{{ __('Contoh: 7A, 8B, 9C') }}" required maxlength="50">
+                        @if($errors->has('name') && session('open_modal') === 'add')
+                        <div class="invalid-feedback d-block">{{ $errors->first('name') }}</div>
+                        @endif
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }}</label>
-                        <select name="grade" class="form-select rounded-3" required>
-                            <option value="7">{{ __('Kelas 7') }}</option>
-                            <option value="8">{{ __('Kelas 8') }}</option>
-                            <option value="9">{{ __('Kelas 9') }}</option>
+                        <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }} <span class="text-danger">*</span></label>
+                        <select name="grade" class="form-select rounded-3 {{ $errors->has('grade') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" required>
+                            <option value="7" {{ old('grade') == '7' ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
+                            <option value="8" {{ old('grade') == '8' ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
+                            <option value="9" {{ old('grade') == '9' ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
                         </select>
+                        @if($errors->has('grade') && session('open_modal') === 'add')
+                        <div class="invalid-feedback d-block">{{ $errors->first('grade') }}</div>
+                        @endif
                     </div>
                     <div class="mb-2">
                         <label class="form-label small fw-semibold">{{ __('Pilih Wali Kelas (Opsional)') }}</label>
-                        <select name="teacher_id" class="form-select rounded-3">
+                        <select name="teacher_id" class="form-select rounded-3 {{ $errors->has('teacher_id') && session('open_modal') === 'add' ? 'is-invalid' : '' }}">
                             <option value="">{{ __('-- Pilih Wali Kelas --') }}</option>
+                            @php
+                                $assignedTeacherIds = $classes->whereNotNull('teacher_id')->pluck('teacher_id')->toArray();
+                            @endphp
                             @foreach($teachers as $teacher)
-                            <option value="{{ $teacher->id }}">
+                            @if(!in_array($teacher->id, $assignedTeacherIds))
+                            <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>
                                 {{ $teacher->name }} (NIP: {{ $teacher->nip }})
                             </option>
+                            @endif
                             @endforeach
                         </select>
-                        <div class="form-text small text-muted">{{ __('Pilihan wali kelas diambil dinamis dari tabel guru.') }}</div>
+                        @if($errors->has('teacher_id') && session('open_modal') === 'add')
+                        <div class="invalid-feedback d-block">{{ $errors->first('teacher_id') }}</div>
+                        @endif
+                        <div class="form-text small text-muted">{{ __('Pilihan wali kelas diambil dinamis dari tabel guru. Guru yang sudah menjadi wali kelas lain tidak ditampilkan.') }}</div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">

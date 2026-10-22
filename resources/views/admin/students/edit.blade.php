@@ -6,8 +6,8 @@
 
 @section('page_header_right')
 <div class="d-flex gap-2">
-    <a href="{{ panel_route('students.index') }}" class="btn btn-primary rounded-3 px-4 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-white fw-semibold" style="font-size: 0.85rem;">
-        {{ __('Kembali') }}
+    <a href="{{ panel_route('students.show', $student->id) }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;">
+        <i class='bx bx-chevron-left'></i> {{ __('Lihat Detail') }}
     </a>
 </div>
 @endsection
@@ -151,7 +151,7 @@
             <!-- Tombol Simpan & Batal -->
             <div class="d-flex align-items-center gap-2">
                 <button type="submit" class="btn-submit-blue">{{ __('Simpan Perubahan') }}</button>
-                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-cancel-gray">{{ __('Batal') }}</a>
+                <a href="{{ panel_route('students.index', array_filter(request()->only(['search', 'class_id', 'page']))) }}" class="btn-cancel-gray">{{ __('Batal') }}</a>
             </div>
         </form>
     </div>

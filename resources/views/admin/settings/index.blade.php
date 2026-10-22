@@ -500,24 +500,34 @@
             <div class="row g-3">
                 <div class="col-12 col-md-6">
                     <label class="form-label small fw-semibold">{{ __('Jam Buka Masuk (Check-In)') }}</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class='bx bx-log-in'></i></span>
-                        <input type="time" name="check_in_time" x-model="checkIn" class="form-control rounded-end-3" value="{{ old('check_in_time', $settings['check_in_time']) }}" required>
+                    <div class="position-relative">
+                        <i class='bx bx-log-in text-primary position-absolute top-50 start-0 translate-middle-y ms-3' style="font-size: 1.1rem; z-index: 10; pointer-events: none;" aria-hidden="true"></i>
+                        <input type="time" name="check_in_time" id="check_in_time" x-model="checkIn" class="form-control rounded-3 ps-5" value="{{ old('check_in_time', $settings['check_in_time']) }}" required style="padding-left: 2.75rem;">
                     </div>
                 </div>
 
                 <div class="col-12 col-md-6">
                     <label class="form-label small fw-semibold">{{ __('Batas Toleransi Keterlambatan') }}</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light text-danger"><i class='bx bx-alarm-exclamation'></i></span>
-                        <input type="time" name="late_limit_time" x-model="lateLimit" class="form-control rounded-end-3" value="{{ old('late_limit_time', $settings['late_limit_time']) }}" required>
+                    <div class="position-relative">
+                        <i class='bx bx-alarm-exclamation text-danger position-absolute top-50 start-0 translate-middle-y ms-3' style="font-size: 1.1rem; z-index: 10; pointer-events: none;" aria-hidden="true"></i>
+                        <input type="time" name="late_limit_time" id="late_limit_time" x-model="lateLimit" class="form-control rounded-3 ps-5" value="{{ old('late_limit_time', $settings['late_limit_time']) }}" required style="padding-left: 2.75rem;">
                     </div>
                 </div>
             </div>
 
-            <div class="p-3 mt-3 rounded-3 bg-light border small text-secondary">
-                <i class='bx bx-info-circle text-primary me-1'></i> 
-                {{ __('Siswa yang melakukan scan antara') }} <strong x-text="checkIn">{{ $settings['check_in_time'] }}</strong> {{ __('hingga') }} <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> {{ __('tercatat') }} <strong>{{ __('Tepat Waktu') }}</strong>. {{ __('Scan di atas') }} <strong x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong> {{ __('otomatis tercatat') }} <strong>{{ __('Terlambat') }}</strong> {{ __('lengkap dengan selisih menit keterlambatannya.') }}
+            <div class="mt-3 small" style="line-height: 1.6; color: #1e293b;">
+                <i class='bx bx-info-circle text-primary me-1' style="font-size: 14px; vertical-align: -0.125em;"></i>
+                <span>{{ __('Siswa yang melakukan scan antara') }}</span>
+                <strong style="color: #166534; font-weight: 700;" x-text="checkIn">{{ $settings['check_in_time'] }}</strong>
+                <span>{{ __('hingga') }}</span>
+                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong>
+                <span>{{ __('tercatat') }}</span>
+                <strong style="color: #166534; font-weight: 700;">{{ __('Tepat Waktu') }}</strong>.
+                <span>{{ __('Scan di atas') }}</span>
+                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong>
+                <span>{{ __('otomatis tercatat') }}</span>
+                <strong style="color: #c2410c; font-weight: 700;">{{ __('Terlambat') }}</strong>
+                <span>{{ __('lengkap dengan selisih menit keterlambatannya.') }}</span>
             </div>
         </div>
 
@@ -596,9 +606,11 @@
             form.addEventListener('submit', function (e) {
                 var nip = document.getElementById('headmaster_nip');
                 var phone = document.getElementById('school_phone');
+                var checkIn = document.getElementById('check_in_time');
+                var lateLimit = document.getElementById('late_limit_time');
                 var ok = true;
 
-                [nip, phone].forEach(function (el) {
+                [nip, phone, checkIn, lateLimit].forEach(function (el) {
                     if (el) el.classList.remove('is-invalid');
                 });
                 var nipErr = document.getElementById('nipClientError');
@@ -618,6 +630,19 @@
                 if (phone && phone.value !== '' && !/^[0-9]{10,15}$/.test(phone.value)) {
                     tandai(phone);
                     if (phoneErr) phoneErr.style.display = '';
+                }
+                if (checkIn && lateLimit && checkIn.value && lateLimit.value && lateLimit.value <= checkIn.value) {
+                    tandai(lateLimit);
+                    if (lateLimit) {
+                        // Tampilkan error di bawah field batas terlambat
+                        var existingErr = lateLimit.parentNode.querySelector('.time-client-error');
+                        if (!existingErr) {
+                            var errDiv = document.createElement('div');
+                            errDiv.className = 'text-danger small mt-1 time-client-error';
+                            errDiv.textContent = {!! json_encode(__('Batas toleransi harus lebih besar dari jam buka masuk.')) !!};
+                            lateLimit.parentNode.appendChild(errDiv);
+                        }
+                    }
                 }
 
                 if (!ok) {

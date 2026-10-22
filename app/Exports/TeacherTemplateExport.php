@@ -19,6 +19,7 @@ class TeacherTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
             'tempat_lahir',
             'tanggal_lahir',
             'no_hp',
+            'kelas',
         ];
     }
 
@@ -32,6 +33,7 @@ class TeacherTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
                 'Surabaya',
                 '1985-01-01',
                 '081334567890',
+                '7A',
             ],
             [
                 '199002152015022002',
@@ -40,6 +42,7 @@ class TeacherTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
                 'Semarang',
                 '1990-02-15',
                 '081223344556',
+                '7B',
             ],
         ];
     }

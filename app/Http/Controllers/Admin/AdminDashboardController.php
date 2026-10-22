@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-
+use App\Services\DailyAttendanceSummary;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\SchoolClass;
@@ -38,7 +38,7 @@ class AdminDashboardController extends Controller
         return $today->copy();
     }
 
-    public function index(Request $request): View
+    public function index(Request $request, DailyAttendanceSummary $dailyAttendanceSummary)
     {
         Carbon::setLocale('id');
         $today = Carbon::now('Asia/Jakarta');
@@ -57,9 +57,18 @@ class AdminDashboardController extends Controller
         $activeYear = AcademicYear::getActive();
 
         // 1. Data Statistik Header & Master Kelas (Single Query Eager Loading)
-        $totalStudents = Student::where('status', 'Aktif')->count();
+        //
+        // Angka "Siswa Aktif" HARUS sama persis dengan total yang tampil di
+        // halaman Data Siswa. Halaman itu memakai Student::with('schoolClass')
+        // TANPA filter status, jadi di sini juga tanpa filter status - query
+        // global SoftDeletes otomatis mengecualikan siswa yang sudah dihapus
+        // (masuk sampah). Query yang sama dipakai untuk roster rombel di bawah.
+        $totalStudents = Student::count();
         
         // Ambil data rombel lengkap beserta guru kelasnya dan jumlah siswa aktif dalam 1 query
+        // (query dasar sama dengan SchoolClassController@index, jadi angka
+        // "Rombongan Belajar" = total di halaman Data Kelas; yang di sampah
+        // tidak terhitung karena global scope SoftDeletes).
         $classesList = SchoolClass::with('teacher')
             ->withCount(['students as total_students' => fn($q) => $q->where('status', 'Aktif')])
             ->orderBy('grade')
@@ -79,16 +88,22 @@ class AdminDashboardController extends Controller
         });
 
         $totalGuruKelas = $classesList->whereNotNull('teacher_id')->unique('teacher_id')->count();
+        // "Guru Aktif" = total di halaman Data Guru: query yang sama
+        // (Teacher::with('schoolClass') tanpa filter status). Guru yang sudah
+        // dihapus (masuk sampah) tidak terhitung karena global scope SoftDeletes.
         $totalTeachers = Teacher::count();
 
-        // 2. Data Ketidakhadiran Hari Ini (Sakit, Izin, Alpha)
-        $attendancesToday = Attendance::whereDate('date', $dateString)
-            ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
-            ->get();
+        // 2. Data Ketidakhadiran (Sakit, Izin, Alfa) untuk tanggal yang
+        //    sedang dipilih. Angkanya diambil dari DailyAttendanceSummary -
+        //    helper yang sama dipakai halaman Presensi (daftar kelas & detail
+        //    kelas), jadi "Alfa" di Dashboard sama persis dengan Alfa di
+        //    halaman presensi (termasuk Alfa hasil hitungan untuk tanggal
+        //    yang sudah lewat).
+        $kelasSummary = $dailyAttendanceSummary->summarize($classesList, $dateString);
 
-        $countSakit = $attendancesToday->where('status', 'Sakit')->count();
-        $countIzin  = $attendancesToday->where('status', 'Izin')->count();
-        $countAlfa  = $attendancesToday->filter(fn($a) => in_array($a->status, ['Alfa', 'Alpha']))->count();
+        $countSakit = (int) $kelasSummary->sum('sakit');
+        $countIzin  = (int) $kelasSummary->sum('izin');
+        $countAlfa  = (int) $kelasSummary->sum('alpha');
         $totalKetidakhadiran = $countSakit + $countIzin + $countAlfa;
 
         // 3. REKAP MINGGUAN PER ROMBEL - data pendukung dashboard. Tetap
@@ -227,12 +242,11 @@ class AdminDashboardController extends Controller
         // 4. Pengaturan Jadwal Operasional dari Cache Teroptimasi
         $checkInTime = Setting::getCheckInTime();
         $lateLimitTime = Setting::getLateLimitTime();
-        $checkOutTime = Setting::getCheckOutTime();
 
         return view('admin.dashboard', compact(
             'today', 'todayFormatted', 'dateString', 'startOfWeek', 'endOfWeek',
             'isToday', 'dateLabel', 'selectedDate',
-            'checkInTime', 'lateLimitTime', 'checkOutTime',
+            'checkInTime', 'lateLimitTime',
             'totalStudents', 'totalClasses', 'totalGuruKelas', 'totalTeachers',
             'classesList', 'guruKelasList',
             'countSakit', 'countIzin', 'countAlfa', 'totalKetidakhadiran',

@@ -438,6 +438,25 @@
             detail: { url: s.url, sukses: !!sukses, dibatalkan: !!s.dibatalkan }
         }));
 
+        // Tutup modal induk jika unduhan berhasil (hanya saat sukses).
+        // Mencari modal terdekat yang mengandung tombol, lalu menutupnya via Bootstrap API.
+        if (sukses) {
+            var modalEl = s.button.closest('.modal');
+            if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                var modal = window.bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    // Fallback jika instance belum diinisialisasi
+                    modalEl.classList.remove('show');
+                    modalEl.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    var backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) backdrop.remove();
+                }
+            }
+        }
+
         // Mode import: baru buka halaman hasil SETELAH tampil "Selesai".
         // Kalau gagal / dibatalkan, callback ini tidak dijalankan sama sekali.
         if (sukses && typeof s.setelahSelesai === 'function') {
@@ -990,6 +1009,22 @@
                 s.button.dispatchEvent(new CustomEvent('dl-busy-end', {
                     detail: { url: s.url, sukses: true, dibatalkan: false }
                 }));
+                // Tutup modal induk setelah unduhan selesai (sekitar 300ms supaya persen 100% terlihat)
+                setTimeout(function() {
+                    var modalEl = s.button.closest('.modal');
+                    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                        var modal = window.bootstrap.Modal.getInstance(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        } else {
+                            modalEl.classList.remove('show');
+                            modalEl.style.display = 'none';
+                            document.body.classList.remove('modal-open');
+                            var backdrop = document.querySelector('.modal-backdrop');
+                            if (backdrop) backdrop.remove();
+                        }
+                    }
+                }, 300);
                 if (typeof s.selesaikan === 'function') s.selesaikan(true);
             }
             return;

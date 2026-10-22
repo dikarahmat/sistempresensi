@@ -2,7 +2,7 @@
 
 @section('title', __('Presensi Kelas') . ' ' . ($selectedClass->name ?? ''))
 @section('page_title', __('Presensi Kelas') . ' ' . ($selectedClass->name ?? '-'))
-@section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y'))
+@section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y') . (!empty($isHoliday) ? ' · ' . ($holidayDescription ?? __('Hari Libur')) : ''))
 
 @push('styles')
 <style>
@@ -439,6 +439,49 @@
 @section('content')
 <div class="pt-1 space-y-3">
 
+    {{-- NOTIFIKASI: sukses / gagal / error validasi.
+         Formatnya sama dengan halaman lain (Alert Bootstrap + .btn-close),
+         jadi script notifikasi global di layout yang menghapusnya otomatis. --}}
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
+    </div>
+    @endif
+
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-start">
+                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <ul class="mb-0 ps-3">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
+    </div>
+    @endif
+
     <!-- RINGKASAN STATUS -->
     <div class="status-summary-grid mb-3">
         <div class="status-badge-pill shadow-2xs">
@@ -535,7 +578,7 @@
 
                 <!-- Jam Operasional di Bawah Kotak -->
                 <div class="text-secondary" style="font-size: 0.78rem;">
-                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jamMasuk ?? '07:00' }}</span> · {{ __('Jam pulang') }} <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? $jamPulang ?? '14:00' }}</span>
+                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jamMasuk ?? '07:00' }}</span>
                 </div>
 
             </div>
@@ -591,10 +634,18 @@
                                     <form action="{{ panel_route('absensi.override') }}" method="POST" class="d-inline-flex align-items-center justify-content-center gap-1 m-0">
                                         @csrf
                                         <input type="hidden" name="student_id" value="{{ $student->id }}">
+                                        <input type="hidden" name="class_id" value="{{ $selectedClass->id ?? '' }}">
                                         <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
 
-                                        <!-- Dropdown Status Cepat -->
-                                        <select name="status" class="select-quick-status">
+                                        <!-- Dropdown Status Cepat.
+                                             Placeholder "Pilih status" dipilih kalau
+                                             siswa BELUM punya catatan presensi (atau
+                                             statusnya Libur). Siswa ALFA hasil
+                                             hitungan tampil "Alfa" di dropdown, tapi
+                                             belum tersimpan sampai tombol centang
+                                             diklik. -->
+                                        <select name="status" class="select-quick-status" aria-label="{{ __('Pilih status presensi') }} {{ $student->name ?? '' }}">
+                                            <option value="" {{ in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa'], true) ? '' : 'selected' }}>{{ __('Pilih status') }}</option>
                                             <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
                                             <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
                                             <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
@@ -603,7 +654,7 @@
                                         </select>
 
                                         <!-- Tombol Simpan Cepat (Checklist) -->
-                                        <button type="submit" class="btn-save-quick" title="{{ __('Simpan Status') }}">
+                                        <button type="submit" class="btn-save-quick" title="{{ __('Simpan Status') }}" aria-label="{{ __('Simpan status presensi') }} {{ $student->name ?? '' }}">
                                             <i class='bx bx-check' style="font-size: 18px !important; width: 18px !important; height: 18px !important; color: #ffffff !important;"></i>
                                         </button>
                                     </form>
@@ -623,12 +674,14 @@
                                                 <form action="{{ panel_route('absensi.override') }}" method="POST" enctype="multipart/form-data">
                                                     @csrf
                                                     <input type="hidden" name="student_id" value="{{ $student->id }}">
+                                                    <input type="hidden" name="class_id" value="{{ $selectedClass->id ?? '' }}">
                                                     <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
 
                                                     <div class="modal-body p-4 text-start">
                                                         <div class="mb-3">
-                                                            <label class="form-label small fw-semibold text-secondary">{{ __('Status Kehadiran') }} <span class="text-danger">*</span></label>
-                                                            <select name="status" class="form-select rounded-3" required>
+                                                            <label class="form-label small fw-semibold text-secondary" for="overrideStatus{{ $student->id }}">{{ __('Status Kehadiran') }} <span class="text-danger">*</span></label>
+                                                            <select name="status" id="overrideStatus{{ $student->id }}" class="form-select rounded-3" required aria-label="{{ __('Status kehadiran') }} {{ $student->name ?? '' }}">
+                                                                <option value="" {{ in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa'], true) ? '' : 'selected' }}>{{ __('Pilih status') }}</option>
                                                                 <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir (Tepat Waktu)') }}</option>
                                                                 <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Hadir (Terlambat)') }}</option>
                                                                 <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>{{ __('Sakit (S)') }}</option>
@@ -682,9 +735,13 @@
 </div>
 @endsection
 
-<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
-
 @push('scripts')
+{{-- Elemen <audio> beep scanner. Dulu diletakkan DI LUAR section sehingga
+     tercetak SEBELUM <!DOCTYPE html> dari layout - itu membuat browser
+     mengabaikan blok <head> (favicon, title, meta) dan ikon tab jadi globe
+     polos. Sekarang ikut di dalam stack scripts => dokumen tetap dimulai
+     dengan <!DOCTYPE html> dan <head> terbaca normal. --}}
+<audio id="beepSound" src="{{ asset('audio/beep.mp3') }}" preload="auto"></audio>
 <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
 <script src="{{ asset('js/camera-select.js') }}?v={{ file_exists(public_path('js/camera-select.js')) ? filemtime(public_path('js/camera-select.js')) : config('app.version', '1') }}"></script>

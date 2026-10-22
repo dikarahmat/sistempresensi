@@ -74,7 +74,7 @@ class RekapController extends Controller
 
             foreach ($students as $student) {
                 $att = $attendances->get($student->id);
-                $status = 'Belum Hadir';
+                $status = Attendance::STATUS_BELUM;
                 $checkIn = '-';
                 $lateMinutes = 0;
                 $lateText = '-';
@@ -82,11 +82,11 @@ class RekapController extends Controller
                 $proofDoc = null;
 
                 if ($att) {
-                    $status = $att->status;
+                    $status = $att->effective_status;
                     $notes = $att->notes ?? '-';
                     $proofDoc = $att->proof_document;
 
-                    if ($status === 'Hadir') {
+                    if ($att->status === 'Hadir') {
                         $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
                         if ($att->time_remark === 'Terlambat') {
                             // Cara menghitung selisih menit TIDAK diubah.
@@ -111,15 +111,15 @@ class RekapController extends Controller
                         $totalAlfa++;
                     }
                 } else {
-                    if ($isHoliday) {
-                        $status = 'Libur';
-                    } elseif ($date < $now->toDateString()) {
-                        $status = 'Alfa';
-                        $totalAlfa++;
-                    } elseif ($date === $now->toDateString() && $now->format('H:i') > $lateLimitTime) {
-                        $status = 'Alfa';
-                        $totalAlfa++;
-                    }
+                    /*
+                     * Tanpa catatan presensi:
+                     * - tanggal lampau (bukan hari libur/akhir pekan) -> ALFA
+                     *   (hitungan tampilan, tidak ditulis ke database);
+                     * - hari ini / masa depan -> BELUM;
+                     * - hari libur / akhir pekan -> LIBUR.
+                     * Sama dengan halaman Presensi (Attendance::statusOf).
+                     */
+                    $status = Attendance::statusOf(null, $date, $isHoliday);
                 }
 
                 $dataRows[] = [
@@ -176,31 +176,35 @@ class RekapController extends Controller
                 $code = '-';
 
                 if ($att) {
-                    if ($att->status === 'Hadir') {
-                        if ($att->time_remark === 'Terlambat') {
-                            $code = 'T';
-                            $t++;
-                            $h++;
-                        } else {
-                            $code = 'H';
-                            $h++;
-                        }
-                    } elseif ($att->status === 'Sakit') {
+                    $status = $att->effective_status;
+                    if ($status === 'Hadir') {
+                        $code = 'H';
+                        $h++;
+                    } elseif ($status === 'Terlambat') {
+                        $code = 'T';
+                        $t++;
+                        $h++;
+                    } elseif ($status === 'Sakit') {
                         $code = 'S';
                         $s++;
-                    } elseif ($att->status === 'Izin') {
+                    } elseif ($status === 'Izin') {
                         $code = 'I';
                         $i++;
-                    } elseif ($att->status === 'Alfa') {
+                    } elseif ($status === 'Alfa') {
                         $code = 'A';
                         $a++;
                     }
                 } else {
                     if ($col['is_holiday']) {
                         $code = 'L';
-                    } elseif ($dStr <= $now->toDateString()) {
+                    } elseif ($dStr < $now->toDateString()) {
+                        // Hari yang sudah lewat tanpa catatan -> ALFA
+                        // (hitungan tampilan, tidak ditulis ke database).
                         $code = 'A';
                         $a++;
+                    } else {
+                        // Hari ini / masa depan -> belum presensi.
+                        $code = '-';
                     }
                 }
 
@@ -780,8 +784,12 @@ class RekapController extends Controller
                         } else {
                             if ($col['is_holiday']) {
                                 $status = 'Libur';
-                            } elseif ($dStr <= $now->toDateString()) {
-                                $status = 'Alfa';
+                            } elseif ($dStr < $now->toDateString()) {
+                                // Hari yang sudah lewat tanpa catatan -> ALFA.
+                                $status = Attendance::STATUS_ALFA;
+                            } else {
+                                // Hari ini / masa depan -> belum presensi.
+                                $status = Attendance::STATUS_BELUM;
                             }
                         }
 
@@ -901,8 +909,12 @@ class RekapController extends Controller
                 } else {
                     if ($col['is_holiday']) {
                         $status = 'Libur';
-                    } elseif ($dStr <= $now->toDateString()) {
-                        $status = 'Alfa';
+                    } elseif ($dStr < $now->toDateString()) {
+                        // Hari yang sudah lewat tanpa catatan -> ALFA.
+                        $status = Attendance::STATUS_ALFA;
+                    } else {
+                        // Hari ini / masa depan -> belum presensi.
+                        $status = Attendance::STATUS_BELUM;
                     }
                 }
 

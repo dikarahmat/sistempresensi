@@ -197,15 +197,15 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 3%;">{{ __('No') }}</th>
+                <th style="width: 4%;">{{ __('No') }}</th>
                 <th style="width: 9%;">{{ __('NISN') }}</th>
-                <th style="text-align: left; width: 21%;">{{ __('Nama Siswa') }}</th>
-                <th style="width: 6%;">{{ __('Kelas') }}</th>
-                <th style="width: 2.5%;">{{ __('JK') }}</th>
-                <th style="width: 9.5%;">{{ __('Jam Masuk') }}</th>
+                <th style="text-align: left; width: 20%;">{{ __('Nama Siswa') }}</th>
+                <th style="width: 8%;">{{ __('Kelas') }}</th>
+                <th style="width: 3%;">{{ __('JK') }}</th>
+                <th style="width: 10%;">{{ __('Jam Masuk') }}</th>
                 <th style="width: 12%;">{{ __('Keterlambatan') }}</th>
                 <th style="width: 8%;">{{ __('Status') }}</th>
-                <th style="text-align: left; width: 29%;">{{ __('Catatan') }}</th>
+                <th style="text-align: left; width: 26%;">{{ __('Catatan') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -229,6 +229,8 @@
                         <span class="badge-i">{{ __('Izin') }}</span>
                     @elseif($row['status'] === 'Alfa')
                         <span class="badge-a">{{ __('Alfa') }}</span>
+                    @elseif(str_contains($row['status'], 'Belum'))
+                        <span class="badge-l">-</span>
                     @else
                         <span class="badge-l">{{ $row['status'] }}</span>
                     @endif
@@ -247,18 +249,19 @@
     {{-- Lebar kolom tanggal dihitung dari sisa lebar agar total tabel = 100%
          (sama persis dengan garis bawah kop surat) pada berapa pun jumlah kolom. --}}
     @php
-        $wMingguanTetap = 3 + 9 + 21 + 6 + 2.5;   // No, NISN, Nama, Kelas, JK
+        $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
+        $wMingguanTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
         $wRingkasan = (2.6 * 5) + 4;             // H, T, S, I, A + %
         $wKolomTanggalMingguan = (100 - $wMingguanTetap - $wRingkasan) / max(1, count($dateColumns));
     @endphp
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 3%;">{{ __('No') }}</th>
-                <th style="width: 9%;">{{ __('NISN') }}</th>
-                <th style="text-align: left; width: 21%;">{{ __('Nama Siswa') }}</th>
-                <th style="width: 6%;">{{ __('Kelas') }}</th>
-                <th style="width: 2.5%;">{{ __('JK') }}</th>
+                <th style="width: {{ $wNo }}%;">{{ __('No') }}</th>
+                <th style="width: {{ $wNisn }}%;">{{ __('NISN') }}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{{ __('Nama Siswa') }}</th>
+                <th style="width: {{ $wKelas }}%;">{{ __('Kelas') }}</th>
+                <th style="width: {{ $wJk }}%;">{{ __('JK') }}</th>
                 @foreach($dateColumns as $d)
                     <th style="width: {{ $wKolomTanggalMingguan }}%;">{{ $d['label'] }}</th>
                 @endforeach
@@ -313,18 +316,19 @@
          total tabel = 100% (sama persis dengan garis bawah kop surat) dan
          TIDAK melar keluar kertas pada bulan 31 hari. --}}
     @php
-        $wBulananTetap = 2.6 + 8 + 19 + 5 + 2.4; // No, NISN, Nama, Kelas, JK
+        $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
+        $wBulananTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
         $wRingkasanBulanan = (2.6 * 5) + 4.4;    // H, T, S, I, A + %
         $wKolomTanggalBulanan = (100 - $wBulananTetap - $wRingkasanBulanan) / max(1, (int) $daysInMonth);
     @endphp
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 2.6%;">{{ __('No') }}</th>
-                <th style="width: 8%;">{{ __('NISN') }}</th>
-                <th style="text-align: left; width: 19%;">{{ __('Nama Siswa') }}</th>
-                <th style="width: 5%;">{{ __('Kelas') }}</th>
-                <th style="width: 2.4%;">{{ __('JK') }}</th>
+                <th style="width: {{ $wNo }}%;">{{ __('No') }}</th>
+                <th style="width: {{ $wNisn }}%;">{{ __('NISN') }}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{{ __('Nama Siswa') }}</th>
+                <th style="width: {{ $wKelas }}%;">{{ __('Kelas') }}</th>
+                <th style="width: {{ $wJk }}%;">{{ __('JK') }}</th>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     <th style="padding: 2px 1px; width: {{ $wKolomTanggalBulanan }}%;">{{ $d }}</th>
                 @endfor

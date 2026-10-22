@@ -14,31 +14,27 @@ class SettingController extends Controller
 {
     public function index(): View
     {
+        $rawPhone = Setting::get('school_phone', '');
+        $rawNip = Setting::get('headmaster_nip', '');
+
+        // Normalisasi: simpan hanya digit untuk validasi & penyimpanan.
+        // Tampilkan nilai normalisasi supaya user bisa mengoreksi format lama.
+        $normalizedPhone = preg_replace('/[^0-9]/', '', (string) $rawPhone);
+        $normalizedNip = preg_replace('/[^0-9]/', '', (string) $rawNip);
+
         $settings = [
             'school_name' => Setting::get('school_name', 'SMP Presensi PGRI'),
             'app_title' => Setting::get('app_title', 'Sistem Presensi Sekolah'),
             'school_logo' => Setting::get('school_logo'),
             'school_address' => Setting::get('school_address', 'Jl. Pendidikan No. 45, Kota Pelajar'),
-            // Default string kosong (bukan contoh berisi simbol): nilai contoh
-            // lama '(021) 555-1234' / '-' justru GAGAL pada regex wajib
-            // (10-15 digit / 18 digit) sehingga penyimpanan pertama mustahil.
-            'school_phone' => Setting::get('school_phone', ''),
+            // Tampilkan versi bersih (hanya digit) supaya nilai lama seperti
+            // '(021) 555-1234' jadi '0215551234' dan bisa diedit/disimpan.
+            'school_phone' => $normalizedPhone,
             'headmaster_name' => Setting::get('headmaster_name', 'Drs. H. Ahmad Sudrajat, M.Pd'),
-            'headmaster_nip' => Setting::get('headmaster_nip', ''),
+            'headmaster_nip' => $normalizedNip,
             'check_in_time' => Setting::get('check_in_time', '06:45'),
             'late_limit_time' => Setting::get('late_limit_time', '07:15'),
-            'check_out_time' => Setting::get('check_out_time', '14:30'),
         ];
-
-        // Data lama yang tersimpan sebelum regex (mis. '(021) 555-1234' / '-')
-        // ditampilkan sebagai kosong supaya tidak memblokir penyimpanan;
-        // database TIDAK diubah di sini.
-        if (!preg_match('/^[0-9]{10,15}$/', (string) $settings['school_phone'])) {
-            $settings['school_phone'] = '';
-        }
-        if (!preg_match('/^[0-9]{18}$/', (string) $settings['headmaster_nip'])) {
-            $settings['headmaster_nip'] = '';
-        }
 
         return view('admin.settings.index', compact('settings'));
     }
@@ -63,9 +59,8 @@ class SettingController extends Controller
             'headmaster_name' => ['nullable', 'string', 'max:100'],
             // NIP: hanya angka, tepat 18 digit.
             'headmaster_nip' => ['nullable', 'string', 'regex:/^[0-9]{18}$/'],
-            'check_in_time' => ['required', 'string'],
-            'late_limit_time' => ['required', 'string'],
-            'check_out_time' => ['nullable', 'string'],
+            'check_in_time' => ['required', 'string', 'date_format:H:i'],
+            'late_limit_time' => ['required', 'string', 'date_format:H:i', 'after:check_in_time'],
         ], [
             'school_name.required' => 'Nama sekolah wajib diisi.',
             'school_name.max' => 'Nama sekolah maksimal 255 karakter.',
@@ -78,23 +73,23 @@ class SettingController extends Controller
             'headmaster_name.max' => 'Nama kepala sekolah maksimal 100 karakter.',
             'headmaster_nip.regex' => 'NIP harus 18 digit angka.',
             'check_in_time.required' => 'Jam buka masuk wajib diisi.',
+            'check_in_time.date_format' => 'Format jam buka masuk tidak valid.',
             'late_limit_time.required' => 'Batas toleransi keterlambatan wajib diisi.',
+            'late_limit_time.date_format' => 'Format batas toleransi tidak valid.',
+            'late_limit_time.after' => 'Batas toleransi harus lebih besar dari jam buka masuk.',
         ]);
 
         // Simpan di dalam try/catch: bila ada kegagalan sistem (mis. storage
         // tidak writable), isian user TIDAK hilang dan pesannya jelas.
         try {
-            Setting::set('school_name', trim($request->school_name));
-            Setting::set('app_title', trim($request->app_title ?? ''));
-            Setting::set('school_address', trim($request->school_address ?? ''));
+            Setting::set('school_name', strip_tags(trim($request->school_name)));
+            Setting::set('app_title', strip_tags(trim($request->app_title ?? '')));
+            Setting::set('school_address', strip_tags(trim($request->school_address ?? '')));
             Setting::set('school_phone', trim($request->school_phone ?? ''));
-            Setting::set('headmaster_name', trim($request->headmaster_name ?? ''));
+            Setting::set('headmaster_name', strip_tags(trim($request->headmaster_name ?? '')));
             Setting::set('headmaster_nip', trim($request->headmaster_nip ?? ''));
             Setting::set('check_in_time', $request->check_in_time);
             Setting::set('late_limit_time', $request->late_limit_time);
-            if ($request->filled('check_out_time')) {
-                Setting::set('check_out_time', $request->check_out_time);
-            }
 
             if ($request->hasFile('school_logo')) {
                 $oldLogo = Setting::get('school_logo');

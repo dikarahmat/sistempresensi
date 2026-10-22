@@ -128,7 +128,18 @@ class Setting extends Model
 
     public static function getSchoolPhone(): string
     {
-        return (string) self::get('school_phone', '(021) 555-1234');
+        $raw = self::get('school_phone');
+        if ($raw) {
+            // Return as stored (digits only after normalization)
+            return (string) $raw;
+        }
+        return '(021) 555-1234';
+    }
+
+    public static function getSchoolPhoneNormalized(): string
+    {
+        $raw = self::get('school_phone', '');
+        return preg_replace('/[^0-9]/', '', (string) $raw);
     }
 
     public static function getHeadmasterName(): string
@@ -151,9 +162,14 @@ class Setting extends Model
         return (string) self::get('late_limit_time', '07:15');
     }
 
+    /**
+     * Jam pulang (Check-Out) - HANYA untuk logika Scanner/Gerbang.
+     * TIDAK ditampilkan di form pengaturan, TIDAK disimpan via form.
+     * Dipakai oleh ScannerController::processScan() untuk logika check-out.
+     */
     public static function getCheckOutTime(): string
     {
-        return (string) self::get('check_out_time', '14:30');
+        return (string) self::get('check_out_time', '14:00');
     }
 
     public static function getLogo(): string

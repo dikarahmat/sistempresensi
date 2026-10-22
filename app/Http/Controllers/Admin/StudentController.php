@@ -110,16 +110,32 @@ class StudentController extends Controller
      * - NISN : wajib, tepat 10 digit angka, unik (identitas tunggal siswa).
      * - Nama Lengkap, Kelas, Jenis Kelamin: wajib.
      *
+     * Catatan: validasi unik NISN memeriksa SEMUA record (termasuk yang di
+     * Tempat Sampah / soft delete) agar tidak bisa membuat siswa baru dengan
+     * NISN yang sudah pernah terdaftar (meski sudah dihapus). Saat Edit,
+     * abaikan id siswa yang sedang diedit.
+     *
      * @param  Student|null  $student  Diisi saat proses Edit (unique mengabaikan id sendiri).
      */
     private function studentRules(?Student $student = null): array
     {
-        $nisnUnique = 'unique:students,nisn' . ($student ? ',' . $student->id : '');
+        // Cek unik NISN terhadap SEMUA record (termasuk soft deleted)
+        // Menggunakan closure untuk query manual karena unique rule default
+        // hanya cek deleted_at IS NULL.
+        $nisnUnique = function ($attribute, $value, $fail) use ($student) {
+            $query = Student::withTrashed()->where('nisn', $value);
+            if ($student) {
+                $query->where('id', '!=', $student->id);
+            }
+            if ($query->exists()) {
+                $fail('NISN sudah terdaftar.');
+            }
+        };
 
         return [
             'school_class_id' => 'required|exists:school_classes,id',
             'name' => 'required|string|max:255',
-            'nisn' => 'required|digits:10|' . $nisnUnique,
+            'nisn' => ['required', 'digits:10', $nisnUnique],
             'gender' => 'required|in:Laki-laki,Perempuan',
         ];
     }

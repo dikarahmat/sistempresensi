@@ -60,15 +60,38 @@
         text-decoration: none;
         border-radius: 6px;
         background-color: transparent;
-        transition: all 0.15s ease;
+        transition: background-color 0.15s ease, color 0.15s ease;
         text-transform: uppercase;
+        -webkit-tap-highlight-color: transparent;
     }
-    .period-link:hover { color: #1e293b; background-color: #e2e8f0; }
-    .period-link.active {
-        background-color: #2563eb;
-        color: #ffffff;
+    @media (hover: hover) {
+        .period-link:hover { color: #1e293b; background-color: #e2e8f0; }
+    }
+    .period-link:active { background-color: #cbd5e1; }
+    .period-link.active,
+    .period-link.active:hover,
+    .period-link.active:active,
+    .period-link.active:focus,
+    .period-link.active:focus-visible {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
         font-weight: 400;
         box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Fokus keyboard: outline tipis biru, tidak mengubah warna latar. */
+    .period-link:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+    }
+
+    /* Layar kecil: tombol tetap menyatu dan di tengah, tidak overflow. */
+    @media (max-width: 575.98px) {
+        .period-link {
+            flex: 0 1 auto;
+            padding: 0.4rem 0.65rem;
+            font-size: 0.78rem;
+        }
     }
 
     /* Date Filter - full width bagi 3
@@ -202,7 +225,10 @@
                 </div>
             </div>
 
-            <!-- Period Nav -->
+            <!-- Period Nav.
+                 Mode "Semua" memakai periode yang sama dengan daftar Catatan
+                 Kehadiran (tahun ajaran aktif), jadi angkanya bisa langsung
+                 dibandingkan dengan tabel daftar. -->
             <div class="period-nav mb-2">
                 <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'harian', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'harian' ? 'active' : '' }}">
                     {{ __('Harian') }}
@@ -212,6 +238,9 @@
                 </a>
                 <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'bulanan', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'bulanan' ? 'active' : '' }}">
                     {{ __('Bulanan') }}
+                </a>
+                <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'semua' ? 'active' : '' }}">
+                    {{ __('Semua') }}
                 </a>
             </div>
 
@@ -245,38 +274,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($attendances as $attendance)
+                    @forelse($rows ?? [] as $row)
                     @php
-                        // Status TAMPILAN memakai effective_status: di database
-                        // "Terlambat" tersimpan sebagai status 'Hadir' +
-                        // time_remark, jadi status mentah akan selalu "Hadir".
-                        $statusTampil = strtolower($attendance->effective_status);
-                        // Hitung durasi keterlambatan dari check_in dan schedule
-                        $lateDuration = '-';
-                        if ($attendance->check_in && $attendance->check_in !== '00:00:00') {
-                            $checkIn = \Carbon\Carbon::parse($attendance->check_in);
-                            $diff = $checkIn->diffInMinutes(\Carbon\Carbon::parse('08:00:00'));
-                            if ($diff > 0) {
-                                if ($diff < 60) {
-                                    $lateDuration = $diff . ' ' . __('MNT');
-                                } else {
-                                    $hours = floor($diff / 60);
-                                    $minutes = $diff % 60;
-                                    $lateDuration = $hours . ' ' . __('JAM') . ' ' . $minutes . ' ' . __('MNT');
-                                }
-                            }
-                        }
+                        // Status TAMPILAN memakai Attendance::statusOf (satu
+                        // sumber): "Terlambat" tersimpan di database sebagai
+                        // status 'Hadir' + time_remark.
+                        $statusTampil = strtolower($row['status']);
+                        $att = $row['attendance'] ?? null;
                     @endphp
                     <tr>
                         <td data-label="{{ __('No') }}" class="text-secondary">{{ $loop->iteration }}</td>
-                        <td data-label="{{ __('Hari') }}" class="col-hari">{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('l') }}</td>
-                        <td data-label="{{ __('Tanggal') }}" class="col-tanggal">{{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}</td>
-                        <td data-label="{{ __('Jam Masuk') }}" class="col-jam">{{ $attendance->check_in ? substr($attendance->check_in, 0, 5) : '-' }}</td>
+                        <td data-label="{{ __('Hari') }}" class="col-hari">{{ \Carbon\Carbon::parse($row['date'])->translatedFormat('l') }}</td>
+                        <td data-label="{{ __('Tanggal') }}" class="col-tanggal">{{ \Carbon\Carbon::parse($row['date'])->format('d M Y') }}</td>
+                        <td data-label="{{ __('Jam Masuk') }}" class="col-jam">{{ ($att && $att->check_in) ? substr($att->check_in, 0, 5) : '-' }}</td>
                         <td data-label="{{ __('Status') }}">
                             <span class="status-{{ $statusTampil }}">{{ __(ucfirst($statusTampil)) }}</span>
                         </td>
-                        <td data-label="{{ __('Keterlambatan') }}" class="text-center">{{ $lateDuration }}</td>
-                        <td data-label="{{ __('Catatan') }}" class="text-start">{{ $attendance->notes && $attendance->notes !== '-' ? $attendance->notes : '-' }}</td>
+                        <td data-label="{{ __('Keterlambatan') }}" class="text-center">{{ $row['late_text'] ?? '-' }}</td>
+                        <td data-label="{{ __('Catatan') }}" class="text-start">{{ $row['notes'] ?? '-' }}</td>
                     </tr>
                     @empty
                     <tr>
