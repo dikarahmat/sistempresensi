@@ -704,6 +704,7 @@
                 height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
                 max-height: calc(100vh - env(safe-area-inset-top, 0px)) !important;
                 max-height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
                 overflow: hidden !important;
                 width: var(--sidebar-width) !important;
                 min-width: 0 !important;

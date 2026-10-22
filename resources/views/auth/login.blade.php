@@ -31,15 +31,13 @@
 
     <style>
         :root {
-            --blue: #3b62f6;
-            --blue-hover: #254fd9;
-            --blue-dark: #1d3fd0;
-            --green: #16a34a;
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --navy: #1e3a8a;
+            --sky: #dbeafe;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --split: 50%;      /* batas kiri/kanan: garis lurus tepat di tengah */
-            --bar: 6px;        /* tebal garis hijau pemisah */
-            --fade: 56px;      /* lebar gradasi hijau memudar ke arah kanan */
+            --page-bg: #faf8ff;
         }
 
         * { box-sizing: border-box; }
@@ -47,259 +45,236 @@
 
         body {
             margin: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
             color: var(--text-main);
             background: #fff;
+            -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
         }
 
-        /* ===================== FULL SCREEN ===================== */
+        /* ===================== LAYOUT ===================== */
         .login-screen {
-            position: relative;
             display: flex;
             width: 100%;
             min-height: 100vh;
-            min-height: 100svh;
-            overflow: hidden;
-            background: #fff;
+            min-height: 100dvh;
         }
 
-        /* ===================== PANEL KIRI ===================== */
+        /* ===================== PANEL KIRI (BRAND) ===================== */
         .brand-panel {
             position: relative;
-            z-index: 1;
-            flex: 0 0 var(--split);
-            width: var(--split);
+            flex: 0 0 50%;
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            overflow: hidden;
+            color: #fff;
+            text-align: center;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e3a8a 30%, #2563eb 100%);
+            user-select: none;
+        }
+
+        /* grafis tipis: titik halus memudar ke tengah + cahaya lembut */
+        .brand-panel::before,
+        .brand-panel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .brand-panel::before {
+            background-image: radial-gradient(rgba(255, 255, 255, .5) 1px, transparent 1.4px);
+            background-size: 26px 26px;
+            opacity: .22;
+            -webkit-mask-image: radial-gradient(ellipse 62% 55% at 50% 50%, transparent 35%, #000 100%);
+            mask-image: radial-gradient(ellipse 62% 55% at 50% 50%, transparent 35%, #000 100%);
+        }
+        .brand-panel::after {
+            background:
+                radial-gradient(ellipse 60% 45% at 100% 0%, rgba(147, 197, 253, .20) 0, transparent 70%),
+                radial-gradient(ellipse 55% 40% at 0% 100%, rgba(255, 255, 255, .07) 0, transparent 70%);
+        }
+
+        .brand-inner {
+            position: relative;
+            z-index: 2;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            text-align: center;
-            color: #fff;
-            padding: clamp(1.5rem, 5vh, 3.5rem) 2rem clamp(1.25rem, 4vh, 2.5rem) 2rem;
-            overflow: hidden;
-            background:
-                radial-gradient(circle at 18% 12%, rgba(130, 160, 255, .65) 0, transparent 42%),
-                radial-gradient(circle at 70% 95%, rgba(20, 50, 200, .6) 0, transparent 50%),
-                linear-gradient(160deg, #4f74ff 0%, #3b62f6 48%, #1f44db 100%);
+            width: 100%;
+            max-width: 600px;
         }
 
-        /* ---------- Lapisan dekorasi desktop (di belakang konten) ---------- */
-        .deco {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        .deco-grid {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
-            background-size: 52px 52px;
-            -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 58%, #000 25%, transparent 75%);
-            mask-image: radial-gradient(ellipse 70% 60% at 50% 58%, #000 25%, transparent 75%);
-        }
-        .deco-orb {
-            position: absolute;
-            border-radius: 50%;
-        }
-        .deco-orb.o1 {
-            top: -14%; right: -16%;
-            width: 52%; aspect-ratio: 1;
-            background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, .22), rgba(255, 255, 255, .02) 65%, transparent 70%);
-        }
-        .deco-orb.o2 {
-            bottom: -16%; right: -12%;
-            width: 46%; aspect-ratio: 1;
-            background: radial-gradient(circle at 40% 40%, rgba(10, 30, 140, .38), transparent 68%);
-        }
-
-        .dots {
-            position: absolute;
-            top: 0; left: 0;
-            width: clamp(120px, 14vw, 230px);
-            aspect-ratio: 1;
-            background-image: radial-gradient(rgba(255, 255, 255, .45) 1.5px, transparent 1.8px);
-            background-size: 10px 10px;
-            -webkit-mask-image: radial-gradient(circle at 0 0, #000 30%, transparent 72%);
-            mask-image: radial-gradient(circle at 0 0, #000 30%, transparent 72%);
-        }
-
-        .swoosh { position: absolute; pointer-events: none; z-index: 1; }
-        .swoosh svg { width: 100%; height: 100%; overflow: visible; }
-        .swoosh path { fill: none; stroke: url(#gLine); stroke-width: 3; stroke-linecap: round; }
-        .swoosh-tl { top: -10px; left: -10px; width: clamp(150px, 16vw, 260px); aspect-ratio: 170 / 220; }
-        .dots-r, .swoosh-tr, .swoosh-br { display: none; }
-        .swoosh-bl { bottom: -10px; left: -10px; width: clamp(130px, 14vw, 230px); aspect-ratio: 150 / 170; }
-
-        .brand-top, .brand-mid, .brand-bottom { position: relative; z-index: 2; width: 100%; }
-
+        /* Logo: murni, tanpa kontainer */
         .brand-logo {
-            width: clamp(52px, 8.5vh, 84px);
-            height: clamp(52px, 8.5vh, 84px);
+            display: block;
+            width: 92px;
+            height: 92px;
+            margin-bottom: 1.5rem;
             object-fit: contain;
-            filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .3));
         }
+
+        /* Teks header (DESKTOP & MOBILE satu gaya): semua uppercase, putih,
+           semi-bold, satu baris, rata tengah. Urutan: judul aplikasi dulu,
+           lalu nama sekolah (sedikit lebih besar), lalu ikon fitur.
+           Keterangan "Presensi digital ..." disembunyikan di semua layar.
+           Mobile hanya menyesuaikan ukuran mengikuti lebar layar (lihat
+           media query di bawah). */
         .brand-title {
-            margin: clamp(.6rem, 2vh, 1.3rem) 0 .1rem;
-            font-size: clamp(1.15rem, 1.9vw, 1.9rem);
-            line-height: 1.15;
-            font-weight: 800;
-            letter-spacing: -.01em;
+            order: 1;
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+            line-height: 1.3;
+            letter-spacing: .06em;
+            padding-left: .06em; /* kompensasi letter-spacing agar tetap center */
             text-transform: uppercase;
-            color: #ffffff;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, .25);
+            white-space: nowrap;
+            color: #fff;
         }
         .brand-school {
-            display: inline-block;
-            margin-top: 0;
-            font-size: clamp(1rem, 1.4vw, 1.4rem);
-            line-height: 1.2;
-            font-weight: 800;
-            letter-spacing: .02em;
-            text-transform: uppercase;
-            color: #ffffff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, .22);
-            position: relative;
-        }
-
-        .brand-mid {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            min-height: 0;
-            margin-bottom: -8px;
-        }
-        .illus {
-            display: block;
-            width: min(100%, 36vw, 66vh);
-            height: auto;
-            max-width: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 18px 28px rgba(10, 30, 120, .3));
-            transform: translateY(-25px);
-        }
-
-        .brand-bottom {
-            margin-top: auto;
-            padding-bottom: clamp(1rem, 2vh, 1.5rem);
-        }
-        .brand-icons {
-            display: flex;
-            justify-content: center;
-            gap: clamp(1.1rem, 2vw, 1.8rem);
-            margin-bottom: clamp(.75rem, 1.5vh, 1.25rem);
-        }
-        .feat-icon {
-            display: flex; align-items: center; justify-content: center;
-            font-size: clamp(1.3rem, 2.8vh, 1.8rem);
-            line-height: 1;
-            color: #fff;
-            filter: drop-shadow(0 3px 6px rgba(10, 30, 120, .3));
-        }
-        .brand-foot {
-            font-size: clamp(.7rem, .95vw, .95rem);
+            order: 2;
+            margin: .65rem 0 0;
+            font-size: 30px;
             font-weight: 600;
-            letter-spacing: .05em;
+            line-height: 1.3;
+            letter-spacing: .06em;
+            padding-left: .06em;
             text-transform: uppercase;
+            white-space: nowrap;
+            color: #fff;
         }
-
-        /* ===================== PEMISAH LURUS HIJAU (DESKTOP) ===================== */
-        .wave-divider {
-            position: absolute;
-            top: 0; bottom: 0;
-            left: var(--split);
-            width: var(--bar);
-            z-index: 5;
-            pointer-events: none;
-            background: #4ade80;
+        .brand-subtitle {
+            display: none;
+            margin: .9rem 0 0;
+            font-size: 15px;
+            font-weight: 400;
+            line-height: 1.6;
+            letter-spacing: .01em;
+            color: rgba(219, 234, 254, .85);
         }
-        .wave-divider::before { display: none; }
-        .wave-mobile { display: none; }
+        .brand-chips {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 1.25rem 2.5rem;
+            width: 100%;
+            order: 4;
+            margin-top: 2.25rem;
+        }
+        .chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .45rem;
+            min-width: 56px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: .02em;
+            color: rgba(255, 255, 255, .92);
+        }
+        .chip i { font-size: 28px; color: #bfdbfe; }
 
-        /* ===================== PANEL KANAN ===================== */
+        /* ===================== PANEL KANAN (FORM) ===================== */
         .form-panel {
             position: relative;
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2.5rem 3rem 2.5rem calc(3rem + var(--bar));
+            padding: 3rem;
+            overflow: hidden;
             background:
-                radial-gradient(circle at 100% 100%, rgba(59, 98, 246, .08) 0, transparent 45%),
-                radial-gradient(circle at 30% 100%, rgba(139, 224, 42, .09) 0, transparent 40%),
+                radial-gradient(circle at 100% 0%, rgba(165, 180, 252, .22) 0, transparent 42%),
+                radial-gradient(circle at 0% 100%, rgba(219, 234, 254, .55) 0, transparent 40%),
                 #fff;
         }
-        .form-wrap { position: relative; z-index: 10; width: 100%; max-width: 460px; }
+        .form-wrap {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 440px;
+        }
 
-        /* Blok khusus mobile: disembunyikan di desktop */
-        .card-brand { display: none; }
+        .form-card {
+            position: relative;
+            background: #fff;
+            border-radius: 24px;
+            padding: 2.25rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 25px 50px -12px rgba(30, 58, 138, .16);
+        }
 
         .form-heading {
-            font-size: clamp(1.9rem, 2.6vw, 2.7rem);
-            font-weight: 800;
-            letter-spacing: -.03em;
-            margin-bottom: .4rem;
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            line-height: 1.2;
+            color: var(--text-main);
         }
         .form-subtext {
-            font-size: clamp(.85rem, 1vw, 1rem);
+            margin: .5rem 0 1.75rem;
+            font-size: 14px;
+            line-height: 1.6;
             color: var(--text-muted);
-            font-weight: 500;
-            margin-bottom: 2rem;
         }
 
-        .form-group-item { margin-bottom: 1.3rem; }
+        .form-group-item { margin-bottom: 1.5rem; }
         .input-label-custom {
-            display: block;
-            font-size: .88rem;
-            font-weight: 700;
-            color: #334155;
-            margin-bottom: .45rem;
+            position: absolute;
+            top: -8px;
+            left: 12px;
+            z-index: 1;
+            margin: 0;
+            padding: 0 6px;
+            background: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+            letter-spacing: .01em;
+            color: var(--text-muted);
+            transition: color .2s;
         }
         .input-box-wrapper {
+            position: relative;
             display: flex;
             align-items: center;
-            background: #f8fafc;
+            gap: .5rem;
+            height: 52px;
+            padding: 0 1rem;
+            background: #fff;
             border: 1.5px solid #e2e8f0;
             border-radius: 14px;
-            padding: .2rem .6rem;
-            overflow: hidden;
+            transition: border-color .2s, box-shadow .2s;
         }
         .input-box-wrapper:focus-within {
             border-color: var(--blue);
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(59, 98, 246, .14);
+            box-shadow: none;
         }
-        .input-box-wrapper.is-invalid-field { border-color: #ef4444; background: #fffafb; }
-
-        .input-icon-box {
-            padding: .55rem .6rem;
-            color: #94a3b8;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .input-box-wrapper:focus-within .input-icon-box { color: var(--blue); }
-        .input-box-wrapper.is-invalid-field .input-icon-box { color: #ef4444; }
+        .input-box-wrapper:focus-within .input-label-custom { color: var(--blue); }
+        .input-box-wrapper.is-invalid-field { border-color: #ef4444; }
+        .input-box-wrapper.is-invalid-field .input-label-custom { color: #ef4444; }
 
         .form-input-field {
-            border: none !important;
-            background: transparent !important;
+            flex: 1;
             width: 100%;
             min-width: 0;
-            padding: .7rem .4rem;
-            font-size: .95rem;
-            font-weight: 600;
-            color: #0f172a !important;
-            -webkit-text-fill-color: #0f172a;
-            caret-color: #0f172a;
+            height: 100%;
+            padding: 0;
+            border: none !important;
             outline: none !important;
             box-shadow: none !important;
+            background: transparent !important;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main) !important;
+            -webkit-text-fill-color: var(--text-main);
+            caret-color: var(--text-main);
         }
         .form-input-field::placeholder {
             color: #94a3b8 !important;
@@ -310,90 +285,80 @@
         .form-input-field:-webkit-autofill,
         .form-input-field:-webkit-autofill:hover,
         .form-input-field:-webkit-autofill:focus {
-            -webkit-text-fill-color: #0f172a !important;
-            -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
-            box-shadow: 0 0 0 1000px #f8fafc inset !important;
-            transition: background-color 9999s ease-out 0s;
-        }
-        .input-box-wrapper:focus-within .form-input-field:-webkit-autofill {
+            -webkit-text-fill-color: var(--text-main) !important;
             -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
             box-shadow: 0 0 0 1000px #fff inset !important;
+            transition: background-color 9999s ease-out 0s;
         }
 
         .btn-toggle-eye {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            padding: .5rem .6rem;
-            cursor: pointer;
             display: flex;
             align-items: center;
-            font-size: 1.3rem;
             flex-shrink: 0;
+            padding: .25rem;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color .2s;
         }
-        .btn-toggle-eye:hover { color: var(--text-main); }
+        .btn-toggle-eye:hover { color: var(--blue); }
 
         .field-error-feedback {
-            color: #dc2626;
-            font-size: .8rem;
-            font-weight: 600;
-            margin-top: .4rem;
             display: flex;
             align-items: center;
             gap: .3rem;
+            margin-top: .4rem;
+            font-size: .8rem;
+            font-weight: 600;
+            color: #dc2626;
         }
 
-        .row-extra {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .75rem;
-            margin-bottom: 1.6rem;
-        }
-        .remember-container { display: flex; align-items: center; gap: .55rem; }
+        .row-extra { margin: .25rem 0 1.5rem; }
+        .remember-container { display: flex; align-items: center; gap: .5rem; }
         .remember-checkbox {
-            width: 1.1rem; height: 1.1rem;
+            width: 16px;
+            height: 16px;
             margin: 0;
             border-radius: 4px;
             cursor: pointer;
-            accent-color: var(--green);
+            accent-color: var(--blue);
         }
         .remember-label {
-            font-size: .88rem;
-            font-weight: 600;
+            margin: 0;
+            font-size: 14px;
             color: var(--text-muted);
             cursor: pointer;
             user-select: none;
-            margin: 0;
         }
-        .forgot-link {
-            font-size: .88rem;
-            font-weight: 700;
-            color: var(--blue-dark);
-            text-decoration: none;
-        }
-        .forgot-link:hover { text-decoration: underline; }
 
         .btn-submit-action {
-            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: .5rem;
+            width: 100%;
+            height: 52px;
             border: none;
             border-radius: 14px;
-            padding: .95rem 1.25rem;
-            font-size: 1rem;
-            font-weight: 700;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: .02em;
             color: #fff;
             cursor: pointer;
-            background-color: var(--blue);
-            box-shadow: 0 8px 20px rgba(59, 98, 246, .38);
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            box-shadow: 0 10px 22px rgba(37, 99, 235, .28);
+            transition: box-shadow .2s, transform .15s, background .15s;
         }
-        .btn-submit-action:hover { background-color: var(--blue-hover); }
+        .btn-submit-action:hover {
+            background: linear-gradient(90deg, #1d4ed8, #1e40af);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, .4);
+        }
+        .btn-submit-action:active { transform: scale(.99); }
         .btn-submit-action:disabled { opacity: .85; cursor: not-allowed; }
 
-        /* loader tombol */
         .app-loader {
             display: inline-block;
             width: 22px;
@@ -410,211 +375,155 @@
         }
         @keyframes spin { to { transform: rotate(1turn); } }
 
-        .alert-login { border-radius: 12px; font-size: .85rem; font-weight: 600; padding: .65rem .9rem; margin-bottom: 1rem; }
+        .alert-login {
+            margin-bottom: 1rem;
+            padding: .65rem .9rem;
+            border-radius: 12px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
 
         /* ==========================================================
-           MOBILE / TABLET (< 992px)  -- SATU BLOK, SEMUA DI DALAMNYA
-           Kartu putih solid di atas background biru, tanpa scroll.
+           MOBILE / TABLET (< 992px): header gradasi + kartu menumpuk
         ========================================================== */
         @media (max-width: 991px) {
-            html, body {
-                margin: 0;
-                padding: 0;
+            body { background: var(--page-bg); }
+
+            .login-screen { flex-direction: column; background: var(--page-bg); }
+
+            /* ---------- HEADER BIRU ---------- */
+            .brand-panel {
+                flex: none;
                 width: 100%;
-                height: 100%;
-                overflow: hidden;
-                overscroll-behavior: none;
-                background: linear-gradient(160deg, #4f74ff 0%, #3b62f6 48%, #1f44db 100%);
+                align-items: center;
+                /* atas 2.75rem = jarak bawah (2.75rem) + tumpang-tindih kartu (4.9rem) */
+                padding: calc(2.75rem + env(safe-area-inset-top, 0px)) 1rem 7.65rem;
+                border-radius: 0 0 32px 32px;
             }
+            .brand-inner { max-width: 520px; }
 
-            .login-screen {
-                flex-direction: column;
-                position: relative;
-                width: 100%;
-                min-height: 100dvh;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                background: linear-gradient(160deg, #4f74ff 0%, #3b62f6 48%, #1f44db 100%);
+            .brand-logo {
+                width: 68px;
+                height: 68px;
+                margin-bottom: 1.35rem;
             }
+            /* Tiga baris teks header: SEMUA UPPERCASE, satu baris, rata tengah.
+               Baris 1 & 2 ukurannya SAMA (dibedakan lewat ketebalan huruf),
+               baris 3 lebih kecil karena kalimatnya dua kali lebih panjang.
+               Ukuran mengikuti lebar layar (clamp) supaya tiap baris selalu
+               muat satu baris dari HP kecil sampai besar. */
+            .brand-school,
+            .brand-title {
+                font-size: clamp(14px, 4.5vw, 18px);
+                line-height: 1.3;
+                letter-spacing: .06em;
+                padding-left: .06em;
+                text-transform: uppercase;
+                white-space: nowrap;
+                color: #ffffff;
+            }
+            /* Urutan MOBILE: judul aplikasi dulu, lalu nama sekolah, lalu
+               keterangan. Hanya urutan tampil (flex order); markup & urutan
+               desktop tidak berubah. */
+            /* Skala ukuran menurun, semua semi-bold (600) kecuali keterangan:
+                 1. SISTEM PRESENSI SEKOLAH  maks 17px
+                 2. SMP PGRI PARUNG PANJANG  maks 19px (terbesar)
+                 3. keterangan               disembunyikan di mobile */
+            .brand-title {
+                order: 1;
+                margin-top: 0;
+                font-size: clamp(13px, 4.2vw, 17px);
+                font-weight: 600;
+            }
+            .brand-school {
+                order: 2;
+                margin-top: .5rem; /* gap judul -> sekolah */
+                font-size: clamp(14px, 4.8vw, 19px);
+                font-weight: 600;
+            }
+            .brand-subtitle {
+                margin-top: .5rem; /* gap sekolah -> keterangan: SAMA dengan gap di atasnya */
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.5;
+                letter-spacing: .03em;
+                padding-left: .03em;
+                text-transform: uppercase;
+                /* Di HP lebar muat satu baris; di HP sempit turun jadi dua
+                   baris yang seimbang (bukan terpotong). */
+                white-space: normal;
+                text-wrap: balance;
+                max-width: 100%;
+                color: #ffffff;
+                order: 3;
+            }
+            /* Keterangan DISEMBUNYIKAN di mobile (hanya tampil di desktop). */
+            .brand-subtitle { display: none; }
+            /* Ikon fitur (Presensi / Kehadiran / Rekap) TAMPIL di mobile,
+               di bawah nama sekolah, versi ringkas. */
+            .brand-chips {
+                display: flex;
+                order: 4;
+                gap: 0 1.75rem;
+                margin-top: 1.25rem;
+            }
+            .chip { min-width: 52px; gap: .35rem; font-size: 11px; }
+            .chip i { font-size: 22px; }
 
-            /* Panel biru lama, pemisah, dan semua hiasan: hilang di mobile */
-            .brand-panel,
-            .wave-divider,
-            .wave-mobile { display: none !important; }
-
+            /* ---------- AREA FORM ---------- */
             .form-panel {
                 position: relative;
-                z-index: 2;
+                z-index: 20;
                 flex: 1;
-                height: 100%;
-                min-height: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 1.75rem 2.25rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
+                align-items: flex-start;
+                padding: 0 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+                margin-top: -4.9rem;
+                overflow: visible;
                 background: transparent;
-                overflow: hidden;
+            }
+            .form-wrap { max-width: 520px; }
+
+            /* ---------- KARTU ---------- */
+            .form-card {
+                padding: 1.5rem;
+                border: 0;
+                border-radius: 28px 28px 24px 24px;
+                box-shadow: 0 20px 25px -5px rgba(0, 74, 198, .10), 0 8px 10px -6px rgba(0, 74, 198, .10);
             }
 
-            /* ---------- KARTU PUTIH SOLID ---------- */
-            .form-wrap {
-                width: 100%;
-                max-width: none;
-                margin: 0;
-                background: #ffffff;
-                border-radius: 10px;
-                padding: 1.5rem 1.25rem 1.5rem;
-                border: 1px solid rgba(255, 255, 255, .6);
-                box-shadow: 0 24px 60px rgba(10, 30, 120, .35);
-            }
+            .form-heading { font-size: 24px; letter-spacing: -.02em; }
+            .form-subtext { font-size: 14px; margin-bottom: 1.5rem; }
 
-            /* ---------- BLOK LOGO + JUDUL ---------- */
-            .card-brand {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                width: fit-content;
-                margin: 0 auto 1.25rem;
-            }
-            .card-brand-logo {
-                width: 56px;
-                height: 56px;
-                object-fit: contain;
-                margin-bottom: .6rem;
-                border-radius: 8px;
-                filter: drop-shadow(0 1px 2px rgba(5, 15, 90, .5));
-            }
-            .card-brand-title {
-                font-size: clamp(1.05rem, 4.8vw, 1.25rem);
-                line-height: 1.15;
-                font-weight: 800;
-                letter-spacing: -.01em;
-                text-transform: uppercase;
-                color: #0f172a;
-                margin-bottom: .25rem;
-                white-space: nowrap;
-            }
-            .card-brand-school {
-                font-size: clamp(.85rem, 3.9vw, .98rem);
-                line-height: 1.15;
-                font-weight: 800;
-                letter-spacing: -.01em;
-                text-transform: uppercase;
-                color: #0f172a;
-                margin-top: .15rem;
-                white-space: nowrap;
-            }
+            .form-group-item { margin-bottom: 1.35rem; }
+            .form-input-field { font-size: 16px; } /* anti-zoom iOS */
 
-            .form-heading, .form-subtext { display: none; }
+            .row-extra { margin: .25rem 0 1.25rem; }
 
-            /* ---------- FIELD ---------- */
-            .form-group-item { margin-bottom: .8rem; }
-            .input-label-custom {
-                font-size: .8rem;
-                font-weight: 700;
-                color: #0f172a;
-                margin-bottom: .3rem;
-            }
-            .input-box-wrapper {
-                border-radius: 10px;
-                padding: 0 .6rem;
-                min-height: 54px;
-                background: #f8fafc;
-                border: 1.5px solid #e2e8f0;
+        }
+
+        /* ==========================================================
+           DESKTOP (>= 992px): tanpa kontainer kartu, form langsung
+           di atas background putih (clean look)
+        ========================================================== */
+        @media (min-width: 992px) {
+            .form-wrap { max-width: 380px; }
+            .form-card {
+                padding: 0;
+                background: transparent;
+                border: 0;
+                border-radius: 0;
                 box-shadow: none;
             }
-            .input-box-wrapper:focus-within {
-                border-color: #3b5bf5;
-                box-shadow: 0 0 0 3px rgba(59, 91, 245, .15);
-                background: #ffffff;
-            }
-            .input-icon-box { padding: .5rem .6rem; font-size: 1.2rem; color: #94a3b8; }
-            .btn-toggle-eye { padding: .5rem .6rem; font-size: 1.2rem; color: #94a3b8; }
-            .input-box-wrapper:focus-within .input-icon-box,
-            .input-box-wrapper:focus-within .btn-toggle-eye { color: #3b5bf5; }
-
-            .form-input-field {
-                padding: .85rem .4rem;
-                font-size: 16px; /* anti-zoom iOS */
-                font-weight: 500;
-            }
-
-            /* ---------- INGAT SAYA ---------- */
-            .row-extra { margin-top: .5rem; margin-bottom: .8rem; gap: .4rem; }
-            .remember-label { font-size: .8rem; color: #334155; }
-            .remember-checkbox {
-                appearance: none;
-                -webkit-appearance: none;
-                width: 22px;
-                height: 22px;
-                border-radius: 5px;
-                border: 1.5px solid #d1d5db;
-                background: #ffffff;
-                cursor: pointer;
-            }
-            .remember-checkbox:checked {
-                background-color: #3b5bf5;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
-                background-size: 16px 16px;
-                background-position: center;
-                background-repeat: no-repeat;
-            }
-            .remember-checkbox:focus-visible {
-                outline: none;
-                box-shadow: 0 0 0 3px rgba(59, 91, 245, .3);
-            }
-
-            /* ---------- TOMBOL ---------- */
-            .btn-submit-action {
-                min-height: 54px;
-                padding: .85rem 1.25rem;
-                border-radius: 10px;
-                background: #3b5bf5;
-                color: #ffffff;
-                box-shadow: 0 10px 24px rgba(59, 91, 245, .35);
-            }
-            .btn-submit-action:hover { background: #2f4ce0; }
-            .btn-submit-action:active { transform: translateY(1px) scale(.985); }
-
-            .alert-login {
-                background: #fef2f2;
-                border: 1px solid #fecaca;
-                color: #991b1b;
-                border-radius: 10px;
-            }
         }
 
-        /* Tablet (576-991px) */
-        @media (min-width: 576px) and (max-width: 991px) {
-            .form-panel { padding-left: 1.25rem; padding-right: 1.25rem; }
-            .form-wrap { width: 86%; max-width: 540px; }
+        @media (max-width: 380px) {
+            .brand-school,
+            .brand-title { letter-spacing: .04em; padding-left: .04em; }
+            .brand-subtitle { letter-spacing: .02em; padding-left: .02em; }
         }
 
-        /* Layar sempit sekali */
-        @media (max-width: 340px) {
-            .form-panel { padding-left: 1.25rem; padding-right: 1.25rem; }
-        }
-
-        /* Layar pendek: padatkan agar kartu tetap utuh tanpa scroll */
-        @media (max-width: 991px) and (max-height: 700px) {
-            .form-wrap { padding: 1.5rem 1.1rem 1.4rem; }
-            .card-brand { margin-bottom: 1rem; }
-            .card-brand-logo { width: 56px; height: 56px; margin-bottom: .6rem; }
-            .card-brand-title { margin-bottom: .2rem; }
-            .form-group-item { margin-bottom: .65rem; }
-            .input-box-wrapper { min-height: 46px; }
-            .btn-submit-action { min-height: 46px; padding: .7rem 1rem; }
-            .row-extra { margin-top: .5rem; margin-bottom: .9rem; }
-            .alert-login { padding: .55rem .8rem; margin-bottom: .75rem; }
-        }
-        @media (max-width: 991px) and (max-height: 600px) {
-            .form-wrap { padding: 1.25rem 1rem 1.2rem; }
-            .card-brand-logo { width: 48px; height: 48px; margin-bottom: .4rem; }
-            .form-group-item { margin-bottom: .5rem; }
-            .input-box-wrapper { min-height: 44px; }
-            .btn-submit-action { min-height: 44px; padding: .65rem 1rem; }
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
         }
     </style>
 </head>
@@ -622,148 +531,82 @@
 
 <div class="login-screen">
 
-    {{-- ================= PANEL KIRI ================= --}}
+    {{-- ================= PANEL KIRI / HEADER MOBILE ================= --}}
     <section class="brand-panel">
+        <div class="brand-inner">
+            <img class="brand-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo {{ $schoolName }}">
 
-        <div class="deco" aria-hidden="true">
-            <div class="deco-grid"></div>
-            <div class="deco-orb o1"></div>
-            <div class="deco-orb o2"></div>
-        </div>
-
-        <div class="dots" aria-hidden="true"></div>
-
-        <div class="swoosh swoosh-tl" aria-hidden="true">
-            <svg viewBox="0 0 170 220">
-                <defs>
-                    <linearGradient id="gLine" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stop-color="#d9f99d"/>
-                        <stop offset=".5" stop-color="#a3e635"/>
-                        <stop offset="1" stop-color="#6cc417"/>
-                    </linearGradient>
-                </defs>
-                <path d="M0 150 C 60 140, 100 90, 110 40 S 140 5, 170 0"/>
-                <path d="M0 175 C 70 165, 118 105, 128 55 S 150 18, 170 12"/>
-            </svg>
-        </div>
-        <div class="swoosh swoosh-bl" aria-hidden="true">
-            <svg viewBox="0 0 150 170">
-                <path d="M0 40 C 55 50, 95 85, 105 125 S 135 160, 150 170"/>
-                <path d="M0 62 C 60 72, 110 100, 120 140 S 140 165, 150 170"/>
-            </svg>
-        </div>
-
-        <div class="dots dots-r" aria-hidden="true"></div>
-        <div class="swoosh swoosh-tr" aria-hidden="true">
-            <svg viewBox="0 0 170 220">
-                <path d="M0 150 C 60 140, 100 90, 110 40 S 140 5, 170 0"/>
-                <path d="M0 175 C 70 165, 118 105, 128 55 S 150 18, 170 12"/>
-            </svg>
-        </div>
-        <div class="swoosh swoosh-br" aria-hidden="true">
-            <svg viewBox="0 0 150 170">
-                <path d="M0 40 C 55 50, 95 85, 105 125 S 135 160, 150 170"/>
-                <path d="M0 62 C 60 72, 110 100, 120 140 S 140 165, 150 170"/>
-            </svg>
-        </div>
-
-        <div class="brand-top">
-            <img class="brand-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo">
+            <h2 class="brand-school">{{ $schoolName }}</h2>
             <h1 class="brand-title">{{ $appName }}</h1>
-            <div class="brand-school">{{ $schoolName }}</div>
-        </div>
+            <p class="brand-subtitle"><span class="sub-line">{{ __('Presensi digital yang') }}</span> <span class="sub-line">{{ __('mudah, cepat, dan akurat.') }}</span></p>
 
-        <div class="brand-mid">
-            <img class="illus"
-                 src="{{ asset('images/login-illustration.webp') }}"
-                 alt="{{ __('Siswa belajar bersama') }}"
-                 decoding="async"
-                 fetchpriority="high">
-        </div>
-
-        <div class="brand-bottom">
-            <div class="brand-icons">
-                <div class="feat-icon"><i class='bx bx-calendar'></i></div>
-                <div class="feat-icon"><i class='bx bx-qr-scan'></i></div>
-                <div class="feat-icon"><i class='bx bx-chat'></i></div>
-                <div class="feat-icon"><i class='bx bx-file'></i></div>
+            <div class="brand-chips">
+                <span class="chip"><i class='bx bx-qr-scan'></i>{{ __('Presensi') }}</span>
+                <span class="chip"><i class='bx bx-calendar-check'></i>{{ __('Kehadiran') }}</span>
+                <span class="chip"><i class='bx bx-folder-open'></i>{{ __('Rekap') }}</span>
             </div>
-            <div class="brand-foot">{{ __('Presensi menjadi lebih mudah') }}</div>
         </div>
     </section>
 
-    {{-- ================= PEMISAH HIJAU LURUS (DESKTOP) ================= --}}
-    <div class="wave-divider" aria-hidden="true"></div>
-
-    {{-- ================= PEMISAH (MOBILE, disembunyikan) ================= --}}
-    <div class="wave-mobile" aria-hidden="true"></div>
-
-    {{-- ================= PANEL KANAN ================= --}}
+    {{-- ================= PANEL KANAN / KARTU LOGIN ================= --}}
     <section class="form-panel">
         <div class="form-wrap">
-            {{-- Blok card-brand: hanya tampil di mobile (< 992px) --}}
-            <div class="card-brand" aria-hidden="true">
-                <img class="card-brand-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo">
-                <div class="card-brand-title">{{ $appName }}</div>
-                <div class="card-brand-school">{{ $schoolName }}</div>
+
+            <div class="form-card">
+                <h2 class="form-heading">{{ __('Masuk Akun') }}</h2>
+                <p class="form-subtext">{{ __('Masuk untuk memulai presensi hari ini.') }}</p>
+
+                @if (session('status'))
+                    <div class="alert alert-success alert-login">{{ session('status') }}</div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" id="loginForm" novalidate>
+                    @csrf
+
+                    <div class="form-group-item">
+                        <div class="input-box-wrapper @error('login') is-invalid-field @enderror @error('email') is-invalid-field @enderror">
+                            <label class="input-label-custom" for="login">Username</label>
+                            <input type="text" id="login" name="login" class="form-input-field"
+                                   value="{{ old('login', old('email')) }}"
+                                   autocomplete="username" required autofocus>
+                        </div>
+                        @error('login')
+                            <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
+                        @enderror
+                        @error('email')
+                            <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group-item">
+                        <div class="input-box-wrapper @error('password') is-invalid-field @enderror">
+                            <label class="input-label-custom" for="password">Password</label>
+                            <input type="password" id="password" name="password" class="form-input-field"
+                                   autocomplete="current-password" required>
+                            <button type="button" class="btn-toggle-eye" id="togglePassword" aria-label="{{ __('Tampilkan kata sandi') }}">
+                                <i class='bx bx-hide' id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        @error('password')
+                            <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="row-extra">
+                        <div class="remember-container">
+                            <input type="checkbox" class="remember-checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
+                            <label class="remember-label" for="remember">{{ __('Ingat saya') }}</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit-action" id="btnLogin">
+                        <span id="btnText">{{ __('Masuk') }}</span>
+                        <span class="app-loader d-none" id="btnLoader"></span>
+                    </button>
+                </form>
             </div>
 
-            <h2 class="form-heading">{{ __('Masuk Akun') }}</h2>
-            <p class="form-subtext">{{ __('Silakan masuk untuk melanjutkan ke sistem presensi.') }}</p>
-
-            @if (session('status'))
-                <div class="alert alert-success alert-login">{{ session('status') }}</div>
-            @endif
-
-            <form method="POST" action="{{ route('login') }}" id="loginForm" novalidate>
-                @csrf
-
-                <div class="form-group-item">
-                    <label class="input-label-custom" for="login">Username</label>
-                    <div class="input-box-wrapper @error('login') is-invalid-field @enderror @error('email') is-invalid-field @enderror">
-                        <span class="input-icon-box"><i class='bx bx-envelope'></i></span>
-                        <input type="text" id="login" name="login" class="form-input-field"
-                               value="{{ old('login', old('email')) }}"
-                               placeholder="{{ __('Masukkan Username') }}"
-                               autocomplete="username" required autofocus>
-                    </div>
-                    @error('login')
-                        <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
-                    @enderror
-                    @error('email')
-                        <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group-item">
-                    <label class="input-label-custom" for="password">{{ __('Kata Sandi') }}</label>
-                    <div class="input-box-wrapper @error('password') is-invalid-field @enderror">
-                        <span class="input-icon-box"><i class='bx bx-lock-alt'></i></span>
-                        <input type="password" id="password" name="password" class="form-input-field"
-                               placeholder="{{ __('Masukkan kata sandi') }}"
-                               autocomplete="current-password" required>
-                        <button type="button" class="btn-toggle-eye" id="togglePassword" aria-label="{{ __('Tampilkan kata sandi') }}">
-                            <i class='bx bx-hide' id="eyeIcon"></i>
-                        </button>
-                    </div>
-                    @error('password')
-                        <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="row-extra">
-                    <div class="remember-container">
-                        <input type="checkbox" class="remember-checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                        <label class="remember-label" for="remember">{{ __('Ingat Saya') }}</label>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit-action" id="btnLogin">
-                    <span id="btnText">{{ __('Masuk Sekarang') }}</span>
-                    <span class="app-loader d-none" id="btnLoader"></span>
-                </button>
-            </form>
-        </div>
+</div>
     </section>
 </div>
 
