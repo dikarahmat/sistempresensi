@@ -210,13 +210,13 @@
          yang sama (#logoutConfirmBtn di #logoutConfirmModal), sehingga method,
          route, dan @csrf tidak berubah sama sekali.
 
-         Nama & peran di bawah diambil DINAMIS dari user yang sedang login.
+         Peran di bawah diambil DINAMIS dari user yang sedang login.
+         Nama & username TIDAK lagi ditampilkan di sini: identitas akun
+         adalah username (lihat halaman Kelola Akun).
          Peran memakai User::roleLabel() (daftar role terpusat di model), dan
          "Administrator" hanya dipakai sebagai fallback bila role kosong. -->
     @php
         $accountUser   = Auth::user();
-        $accountName   = trim((string) ($accountUser->name ?? ''));
-        $accountName   = $accountName !== '' ? $accountName : __('Pengguna');
         $accountRole   = method_exists($accountUser, 'roleLabel')
             ? trim((string) $accountUser->roleLabel())
             : '';
@@ -235,13 +235,12 @@
                 aria-haspopup="menu"
                 :aria-expanded="accountOpen ? 'true' : 'false'"
                 aria-controls="sidebarAccountMenu"
-                aria-label="{{ __('Menu akun ') }}{{ $accountName }}">
+                aria-label="{{ __('Menu akun ') }}{{ $accountRole }}">
             <span class="sidebar-account-avatar" aria-hidden="true">
                 <i class='bx bx-user'></i>
             </span>
             <span class="sidebar-account-text">
-                <span class="sidebar-account-name">{{ $accountName }}</span>
-                <span class="sidebar-account-role">{{ __($accountRole) }}</span>
+                <span class="sidebar-account-name">{{ __($accountRole) }}</span>
             </span>
             <i class='bx bx-chevron-up sidebar-account-chevron'
                :class="accountOpen ? 'is-open' : ''"

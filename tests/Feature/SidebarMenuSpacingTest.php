@@ -24,6 +24,7 @@ class SidebarMenuSpacingTest extends TestCase
     {
         return User::create([
             'name' => 'Admin Sidebar',
+            'username' => 'adminsidebar',
             'email' => 'admin.sidebar@presensi.test',
             'password' => Hash::make('password123'),
             'role' => 'admin',

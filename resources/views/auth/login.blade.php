@@ -564,16 +564,13 @@
                     @csrf
 
                     <div class="form-group-item">
-                        <div class="input-box-wrapper @error('login') is-invalid-field @enderror @error('email') is-invalid-field @enderror">
+                        <div class="input-box-wrapper @error('login') is-invalid-field @enderror">
                             <label class="input-label-custom" for="login">Username</label>
                             <input type="text" id="login" name="login" class="form-input-field"
-                                   value="{{ old('login', old('email')) }}"
+                                   value="{{ old('login') }}"
                                    autocomplete="username" required autofocus>
                         </div>
                         @error('login')
-                            <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
-                        @enderror
-                        @error('email')
                             <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
                         @enderror
                     </div>

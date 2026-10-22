@@ -60,18 +60,29 @@ class TeacherController extends Controller
             $validated['phone'] = $validated['phone_number'] ?? null;
 
             if (!empty($validated['nip'])) {
+                // Akun login guru: identitas = USERNAME (NIP), bukan email lagi.
+                // Password tetap memakai NIP (seperti sebelumnya).
+                $nip = (string) $validated['nip'];
                 $userEmail = !empty($validated['email'])
                     ? $validated['email']
-                    : $validated['nip'] . '@guru.smppresensipgri.sch.id';
+                    : $nip . '@guru.smppresensipgri.sch.id';
+
+                $userAttributes = [
+                    'name' => $validated['name'],
+                    'password' => Hash::make($nip),
+                    'role' => 'guru',
+                    'email_verified_at' => now(),
+                ];
+
+                // Email hanya atribut kontak tambahan. Kolom email tetap UNIQUE,
+                // jadi hanya diisi bila belum dipakai akun lain.
+                if (! User::where('email', $userEmail)->exists()) {
+                    $userAttributes['email'] = $userEmail;
+                }
 
                 $user = User::firstOrCreate(
-                    ['email' => $userEmail],
-                    [
-                        'name' => $validated['name'],
-                        'password' => Hash::make($validated['nip']),
-                        'role' => 'guru',
-                        'email_verified_at' => now(),
-                    ]
+                    ['username' => strtolower($nip)],
+                    $userAttributes
                 );
 
                 $validated['user_id'] = $user->id;

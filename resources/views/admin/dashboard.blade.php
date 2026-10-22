@@ -2,7 +2,7 @@
 
 @section('title', is_admin() ? __('Dashboard Admin') : __('Dashboard Guru'))
 @section('page_title', is_admin() ? __('Dashboard Administrator') : __('DASHBOARD GURU'))
-@section('page_subtitle', is_admin() ? __('Sistem Presensi Terintegrasi') : __('Selamat datang, ') . (Auth::user()->name ?? 'Guru'))
+@section('page_subtitle', is_admin() ? __('Sistem Presensi Terintegrasi') : __('Selamat datang, ') . (Auth::user()?->roleLabel() ?: 'Guru'))
 
 {{-- Kanvas dikunci setinggi satu layar (sama seperti halaman acuan Presensi /
      Data Guru / Data Kelas) dan isi dashboard menggulir di dalam kanvas.

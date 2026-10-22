@@ -42,6 +42,7 @@ class TrashArchiveTest extends TestCase
 
         $this->admin = User::create([
             'name' => 'Admin Arsip',
+            'username' => 'adminarsip',
             'email' => 'admin.arsip@presensi.test',
             'password' => Hash::make('password123'),
             'role' => 'admin',

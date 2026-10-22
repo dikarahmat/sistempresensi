@@ -43,6 +43,7 @@ class SecurityAuditFixesTest extends TestCase
 
         $this->adminUser = User::create([
             'name' => 'Admin SMP',
+            'username' => 'admin',
             'email' => 'admin@smppresensipgri.sch.id',
             'password' => Hash::make('password123'),
             'role' => 'admin',
@@ -50,6 +51,7 @@ class SecurityAuditFixesTest extends TestCase
 
         $this->guruUser = User::create([
             'name' => 'Guru Pengajar A',
+            'username' => '198501012010011001',
             'email' => '198501012010011001@guru.smppresensipgri.sch.id',
             'password' => Hash::make('password_rahasia_guru'),
             'role' => 'guru',

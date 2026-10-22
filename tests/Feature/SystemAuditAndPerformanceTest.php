@@ -28,6 +28,7 @@ class SystemAuditAndPerformanceTest extends TestCase
 
         $this->admin = User::create([
             'name' => 'Super Admin',
+            'username' => 'superadmin',
             'email' => 'admin@presensi.test',
             'password' => Hash::make('secret123'),
             'role' => 'admin',

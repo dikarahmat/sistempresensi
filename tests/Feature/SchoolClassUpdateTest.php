@@ -18,6 +18,7 @@ class SchoolClassUpdateTest extends TestCase
     {
         $admin = User::create([
             'name' => 'Admin Test',
+            'username' => 'admintest',
             'email' => 'admin_test@test.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
@@ -70,6 +71,7 @@ class SchoolClassUpdateTest extends TestCase
     {
         $admin = User::create([
             'name' => 'Admin Test 2',
+            'username' => 'admintest2',
             'email' => 'admin_test2@test.com',
             'password' => Hash::make('password'),
             'role' => 'admin',

@@ -102,14 +102,17 @@ Sekarang, buka browser dan akses aplikasi di: **`http://127.0.0.1:8000`**
 
 ## 🔑 Akun Default (Login)
 
-Setelah menjalankan perintah `migrate --seed`, gunakan akun berikut untuk masuk ke dalam sistem:
+Identitas login memakai **USERNAME** (bukan email). Setelah menjalankan perintah `migrate --seed`, gunakan akun berikut untuk masuk ke dalam sistem:
 
-| Role | Email / Username | Password |
+| Role | Username | Password |
 | :--- | :--- | :--- |
-| **Admin** | admin@smp.com | admin123 |
-| **Guru** | *(NIP Guru dari file Excel/Seeder)* | guru123 |
+| **Admin** | admin | admin123 |
+| **Guru** | guru | guru123 |
+| **Guru Piket** | piket | piket123 |
 
-*(Silakan cek file `database/seeders/UserSeeder.php` untuk melihat detail akun lainnya yang digenerate).*
+Password di atas bisa diganti lewat `.env` (`ADMIN_PASSWORD`, `GURU_PASSWORD`, `PIKET_PASSWORD`) atau lewat halaman **Kelola Akun** (`/admin/kelola-akun`).
+
+*(Silakan cek file `database/seeders/DatabaseSeeder.php` untuk melihat detail akun lainnya yang digenerate).*
 
 ---
 *Developed with ❤️*

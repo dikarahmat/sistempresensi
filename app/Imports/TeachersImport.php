@@ -74,7 +74,7 @@ class TeachersImport implements ToCollection, WithHeadingRow
             try {
                 // Hanya simpan data guru ke tabel teachers.
                 // Akun User tidak lagi dibuat otomatis melalui import —
-                // login hanya melalui email + password (lihat AuthController).
+                // login hanya melalui username + password (lihat AuthController).
                 Teacher::updateOrCreate(
                     ['nip' => $nip],
                     [

@@ -2113,10 +2113,11 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             color: #ffffff;
         }
 
-        /* Nama (semibold, putih) + peran (kecil, putih transparan 70%).
-           min-width:0 + whitespace:nowrap membuat nama TIDAK terpotong untuk
-           nama normal seperti "Administrator"; ellipsis hanya muncul bila nama
-           benar-benar lebih panjang dari ruang yang tersedia. */
+        /* Label peran (semibold, putih) - satu-satunya teks profil yang
+           ditampilkan (nama & username tidak lagi dipakai di tampilan).
+           min-width:0 + whitespace:nowrap membuat teks TIDAK terpotong untuk
+           label normal seperti "Administrator"; ellipsis hanya muncul bila
+           teks benar-benar lebih panjang dari ruang yang tersedia. */
         .app-sidebar-drawer .sidebar-account-text {
             display: flex;
             flex-direction: column;
@@ -2130,16 +2131,6 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             font-weight: 600;
             line-height: 1.25;
             color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .app-sidebar-drawer .sidebar-account-role {
-            font-size: 11px;
-            font-weight: 500;
-            line-height: 1.3;
-            color: rgba(255, 255, 255, 0.7);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;

@@ -26,25 +26,29 @@ class MultiRoleAuthTest extends TestCase
     {
         parent::setUp();
 
-        // Siapkan akun Admin (seed DBSeeder baca ADMIN_EMAIL/ADMIN_PASSWORD
-        // dari phpunit.xml), pastikan ada walaupun staging tidak di-seed sendiri.
+        // Siapkan akun Admin (identitas login = username 'admin'; password
+        // dibaca dari phpunit.xml / .env), pastikan ada walaupun staging
+        // tidak di-seed sendiri.
         $adminEmail = env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id');
         $adminPassword = env('ADMIN_PASSWORD', 'password123');
 
         User::updateOrCreate(
-            ['email' => $adminEmail],
+            ['username' => 'admin'],
             [
                 'name' => 'Administrator SMP PGRI',
+                'email' => $adminEmail,
                 'password' => Hash::make($adminPassword),
                 'role' => 'admin',
             ]
         );
 
-        // Siapkan akun Guru & Teacher jika belum ada
+        // Siapkan akun Guru & Teacher jika belum ada.
+        // Username = NIP, sehingga login guru tetap memakai NIP + password.
         $guruUser = User::updateOrCreate(
-            ['email' => '198503122010011002@guru.smppresensipgri.sch.id'],
+            ['username' => '198503122010011002'],
             [
                 'name' => 'Budi Santoso, S.Pd.',
+                'email' => '198503122010011002@guru.smppresensipgri.sch.id',
                 'password' => Hash::make('198503122010011002'),
                 'role' => 'guru',
             ]
@@ -68,27 +72,42 @@ class MultiRoleAuthTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertSee('Masuk Sekarang');
-        $response->assertSee('Email');
-        $response->assertSee('Kata Sandi');
+        $response->assertSee('Masuk Akun');
+        $response->assertSee('Username');
+        $response->assertSee('Password');
+        // Field email tidak lagi dipakai untuk login.
+        $response->assertDontSee('Email');
         $response->assertDontSee('btn-tab-choice');
     }
 
     public function test_admin_can_login_and_is_redirected_to_admin_dashboard(): void
     {
-        // Kredensial dicegat dari .env (ADMIN_EMAIL / ADMIN_PASSWORD)
-        // karena DatabaseSeeder tidak lagi bawaakun default hardcode.
-        $email = env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id');
+        // Kredensial dibaca dari .env (ADMIN_PASSWORD) karena DatabaseSeeder
+        // memakai username 'admin' sebagai identitas login.
+        $username = 'admin';
         $password = env('ADMIN_PASSWORD', 'password123');
 
         $response = $this->post('/login', [
-            'login' => $email,
+            'login' => $username,
             'password' => $password,
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticated();
         $this->assertEquals('admin', auth()->user()->role);
+    }
+
+    public function test_admin_tidak_bisa_login_dengan_email(): void
+    {
+        // Email bukan lagi identitas login.
+        $response = $this->from(route('login'))->post('/login', [
+            'login' => env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id'),
+            'password' => env('ADMIN_PASSWORD', 'password123'),
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('login');
+        $this->assertGuest();
     }
 
     public function test_guru_can_login_using_nip_and_is_redirected_to_guru_dashboard(): void
@@ -122,7 +141,7 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_role_security_middleware_aborts_403_for_unauthorized_panels(): void
     {
-        $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
+        $admin = User::where('username', 'admin')->first();
         $guru = User::where('role', 'guru')->first();
 
         // 1. Admin tidak boleh masuk ke panel guru -> 403
@@ -143,9 +162,9 @@ class MultiRoleAuthTest extends TestCase
 
         $this->post('/logout');
 
-        // 2. Universal login admin via email
+        // 2. Universal login admin via username
         $responseAdmin = $this->post('/login', [
-            'login' => 'admin@smppresensipgri.sch.id',
+            'login' => 'admin',
             'password' => 'password123',
         ]);
         $responseAdmin->assertRedirect(route('admin.dashboard'));
@@ -153,7 +172,7 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_logout_button_opens_confirmation_modal_instead_of_logging_out_directly(): void
     {
-        $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
+        $admin = User::where('username', 'admin')->first();
 
         // Halaman dashboard harus memuat modal konfirmasi keluar.
         $response = $this->actingAs($admin)->get(route('admin.dashboard'));
@@ -178,7 +197,7 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_logout_confirmation_modal_is_shared_across_sidebar_pages(): void
     {
-        $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
+        $admin = User::where('username', 'admin')->first();
 
         // Modal diletakkan di layout bersama, jadi harus tersedia di SETIAP halaman
         // yang memakai layout sidebar - bukan hanya dashboard.
@@ -204,7 +223,7 @@ class MultiRoleAuthTest extends TestCase
      */
     public function test_logout_modal_is_centered_in_viewport(): void
     {
-        $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
+        $admin = User::where('username', 'admin')->first();
         $html = $this->actingAs($admin)->get(route('admin.dashboard'))->getContent();
 
         // 1. .modal-content harus anak LANGSUNG dari .modal-dialog (bukan <form>).
@@ -243,7 +262,7 @@ class MultiRoleAuthTest extends TestCase
      */
     public function test_logout_modal_content_and_buttons_are_balanced(): void
     {
-        $admin = User::where('email', 'admin@smppresensipgri.sch.id')->first();
+        $admin = User::where('username', 'admin')->first();
         $html = $this->actingAs($admin)->get(route('admin.dashboard'))->getContent();
 
         // Teks pertanyaan rata tengah.
@@ -315,13 +334,8 @@ class MultiRoleAuthTest extends TestCase
      */
     public function test_akun_admin_tidak_bisa_dihapus_lewat_aplikasi(): void
     {
-        $admin = User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => 'admin@presensi.com',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-        ]);
+        // Akun admin (username 'admin') dilindungi dari penghapusan.
+        $admin = User::where('username', 'admin')->firstOrFail();
 
         $this->assertTrue($admin->isProtectedAccount());
 
@@ -427,13 +441,7 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_import_guru_tidak_menghapus_akun_admin(): void
     {
-        $admin = User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => 'admin@presensi.com',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-        ]);
+        $admin = User::where('username', 'admin')->firstOrFail();
 
         $import = new TeachersImport();
         $import->collection(collect([
@@ -462,10 +470,10 @@ class MultiRoleAuthTest extends TestCase
         $this->assertTrue(Hash::check('guru123', User::where('username', 'guru')->first()->password));
         $this->assertTrue(Hash::check('piket123', User::where('username', 'piket')->first()->password));
 
-        // Akun admin dibaca dari .env (ADMIN_EMAIL / ADMIN_PASSWORD). Karena
-        // setUp() sudah memakai email yang sama untuk "akun lama", seeder TIDAK
-        // membuat duplikat (penjaga UNIQUE email), sehingga tetap hanya ada
-        // SATU akun dengan email tersebut.
+        // Akun admin memakai username 'admin'. Karena setUp() sudah membuat
+        // akun dengan username yang sama, seeder TIDAK membuat duplikat,
+        // sehingga tetap hanya ada SATU akun admin.
+        $this->assertSame(1, User::where('username', 'admin')->count());
         $this->assertSame(
             1,
             User::where('email', env('ADMIN_EMAIL', 'admin@smppresensipgri.sch.id'))->count()
@@ -474,9 +482,7 @@ class MultiRoleAuthTest extends TestCase
 
     public function test_seeder_lama_tidak_menimpa_password_dengan_nilai_lain(): void
     {
-        // Akun admin dari setUp() harus TIDAK tersentuh oleh seeder mana pun.
-        $adminLama = User::where('email', 'admin@smppresensipgri.sch.id')->first();
-        $hashLama = $adminLama->password;
+        // Semua seeder memakai kredensial yang sama persis.
         $jumlahAwal = User::count();
 
         $this->seed(DatabaseSeeder::class);
@@ -488,9 +494,14 @@ class MultiRoleAuthTest extends TestCase
         $this->assertTrue(Hash::check('guru123', User::where('username', 'guru')->first()->password));
         $this->assertTrue(Hash::check('piket123', User::where('username', 'piket')->first()->password));
 
-        // Akun lama tidak ditimpa, dan tidak ada akun tambahan selain guru+piket.
-        $adminLama->refresh();
-        $this->assertSame($hashLama, $adminLama->password);
+        // Akun admin tetap memakai password default (ADMIN_PASSWORD), bukan
+        // password lain dari seeder lain.
+        $this->assertTrue(Hash::check(
+            env('ADMIN_PASSWORD', 'password123'),
+            User::where('username', 'admin')->first()->password
+        ));
+
+        // Tidak ada akun tambahan selain guru+piket.
         $this->assertSame($jumlahAwal + 2, User::count());
     }
 
@@ -544,6 +555,7 @@ class MultiRoleAuthTest extends TestCase
         $pesan = session('errors')->first('login');
 
         $this->assertStringContainsString('salah', $pesan);
+        $this->assertStringContainsString('Username atau password salah', $pesan);
         $this->assertStringNotContainsString('tidak ditemukan', $pesan);
         $this->assertStringNotContainsString('belum terdaftar', $pesan);
     }

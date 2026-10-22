@@ -25,8 +25,14 @@
     .table-zebra-custom tbody tr:nth-child(odd) > td { background-color: #ffffff !important; }
     .table-zebra-custom tbody tr:hover > td { background-color: #f1f5f9 !important; }
 
+    /* Tabel Akun memakai seluruh lebar kartu putih. min-width 620px (mobile)
+       tetap dipakai => tabel tetap bisa di-scroll di layar kecil tanpa
+       overflow. */
+
     .table-zebra-custom tbody td {
-        padding: 0.5rem 0.75rem !important;
+        /* Baris tabel Akun hanya berisi satu baris teks (username), jadi
+           padding vertikalnya ditambah supaya barisnya tetap rapi. */
+        padding: 0.85rem 0.75rem !important;
         vertical-align: middle !important;
         color: #0f172a !important;
         border-top: none !important;
@@ -88,16 +94,28 @@
     }
 
     /* ===== Teks sel ===== */
-    .akun-name { font-weight: 600; color: #0f172a; }
-    .akun-email { font-size: .78rem; color: #334155; overflow-wrap: anywhere; }
-    .akun-role { font-size: .85rem; font-weight: 600; }
+    /* Username ditampilkan PERSIS seperti tersimpan di database (huruf kecil),
+       jadi uppercase bawaan sel tabel zebra dibatalkan khusus untuk teks ini.
+       Label role tetap uppercase (bawaan layout). */
+    .akun-name { font-weight: 400; color: #0f172a; text-transform: none !important; }
+    .akun-role { font-size: .85rem; font-weight: 400; }
     .akun-role.is-admin, .akun-role-static-value.is-admin { color: #1d4ed8; }
     .akun-role.is-guru, .akun-role-static-value.is-guru { color: #15803d; }
     .akun-role.is-piket, .akun-role-static-value.is-piket { color: #b45309; }
-    .akun-status { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 500; color: #0f172a; }
+    .akun-status { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 400; color: #0f172a; }
     .akun-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .akun-status.is-aktif .akun-status-dot { background-color: #16a34a; }
     .akun-status.is-nonaktif .akun-status-dot { background-color: #dc2626; }
+
+    /* ===== Kolom AKSI =====
+       Header & isi sama-sama diberi jarak dari tepi kanan tabel (40px) dan
+       isinya rata tengah. Karena header dan isi memakai kotak konten yang
+       sama, teks "AKSI" tepat sejajar di tengah dengan pasangan ikon
+       edit + hapus di bawahnya. */
+    #daftar-akun th.akun-col-aksi,
+    #daftar-akun td.akun-col-aksi {
+        padding-right: 40px !important;
+    }
 
     /* ===== Dialog native ===== */
     dialog.acc-dialog {
@@ -126,6 +144,21 @@
     .akun-role-static-note { display: block; font-size: .72rem; color: #64748b; margin-top: 2px; }
     .akun-password-wrap { position: relative; }
     .akun-password-wrap .form-control { padding-right: 48px; }
+
+    /* ===== Modal Edit: teks diperbesar supaya nyaman dibaca =====
+       Semua aturan di sini memakai #dialogEdit sebagai scope, jadi Modal
+       Tambah (dialogTambah) tidak ikut berubah sama sekali. */
+    #dialogEdit .form-label { font-size: 14px !important; }
+    #dialogEdit .form-control {
+        font-size: 16px !important;
+        /* padding vertikal saja: padding kanan input password (48px) tetap
+           dipakai untuk memberi ruang ikon mata. */
+        padding-top: .55rem !important;
+        padding-bottom: .55rem !important;
+    }
+    #dialogEdit .text-secondary.small { font-size: 13px !important; }
+    #dialogEdit .akun-role-static-value { font-size: 15px !important; }
+    #dialogEdit .akun-role-static-note { font-size: 13px !important; }
     .akun-password-toggle {
         position: absolute; top: 50%; right: 2px; transform: translateY(-50%);
         width: 36px; height: 36px; border-radius: 50%;
@@ -215,10 +248,10 @@
             <table class="table table-hover align-middle mb-0 table-zebra-custom">
                 <thead>
                     <tr>
-                        <th class="text-start">{{ __('Nama') }}</th>
-                        <th class="text-start" style="width: 20%;">{{ __('Role') }}</th>
-                        <th class="text-start" style="width: 18%;">{{ __('Status') }}</th>
-                        <th class="text-center" style="width: 130px;">{{ __('Aksi') }}</th>
+                        <th class="text-start" style="width: 30%;">{{ __('Username') }}</th>
+                        <th class="text-start" style="width: 25%;">{{ __('Role') }}</th>
+                        <th class="text-start" style="width: 25%;">{{ __('Status') }}</th>
+                        <th class="text-center akun-col-aksi" style="width: 20%;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -231,24 +264,22 @@
                             $akunAdmin = $akun->role === \App\Models\User::ROLE_ADMIN;
                         @endphp
                         <tr>
-                            <td data-label="{{ __('Nama') }}">
-                                <div class="akun-name">{{ $akun->name }}</div>
-                                <div class="akun-email">{{ $akun->email }}</div>
+                            <td data-label="{{ __('Username') }}">
+                                <div class="akun-name">{{ $akun->username }}</div>
                             </td>
-                            <td data-label="{{ __('Role') }}"><span class="akun-role {{ $akunRoleKelas }}">{{ $akun->roleLabel() }}</span></td>
-                            <td data-label="{{ __('Status') }}">
+                            <td data-label="{{ __('Role') }}" class="text-start"><span class="akun-role {{ $akunRoleKelas }}">{{ $akun->roleLabel() }}</span></td>
+                            <td data-label="{{ __('Status') }}" class="text-start">
                                 <span class="akun-status {{ $akunAktif ? 'is-aktif' : 'is-nonaktif' }}">
                                     <span class="akun-status-dot" aria-hidden="true"></span>
                                     <span>{{ $akunAktif ? __('Aktif') : __('Nonaktif') }}</span>
                                 </span>
                             </td>
-                            <td class="text-center col-aksi" data-label="{{ __('Aksi') }}">
-                                <div class="d-flex align-items-center justify-content-center gap-2">
+                            <td class="text-center col-aksi akun-col-aksi" data-label="{{ __('Aksi') }}">
+                                <div class="d-flex align-items-center justify-content-center gap-1">
                                     <button type="button" class="btn-row-action action-edit btn-edit-akun"
                                             aria-label="{{ __('Edit akun') }}" title="{{ __('Edit akun') }}"
                                             data-id="{{ $akun->id }}"
-                                            data-name="{{ $akun->name }}"
-                                            data-email="{{ $akun->email }}"
+                                            data-username="{{ $akun->username }}"
                                             data-role="{{ $akun->role }}"
                                             data-role-label="{{ $akun->roleLabel() }}"
                                             data-update-url="{{ route('admin.accounts.update', $akun) }}"
@@ -259,8 +290,7 @@
                                             aria-label="{{ __('Hapus akun') }}"
                                             title="{{ $akunAdmin ? __('Akun Admin tidak dapat dihapus') : __('Hapus akun') }}"
                                             data-id="{{ $akun->id }}"
-                                            data-name="{{ $akun->name }}"
-                                            data-email="{{ $akun->email }}"
+                                            data-username="{{ $akun->username }}"
                                             data-delete-url="{{ route('admin.accounts.destroy', $akun) }}"
                                             @if($akunAdmin) disabled @endif>
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
@@ -293,9 +323,9 @@
                     @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="tambahEmail">{{ __('Email') }} <span class="text-danger">*</span></label>
-                    <input type="email" name="email" id="tambahEmail" class="form-control rounded-3" value="{{ old('_form') === 'create' ? old('email') : '' }}" required autocomplete="off">
-                    @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    <label class="form-label small fw-semibold" for="tambahUsername">{{ __('Username') }} <span class="text-danger">*</span></label>
+                    <input type="text" name="username" id="tambahUsername" class="form-control rounded-3" maxlength="255" value="{{ old('_form') === 'create' ? old('username') : '' }}" required autocomplete="off" autocapitalize="none" spellcheck="false">
+                    @error('username')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-semibold" for="tambahRole">{{ __('Role') }} <span class="text-danger">*</span></label>
@@ -341,21 +371,9 @@
             </div>
             <div class="akun-dialog-body">
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="editName">{{ __('Nama') }} <span class="text-danger">*</span></label>
-                    <input type="text" name="name" id="editName" class="form-control rounded-3" maxlength="100" required>
-                    @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold" for="editEmail">{{ __('Email') }} <span class="text-danger">*</span></label>
-                    <input type="email" name="email" id="editEmail" class="form-control rounded-3" required autocomplete="off">
-                    @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold">{{ __('Role') }}</label>
-                    <div class="akun-role-static">
-                        <span class="akun-role-static-value" id="editRoleLabel">-</span>
-                        <span class="akun-role-static-note">{{ __('Role tidak dapat diubah') }}</span>
-                    </div>
+                    <label class="form-label small fw-semibold" for="editUsername">{{ __('Username') }} <span class="text-danger">*</span></label>
+                    <input type="text" name="username" id="editUsername" class="form-control rounded-3" maxlength="255" required autocomplete="off" autocapitalize="none" spellcheck="false">
+                    @error('username')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-semibold" for="editPassword">{{ __('Password') }}</label>
@@ -367,6 +385,13 @@
                     </div>
                     <div class="text-secondary small mt-1" id="editPasswordHint">{{ __('Ubah kolom ini untuk mengganti password.') }}</div>
                     @error('password')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ __('Role') }}</label>
+                    <div class="akun-role-static">
+                        <span class="akun-role-static-value" id="editRoleLabel">-</span>
+                        <span class="akun-role-static-note">{{ __('Role tidak dapat diubah') }}</span>
+                    </div>
                 </div>
             </div>
             <div class="akun-dialog-footer">
@@ -387,7 +412,7 @@
                     <i class='bx bx-error-circle hapus-icon'></i>
                     <h5 class="fw-bold mb-1">{{ __('Hapus Akun Ini?') }}</h5>
                     <p class="mb-0 small text-secondary">
-                        {{ __('Akun') }} <strong id="hapusNama">-</strong> (<span id="hapusEmail">-</span>) {{ __('akan dihapus permanen dan tidak dapat dipulihkan.') }}
+                        {{ __('Akun') }} <strong id="hapusUsername">-</strong> {{ __('akan dihapus permanen dan tidak dapat dipulihkan.') }}
                     </p>
                 </div>
                 <label class="hapus-check"><input type="checkbox" class="form-check-input" data-hapus-check> <span>{{ __('Saya memahami akun ini dihapus permanen dan tidak dapat dipulihkan.') }}</span></label>
@@ -413,8 +438,7 @@
 
     var fillEdit = function (b) {
         var set = function (id, v) { var el = $(id); if (el) { el.value = v; } };
-        set('editName', b.getAttribute('data-name') || '');
-        set('editEmail', b.getAttribute('data-email') || '');
+        set('editUsername', b.getAttribute('data-username') || '');
         set('editUserId', b.getAttribute('data-id') || '');
         var lbl = $('editRoleLabel');
         if (lbl) { lbl.textContent = b.getAttribute('data-role-label') || ''; lbl.className = 'akun-role-static-value is-' + b.getAttribute('data-role'); }
@@ -451,9 +475,8 @@
 
         var db = e.target.closest('.btn-hapus-akun');
         if (db && !db.disabled) {
-            var n = $('hapusNama'), m = $('hapusEmail');
-            if (n) { n.textContent = db.getAttribute('data-name') || ''; }
-            if (m) { m.textContent = db.getAttribute('data-email') || ''; }
+            var m = $('hapusUsername');
+            if (m) { m.textContent = db.getAttribute('data-username') || ''; }
             var fh = $('formHapus');
             if (fh) { fh.setAttribute('action', db.getAttribute('data-delete-url')); }
             var cs = document.querySelectorAll('[data-hapus-check]');
@@ -493,9 +516,8 @@
         if (btn) { fillEdit(btn); }
         var fe = $('formEdit');
         if (fe && uid) { fe.setAttribute('action', @json(url('/admin/kelola-akun')) + '/' + uid + '/update'); }
-        var nn = $('editName'), ee = $('editEmail');
-        if (nn) { nn.value = @json(old('name')); }
-        if (ee) { ee.value = @json(old('email')); }
+        var ee = $('editUsername');
+        if (ee) { ee.value = @json(old('username')); }
         open(dEdit);
     }
 })();

@@ -65,7 +65,7 @@ class AuthController extends Controller
     /**
      * Peringatan dini bila tabel `users` kosong.
      *
-     * Gejala "Username atau kata sandi yang Anda masukkan salah" hampir selalu
+     * Gejala "Username atau password salah" hampir selalu
      * bermula dari tabel users yang ikut terhapus. Karena itu, saat halaman
      * login dibuka, kondisi ini dicatat ke log agar masalah cepat terdeteksi.
      *
@@ -105,50 +105,31 @@ class AuthController extends Controller
 
     /**
      * Router login universal & cerdas:
-     * - Menerima satu input Email, Username, atau NIP
-     * - Mendeteksi hak akses secara otomatis (ADMIN atau GURU)
+     * - Menerima satu input Username (identitas login) + password
+     * - Akun WAJIB berstatus AKTIF untuk boleh masuk
      * - Mengarahkan ke dashboard masing-masing secara instan tanpa perlu memilih role manual
      */
     public function login(Request $request)
     {
-                $request->validate([
+        $request->validate([
             'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ], [
-            'login.required' => __('Email wajib diisi.'),
+            'login.required' => __('Username wajib diisi.'),
             'password.required' => __('Kata sandi wajib diisi.'),
         ]);
 
-        $loginInput = trim((string) $request->input('login'));
+        $username = trim((string) $request->input('login'));
         $password = (string) $request->input('password');
         $remember = $request->boolean('remember');
 
-        // 1. Cek apakah login menggunakan Email User lengkap (atau username pendek)
-        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            $user = User::where('email', $loginInput)->first();
-            if ($user && $this->verifyUserCredentials($user, $password)) {
-                if (!$user->isActive()) {
-                    return back()->withInput($request->only('login', 'remember'))->withErrors([
-                        'login' => __('Akun tidak dapat digunakan. Hubungi admin sekolah.'),
-                    ]);
-                }
-
-                Auth::login($user, $remember);
-                $request->session()->regenerate();
-
-                return $this->redirectBasedOnRole($user);
-            }
-        }
-
-        // 2. Cek apakah login menggunakan Username pendek (misal: 'admin', 'guru')
-        //    Hanya query username jika kolom sudah ada di database.
+        // 1. Akun dicari berdasarkan USERNAME (identitas login), bukan email.
+        //    Kolom username dijamin ada oleh migration
+        //    2026_10_22_000001_switch_user_identity_to_username.
         $user = null;
+
         if (Schema::hasColumn('users', 'username')) {
-            $user = User::where('username', $loginInput)->first();
-        }
-        if (!$user) {
-            // Prefix alias email: 'admin' -> 'admin@%'
-            $user = User::where('email', 'like', $loginInput . '@%')->first();
+            $user = User::where('username', $username)->first();
         }
 
         if ($user && $this->verifyUserCredentials($user, $password)) {
@@ -164,30 +145,9 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole($user);
         }
 
-        // 3. Auth::attempt sebagai fallback terakhir (untuk username/email yang valid)
-        $attemptField = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        if (Schema::hasColumn('users', 'username') || $attemptField === 'email') {
-            if (Auth::attempt([$attemptField => $loginInput, 'password' => $password], $remember)) {
-                // Pengecekan nonaktif juga berlaku di jalur fallback ini.
-                if (!Auth::user()->isActive()) {
-                    Auth::logout();
-                    $request->session()->invalidate();
-                    $request->session()->regenerateToken();
-
-                    return back()->withInput($request->only('login', 'remember'))->withErrors([
-                        'login' => __('Akun tidak dapat digunakan. Hubungi admin sekolah.'),
-                    ]);
-                }
-
-                $request->session()->regenerate();
-
-                return $this->redirectBasedOnRole(Auth::user());
-            }
-        }
-
-        // Autentikasi Gagal
+        // 2. Autentikasi gagal - pesan generik (tidak membocorkan info akun).
         return back()->withInput($request->only('login', 'remember'))->withErrors([
-            'login' => __('Email atau kata sandi yang Anda masukkan salah.'),
+            'login' => __('Username atau password salah'),
         ]);
     }
 

@@ -66,10 +66,14 @@ class UserAccountController extends Controller
         try {
             $user = DB::transaction(function () use ($validated, $hasEncryptedColumn) {
                 $password = $validated['password'];
+                $username = strtolower(trim($validated['username']));
 
                 $attributes = [
-                    'name' => trim($validated['name']),
-                    'email' => strtolower(trim($validated['email'])),
+                    // Kolom `name` tidak lagi dipakai untuk tampilan dan tidak
+                    // diedit lagi; nilainya otomatis mengikuti username sehingga
+                    // kolom itu tetap terisi (kolomnya TIDAK dihapus).
+                    'name' => $username,
+                    'username' => $username,
                     'role' => $validated['role'],
                     'status' => User::STATUS_AKTIF,
                     'password' => $password,
@@ -90,7 +94,7 @@ class UserAccountController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Akun berhasil ditambahkan.',
-                    'user' => $user->only(['id', 'name', 'email', 'role', 'status']),
+                    'user' => $user->only(['id', 'name', 'username', 'role', 'status']),
                 ]);
             }
             return redirect()->route('admin.accounts.index')->with('success', __('Akun berhasil ditambahkan.'));
@@ -105,18 +109,25 @@ class UserAccountController extends Controller
     }
 
     /**
-     * Perbarui akun (nama, email, dan/atau password).
+     * Perbarui akun (username dan/atau password).
      *
      * Role SENGAJA tidak bisa diubah lewat form: nilai role diambil dari
      * akun yang ada (bukan dari input).
+     *
+     * Nama SENGAJA tidak bisa diubah lewat form lagi: kolom `name` tidak lagi
+     * dipakai untuk tampilan dan nilainya otomatis mengikuti username.
      */
     public function update(Request $request, User $user)
     {
         $validated = $request->validate($this->rulesForUpdate($user->id), $this->messages());
 
+        $username = strtolower(trim($validated['username']));
+
         $data = [
-            'name' => trim($validated['name']),
-            'email' => strtolower(trim($validated['email'])),
+            // Kolom `name` tidak boleh ditimpa dengan null/kosong: nilainya
+            // otomatis mengikuti username.
+            'name' => $username,
+            'username' => $username,
             'role' => $user->role,
         ];
 
@@ -144,7 +155,7 @@ class UserAccountController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Akun berhasil diperbarui.',
-                    'user' => $user->only(['id', 'name', 'email', 'role', 'status']),
+                    'user' => $user->only(['id', 'name', 'username', 'role', 'status']),
                 ]);
             }
             return redirect()->route('admin.accounts.index')->with('success', __('Akun berhasil diperbarui.'));
@@ -261,7 +272,9 @@ class UserAccountController extends Controller
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'username' => array_merge($this->usernameRules(), [
+                Rule::unique('users', 'username'),
+            ]),
             'role' => ['required', 'in:' . implode(',', array_keys(User::ROLES))],
             'password' => ['required', 'string', 'min:8'],
         ];
@@ -270,9 +283,45 @@ class UserAccountController extends Controller
     protected function rulesForUpdate(int $userId): array
     {
         return [
-            'name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
+            // Tidak ada validasi `name`: field Nama sudah dihapus dari modal
+            // Edit dan kolom `name` mengikuti username.
+            'username' => array_merge($this->usernameRules(), [
+                // Saat edit, akun yang sedang diedit diabaikan supaya
+                // username lamanya tidak dianggap duplikat.
+                Rule::unique('users', 'username')->ignore($userId),
+            ]),
             'password' => ['nullable', 'string', 'min:8'],
+        ];
+    }
+
+    /**
+     * Aturan username (identitas login).
+     *
+     * Wajib, minimal 3 karakter, tanpa spasi, dan hanya boleh berisi
+     * huruf kecil, angka, titik, underscore, atau strip.
+     */
+    protected function usernameRules(): array
+    {
+        return [
+            'required',
+            'string',
+            'min:3',
+            'max:255',
+            function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! is_string($value)) {
+                    return;
+                }
+
+                if (preg_match('/\s/', $value)) {
+                    $fail('Username tidak boleh mengandung spasi.');
+
+                    return;
+                }
+
+                if (! preg_match('/^[a-z0-9._-]+$/', $value)) {
+                    $fail('Username hanya boleh berisi huruf kecil, angka, titik, underscore, atau strip.');
+                }
+            },
         ];
     }
 
@@ -280,9 +329,10 @@ class UserAccountController extends Controller
     {
         return [
             'name.required' => 'Nama wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah terdaftar pada akun lain.',
+            'username.required' => 'Username wajib diisi.',
+            'username.min' => 'Username minimal 3 karakter.',
+            'username.max' => 'Username maksimal 255 karakter.',
+            'username.unique' => 'Username sudah digunakan akun lain.',
             'role.required' => 'Role wajib dipilih.',
             'role.in' => 'Role yang dipilih tidak valid.',
             'password.required' => 'Password wajib diisi.',

@@ -9,6 +9,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 /**
  * SATU-SATUNYA SUMBER KEBENARAN AKUN LOGIN (2026-10-03).
@@ -19,53 +20,48 @@ use Illuminate\Support\Facades\Hash;
  *   - TIDAK pernah membuat data CONTOH (siswa, guru, presensi, hari libur).
  *
  * Isi seed HANYA data esensial supaya aplikasi langsung bisa dipakai:
- *   1. Akun admin + akun guru default.
+ *   1. Akun admin + akun guru + akun guru piket default.
  *   2. Satu tahun ajaran aktif (rekap & presensi butuh tahun ajaran aktif).
  *   3. Tiga kelas inti 7A/8A/9A (form Tambah Siswa butuh pilihan kelas;
  *      tanpa kelas, dropdown kosong dan siswa tidak bisa ditambah manual).
  * Data contoh (siswa, guru, absensi) TIDAK lagi dibuat di sini - kalau
  * dibutuhkan untuk uji, buat sendiri lewat aplikasi atau import Excel.
  *
+ * IDENTITAS LOGIN = USERNAME (bukan email lagi).
+ *
  * KREDENSIAL DEVELOPMENT (WAJIB DIGANTI SEBELUM PRODUCTION):
  *   admin / admin123
  *   guru  / guru123
- * `username` adalah identitas login. Email hanya atribut kontak tambahan.
+ *   piket / piket123
+ * Password di atas bisa ditimpa lewat .env (ADMIN_PASSWORD, GURU_PASSWORD,
+ * PIKET_PASSWORD) atau langsung diubah lewat halaman Kelola Akun.
  */
 class DatabaseSeeder extends Seeder
 {
     /**
+     * Password default untuk akun bawaan.
+     *
+     * Bisa ditimpa lewat .env:
+     *   ADMIN_PASSWORD, GURU_PASSWORD, PIKET_PASSWORD
+     */
+    public const DEFAULT_PASSWORDS = [
+        'admin' => 'admin123',
+        'guru' => 'guru123',
+        'piket' => 'piket123',
+    ];
+
+    /**
      * Akun default yang dibuat/dipastikan ada.
      *
-     * Sumber kebenaran akun login SEBARANG PERUBAHAN:
-     *   - email & password dibaca dari .env (ADMIN_EMAIL, ADMIN_PASSWORD).
-     *   - SEEDER TIDAK MENYIMPAN KONDITIONAL DEFAULT PASSWORD.
-     *   - Saat env kosong: seeder BERHENTI dengan pesan error yang jelas,
-     *     ITSU BUKAN membuat akun default yang memicu login tanpa izin.
+     * Username adalah identitas login. Email hanya atribut kontak tambahan
+     * (boleh kosong) dan TIDAK lagi dipakai untuk masuk ke aplikasi.
      *
-     * Idempotent: memakai updateOrCreate(['email' => $email]), jadi
+     * Idempotent: memakai updateOrCreate(['username' => ...]), jadi
      * `db:seed` berjalan berkali-kali tidak menimpa akun lain & tidak
      * membuat duplikat.
-     * =======================================================================
-     * CARA MENGGUNAKAN (di .env):
-     *   ADMIN_NAME="Administrator SMP PGRI"
-     *   ADMIN_EMAIL="admin@sekolah.sch.id"
-     *   ADMIN_PASSWORD="SangatKuat123!"
-     * =======================================================================
      */
     public function run(): void
     {
-        $adminName = env('ADMIN_NAME', 'Administrator');
-        $adminEmail = env('ADMIN_EMAIL', '');
-        $adminPassword = env('ADMIN_PASSWORD', '');
-
-        if ($adminEmail === '' || $adminPassword === '' || $adminName === '') {
-            throw new RuntimeException(
-                'Seeder DatabaseSeeder gagal: variabel .env belum diisi. '
-                .'Silakan set setidaknya ADMIN_EMAIL dan ADMIN_PASSWORD '
-                .'di .env (lihat docblock pada DatabaseSeeder::run()).'
-            );
-        }
-
         $this->seedAccounts();
         $this->seedActiveAcademicYear();
         $this->seedCoreClasses();
@@ -120,12 +116,13 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Pastikan akun ADMIN (dari .env) + akun default Guru & Guru Piket ada.
+     * Pastikan akun ADMIN + akun default Guru & Guru Piket ada.
      *
-     *   - ADMIN: nama/email/password dibaca dari .env (ADMIN_NAME,
-     *     ADMIN_EMAIL, ADMIN_PASSWORD) - TIDAK ada password hardcode.
-     *   - Guru & Guru Piket: akun default development (diubah lewat aplikasi
-     *     setelah login). Satu akun per role.
+     *   - Identitas login: USERNAME (admin / guru / piket).
+     *   - Password: default development (lihat self::DEFAULT_PASSWORDS),
+     *     bisa ditimpa lewat .env (ADMIN_PASSWORD / GURU_PASSWORD /
+     *     PIKET_PASSWORD) atau diubah lewat aplikasi.
+     *   - Email: atribut kontak tambahan saja, boleh kosong.
      *
      * Kolom password_terenkripsi ikut diisi (enkripsi reversibel) supaya admin
      * bisa melihat password lewat Kelola Akun.
@@ -138,24 +135,21 @@ class DatabaseSeeder extends Seeder
         $accounts = [
             [
                 'username' => 'admin',
-                'name' => (string) env('ADMIN_NAME', 'Administrator'),
                 'role' => 'admin',
                 'email' => (string) env('ADMIN_EMAIL', ''),
-                'password' => (string) env('ADMIN_PASSWORD', ''),
+                'password' => (string) (env('ADMIN_PASSWORD') ?: self::DEFAULT_PASSWORDS['admin']),
             ],
             [
                 'username' => 'guru',
-                'name' => 'Guru Pengajar',
                 'role' => 'guru',
-                'email' => 'guru@presensi.com',
-                'password' => 'guru123',
+                'email' => (string) env('GURU_EMAIL', 'guru@presensi.com'),
+                'password' => (string) (env('GURU_PASSWORD') ?: self::DEFAULT_PASSWORDS['guru']),
             ],
             [
                 'username' => 'piket',
-                'name' => 'Guru Piket',
                 'role' => 'piket',
-                'email' => 'piket@presensi.com',
-                'password' => 'piket123',
+                'email' => (string) env('PIKET_EMAIL', 'piket@presensi.com'),
+                'password' => (string) (env('PIKET_PASSWORD') ?: self::DEFAULT_PASSWORDS['piket']),
             ],
         ];
 
@@ -168,23 +162,29 @@ class DatabaseSeeder extends Seeder
 
             // Idempotent & TIDAK menimpa akun lain:
             //   - akun dengan username sama sudah ada  -> perbarui;
-            //   - email sudah dipakai akun username lain (mis. akun lama tanpa
-            //     username) -> LEWATI, agar password akun lama tidak tertimpa
-            //     dan tidak terjadi pelanggaran UNIQUE(users.email).
+            //   - akun dengan username lain tidak ikut tersentuh.
             $user = User::where('username', $account['username'])->first();
 
-            if (! $user && $account['email'] !== '' && User::where('email', $account['email'])->exists()) {
-                continue;
-            }
-
             $attributes = [
-                'name' => $account['name'],
+                // Kolom `name` tidak lagi dipakai untuk tampilan dan tidak
+                // diedit lagi; nilainya otomatis mengikuti username (kolomnya
+                // tetap ada & wajib terisi, tidak dihapus).
+                'name' => $account['username'],
                 'role' => $account['role'],
-                'email' => $account['email'],
                 'password' => Hash::make($plainPassword),
                 'password_terenkripsi' => Crypt::encryptString($plainPassword),
                 'email_verified_at' => now(),
             ];
+
+            // Email hanya atribut kontak tambahan. Kolom email tetap UNIQUE,
+            // jadi hanya diisi bila belum dipakai akun lain.
+            $email = trim($account['email']);
+
+            if ($email !== '' && ! User::where('email', $email)
+                ->when($user, fn ($query) => $query->where('id', '!=', $user->id))
+                ->exists()) {
+                $attributes['email'] = $email;
+            }
 
             if ($user) {
                 $user->update($attributes);
@@ -192,5 +192,12 @@ class DatabaseSeeder extends Seeder
                 User::create($attributes + ['username' => $account['username']]);
             }
         }
+
+        // Peringatan sekali jalan: password default development harus diganti.
+        Log::warning(
+            'SEED: akun default memakai password development. '
+            .'Ganti lewat .env (ADMIN_PASSWORD/GURU_PASSWORD/PIKET_PASSWORD) '
+            .'atau lewat halaman Kelola Akun sebelum dipakai di production.'
+        );
     }
 }
