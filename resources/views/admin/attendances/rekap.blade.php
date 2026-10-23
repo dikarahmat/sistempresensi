@@ -772,7 +772,8 @@
                         <col style="width: 170px;">
                         <col style="width: 80px;">
                         <col style="width: 35px;">
-                        <col style="width: auto;" span="{{ $daysInMonth + 6 }}">
+                        <col style="width: auto;" span="{{ $daysInMonth + 5 }}">
+                        <col style="width: 64px;">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
@@ -785,12 +786,12 @@
                                 @php $isHol = isset($holidayMap[$d]); @endphp
                                 <th class="{{ $isHol ? 'th-holiday' : '' }}">{{ $d }}</th>
                             @endfor
-                            <th class="text-success">H</th>
-                            <th style="color: #d97706;">T</th>
-                            <th class="text-primary">S</th>
-                            <th style="color: #7e22ce;">I</th>
-                            <th style="color: #ef4444;">A</th>
-                            <th class="text-secondary">%</th>
+                            <th style="color: var(--bs-success, #198754) !important; font-weight: 700 !important;">H</th>
+                            <th style="color: #d97706 !important; font-weight: 700 !important;">T</th>
+                            <th style="color: var(--bs-primary, #0d6efd) !important; font-weight: 700 !important;">S</th>
+                            <th style="color: #7e22ce !important; font-weight: 700 !important;">I</th>
+                            <th style="color: #ef4444 !important; font-weight: 700 !important;">A</th>
+                            <th style="color: #212529 !important; font-weight: 700 !important; font-size: 0.95rem !important;">%</th>
                         </tr>
                     </thead>
                     <tbody>
