@@ -367,7 +367,7 @@ class TeacherController extends Controller
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'nip' => ['required', 'regex:/^[0-9]{18}$/', $nipUnique],
+            'nip' => ['required', 'regex:/^([0-9]{16}|[0-9]{18})$/', $nipUnique],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
             'birth_place' => ['nullable', 'string', 'max:100'],
             'birth_date' => ['nullable', 'date'],
@@ -384,7 +384,7 @@ class TeacherController extends Controller
             'name.string' => 'Nama lengkap tidak valid.',
             'name.max' => 'Nama lengkap maksimal 255 karakter.',
             'nip.required' => 'NIP wajib diisi.',
-            'nip.regex' => 'NIP harus 18 digit angka.',
+            'nip.regex' => 'NIP/NUPTK harus 16 atau 18 digit angka.',
             'nip.unique' => 'NIP sudah terdaftar.',
             'gender.required' => 'Jenis kelamin wajib dipilih.',
             'gender.in' => 'Jenis kelamin tidak valid.',
