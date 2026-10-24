@@ -295,6 +295,51 @@
     .search-filter-group .input-group button.btn {
         border-radius: 0 var(--clean-radius) var(--clean-radius) 0 !important;
     }
+
+    /* ===== Data Guru: aturan MOBILE (max-width: 767px) =====
+       Semua aturan di dalam media query ini; desktop (>= 768px) tidak terpengaruh. */
+    @media (max-width: 767px) {
+        .table-responsive {
+            width: 100% !important;
+            display: block !important;
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: contain !important;
+        }
+        .table-zebra-custom {
+            table-layout: fixed !important;
+            min-width: 640px !important;
+        }
+        /* Lebar kolom eksplisit (total 890px; tabel digulir di dalam wadah, halaman tidak ikut scroll) */
+        .table-zebra-custom col:nth-child(1)  { width: 40px !important; }    /* No */
+        .table-zebra-custom col:nth-child(2)  { width: 170px !important; }   /* NIP */
+        .table-zebra-custom col:nth-child(3)  { width: 220px !important; }   /* Nama Lengkap Guru */
+        .table-zebra-custom col:nth-child(4)  { width: 110px !important; }   /* Jenis Kelamin */
+        .table-zebra-custom col:nth-child(5)  { width: 130px !important; }   /* Tugas Kelas */
+        .table-zebra-custom col:nth-child(6)  { width: 140px !important; }   /* No. Telepon / WA */
+        .table-zebra-custom col:nth-child(7)  { width: 80px !important; }    /* Aksi */
+        .table-zebra-custom thead th:nth-child(1)  { width: 40px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(2)  { width: 170px !important; text-align: left !important; white-space: nowrap !important; }
+        .table-zebra-custom thead th:nth-child(3)  { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
+        .table-zebra-custom thead th:nth-child(4)  { width: 110px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(5)  { width: 130px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(6)  { width: 140px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(7)  { width: 80px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(1)  { width: 40px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(2)  { width: 170px !important; text-align: left !important; white-space: nowrap !important; }
+        .table-zebra-custom tbody td:nth-child(3)  { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
+        .table-zebra-custom tbody td:nth-child(4)  { width: 110px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(5)  { width: 130px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(6)  { width: 140px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(7)  { width: 80px !important; text-align: center !important; }
+        /* Padding konsisten antar kolom (minimal 8px) */
+        .table-zebra-custom th,
+        .table-zebra-custom td {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+    }
 </style>
 @endpush
 

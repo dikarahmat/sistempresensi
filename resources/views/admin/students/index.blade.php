@@ -86,12 +86,13 @@
     }
 
     .nama-siswa-wrapper {
-        display: inline-block;
-        width: auto;
-        max-width: none;
-        padding-left: 183px;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        padding-left: 0;
         text-align: left;
-        white-space: nowrap;
+        white-space: normal;
+        word-break: break-word;
     }
 
     .crud-center-wrapper {
@@ -110,10 +111,74 @@
         border-radius: 6px !important;
     }
 
-    @media (max-width: 767.98px) {
-        .pagination-compact .pagination {
-            justify-content: center !important;
+@media (max-width: 767px) {
+        /* Table responsive */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+        }
+
+        /* Zebra striping & table layout */
+        .table-zebra-custom {
+            table-layout: auto;
+            border-collapse: collapse;
+        }
+
+        .table-zebra-custom th,
+        .table-zebra-custom td {
+            vertical-align: middle;
+            padding: 10px 6px !important;
+            font-size: 11px !important;
+        }
+
+        /* Column widths */
+        .table-zebra-custom th.no, .table-zebra-custom td.no { display: none; }
+        .table-zebra-custom th.kelas, .table-zebra-custom td.kelas { width: 1%; text-align: center; }
+        .table-zebra-custom th.nisn, .table-zebra-custom td.nisn { width: 1%; text-align: center; }
+        .table-zebra-custom th.nama, .table-zebra-custom td.nama { width: auto; text-align: left; white-space: normal; word-break: break-word; }
+        .table-zebra-custom th.jenis_kelamin, .table-zebra-custom td.jenis_kelamin { width: 1%; text-align: center; }
+        .table-zebra-custom th.aksi, .table-zebra-custom td.aksi { width: 1%; white-space: nowrap; }
+
+        /* Header text alignment */
+        .table-zebra-custom thead th.no, .table-zebra-custom thead th.kelas,
+        .table-zebra-custom thead th.nisn, .table-zebra-custom thead th.jenis_kelamin,
+        .table-zebra-custom thead th.aksi { text-align: center; }
+        .table-zebra-custom thead th.nama { text-align: left; }
+
+        /* Cell text alignment (same as header) */
+        .table-zebra-custom tbody td.no, .table-zebra-custom tbody td.kelas,
+        .table-zebra-custom tbody td.nisn, .table-zebra-custom tbody td.jenis_kelamin,
+        .table-zebra-custom tbody td.aksi { text-align: center; }
+        .table-zebra-custom tbody td.nama { text-align: left; }
+
+        /* Aksi column */
+        .table-zebra-custom tbody td.aksi {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .table-zebra-custom tbody td.aksi .crud-center-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Nama siswa wrapper */
+        .nama-siswa-wrapper {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            text-align: left !important;
+        }
+    }
             flex-wrap: wrap;
+            gap: 2px;
+        }
+    }: wrap;
             gap: 2px;
         }
     }
@@ -375,6 +440,74 @@
     /* Gaya pagination TIDAK ditulis di sini: memakai blok bersama
        .kehadiran-pagination* di layouts/app.blade.php (satu sumber gaya,
        sama persis dengan Catatan Kehadiran & Rekap). */
+
+    /* ===== Data Siswa: aturan MOBILE (max-width: 767px) =====
+       Semua aturan di dalam media query ini; desktop (>= 768px) tidak terpengaruh. */
+    @media (max-width: 767px) {
+        .table-responsive {
+            width: 100% !important;
+            display: block !important;
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            max-height: none !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: contain !important;
+        }
+        .table-zebra-custom {
+            table-layout: fixed !important;
+            min-width: 650px !important;
+        }
+        /* Lebar kolom eksplisit (total 650px; tabel digulir di dalam wadah, halaman tidak ikut scroll) */
+        .table-zebra-custom col:nth-child(1)  { width: 40px !important; }    /* No */
+        .table-zebra-custom col:nth-child(2)  { width: 60px !important; }     /* Kelas */
+        .table-zebra-custom col:nth-child(3)  { width: 120px !important; }    /* NISN */
+        .table-zebra-custom col:nth-child(4)  { width: 220px !important; }    /* Nama Siswa */
+        .table-zebra-custom col:nth-child(5)  { width: 110px !important; }    /* Jenis Kelamin */
+        .table-zebra-custom col:nth-child(6)  { width: 100px !important; }    /* Aksi */
+        .table-zebra-custom thead th:nth-child(1) { width: 40px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(2) { width: 60px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(3) { width: 120px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(4) { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
+        .table-zebra-custom thead th:nth-child(5) { width: 110px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(6) { width: 100px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(1) { width: 40px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(2) { width: 60px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(3) { width: 120px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(4) { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
+        .table-zebra-custom tbody td:nth-child(5) { width: 110px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(6) { width: 100px !important; text-align: center !important; }
+        /* Padding konsisten antar kolom (minimal 8px) */
+        .table-zebra-custom th,
+        .table-zebra-custom td {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+        /* Nama siswa tidak boleh didorong ke kanan: teks rata kiri, pas di sebelah kanan NISN. */
+        .nama-siswa-wrapper {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            text-align: left !important;
+        }
+    }
+
+    /* ===== Data Siswa: kolom Nama Siswa rata kiri di DESKTOP =====
+       Hanya berlaku di lebar >= 768px; mobile (di bawah 768px) tidak terpengaruh.
+       padding-left 120px pada th dan td agar judul & isi nama berawal di garis vertikal
+       yang sama, berada di tengah celah antara NISN dan Jenis Kelamin (~x=850-900 di 1920px). */
+    @media (min-width: 768px) {
+        .table-zebra-custom thead th:nth-child(4),
+        .table-zebra-custom tbody td:nth-child(4) {
+            text-align: left !important;
+            padding-left: 225px !important;
+        }
+        .table-zebra-custom tbody td:nth-child(4) {
+            white-space: normal !important;
+        }
+        .table-zebra-custom tbody td:nth-child(4) .nama-siswa-wrapper {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+    }
 </style>
 @endpush
 
@@ -550,7 +683,7 @@
                         <th class="text-center">{{ __('No') }}</th>
                         <th class="text-center">{{ __('Kelas') }}</th>
                         <th class="text-center">{{ __('NISN') }}</th>
-                        <th class="text-center">{{ __('Nama Siswa') }}</th>
+                        <th class="text-left">{{ __('Nama Siswa') }}</th>
                         <th class="text-center">{{ __('Jenis Kelamin') }}</th>
                         <th class="text-center">{{ __('Aksi') }}</th>
                     </tr>
