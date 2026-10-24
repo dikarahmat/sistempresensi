@@ -10,7 +10,6 @@ use App\Models\Setting;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -308,16 +307,6 @@ class StudentController extends Controller
             'pengaturan',
             'setting'
         ));
-    }
-
-    public function downloadQr(Student $student)
-    {
-        // Validasi: hanya admin dan guru yang bisa download QR
-        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'guru'])) {
-            abort(403, 'Akses ditolak.');
-        }
-
-        return \App\Services\DownloadCacheService::downloadQrSvg($student);
     }
 
     public function import(Request $request): RedirectResponse

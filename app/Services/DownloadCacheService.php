@@ -131,9 +131,9 @@ class DownloadCacheService
     }
 
     /**
-     * Download Single Student Card PDF (Identik dengan satu kartu di PDF massal).
-     * Menggunakan template yang sama (admin.students.partials.card) via view print-card-pdf.
-     * Kertas A4 Portrait, kartu di pojok kiri atas (posisi slot pertama massal).
+     * Download Single Student Card PDF — A4 portrait, 1 kartu (53,98 x 85,6 mm)
+     * di pojok kiri atas, memakai partial admin.students.partials.card
+     * (desain sama persis dengan preview & PDF massal).
      */
     public static function downloadSingleCardPdf(Student $student)
     {
@@ -144,7 +144,7 @@ class DownloadCacheService
             $student->loadMissing('schoolClass');
             $settingStamp = self::getSettingStamp();
             $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.pdf";
+            $cacheFileName = "card_single_a4p_{$student->id}_{$studentStamp}_{$settingStamp}.pdf";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
             $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.pdf';
@@ -166,14 +166,14 @@ class DownloadCacheService
                     $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
                 }
 
-                // QR Base64
+                // QR Base64 (SVG, sama seperti PDF massal)
                 $token = $student->nisn ?: $student->qr_token;
                 $qrBase64 = null;
                 try {
-                    $svg = QrCode::size(120)->margin(0)->generate($token);
+                    $svg = QrCode::size(140)->margin(0)->generate($token);
                     $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
                 } catch (\Throwable $e) {
-                    $qrBase64 = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($token);
+                    $qrBase64 = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" . urlencode($token);
                 }
 
                 $genderVal = ($student->gender ?? 'Laki-laki') === 'Perempuan' ? 'Perempuan' : 'Laki-laki';

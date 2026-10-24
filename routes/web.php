@@ -107,7 +107,6 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
     Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
     Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import')->middleware('throttle:10,1');
-    Route::get('students/{student}/download-qr', [AdminStudentController::class, 'downloadQr'])->name('students.download-qr');
     Route::get('students/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
     Route::get('students/{id}/print-card', [AdminStudentController::class, 'printCard'])->name('students.print-card');
     Route::get('students-print-all', [AdminStudentController::class, 'printCard'])->name('students.print-all');
@@ -214,7 +213,6 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     Route::get('/siswa', [AdminStudentController::class, 'index'])->name('students.index');
     // Route statis didaftarkan lebih dulu agar tidak tertangkap {student}.
     Route::match(['get', 'post'], '/siswa/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
-    Route::get('/siswa/{student}/download-qr', [AdminStudentController::class, 'downloadQr'])->name('students.download-qr');
     Route::get('/siswa/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
     Route::get('/siswa/{student}/card', [AdminStudentController::class, 'downloadCard'])->name('students.card');
     Route::get('/siswa/{student}', [AdminStudentController::class, 'show'])->name('students.show');

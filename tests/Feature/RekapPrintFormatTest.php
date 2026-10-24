@@ -807,7 +807,7 @@ class RekapPrintFormatTest extends TestCase
         // Tombol/link unduhan yang memakai helper.
         $pemakaiHelper = [
             'admin/students/index.blade.php'    => ['data-dl-progress', 'id="kartuUnduhBtn"', "panel_route('students.template')"],
-            'admin/students/show.blade.php'     => ["panel_route('students.download-qr'", "panel_route('students.download-card'"],
+            'admin/students/show.blade.php'     => ["panel_route('students.download-card'"],
             'admin/teachers/index.blade.php'    => ["panel_route('guru.template')"],
             'admin/classes/index.blade.php'     => ["panel_route('classes.template')"],
             'admin/holidays/index.blade.php'    => ["panel_route('holidays.template')"],

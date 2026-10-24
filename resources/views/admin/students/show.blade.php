@@ -68,30 +68,6 @@
         margin-bottom: 1.5rem;
     }
 
-    .qr-display-box svg, .qr-display-box img {
-        width: 220px;
-        height: 220px;
-        object-fit: contain;
-    }
-
-    .btn-download-blue {
-        background-color: #3b82f6;
-        color: #ffffff;
-        font-weight: 600;
-        font-size: 0.9rem;
-        border-radius: var(--clean-radius);
-        border: none;
-        padding: 0.65rem 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        text-decoration: none;
-        margin-bottom: 0.75rem;
-        transition: all 0.2s ease;
-    }
-    .btn-download-blue:hover { background-color: #2563eb; color: #ffffff; }
-
     .btn-download-green {
         background-color: #059669;
         color: #ffffff;
@@ -159,19 +135,20 @@
             </div>
         </div>
 
-        <!-- Box QR Code Siswa -->
+        <!-- Box Kartu Presensi -->
         <div class="col-12 col-lg-5">
             <div class="card card-modern p-4">
-                <h5 class="fw-bold mb-3" style="color: #0f172a;">{{ __('QR Code Siswa') }}</h5>
+                <h5 class="fw-bold mb-3" style="color: #0f172a;">{{ __('Kartu Presensi') }}</h5>
 
+                {{-- Pratinjau kartu memakai komponen yang SAMA dengan PDF massal/individual --}}
                 <div class="qr-display-box d-flex justify-content-center align-items-center p-3 mb-3 bg-light rounded-3" style="border: 1px dashed #cbd5e1;">
-                    {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(220)->margin(1)->generate($student->nisn ?: $student->qr_token) !!}
+                    @include('admin.students.partials.card', [
+                        'studentItem' => $student,
+                        'studentName' => $student->name,
+                        'studentNisn' => $student->nisn,
+                        'studentClass' => $student->schoolClass->name ?? '-',
+                    ])
                 </div>
-
-                <!-- Tombol Download QR Saja (Tanpa Ikon) -->
-                <a href="{{ panel_route('students.download-qr', $student->id) }}" class="btn-download-blue btn-progress" data-download data-no-download data-dl-progress>
-                    {{ __('Download QR Code') }}
-                </a>
 
                 <!-- Tombol Download Kartu Presensi PDF (Tanpa Ikon) -->
                 <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green btn-progress" id="btnDownloadCard" style="text-decoration: none;" data-download data-no-download data-dl-progress>
