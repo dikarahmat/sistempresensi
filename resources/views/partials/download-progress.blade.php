@@ -188,8 +188,8 @@
     var TICK_FINAL_MS   = 12;    // kejar 100%: +1 tiap 12 ms
     var HOLD_100_MS     = 300;   // tahan di 100% supaya terlihat
     var HOLD_SELESAI_MS = 1000;  // tahan teks "Selesai"
-    var TEKS_SELESAI    = (window.__i18n && window.__i18n.dl_selesai) || 'Selesai';
-    var TEKS_GESER      = (window.__i18n && window.__i18n.dl_memproses) || 'Memproses...';
+    var TEKS_SELESAI    = 'Selesai';
+    var TEKS_GESER      = 'Memproses...';
     var MAKS_RETRY      = 3;
     var ESTIMASI_MS     = 150;   // tanpa Content-Length: interval estimasi
     var PLAFON_ESTIMASI = 90;    // maks estimasi selama menunggu

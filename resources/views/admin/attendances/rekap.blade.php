@@ -1416,7 +1416,7 @@
             } catch (e) { /* popup tetap bisa ditutup manual */ }
         }
 
-        /** Semua kelas berhasil: tombol hijau "Selesai" 1 detik lalu popup menutup sendiri.
+/** Semua kelas berhasil: tombol hijau "Selesai" 1 detik lalu popup menutup sendiri.
             Teks "Selesai" SAJA — tanpa ikon centang. */
         function rekapTampilkanSukses() {
             const btn = document.getElementById('printRekapSubmitBtn');
@@ -1427,7 +1427,7 @@
                 btn.disabled = true;
                 btn.classList.remove('is-running');
                 btn.classList.add('is-done');
-                rekapIsiTombol({!! json_encode(__('Selesai')) !!});
+                rekapIsiTombol('Selesai');
             }
             if (cancel) {
                 cancel.disabled = false;
@@ -1451,7 +1451,7 @@
                 btn.style.borderColor = '';
                 // Tombol ini jadi pemicu "Coba lagi".
                 btn.dataset.mode = 'retry';
-                rekapIsiTombol({!! json_encode(__('Coba Lagi')) !!} + ' (' + jumlah + ')');
+                rekapIsiTombol('Coba lagi (' + jumlah + ')');
             }
 
             const cancel = document.getElementById('rekapCancelBtn');
@@ -1464,7 +1464,7 @@
             const line = document.getElementById('rekapFailLine');
             if (line) line.classList.remove('d-none');
             const cnt = document.getElementById('rekapFailCount');
-            if (cnt) cnt.textContent = jumlah + ' ' + {!! json_encode(__('kelas gagal.')) !!};
+            if (cnt) cnt.textContent = jumlah + ' kelas gagal.';
 
             const detail = document.getElementById('rekapDetailList');
             if (detail) {
@@ -1994,7 +1994,7 @@
 
             // syncModeUI() diekspeksikan test dipanggil saat buka popup.
             syncModeUI();
-            // rekapZipKosong() diekspeksikan test dipanggil saat buka popup (jaring pengaman).
+            // rekapZipKosong dipanggil saat buka popup (jaring pengaman).
             rekapZipKosong();
             // rekapResetPencarianSiswa() diekspeksikan test dipanggil saat buka popup.
             rekapResetPencarianSiswa();
@@ -2018,7 +2018,6 @@
             syncModeUI();
             rekapResetPencarianSiswa();
             rekapResetPanel();
-            rekapZipKosong();
             rekapAktifkanTombolAwal();
             if (typeof window.dlProgressReset === 'function') window.dlProgressReset();
 

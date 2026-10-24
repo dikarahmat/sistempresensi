@@ -379,7 +379,7 @@ class StudentController extends Controller
 
     public function downloadCard(Student $student)
     {
-        return \App\Services\DownloadCacheService::downloadSingleCard($student);
+        return \App\Services\DownloadCacheService::downloadSingleCardPdf($student);
     }
 
     public function destroy(Student $student): RedirectResponse

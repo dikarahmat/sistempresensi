@@ -482,8 +482,9 @@
 
                 </form>
 
-                <!-- Sisi Kanan: Deretan Tombol Aksi -->
+                <!-- Sisi Kanan: Deretan Tombol Aksi (Hanya Admin) -->
                 <div class="action-buttons-wrap">
+                    @if(Auth::check() && Auth::user()->role === 'admin')
                     @if(Route::has('admin.classes.import'))
                     <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importClassModal">
@@ -500,6 +501,7 @@
                     <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Kelas') }}" onclick="confirmDeleteAllClasses()">
                         <span>{{ __('Hapus') }}</span>
                     </button>
+                    @endif
                 </div>
 
             </div>

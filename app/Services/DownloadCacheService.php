@@ -131,6 +131,93 @@ class DownloadCacheService
     }
 
     /**
+     * Download Single Student Card PDF (Identik dengan satu kartu di PDF massal).
+     * Menggunakan template yang sama (admin.students.partials.card) via view print-card-pdf.
+     * Kertas A4 Portrait, kartu di pojok kiri atas (posisi slot pertama massal).
+     */
+    public static function downloadSingleCardPdf(Student $student)
+    {
+        self::initDirs();
+
+        try {
+            $student = clone $student;
+            $student->loadMissing('schoolClass');
+            $settingStamp = self::getSettingStamp();
+            $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
+            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.pdf";
+            $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
+
+            $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.pdf';
+
+            // Bersihkan file cache jika ada file 0-byte atau rusak
+            if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
+                @unlink($cacheFilePath);
+            }
+
+            if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
+                $activeYear = AcademicYear::getActive();
+                $schoolName = Setting::getSchoolName();
+                $schoolAddress = Setting::getSchoolAddress();
+
+                $logoPath = public_path(Setting::getLogo());
+                $logoBase64 = null;
+                if (file_exists($logoPath)) {
+                    $mime = mime_content_type($logoPath) ?: 'image/png';
+                    $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
+                }
+
+                // QR Base64
+                $token = $student->nisn ?: $student->qr_token;
+                $qrBase64 = null;
+                try {
+                    $svg = QrCode::size(120)->margin(0)->generate($token);
+                    $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                } catch (\Throwable $e) {
+                    $qrBase64 = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($token);
+                }
+
+                $genderVal = ($student->gender ?? 'Laki-laki') === 'Perempuan' ? 'Perempuan' : 'Laki-laki';
+
+                $pdf = Pdf::loadView('admin.students.print-card-pdf', array_merge(compact(
+                    'student',
+                    'schoolName',
+                    'schoolAddress',
+                    'activeYear',
+                    'logoBase64',
+                    'qrBase64'
+                ), [
+                    'studentItem' => $student,
+                    'studentName' => $student->name,
+                    'studentClass' => $student->schoolClass->name ?? '-',
+                    'studentGender' => $genderVal,
+                    'isPdf' => true,
+                ]))->setPaper('a4', 'portrait');
+
+                File::put($cacheFilePath, $pdf->output());
+            }
+
+            return response()->download($cacheFilePath, $downloadFileName, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
+                'Cache-Control' => 'no-cache, must-revalidate'
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengunduh kartu presensi PDF siswa: ' . $e->getMessage(), [
+                'student_id' => $student->id ?? null,
+                'exception' => $e
+            ]);
+
+            if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'message' => 'Kartu belum bisa diunduh, coba lagi'
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Kartu belum bisa diunduh, coba lagi');
+        }
+    }
+
+    /**
      * Render Single Student Card PNG menggunakan PHP GD murni.
      * Standar CR80 Portrait: 1086 x 1725 px (~500 DPI), sudut lengkung 64 px (~3.18mm),
      * latar transparan di luar sudut, desain IDENTIK dengan card.blade.php (massal).
@@ -277,101 +364,105 @@ class DownloadCacheService
 
         $maxNameWidth = $w - 120; // Margin kiri-kanan 60px
 
-        $wrapLines = function(string $text, int $size, string $font, int $maxWidth): array {
-            $words = explode(' ', $text);
-            $lines = [];
-            $curLine = '';
-            foreach ($words as $word) {
-                $testLine = $curLine === '' ? $word : $curLine . ' ' . $word;
-                $bbox = imagettfbbox($size, 0, $font, $testLine);
-                $lineW = abs($bbox[4] - $bbox[0]);
-                if ($lineW > $maxWidth && $curLine !== '') {
-                    $lines[] = $curLine;
-                    $curLine = $word;
+        // Nama: SATU BARIS (nowrap + clip), line-height 1.2 - SAMA dengan template
+        // Template: white-space: nowrap; overflow: hidden; text-overflow: clip; line-height: 1.2
+        $nameLineHeight = (int) round($nameFontSize * 1.2); // ≈ 44px (1.2 * 37)
+        
+        // Potong nama jika terlalu panjang (clip seperti template text-overflow: clip)
+        $nameBbox = imagettfbbox($nameFontSize, 0, $fontBold, $studentName);
+        $nameWidth = abs($nameBbox[4] - $nameBbox[0]);
+        if ($nameWidth > $maxNameWidth) {
+            // Binary search untuk panjang maksimal yang muat
+            $min = 0;
+            $max = mb_strlen($studentName);
+            $clippedName = $studentName;
+            while ($min <= $max) {
+                $mid = (int) (($min + $max) / 2);
+                $testName = mb_substr($studentName, 0, $mid);
+                $testBbox = imagettfbbox($nameFontSize, 0, $fontBold, $testName);
+                $testWidth = abs($testBbox[4] - $testBbox[0]);
+                if ($testWidth <= $maxNameWidth) {
+                    $clippedName = $testName;
+                    $min = $mid + 1;
                 } else {
-                    $curLine = $testLine;
+                    $max = $mid - 1;
                 }
             }
-            if ($curLine !== '') {
-                $lines[] = $curLine;
-            }
-            return $lines;
-        };
+            $studentName = $clippedName;
+        }
 
-        // Nama: max 2 baris, line-height 1.15, vertikal tengah di blok identitas
-        $nameLineHeight = (int) round($nameFontSize * 1.15); // ≈ 43px
-        $lines = $wrapLines($studentName, $nameFontSize, $fontBold, $maxNameWidth);
-        
-        // Hitung total tinggi teks nama (1 atau 2 baris)
-        $totalNameHeight = count($lines) * $nameLineHeight;
-        
         // NISN: line-height 1.2, gap 0.53mm ≈ 11px dari nama
         $nisnLineHeight = (int) round($nisnFontSize * 1.2); // ≈ 43px
-        $nisnGap = 11; // 0.53mm ≈ 11px
+        $nisnGap = 60; // diperbesar dari 11px → ~70px total gap (line-height 44 + gap 60 = 104px baseline-to-baseline, visual gap ~70px)
         
         // Kelas: line-height 1.2, gap 11px dari NISN
         $classLineHeight = (int) round($classFontSize * 1.2); // ≈ 50px
-        $classGap = 11;
+        $classGap = 60; // diperbesar dari 11px → ~70px visual gap
 
         // Total tinggi blok teks (nama + gap + NISN + gap + kelas)
-        $totalTextHeight = $totalNameHeight;
+        $nameHeight = $nameLineHeight; // 1 baris
+        $totalTextHeight = $nameHeight;
         if ($studentNisn !== '') {
             $totalTextHeight += $nisnGap + $nisnLineHeight + $classGap + $classLineHeight;
         } else {
             $totalTextHeight += $classGap + $classLineHeight;
         }
 
-        // Posisi baseline nama (baris pertama) agar seluruh blok vertikal tengah
-        $nameBaseline = $identityMiddle - ($totalTextHeight / 2) + $nameFontSize * 0.8; // baseline offset
+        // Posisikan blok identitas agar center visual di tengah block 363px (242-605)
+        // Target: name center ~362, nisn center ~432, class center ~502
+        // Hitung baseline positions untuk target centers:
+        // name baseline = 362 - (37*0.4) ≈ 347
+        // nisn baseline = 432 - (36*0.4) ≈ 418
+        // class baseline = 502 - (42*0.4) ≈ 485
+        
+        // Baseline positions dengan gap 70px:
+        $nameBaseline = 377;    // 347 + 30
+        $nisnBaseline = $nameBaseline + 70; // 447
+        $classBaseline = $nisnBaseline + 70; // 517
 
-        // Render Nama (1 atau 2 baris)
-        $y = $nameBaseline;
-        foreach ($lines as $line) {
-            $bbox = imagettfbbox($nameFontSize, 0, $fontBold, $line);
-            $lineW = abs($bbox[4] - $bbox[0]);
-            $lx = (int) round(($w - $lineW) / 2);
-            imagettftext($img, $nameFontSize, 0, $lx, $y, $dark, $fontBold, $line);
-            $y += $nameLineHeight;
-        }
+        // Render Nama (SATU BARIS, nowrap+clip)
+        $bbox = imagettfbbox($nameFontSize, 0, $fontBold, $studentName);
+        $lineW = abs($bbox[4] - $bbox[0]);
+        $lx = (int) round(($w - $lineW) / 2);
+        imagettftext($img, $nameFontSize, 0, $lx, $nameBaseline, $dark, $fontBold, $studentName);
 
         // Render NISN
         if ($studentNisn !== '') {
-            $y += $nisnGap;
             $nisnBbox = imagettfbbox($nisnFontSize, 0, $fontBold, $studentNisn);
             $nisnW = abs($nisnBbox[4] - $nisnBbox[0]);
             $nisnX = (int) round(($w - $nisnW) / 2);
-            imagettftext($img, $nisnFontSize, 0, $nisnX, $y, $dark, $fontBold, $studentNisn);
-            $y += $nisnLineHeight;
+            imagettftext($img, $nisnFontSize, 0, $nisnX, $nisnBaseline, $dark, $fontBold, $studentNisn);
         }
 
         // Render Kelas
-        $y += $classGap;
         $classBbox = imagettfbbox($classFontSize, 0, $fontBold, $className);
         $classW = abs($classBbox[4] - $classBbox[0]);
         $classX = (int) round(($w - $classW) / 2);
-        imagettftext($img, $classFontSize, 0, $classX, $y, $dark, $fontBold, $className);
+        imagettftext($img, $classFontSize, 0, $classX, $classBaseline, $dark, $fontBold, $className);
 
-        // 9. QR Code Area - 49mm = 987px
+        // 9. QR Code Area - 49mm = 987px (allocated space)
         // card.blade.php: QR 32mm x 32mm dalam container 34mm dengan padding 1mm
-        // Massal: QR area dimulai setelah identity block (605px), tinggi 987px → berakhir di 1592px
-        // QR code 32mm = 326px, container 34mm = 346px dengan padding 1mm = 10px
-        $qrAreaTop = $identityBottom; // 605px
-        $qrAreaMiddle = $qrAreaTop + ($qrAreaH / 2); // 605 + 493.5 = 1098.5px
+        // 32mm @ 500 DPI = 32 * 500/25.4 ≈ 630px
+        // 34mm @ 500 DPI = 34 * 500/25.4 ≈ 670px
+        // 1mm padding @ 500 DPI = 19.7px ≈ 20px each side
+        // Target QR actual top: y=660 (55px gap from identity block bottom at 605px)
+        // Container top = 660 - 20px padding = 640
+        $qrAreaTop = 640; // QR container top
         
         $token = $student->nisn ?: $student->qr_token;
         $qrMatrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::M())->getMatrix();
         $mW = $qrMatrix->getWidth();
         $mH = $qrMatrix->getHeight();
 
-        $qrCodeSize = 326; // 32mm ≈ 326px (massal: 32mm)
+        $qrCodeSize = 630; // 32mm ≈ 630px @ 500 DPI
         $moduleSize = (int) floor($qrCodeSize / $mW);
         $qrActualSize = $moduleSize * $mW;
         $qrStartX = (int) round(($w - $qrActualSize) / 2);
         
-        // Container 34mm = 346px dengan padding 1mm = 10px
-        $containerSize = $qrActualSize + 20; // padding 10px each side
+        // Container 34mm = 670px dengan padding 1mm = 20px each side
+        $containerSize = $qrActualSize + 40; // padding 20px each side (1mm @ 500 DPI)
         $containerX = (int) round(($w - $containerSize) / 2);
-        $containerY = (int) round($qrAreaMiddle - ($containerSize / 2));
+        $containerY = $qrAreaTop; // QR container top at y=660
 
         // Background putih quiet zone (container)
         imagefilledrectangle($img, $containerX, $containerY, $containerX + $containerSize, $containerY + $containerSize, $white);
@@ -393,12 +484,16 @@ class DownloadCacheService
             }
         }
 
-        // 10. Teks "SCAN PRESENSI" - massal: 5pt ≈ 17px, margin-top 1mm ≈ 10px dari QR
+        // 10. Teks "SCAN PRESENSI" - massal: 5pt ≈ 17px
+        // Target: pusat y≈1380, gap ~100px dari QR actual bottom (~1310)
+        // QR actual bottom = containerY + 20 + qrActualSize = 640 + 20 + 630 = 1290
+        // Target baseline ≈ 1290 + 100 = 1390
         $scanFontSize = 17; // 5pt ≈ 17px
         $scanBbox = imagettfbbox($scanFontSize, 0, $fontBold, 'SCAN PRESENSI');
         $scanW = abs($scanBbox[4] - $scanBbox[0]);
         $scanX = (int) round(($w - $scanW) / 2);
-        $scanY = $containerY + $containerSize + 10; // 10px gap dari container QR
+        $qrActualBottom = $containerY + 20 + $qrActualSize; // 640 + 20 + 630 = 1290
+        $scanY = $qrActualBottom + 100; // 100px gap dari QR actual bottom = 1390
         imagettftext($img, $scanFontSize, 0, $scanX, $scanY, $dark, $fontBold, 'SCAN PRESENSI');
 
         // 11. Footer - massal: 4.5pt ≈ 15px, italic, #64748b, vertical-align middle in 6.6mm footer
@@ -408,7 +503,7 @@ class DownloadCacheService
         $footW = abs($footBbox[4] - $footBbox[0]);
         $footX = (int) round(($w - $footW) / 2);
         // Footer vertikal tengah: footerY (1592) + footerH/2 (66.5) + fontSize/2 adjustment
-        $footY = $footerY + ($footerH / 2) + ($footerFontSize / 3);
+        $footY = $footerY + ($footerH / 2) + ($footerFontSize / 3) + 6; // +6 untuk target center ~1658
         imagettftext($img, $footerFontSize, 0, $footX, $footY, $grayText, $fontOblique, $footerText);
 
         // 12. Tulis file PNG dengan kompresi maksimal (9)
