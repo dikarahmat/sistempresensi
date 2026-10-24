@@ -132,8 +132,8 @@ class DownloadCacheService
 
     /**
      * Download Single Student Card PDF — A4 portrait, 1 kartu (53,98 x 85,6 mm)
-     * di pojok kiri atas, memakai partial admin.students.partials.card
-     * (desain sama persis dengan preview & PDF massal).
+     * di pojok kiri atas, memakai partial admin.students.partials.card-single
+     * (desain baru khusus fitur single: preview & unduh individual).
      */
     public static function downloadSingleCardPdf(Student $student)
     {
@@ -144,7 +144,7 @@ class DownloadCacheService
             $student->loadMissing('schoolClass');
             $settingStamp = self::getSettingStamp();
             $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-            $cacheFileName = "card_single_a4p_{$student->id}_{$studentStamp}_{$settingStamp}.pdf";
+            $cacheFileName = "card_single_v2_{$student->id}_{$studentStamp}_{$settingStamp}.pdf";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
             $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.pdf';
@@ -553,7 +553,7 @@ class DownloadCacheService
 
         $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
         $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-        $cacheFileName = "cards_mass_{$scopeKey}.pdf";
+        $cacheFileName = "cards_mass_v13_{$scopeKey}.pdf";
         $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
         $targetClassName = '';

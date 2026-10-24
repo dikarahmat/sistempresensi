@@ -167,24 +167,24 @@
         }
 
         .kiosk-clock-time {
-            font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-            font-size: 1.875rem;
-            font-weight: 600;
-            line-height: 1.2;
-            letter-spacing: 0.02em;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-        }
+    font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+    font-size: 2.5rem;      /* sebelumnya 1.875rem */
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
 
-        .kiosk-clock-date {
-            font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-            font-size: 0.875rem;
-            font-weight: 400;
-            line-height: 1.3;
-            margin-top: 2px;
-            opacity: 0.9;
-            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-        }
+.kiosk-clock-date {
+    font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+    font-size: 1rem;        /* sebelumnya 0.875rem */
+    font-weight: 400;
+    line-height: 1.3;
+    margin-top: 2px;
+    opacity: 0.9;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
 
         /* ===== HEADER KHUSUS MOBILE (logo + nama sekolah) =====
            Default display:none: TIDAK tampil & TIDAK mempengaruhi layout desktop.

@@ -140,15 +140,18 @@
             <div class="card card-modern p-4">
                 <h5 class="fw-bold mb-3" style="color: #0f172a;">{{ __('Kartu Presensi') }}</h5>
 
-                {{-- Pratinjau kartu memakai komponen yang SAMA dengan PDF massal/individual --}}
-                <div class="qr-display-box d-flex justify-content-center align-items-center p-3 mb-3 bg-light rounded-3" style="border: 1px dashed #cbd5e1;">
-                    @include('admin.students.partials.card', [
-                        'studentItem' => $student,
-                        'studentName' => $student->name,
-                        'studentNisn' => $student->nisn,
-                        'studentClass' => $student->schoolClass->name ?? '-',
-                    ])
-                </div>
+                <div class="qr-display-box d-flex justify-content-center align-items-center mb-3" style="background: transparent; padding: 0.5rem 0;">
+    <div style="width: calc(53.98mm * 1.6); height: calc(85.6mm * 1.6);">
+        <div style="width: 53.98mm; height: 85.6mm; transform: scale(1.6); transform-origin: top left;">
+            @include('admin.students.partials.card-single', [
+                'studentItem' => $student,
+                'studentName' => $student->name,
+                'studentNisn' => $student->nisn,
+                'studentClass' => $student->schoolClass->name ?? '-',
+            ])
+        </div>
+    </div>
+</div>
 
                 <!-- Tombol Download Kartu Presensi PDF (Tanpa Ikon) -->
                 <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green btn-progress" id="btnDownloadCard" style="text-decoration: none;" data-download data-no-download data-dl-progress>

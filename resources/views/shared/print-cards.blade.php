@@ -232,7 +232,7 @@
                         @endphp
 
                         <td class="page-cell">
-                            @include('admin.students.partials.card', [
+                            @include('admin.students.partials.card-single', [
                                 'studentItem' => $item,
                                 'logoSrc' => $logoSrc,
                                 'qrSrc' => $qrSrc,

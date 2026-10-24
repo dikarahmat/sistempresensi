@@ -48,10 +48,10 @@
     $studentNisn  = $studentNisn  ?? ($studentItem->nisn ?? null);
 @endphp
 
-{{-- Kartu memakai partial yang SAMA dengan preview & PDF massal.
+{{-- Kartu memakai partial DESAIN BARU card-single (khusus fitur single).
      Jarak dari kiri/atas diberikan lewat padding wrapper (margin @page diabaikan dompdf). --}}
 <div style="padding:14mm 0 0 14mm;">
-@include('admin.students.partials.card', [
+@include('admin.students.partials.card-single', [
     'studentItem'  => $studentItem,
     'logoSrc'      => $logoSrc,
     'qrSrc'        => $qrSrc,

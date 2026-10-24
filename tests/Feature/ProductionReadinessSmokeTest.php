@@ -147,9 +147,8 @@ class ProductionReadinessSmokeTest extends TestCase
             $this->assertStringContainsString('font-size: 7pt; font-weight: bold; text-transform: uppercase; color: #0f172a; line-height: 1.2;', $card, 'Ukuran & gaya nama harus tetap (7pt, bold, hitam, satu baris) untuk semua kartu.');
             $this->assertStringContainsString('font-size: 6.8pt; font-weight: bold; color: #0f172a; line-height: 1.2;', $card, 'Ukuran & gaya NISN harus tetap (6.8pt, bold, hitam) untuk semua kartu.');
             $this->assertStringContainsString('font-size: 8pt; font-weight: bold; color: #0f172a; line-height: 1.2;', $card, 'Ukuran kelas harus tetap (8pt, bold, hitam).');
-            // Jarak antar baris rapat: margin 2px (0,53mm), tanpa wrapper tinggi tetap.
             $this->assertStringContainsString('white-space: nowrap; overflow: hidden; text-overflow: clip;', $card, 'Nama harus satu baris (nowrap) tanpa blok tinggi tetap.');
-            $this->assertMatchesRegularExpression('/margin:\s*0\.53mm 0 0 0;/', $card, 'Jarak antar baris harus rapat (margin 2px).');
+            $this->assertMatchesRegularExpression('/margin-top:\s*0\.5mm;/', $card, 'Jarak antar baris harus rapat (margin-top 0,5mm).');
         }
 
         // Urutan NAMA -> NISN -> KELAS.
