@@ -275,20 +275,26 @@
                 </thead>
                 <tbody>
                     @forelse($rows ?? [] as $row)
-                    @php
-                        // Status TAMPILAN memakai Attendance::statusOf (satu
-                        // sumber): "Terlambat" tersimpan di database sebagai
-                        // status 'Hadir' + time_remark.
-                        $statusTampil = strtolower($row['status']);
-                        $att = $row['attendance'] ?? null;
-                    @endphp
+@php
+                    // Status TAMPILAN memakai Attendance::statusOf (satu
+                    // sumber): status hanya dari catatan presensi yang tersimpan.
+                    // - Ada catatan: status efektif (Hadir/Terlambat/Sakit/Izin/Alfa)
+                    // - Tidak ada catatan, libur/weekend: LIBUR
+                    // - Tidak ada catatan, selainnya: "-"
+                    $statusTampil = $row['status'];
+                    $att = $row['attendance'] ?? null;
+@endphp
                     <tr>
                         <td data-label="{{ __('No') }}" class="text-secondary">{{ $loop->iteration }}</td>
                         <td data-label="{{ __('Hari') }}" class="col-hari">{{ \Carbon\Carbon::parse($row['date'])->translatedFormat('l') }}</td>
                         <td data-label="{{ __('Tanggal') }}" class="col-tanggal">{{ \Carbon\Carbon::parse($row['date'])->format('d M Y') }}</td>
                         <td data-label="{{ __('Jam Masuk') }}" class="col-jam">{{ ($att && $att->check_in) ? substr($att->check_in, 0, 5) : '-' }}</td>
                         <td data-label="{{ __('Status') }}">
-                            <span class="status-{{ $statusTampil }}">{{ __(ucfirst($statusTampil)) }}</span>
+                            @if($statusTampil === '-')
+                                <span style="color: #647489; font-weight: 400;">-</span>
+                            @else
+                                <span class="status-{{ strtolower($statusTampil) }}">{{ ucfirst($statusTampil) }}</span>
+                            @endif
                         </td>
                         <td data-label="{{ __('Keterlambatan') }}" class="text-center">{{ $row['late_text'] ?? '-' }}</td>
                         <td data-label="{{ __('Catatan') }}" class="text-start">{{ $row['notes'] ?? '-' }}</td>
@@ -297,7 +303,7 @@
                     <tr>
                         <td colspan="7" class="text-center align-middle py-5 text-secondary empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
-                            {{ __('BELUM ADA DATA PRESENSI UNTUK PERIODE INI.') }}
+                            {{ __('Tidak ada data presensi untuk periode ini.') }}
                         </td>
                     </tr>
                     @endforelse

@@ -624,10 +624,6 @@
                 <form action="{{ panel_route('guru.store') }}" method="POST" novalidate id="addTeacherForm" data-teacher-form>
                     @csrf
                     <div class="modal-body py-3">
-                        <div class="alert alert-primary border-0 rounded-3 py-2 px-3 small mb-3 d-flex align-items-center gap-2" style="background-color: #eff6ff; color: #1d4ed8;">
-                            <i class='bx bx-info-circle fs-5 flex-shrink-0'></i>
-                            <span>{{ __('Akun login guru otomatis dibuat dengan') }} <strong>{{ __('NIP') }}</strong> {{ __('sebagai kata sandi default.') }}</span>
-                        </div>
 
                         @if(session('open_modal') === 'add' && session('form_error'))
                         <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
@@ -641,17 +637,15 @@
                         </div>
                         @endif
 
-                        <div class="text-muted mb-3" style="font-size: 0.72rem;"><span class="text-danger">*</span> {{ __('wajib diisi') }}</div>
-
                         <div class="row g-3">
-                            <div class="col-12 col-md-8">
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold" for="add_name">{{ __('Nama Lengkap & Gelar') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="name" id="add_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Contoh: Dra. Hj. Siti Aminah, M.Pd') }}" value="{{ session('open_modal') === 'add' ? old('name') : '' }}" required maxlength="255">
                                 <div class="invalid-feedback {{ $errors->has('name') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="name">{{ session('open_modal') === 'add' ? $errors->first('name') : '' }}</div>
                             </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold" for="add_nip">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="nip" id="add_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('18 digit angka') }}" value="{{ session('open_modal') === 'add' ? old('nip') : '' }}" inputmode="numeric" pattern="[0-9]{18}" maxlength="18" required>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold" for="add_nip">NIP (Nomor Induk Pegawai)</label>
+                                <input type="text" name="nip" id="add_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="16 atau 18 digit angka (boleh kosong)" inputmode="numeric" maxlength="18">
                                 <div class="invalid-feedback {{ $errors->has('nip') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="nip">{{ session('open_modal') === 'add' ? $errors->first('nip') : '' }}</div>
                             </div>
 
@@ -685,7 +679,7 @@
                                 <div class="invalid-feedback {{ $errors->has('birth_date') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="birth_date">{{ session('open_modal') === 'add' ? $errors->first('birth_date') : '' }}</div>
                             </div>
 
-                            <div class="col-12 col-md-6">
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold" for="add_phone_number">{{ __('No. Telepon / WhatsApp') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="phone_number" id="add_phone_number" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('08xxxxxxxxxx (10-15 digit)') }}" value="{{ session('open_modal') === 'add' ? old('phone_number') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
                                 <div class="invalid-feedback {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="phone_number">{{ session('open_modal') === 'add' ? $errors->first('phone_number') : '' }}</div>
@@ -737,8 +731,8 @@
                                 <div class="invalid-feedback {{ $errors->has('name') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="name">{{ session('open_modal') === 'edit' ? $errors->first('name') : '' }}</div>
                             </div>
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold" for="edit_nip">{{ __('NIP') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="nip" id="edit_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('nip') : '' }}" inputmode="numeric" pattern="[0-9]{18}" maxlength="18" required>
+                                <label class="form-label small fw-semibold" for="edit_nip">{{ __('NIP') }}</label>
+                                <input type="text" name="nip" id="edit_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('nip') : '' }}" inputmode="numeric" placeholder="16 atau 18 digit angka (boleh kosong)" maxlength="18" >
                                 <div class="invalid-feedback {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="nip">{{ session('open_modal') === 'edit' ? $errors->first('nip') : '' }}</div>
                             </div>
 

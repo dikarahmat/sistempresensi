@@ -229,6 +229,8 @@
                         <span class="badge-i">{{ __('Izin') }}</span>
                     @elseif($row['status'] === 'Alfa')
                         <span class="badge-a">{{ __('Alfa') }}</span>
+                    @elseif($row['status'] === 'Libur')
+                        <span class="badge-l">{{ __('Libur') }}</span>
                     @elseif(str_contains($row['status'], 'Belum'))
                         <span class="badge-l">-</span>
                     @else
@@ -290,9 +292,10 @@
                             'S' => 'badge-s',
                             'I' => 'badge-i',
                             'A' => 'badge-a',
+                            'L' => 'badge-l',
                             default => 'badge-l'
                         };
-                        $val = in_array($code, ['H','T','S','I','A']) ? $code : '-';
+                        $val = in_array($code, ['H','T','S','I','A','L']) ? $code : '-';
                     @endphp
                     <td class="{{ $cls }}">{{ $val }}</td>
                 @endforeach
@@ -357,6 +360,7 @@
                             'S' => 'badge-s',
                             'I' => 'badge-i',
                             'A' => 'badge-a',
+                            'L' => 'badge-l',
                             default => 'badge-l'
                         };
                     @endphp

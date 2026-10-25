@@ -20,15 +20,14 @@
         }
 
         html {
-            background-color: #e5e7eb;
+            background-color: #ffffff;
         }
 
-        body {
+body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0 6mm 6mm 6mm;
-            background-color: #e5e7eb;
-            color: #0f172a;
+            background-color: #ffffff;
         }
 
         /* Saat Cetak / Export PDF */
@@ -37,7 +36,7 @@
                 display: none !important;
             }
             body {
-                background-color: #e5e7eb !important;
+                background-color: #ffffff !important;
                 margin: 0 !important;
                 padding: 0 6mm 6mm 6mm !important;
             }

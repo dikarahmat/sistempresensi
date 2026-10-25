@@ -197,13 +197,7 @@ class RekapController extends Controller
                 } else {
                     if ($col['is_holiday']) {
                         $code = 'L';
-                    } elseif ($dStr < $now->toDateString()) {
-                        // Hari yang sudah lewat tanpa catatan -> ALFA
-                        // (hitungan tampilan, tidak ditulis ke database).
-                        $code = 'A';
-                        $a++;
                     } else {
-                        // Hari ini / masa depan -> belum presensi.
                         $code = '-';
                     }
                 }
@@ -870,6 +864,13 @@ class RekapController extends Controller
             $cur->addDay();
         }
 
+        // Build a flat collection of all attendance records for condition (d) checking
+        // This allows statusOf() to check if there's at least one attendance on a given date
+        $allAttendanceRecords = collect();
+        foreach ($allAttendances as $studentId => $studentAttendances) {
+            $allAttendanceRecords = $allAttendanceRecords->merge($studentAttendances);
+        }
+
         $studentsData = [];
         foreach ($students as $student) {
             // keyBy date only (YYYY-MM-DD), not datetime string
@@ -907,15 +908,7 @@ class RekapController extends Controller
                         $keterlambatan = rekap_format_late_minutes($lateMinutes);
                     }
                 } else {
-                    if ($col['is_holiday']) {
-                        $status = 'Libur';
-                    } elseif ($dStr < $now->toDateString()) {
-                        // Hari yang sudah lewat tanpa catatan -> ALFA.
-                        $status = Attendance::STATUS_ALFA;
-                    } else {
-                        // Hari ini / masa depan -> belum presensi.
-                        $status = Attendance::STATUS_BELUM;
-                    }
+                    $status = Attendance::statusOf($att, $dStr, $col['is_holiday']);
                 }
 
                 // Count stats (Rekap rules)

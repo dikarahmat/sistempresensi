@@ -20,6 +20,12 @@ class DownloadCacheService
 {
     protected static string $baseDir = '';
 
+    /**
+     * Versi cache rekap. Naikkan nilainya setiap logika perhitungan rekap berubah
+     * supaya file lama tidak pernah disajikan lagi.
+     */
+    protected static string $rekapCacheVersion = 'v2';
+
     public static function initDirs(): void
     {
         if (empty(self::$baseDir)) {
@@ -367,7 +373,7 @@ class DownloadCacheService
         // Nama: SATU BARIS (nowrap + clip), line-height 1.2 - SAMA dengan template
         // Template: white-space: nowrap; overflow: hidden; text-overflow: clip; line-height: 1.2
         $nameLineHeight = (int) round($nameFontSize * 1.2); // ≈ 44px (1.2 * 37)
-        
+
         // Potong nama jika terlalu panjang (clip seperti template text-overflow: clip)
         $nameBbox = imagettfbbox($nameFontSize, 0, $fontBold, $studentName);
         $nameWidth = abs($nameBbox[4] - $nameBbox[0]);
@@ -394,7 +400,7 @@ class DownloadCacheService
         // NISN: line-height 1.2, gap 0.53mm ≈ 11px dari nama
         $nisnLineHeight = (int) round($nisnFontSize * 1.2); // ≈ 43px
         $nisnGap = 60; // diperbesar dari 11px → ~70px total gap (line-height 44 + gap 60 = 104px baseline-to-baseline, visual gap ~70px)
-        
+
         // Kelas: line-height 1.2, gap 11px dari NISN
         $classLineHeight = (int) round($classFontSize * 1.2); // ≈ 50px
         $classGap = 60; // diperbesar dari 11px → ~70px visual gap
@@ -414,7 +420,7 @@ class DownloadCacheService
         // name baseline = 362 - (37*0.4) ≈ 347
         // nisn baseline = 432 - (36*0.4) ≈ 418
         // class baseline = 502 - (42*0.4) ≈ 485
-        
+
         // Baseline positions dengan gap 70px:
         $nameBaseline = 377;    // 347 + 30
         $nisnBaseline = $nameBaseline + 70; // 447
@@ -448,7 +454,7 @@ class DownloadCacheService
         // Target QR actual top: y=660 (55px gap from identity block bottom at 605px)
         // Container top = 660 - 20px padding = 640
         $qrAreaTop = 640; // QR container top
-        
+
         $token = $student->nisn ?: $student->qr_token;
         $qrMatrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::M())->getMatrix();
         $mW = $qrMatrix->getWidth();
@@ -458,7 +464,7 @@ class DownloadCacheService
         $moduleSize = (int) floor($qrCodeSize / $mW);
         $qrActualSize = $moduleSize * $mW;
         $qrStartX = (int) round(($w - $qrActualSize) / 2);
-        
+
         // Container 34mm = 670px dengan padding 1mm = 20px each side
         $containerSize = $qrActualSize + 40; // padding 20px each side (1mm @ 500 DPI)
         $containerX = (int) round(($w - $containerSize) / 2);
@@ -466,7 +472,7 @@ class DownloadCacheService
 
         // Background putih quiet zone (container)
         imagefilledrectangle($img, $containerX, $containerY, $containerX + $containerSize, $containerY + $containerSize, $white);
-        
+
         // Draw QR modules centered in container
         $qrStartX = $containerX + 10; // 10px padding
         $qrStartY = $containerY + 10;
@@ -518,8 +524,8 @@ class DownloadCacheService
     {
         self::initDirs();
 
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', '180');
+        ini_set('memory_limit', '1024M');
+        ini_set('max_execution_time', '300');
 
         $query = Student::with('schoolClass')->where('status', 'Aktif');
 
@@ -553,7 +559,7 @@ class DownloadCacheService
 
         $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
         $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-        $cacheFileName = "cards_mass_v13_{$scopeKey}.pdf";
+        $cacheFileName = "cards_mass_v14_{$scopeKey}.pdf";
         $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
         $targetClassName = '';
@@ -580,8 +586,8 @@ class DownloadCacheService
                 foreach ($chunk as $st) {
                     $token = $st->nisn ?: $st->qr_token;
                     try {
-                        $svg = QrCode::size(140)->margin(0)->generate($token);
-                        $st->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                        // QR berupa PNG kecil (GD), jauh lebih hemat memori daripada SVG vektor
+                        $st->qr_base64 = self::qrPngDataUri((string) $token);
                     } catch (\Throwable $e) {
                         $st->qr_base64 = null;
                     }
@@ -602,7 +608,11 @@ class DownloadCacheService
                 'logoBase64'
             ), ['isPdf' => true]))->setPaper('a4', 'landscape');
 
-            File::put($cacheFilePath, $pdf->output());
+            $output = $pdf->output();
+            File::put($cacheFilePath, $output);
+
+            unset($pdf, $output, $students);
+            gc_collect_cycles();
         }
 
         return response()->download($cacheFilePath, $downloadFileName, [
@@ -610,6 +620,42 @@ class DownloadCacheService
             'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
             'Cache-Control' => 'no-cache, must-revalidate'
         ]);
+    }
+
+    /**
+     * Buat QR sebagai PNG (data URI) memakai GD. Tanpa quiet zone tambahan,
+     * sama seperti QrCode::margin(0) sebelumnya.
+     */
+    private static function qrPngDataUri(string $token, int $targetPx = 378): string
+    {
+        $matrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::L())->getMatrix();
+        $mW = $matrix->getWidth();
+        $mH = $matrix->getHeight();
+        $moduleSize = max(1, (int) floor($targetPx / $mW));
+        $w = $moduleSize * $mW;
+        $h = $moduleSize * $mH;
+
+        $img = imagecreatetruecolor($w, $h);
+        $white = imagecolorallocate($img, 255, 255, 255);
+        $black = imagecolorallocate($img, 0, 0, 0);
+        imagefilledrectangle($img, 0, 0, $w - 1, $h - 1, $white);
+
+        for ($y = 0; $y < $mH; $y++) {
+            for ($x = 0; $x < $mW; $x++) {
+                if ($matrix->get($x, $y) === 1) {
+                    $x1 = $x * $moduleSize;
+                    $y1 = $y * $moduleSize;
+                    imagefilledrectangle($img, $x1, $y1, $x1 + $moduleSize - 1, $y1 + $moduleSize - 1, $black);
+                }
+            }
+        }
+
+        ob_start();
+        imagepng($img, null, 9);
+        $png = (string) ob_get_clean();
+        imagedestroy($img);
+
+        return 'data:image/png;base64,' . base64_encode($png);
     }
 
     /**
@@ -690,20 +736,29 @@ class DownloadCacheService
     }
 
     /**
+     * Kunci cache rekap. Memuat versi logika ($rekapCacheVersion), stempel data
+     * presensi terakhir, dan stempel pengaturan sekolah.
+     */
+    protected static function getRekapCacheKey(string $format, string $type, ?int $classId, array $allInputs): string
+    {
+        $maxAttStamp = (int) strtotime((string) (Attendance::max('updated_at') ?? '0'));
+        $settingStamp = self::getSettingStamp();
+        $inputHash = md5(json_encode($allInputs));
+        $classKey = $classId ?? 'all';
+
+        return "rekap_{$type}_{$classKey}_{$format}_{$inputHash}_{$maxAttStamp}_{$settingStamp}_" . self::$rekapCacheVersion;
+    }
+
+    /**
      * Cache & Download Rekap Presensi Excel / PDF / CSV
      */
     public static function downloadRekapFile(string $format, string $type, ?int $classId, array $allInputs, callable $generator, string $downloadFileName)
     {
         self::initDirs();
 
-        // Identifikasi versi data presensi
-        $maxAttStamp = strtotime((string) (Attendance::max('updated_at') ?? '0'));
-        $settingStamp = self::getSettingStamp();
-        $inputHash = md5(json_encode($allInputs));
-        $classKey = $classId ?? 'all';
-
         $ext = strtolower($format);
-        $cacheFile = self::$baseDir . "/rekap/rekap_{$type}_{$classKey}_{$ext}_{$inputHash}_{$maxAttStamp}_{$settingStamp}.{$ext}";
+        $cacheKey = self::getRekapCacheKey($ext, $type, $classId, $allInputs);
+        $cacheFile = self::$baseDir . "/rekap/{$cacheKey}.{$ext}";
 
         if (!File::exists($cacheFile) || File::size($cacheFile) === 0) {
             // Jalankan generator

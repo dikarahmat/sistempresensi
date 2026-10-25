@@ -6,7 +6,7 @@
 
     <style>
         @page { size: A4 portrait; margin: 0; }
-        html, body { margin:0; padding:0; background:#e5e7eb; font-family: Arial, Helvetica, sans-serif; }
+        html, body { margin:0; padding:0; background:#ffffff; font-family: Arial, Helvetica, sans-serif; }
         /* Netralkan margin auto di partial agar kartu ikut padding wrapper (kiri/atas),
            bukan ter-center. Hanya berlaku di view ini — massal tidak terpengaruh. */
         table.presensi-card-table { margin:0 !important; }

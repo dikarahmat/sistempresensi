@@ -7,11 +7,9 @@ use App\Exports\TeacherTemplateExport;
 use App\Imports\TeachersImport;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -43,6 +41,7 @@ class TeacherController extends Controller
 
     /**
      * Simpan data guru baru.
+     * NIP hanya data identitas (opsional). Tidak ada akun User yang dibuat dari NIP.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -59,54 +58,15 @@ class TeacherController extends Controller
 
             $validated['phone'] = $validated['phone_number'] ?? null;
 
-            if (!empty($validated['nip'])) {
-                // Akun login guru: identitas = USERNAME (NIP), bukan email lagi.
-                // Password tetap memakai NIP (seperti sebelumnya).
-                $nip = (string) $validated['nip'];
-                $userEmail = !empty($validated['email'])
-                    ? $validated['email']
-                    : $nip . '@guru.smppresensipgri.sch.id';
-
-                $userAttributes = [
-                    'name' => $validated['name'],
-                    'password' => Hash::make($nip),
-                    'role' => 'guru',
-                    'email_verified_at' => now(),
-                ];
-
-                // Email hanya atribut kontak tambahan. Kolom email tetap UNIQUE,
-                // jadi hanya diisi bila belum dipakai akun lain.
-                if (! User::where('email', $userEmail)->exists()) {
-                    $userAttributes['email'] = $userEmail;
-                }
-
-                $user = User::firstOrCreate(
-                    ['username' => strtolower($nip)],
-                    $userAttributes
-                );
-
-                // Normalisasi NIP menjadi null jika kosong
-$nipNormalized = !empty($validated['nip']) ? $validated['nip'] : null;
-
-$teacher = Teacher::updateOrCreate(
-    ['nip' => $nipNormalized],
-    [
-        'name' => $validated['name'],
-        'gender' => $validated['gender'],
-        'birth_place' => $validated['birth_place'] ?? null,
-        'birth_date' => $validated['birth_date'] ?? null,
-        'phone_number' => $validated['phone_number'] ?? null,
-        'phone' => $validated['phone'] ?? null,
-        'school_class_id' => $classId,
-    ]
-);
-
-// Sinkronkan TUGAS KELAS ke Data Kelas (SchoolClass)
-$this->syncTugasKelas($teacher, $classId);
-            }
+            // NIP kosong disimpan sebagai null
+            $validated['nip'] = !empty($validated['nip']) ? $validated['nip'] : null;
 
             $classId = $validated['school_class_id'] ?? null;
-            unset($validated['school_class_id'], $validated['email']);
+            if ($classId === 'none' || $classId === '') {
+                $classId = null;
+            }
+            $classId = $classId !== null ? (int) $classId : null;
+            unset($validated['school_class_id']);
 
             $teacher = Teacher::create($validated);
 
@@ -153,10 +113,14 @@ $this->syncTugasKelas($teacher, $classId);
 
             $validated['phone'] = $validated['phone_number'] ?? $teacher->phone;
 
+            // NIP kosong disimpan sebagai null
+            $validated['nip'] = !empty($validated['nip']) ? $validated['nip'] : null;
+
             $classId = $validated['school_class_id'] ?? null;
             if ($classId === 'none' || $classId === '') {
                 $classId = null;
             }
+            $classId = $classId !== null ? (int) $classId : null;
             unset($validated['school_class_id']);
 
             $teacher->update($validated);
@@ -263,14 +227,9 @@ $this->syncTugasKelas($teacher, $classId);
     /**
      * Hapus Seluruh Data Guru Secara Massal dengan proteksi transaksi.
      *
-     * PERUBAHAN: ini dulu HAPUS PERMANEN (forceDelete). Sekarang menjadi soft
-     * delete supaya sama seperti Data Siswa: seluruh data guru aktif dipindahkan
-     * ke Tempat Sampah dan masih bisa dipulihkan.
-     *
-     * Foto guru SENGAJA tidak dihapus dari storage supaya saat guru dipulihkan
-     * fotonya masih utuh. Penugasan kelas dilepas (wali kelas jadi kosong) dan
-     * TIDAK dikembalikan otomatis saat dipulihkan - admin perlu menugaskan
-     * ulang lewat halaman Ubah.
+     * Soft delete: seluruh data guru aktif dipindahkan ke Tempat Sampah dan
+     * masih bisa dipulihkan. Foto guru sengaja tidak dihapus dari storage.
+     * Penugasan kelas dilepas dan TIDAK dikembalikan otomatis saat dipulihkan.
      */
     public function destroyAll(): RedirectResponse
     {
@@ -294,8 +253,6 @@ $this->syncTugasKelas($teacher, $classId);
 
             DB::commit();
 
-            // Flash 'deleted' supaya notifikasi tampil MERAH (alert-danger)
-            // dengan ikon tempat sampah, sama seperti notifikasi hapus lainnya.
             return redirect()->route('admin.guru.index')
                 ->with('deleted', __('Seluruh data guru (:total) berhasil dihapus dan dipindahkan ke Tempat Sampah di Pengaturan.', ['total' => $total]));
         } catch (\Throwable $e) {
@@ -375,6 +332,7 @@ $this->syncTugasKelas($teacher, $classId);
 
     /**
      * Aturan validasi bersama Tambah/Edit guru (Bahasa Indonesia).
+     * NIP opsional: boleh kosong, tapi kalau diisi harus 16 atau 18 digit dan unik.
      */
     private function teacherRules(?Teacher $teacher = null): array
     {
@@ -384,12 +342,11 @@ $this->syncTugasKelas($teacher, $classId);
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'nip' => ['required', 'regex:/^([0-9]{16}|[0-9]{18})$/', $nipUnique],
+            'nip' => ['nullable', 'regex:/^([0-9]{16}|[0-9]{18})$/', $nipUnique],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
             'birth_place' => ['nullable', 'string', 'max:100'],
             'birth_date' => ['nullable', 'date'],
             'phone_number' => ['required', 'regex:/^(\+62|0)[0-9]{9,14}$/'],
-            'email' => ['nullable', 'email', 'max:255'],
             'school_class_id' => ['nullable', 'exists:school_classes,id'],
         ];
     }
@@ -400,8 +357,7 @@ $this->syncTugasKelas($teacher, $classId);
             'name.required' => 'Nama lengkap wajib diisi.',
             'name.string' => 'Nama lengkap tidak valid.',
             'name.max' => 'Nama lengkap maksimal 255 karakter.',
-            'nip.required' => 'NIP wajib diisi.',
-            'nip.regex' => 'NIP/NUPTK harus 16 atau 18 digit angka.',
+            'nip.regex' => 'NIP harus 16 atau 18 digit angka (atau dikosongkan).',
             'nip.unique' => 'NIP sudah terdaftar.',
             'gender.required' => 'Jenis kelamin wajib dipilih.',
             'gender.in' => 'Jenis kelamin tidak valid.',
@@ -410,8 +366,6 @@ $this->syncTugasKelas($teacher, $classId);
             'birth_date.date' => 'Tanggal lahir tidak valid.',
             'phone_number.required' => 'Nomor telepon wajib diisi.',
             'phone_number.regex' => 'Nomor telepon harus 10-15 digit angka.',
-            'email.email' => 'Format email tidak valid.',
-            'email.max' => 'Email maksimal 255 karakter.',
             'school_class_id.exists' => 'Penugasan kelas tidak valid.',
         ];
     }
@@ -425,7 +379,6 @@ $this->syncTugasKelas($teacher, $classId);
             'birth_place' => 'tempat lahir',
             'birth_date' => 'tanggal lahir',
             'phone_number' => 'nomor telepon',
-            'email' => 'email',
             'school_class_id' => 'penugasan kelas',
         ];
     }
@@ -468,9 +421,7 @@ $this->syncTugasKelas($teacher, $classId);
     /**
      * Pulihkan guru dari arsip.
      *
-     * Penugasan kelas SENGAJA tidak dikembalikan otomatis: saat guru dihapus,
-     * kolom school_classes.teacher_id sudah di-set NULL sehingga informasi
-     * "guru ini dulunya wali kelas mana" tidak tersimpan. Admin perlu
+     * Penugasan kelas SENGAJA tidak dikembalikan otomatis: admin perlu
      * menugaskan ulang lewat halaman Ubah.
      */
     public function restore($id): RedirectResponse
@@ -479,16 +430,17 @@ $this->syncTugasKelas($teacher, $classId);
         // query mustahil (penyebab 404 sebelumnya).
         $teacher = Teacher::onlyTrashed()->findOrFail($id);
 
-        // teachers.nip punya UNIQUE index di database yang TIDAK mengabaikan
-        // deleted_at. Tetap dijaga di sini supaya konflik tampil sebagai pesan
-        // yang jelas, bukan error 500.
-        $duplikat = Teacher::where('nip', $teacher->nip)
-            ->where('id', '!=', $teacher->id)
-            ->exists();
+        // teachers.nip punya UNIQUE index yang TIDAK mengabaikan deleted_at.
+        // Cek hanya bila NIP terisi (guru tanpa NIP boleh banyak).
+        if (!empty($teacher->nip)) {
+            $duplikat = Teacher::where('nip', $teacher->nip)
+                ->where('id', '!=', $teacher->id)
+                ->exists();
 
-        if ($duplikat) {
-            return redirect()->route('admin.teachers.trash')
-                ->with('error', __('Gagal dipulihkan: NIP :nip sudah dipakai data guru yang aktif. Perbaiki NIP lebih dulu.', ['nip' => $teacher->nip]));
+            if ($duplikat) {
+                return redirect()->route('admin.teachers.trash')
+                    ->with('error', __('Gagal dipulihkan: NIP :nip sudah dipakai data guru yang aktif. Perbaiki NIP lebih dulu.', ['nip' => $teacher->nip]));
+            }
         }
 
         $teacher->restore();
@@ -516,7 +468,6 @@ $this->syncTugasKelas($teacher, $classId);
             $teacher->forceDelete();
 
             DB::commit();
-            // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
                 ->with('deleted', __('Data guru :name berhasil dihapus permanen!', ['name' => $teacherName]));
         } catch (\Throwable $e) {
@@ -529,10 +480,6 @@ $this->syncTugasKelas($teacher, $classId);
 
     /**
      * Hapus PERMANEN seluruh isi Tempat Sampah Guru sekaligus.
-     *
-     * Dipakai oleh tombol "Hapus Semua dari Tempat Sampah" di halaman
-     * teachers/trash. Dialog konfirmasinya (dengan dua checkbox) dibuat di
-     * sisi tampilan memakai confirmUniversalDelete() dari layout bersama.
      */
     public function destroyAllTrashed(): RedirectResponse
     {
@@ -559,7 +506,6 @@ $this->syncTugasKelas($teacher, $classId);
             Teacher::onlyTrashed()->forceDelete();
 
             DB::commit();
-            // Flash 'deleted' supaya notifikasi hapus tampil MERAH.
             return redirect()->route('admin.teachers.trash')
                 ->with('deleted', __('Seluruh data guru di Tempat Sampah (:total) berhasil dihapus permanen!', ['total' => $total]));
         } catch (\Throwable $e) {

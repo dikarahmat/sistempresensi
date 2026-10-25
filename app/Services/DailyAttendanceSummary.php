@@ -49,15 +49,14 @@ class DailyAttendanceSummary
             ->get()
             ->keyBy('class_id');
 
-        /*
-         * ATURAN STATUS (satu sumber: App\Models\Attendance::statusOf):
-         * - tanpa catatan, tanggal SUDAH LEWAT & bukan hari libur/akhir pekan
-         *   -> dihitung ALFA (hitungan tampilan, tidak ditulis ke database);
-         * - tanpa catatan, hari ini / masa depan -> BELUM;
-         * - tanpa catatan, hari libur / akhir pekan -> LIBUR (bukan Alfa).
-         */
-        $hitungAlfa = ($date < Carbon::now('Asia/Jakarta')->toDateString())
-            && ! Attendance::isTanggalLibur($date);
+/*
+ * ATURAN STATUS (satu sumber: App\Models\Attendance::statusOf):
+ * - tanpa catatan presensi -> status ditentukan oleh statusOf:
+ *   * hari libur/akhir pekan -> LIBUR
+ *   * lainnya -> '-' (kosong, tidak dihitung statistik)
+ * - hanya catatan presensi yang tersimpan yang dihitung untuk alfa/hadir/terlambat/sakit/izin.
+ */
+$hitungAlfa = false;
 
         return $classes->map(function ($class) use ($summaries, $hitungAlfa) {
             $summary = $summaries->get($class->id);
@@ -69,8 +68,8 @@ class DailyAttendanceSummary
             $alphaCatatan = (int) ($summary->alpha ?? 0);
             $belumCatatan = (int) ($summary->belum_catatan ?? 0);
 
-            // Alfa = alfa yang dicatat + alfa hasil hitungan (tanggal lampau).
-            $alpha = $alphaCatatan + ($hitungAlfa ? $belumCatatan : 0);
+            // Alfa hanya dari catatan presensi yang tersimpan, tidak dihitung dari tanggal
+            $alpha = $alphaCatatan;
             $totalHadir = $hadir + $terlambat;
 
             /*

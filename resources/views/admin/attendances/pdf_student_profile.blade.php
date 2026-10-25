@@ -225,7 +225,8 @@
                 <span class="st st-S">S</span> = {{ __('Sakit') }},
                 <span class="st st-I">I</span> = {{ __('Izin') }},
                 <span class="st st-A">A</span> = {{ __('Alfa') }},
-                <span class="st st-L">L</span> = {{ __('Libur') }}
+                <span class="st st-L">L</span> = {{ __('Libur') }},
+                <span style="color: #647489;">-</span> = {{ __('Belum ada data') }}
             </div>
             <div class="legend-note">{{ __('Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".') }}</div>
         </div>

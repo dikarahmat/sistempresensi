@@ -75,7 +75,7 @@ class Attendance extends Model
         }
 
         if ($tanggal === null) {
-            return self::STATUS_BELUM;
+            return '-';
         }
 
         $isLibur = $isLibur ?? self::isTanggalLibur($tanggal);
@@ -84,9 +84,7 @@ class Attendance extends Model
             return self::STATUS_LIBUR;
         }
 
-        return $tanggal < \Carbon\Carbon::now('Asia/Jakarta')->toDateString()
-            ? self::STATUS_ALFA
-            : self::STATUS_BELUM;
+        return '-';
     }
 
     /**
@@ -264,8 +262,8 @@ class Attendance extends Model
             'terlambat' => $terlambat,
             'sakit' => $sakit,
             'izin' => $izin,
-            'alfa' => $alfaCatatan + max(0, $schoolDays - $hariAdaCatatan),
-            'belum' => max(0, $futureSchoolDays - $hariAdaCatatan),
+            'alfa' => $alfaCatatan,
+            'belum' => 0,
         ];
     }
 

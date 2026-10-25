@@ -563,15 +563,13 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         }
                     }
                 } else {
-                    /*
-                     * Tanpa catatan presensi:
-                     * - tanggal lampau (bukan hari libur/akhir pekan) -> ALFA
-                     *   (hitungan tampilan, tidak ditulis ke database);
-                     * - hari ini / masa depan -> BELUM;
-                     * - hari libur / akhir pekan -> LIBUR.
-                     * Sama dengan halaman Rekap & halaman Presensi.
-                     */
-                    $status = Attendance::statusOf(null, $date, $isHoliday);
+/*
+ * Tanpa catatan presensi:
+ * - hari libur / akhir pekan -> LIBUR (bukan Alfa).
+ * - selainnya -> status "-" (kosong, tidak ada catatan).
+ * Sama dengan halaman Rekap & halaman Presensi.
+ */
+$status = Attendance::statusOf(null, $date, $isHoliday, null);
                 }
 
                 $rows[] = [
@@ -629,9 +627,9 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         if ($dObj->isWeekend() || Holiday::isHoliday($dStr)) {
                             $code = 'L';
                         } else {
-                            // Tanpa catatan: tanggal lampau -> ALFA
-                            // (hitungan tampilan, tidak ditulis ke database).
-                            $code = Attendance::statusOf(null, $dStr) === 'Alfa' ? 'A' : '-';
+                            // Tanpa catatan: hari kerja tanpa catatan -> "-" (kosong).
+                            // Tidak pernah "A" tanpa catatan presensi tersimpan.
+                            $code = Attendance::statusOf(null, $dStr, null, null) === 'Alfa' ? 'A' : '-';
                             if ($code === 'A') {
                                 $a++;
                             }
@@ -704,18 +702,18 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                         $code = 'A';
                         $a++;
                     }
-                } else {
+} else {
                     $dObj = Carbon::createFromDate($year, $month, $d);
                     if ($dObj->isWeekend() || Holiday::isHoliday($cDate)) {
                         $code = 'L';
                     } else {
-                        // Tanpa catatan: tanggal lampau -> ALFA
-                        // (hitungan tampilan, tidak ditulis ke database).
-                        $code = Attendance::statusOf(null, $cDate) === 'Alfa' ? 'A' : '-';
+                        // Tanpa catatan presensi: hanya "-" (kosong).
+                        // statusOf tidak pernah mengembalikan Alfa untuk tanggal tanpa catatan.
+                        $code = Attendance::statusOf(null, $cDate, null, null) === 'Alfa' ? 'A' : '-';
                         if ($code === 'A') {
                             $a++;
                         }
-                    }
+}
                 }
 
                 $days[$d] = $code;
