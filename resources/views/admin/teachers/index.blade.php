@@ -106,6 +106,26 @@
             flex-wrap: wrap;
             gap: 2px;
         }
+        
+        /* Mobile: Data Guru table column alignment */
+        .table-zebra-custom th.nip-col, .table-zebra-custom td.nip-col {
+            text-align: center !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        .table-zebra-custom td.nip-col {
+            white-space: nowrap !important;
+        }
+        .table-zebra-custom th.no-col, .table-zebra-custom td.no-col {
+            text-align: center !important;
+        }
+        .table-zebra-custom th.nama-col, .table-zebra-custom td.nama-col {
+            text-align: left !important;
+        }
+        .table-zebra-custom th, .table-zebra-custom td {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
     }
 
     /* Header tabel Data Guru: nilai DESKTOP (>= 1024px) tidak berubah. */

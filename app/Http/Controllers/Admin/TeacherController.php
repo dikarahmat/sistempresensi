@@ -85,7 +85,24 @@ class TeacherController extends Controller
                     $userAttributes
                 );
 
-                $validated['user_id'] = $user->id;
+                // Normalisasi NIP menjadi null jika kosong
+$nipNormalized = !empty($validated['nip']) ? $validated['nip'] : null;
+
+$teacher = Teacher::updateOrCreate(
+    ['nip' => $nipNormalized],
+    [
+        'name' => $validated['name'],
+        'gender' => $validated['gender'],
+        'birth_place' => $validated['birth_place'] ?? null,
+        'birth_date' => $validated['birth_date'] ?? null,
+        'phone_number' => $validated['phone_number'] ?? null,
+        'phone' => $validated['phone'] ?? null,
+        'school_class_id' => $classId,
+    ]
+);
+
+// Sinkronkan TUGAS KELAS ke Data Kelas (SchoolClass)
+$this->syncTugasKelas($teacher, $classId);
             }
 
             $classId = $validated['school_class_id'] ?? null;

@@ -55,18 +55,19 @@ class TeachersImport implements ToCollection, WithHeadingRow
             $nip = trim((string) ($row['nip'] ?? $row['nomor_induk_pegawai'] ?? $row['id_guru'] ?? ''));
             $name = trim((string) ($row['nama'] ?? $row['nama_lengkap'] ?? $row['nama_guru'] ?? $row['name'] ?? ''));
 
-            if (empty($nip)) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: Kolom NIP wajib diisi (kosong).";
-                continue;
+            if (!empty($nip)) {
+                // NIP (18 digit, PNS/PPPK) atau NUPTK (16 digit, guru non-PNS)
+                if (!preg_match('/^([0-9]{16}|[0-9]{18})$/', $nip)) {
+                    $this->skippedCount++;
+                    $this->errors[] = "Baris {$rowIndex}: Format NIP/NUPTK tidak valid (harus 16 atau 18 digit angka). Baris dilewati.";
+                    continue;
+                }
             }
 
-            // NIP (18 digit, PNS/PPPK) atau NUPTK (16 digit, guru non-PNS)
-            if (!preg_match('/^([0-9]{16}|[0-9]{18})$/', $nip)) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: Format NIP/NUPTK tidak valid (harus 16 atau 18 digit angka). Baris dilewati.";
-                continue;
-            }
+            // Normalisasi NIP: jika kosong jadi null, jika ada tetap tetap
+            // Gunakan $nip !== '' untuk memastikan hanya string kosong yang jadi null,
+            // bukan nilai 0 atau null lainnya
+            $nip = $nip !== '' ? $nip : null;
 
             if (empty($name)) {
                 $this->skippedCount++;
@@ -147,22 +148,40 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 $assignedWaliKelasInFile[] = $schoolClassId;
             }
 
-            try {
+                       try {
                 // Hanya simpan data guru ke tabel teachers.
                 // Akun User tidak lagi dibuat otomatis melalui import —
                 // login hanya melalui username + password (lihat AuthController).
-                Teacher::updateOrCreate(
-                    ['nip' => $nip],
-                    [
-                        'name' => $name,
-                        'gender' => $gender,
-                        'birth_place' => $birthPlace ?: null,
-                        'birth_date' => $birthDate ?: null,
-                        'phone_number' => $phone ?: null,
-                        'phone' => $phone ?: null,
-                        'school_class_id' => $schoolClassId,
-                    ]
-                );
+                $data = [
+                    'name' => $name,
+                    'gender' => $gender,
+                    'birth_place' => $birthPlace ?: null,
+                    'birth_date' => $birthDate ?: null,
+                    'phone_number' => $phone ?: null,
+                    'phone' => $phone ?: null,
+                    'school_class_id' => $schoolClassId,
+                ];
+
+                if ($nip !== null) {
+                    // Punya NIP/NUPTK: NIP jadi kunci.
+                    Teacher::updateOrCreate(['nip' => $nip], $data);
+                } else {
+                    // Tanpa NIP: kuncinya NAMA, supaya guru tanpa NIP
+                    // tidak saling menimpa.
+                    $teacher = Teacher::withTrashed()
+                        ->whereNull('nip')
+                        ->where('name', $name)
+                        ->first();
+
+                    if ($teacher) {
+                        if ($teacher->trashed()) {
+                            $teacher->restore();
+                        }
+                        $teacher->update($data);
+                    } else {
+                        Teacher::create($data + ['nip' => null]);
+                    }
+                }
 
                 $this->importedCount++;
             } catch (\Throwable $e) {
