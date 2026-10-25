@@ -20,12 +20,51 @@ class DownloadCacheService
 {
     protected static string $baseDir = '';
 
-    /**
+    /***
      * Versi cache rekap. Naikkan nilainya setiap logika perhitungan rekap berubah
      * supaya file lama tidak pernah disajikan lagi.
      */
     protected static string $rekapCacheVersion = 'v2';
 
+    /***
+     * satu-satinya tempat ganti jenis kertas ('a4' atau 'a3').
+     * Kolom/baris/per lembar dihitung otomatis dari sini.
+     */
+    public const CARD_PAPER = 'a3';
+
+    /**
+     * Peta ukuran kertas: lebar dan tinggi mm.
+     * A4 landscape: 297×210, A3 landscape: 420×297.
+     */
+    protected static function paperConfig(): array
+    {
+        return [
+            'a4' => ['width' => 297, 'height' => 210, 'cols' => 5, 'rows' => 2, 'perSheet' => 10],
+            'a3' => ['width' => 420, 'height' => 297, 'cols' => 7, 'rows' => 3, 'perSheet' => 21],
+        ];
+    }
+
+    /**
+     * Ambil stamp desain dari file-terbitan view yang ikut desain.
+     * Digabung "_" . self::CARD_PAPER untuk versi cache.
+     */
+    protected static function getDesignStamp(): string
+{
+    $files = [
+        resource_path('views/shared/print-cards.blade.php'),
+        resource_path('views/admin/students/partials/card-single.blade.php'),
+        resource_path('views/admin/students/print-card-pdf.blade.php'),
+        public_path('images/card-bg-single.svg'),
+        public_path('images/card-bg-pdf.png'),
+    ];
+    $parts = [];
+    foreach ($files as $path) {
+        $parts[] = is_file($path) ? (string) filemtime($path) : '0';
+    }
+    $parts[] = self::CARD_PAPER;
+
+    return substr(md5(implode('|', $parts)), 0, 12);
+}
     public static function initDirs(): void
     {
         if (empty(self::$baseDir)) {
@@ -55,6 +94,33 @@ class DownloadCacheService
         try {
             $setting = Setting::first();
             return $setting && $setting->updated_at ? $setting->updated_at->timestamp : 0;
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+/** 
+     * Dapatkan stempel file gambar (logo & QR) untuk cache invalidation. 
+     * Menggunakan filemtime dari file path untuk mendeteksi perubahan gambar. 
+     */
+    protected static function getImageStamp(): int
+    {
+        try {
+            $logoPath = public_path(Setting::getLogo());
+            $bgSvgPath = public_path('images/card-bg-single.svg');
+            $bgPngPath = public_path('images/card-bg-pdf.png');
+
+            $times = [];
+            if (file_exists($logoPath)) {
+                $times[] = filemtime($logoPath);
+            }
+            if (file_exists($bgSvgPath)) {
+                $times[] = filemtime($bgSvgPath);
+            }
+            if (file_exists($bgPngPath)) {
+                $times[] = filemtime($bgPngPath);
+            }
+
+            return empty($times) ? 0 : max($times);
         } catch (\Throwable $e) {
             return 0;
         }
@@ -93,7 +159,8 @@ class DownloadCacheService
             $student->loadMissing('schoolClass');
             $settingStamp = self::getSettingStamp();
             $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}.png";
+            $designStamp = self::getDesignStamp();
+            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.png";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
             $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.png';
@@ -141,102 +208,85 @@ class DownloadCacheService
      * di pojok kiri atas, memakai partial admin.students.partials.card-single
      * (desain baru khusus fitur single: preview & unduh individual).
      */
-    public static function downloadSingleCardPdf(Student $student)
-    {
-        self::initDirs();
+   public static function downloadSingleCardPdf(Student $student)
+{
+    self::initDirs();
 
-        try {
-            $student = clone $student;
-            $student->loadMissing('schoolClass');
-            $settingStamp = self::getSettingStamp();
-            $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-            $cacheFileName = "card_single_v2_{$student->id}_{$studentStamp}_{$settingStamp}.pdf";
-            $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
+    try {
+        $student = clone $student;
+        $student->loadMissing('schoolClass');
+        $settingStamp = self::getSettingStamp();
+        $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
+        $designStamp = self::getDesignStamp();
+        $cacheFileName = "card_single_v3_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.pdf";
+        $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-            $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.pdf';
+        $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.pdf';
 
-            // Bersihkan file cache jika ada file 0-byte atau rusak
-            if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
-                @unlink($cacheFilePath);
-            }
-
-            if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-                $activeYear = AcademicYear::getActive();
-                $schoolName = Setting::getSchoolName();
-                $schoolAddress = Setting::getSchoolAddress();
-
-                $logoPath = public_path(Setting::getLogo());
-                $logoBase64 = null;
-                if (file_exists($logoPath)) {
-                    $mime = mime_content_type($logoPath) ?: 'image/png';
-                    $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
-                }
-
-                // QR Base64 (SVG, sama seperti PDF massal)
-                $token = $student->nisn ?: $student->qr_token;
-                $qrBase64 = null;
-                try {
-                    $svg = QrCode::size(140)->margin(0)->generate($token);
-                    $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
-                } catch (\Throwable $e) {
-                    $qrBase64 = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" . urlencode($token);
-                }
-
-                $genderVal = ($student->gender ?? 'Laki-laki') === 'Perempuan' ? 'Perempuan' : 'Laki-laki';
-
-                $pdf = Pdf::loadView('admin.students.print-card-pdf', array_merge(compact(
-                    'student',
-                    'schoolName',
-                    'schoolAddress',
-                    'activeYear',
-                    'logoBase64',
-                    'qrBase64'
-                ), [
-                    'studentItem' => $student,
-                    'studentName' => $student->name,
-                    'studentClass' => $student->schoolClass->name ?? '-',
-                    'studentGender' => $genderVal,
-                    'isPdf' => true,
-                ]))->setPaper('a4', 'portrait');
-
-                File::put($cacheFilePath, $pdf->output());
-            }
-
-            return response()->download($cacheFilePath, $downloadFileName, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
-                'Cache-Control' => 'no-cache, must-revalidate'
-            ]);
-        } catch (\Throwable $e) {
-            Log::error('Gagal mengunduh kartu presensi PDF siswa: ' . $e->getMessage(), [
-                'student_id' => $student->id ?? null,
-                'exception' => $e
-            ]);
-
-            if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'message' => 'Kartu belum bisa diunduh, coba lagi'
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Kartu belum bisa diunduh, coba lagi');
+        if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
+            @unlink($cacheFilePath);
         }
+
+        if (!File::exists($cacheFilePath)) {
+            $schoolName = Setting::getSchoolName();
+
+            // Gunakan file path instead of base64 data URL
+            $logoPath = public_path(Setting::getLogo());
+
+            $pdf = Pdf::loadView('admin.students.print-card-pdf', [
+                'student'      => $student,
+                'schoolName'   => $schoolName,
+                'logoPath'     => $logoPath,  // File path instead of base64
+                'qrCodePath'   => null,  // File path (null means view will generate)
+                'studentName'  => $student->name,
+                'studentNisn'  => $student->nisn,
+                'studentClass' => $student->schoolClass->name ?? '-',
+                'isPdf'        => true,
+            ])->setPaper('a4', 'portrait');
+
+            // Set DomPDF options for optimization
+            $pdf->setOption('enable_font_subsetting', true);
+            $pdf->setOption('isHtml5ParserEnabled', true);
+            $pdf->setOption('dpi', 150);  // Reduce DPI for smaller filesize
+            $pdf->setOption('defaultFont', 'sans-serif');
+
+            File::put($cacheFilePath, $pdf->output());
+        }
+
+        return response()->download($cacheFilePath, $downloadFileName, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+        ]);
+    } catch (\Throwable $e) {
+        Log::error('Gagal mengunduh kartu presensi PDF siswa: ' . $e->getMessage(), [
+            'student_id' => $student->id ?? null,
+            'exception' => $e,
+        ]);
+
+        if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['message' => 'Kartu belum bisa diunduh, coba lagi'], 500);
+        }
+
+        return redirect()->back()->with('error', 'Kartu belum bisa diunduh, coba lagi');
     }
+}
+/**
+ * Render Single Student Card PNG menggunakan PHP GD murni.
+ * Standar CR80 Portrait: 1086 x 1725 px (~500 DPI),
+ * desain identik dengan card.blade.php (massal).
+ * Kanvas penuh 1086x1725, tanpa area transparan/sudut melengkung.
+ * Latar kartu digambar menggunakan desain SVG card-bg-single.svg
+ * melalui perintah GD (rect, ellipse). Teks dan QR tetap digambar di atas.
+ */
+public static function renderCardPngWithGd(Student $student, string $outputPath): void
+{
+    $w = 1086;
+    $h = 1725;
 
-    /**
-     * Render Single Student Card PNG menggunakan PHP GD murni.
-     * Standar CR80 Portrait: 1086 x 1725 px (~500 DPI), sudut lengkung 64 px (~3.18mm),
-     * latar transparan di luar sudut, desain IDENTIK dengan card.blade.php (massal).
-     */
-    public static function renderCardPngWithGd(Student $student, string $outputPath): void
-    {
-        $w = 1086;
-        $h = 1725;
-        $radius = 64;
-
-        $img = imagecreatetruecolor($w, $h);
-        imagesavealpha($img, true);
-        imagealphablending($img, true);
+    $img = imagecreatetruecolor($w, $h);
+    imagesavealpha($img, true);
+    imagealphablending($img, true);
 
         // Latar belakang transparan di luar sudut lengkung kartu
         $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
@@ -252,15 +302,17 @@ class DownloadCacheService
         $grayBorder = imagecolorallocate($img, 226, 232, 240); // #e2e8f0 (Garis atas footer)
         $grayText = imagecolorallocate($img, 100, 116, 139);   // #64748b (Teks footer)
 
-        // Proporsi tinggi elemen (total 1725 px) - SAMA DENGAN card.blade.php
-        // Header 11.2mm = 226px, Accent 0.8mm = 16px, Identity 18mm = 363px, QR 49mm = 987px, Footer 6.6mm = 133px
-        // Total: 226 + 16 + 363 + 987 + 133 = 1725px ✓
+        // Proporsi tinggi elemen (total 1725 px) - DISETUJUI sama desain card.blade.php
+        // dengan pembaharuan footer navy lebih tinggi (141px daripada 133px).
+        // Header 11.2mm = 226px, Accent 0.8mm = 16px, Identity 18mm = 363px, QR 49mm = 979px,
+        // Footer 8.1mm = 141px (sebanding 141/1725 = 8.1% dari tinggi kartu).
+        // Total: 226 + 16 + 363 + 979 + 141 = 1725px ✓
         $headerH = 226;    // 11.2mm
         $accentH = 16;     // 0.8mm
         $identityH = 363;  // 18mm (nama + NISN + kelas, vertikal tengah)
-        $qrAreaH = 987;    // 49mm
-        $footerH = 133;    // 6.6mm
-        $footerY = $h - $footerH; // 1592
+        $qrAreaH = 979;    // 49mm (disingkurkan 8px untuk footer lebih tinggi)
+        $footerH = 141;    // 8.1mm (141/1725 dari tinggi total)
+        $footerY = $h - $footerH; // 1584
 
         // 1. Gambar badan kartu putih (di bawah header + accent)
         imagefilledrectangle($img, 0, $headerH + $accentH, $w - 1, $footerY - 1, $white);
@@ -268,40 +320,14 @@ class DownloadCacheService
         // 2. Garis aksen oranye
         imagefilledrectangle($img, 0, $headerH, $w - 1, $headerH + $accentH - 1, $amber);
 
-        // 3. Header Navy dengan sudut atas melengkung
-        imagefilledrectangle($img, 0, $radius, $w - 1, $headerH - 1, $navy);
-        imagefilledrectangle($img, $radius, 0, $w - 1 - $radius, $radius, $navy);
-        imagefilledellipse($img, $radius, $radius, $radius * 2, $radius * 2, $navy);
-        imagefilledellipse($img, $w - 1 - $radius, $radius, $radius * 2, $radius * 2, $navy);
+        // 3. Header Navy kotak square (tanpa sudut melengkung)
+        imagefilledrectangle($img, 0, 0, $w - 1, $headerH - 1, $navy);
 
-        // 4. Footer Abu-abu dengan sudut bawah melengkung
-        imagefilledrectangle($img, 0, $footerY, $w - 1, $h - 1 - $radius, $grayLight);
-        imagefilledrectangle($img, $radius, $h - 1 - $radius, $w - 1 - $radius, $h - 1, $grayLight);
-        imagefilledellipse($img, $radius, $h - 1 - $radius, $radius * 2, $radius * 2, $grayLight);
-        imagefilledellipse($img, $w - 1 - $radius, $h - 1 - $radius, $radius * 2, $radius * 2, $grayLight);
+        // 4. Footer Abu-abi kotak square (tanpa sudut melengkung dan transparan)
+        imagefilledrectangle($img, 0, $footerY, $w - 1, $h - 1, $grayLight);
         imageline($img, 0, $footerY, $w - 1, $footerY, $grayBorder);
 
-        // 5. Potong sudut luar kartu agar transparan sempurna
-        for ($y = 0; $y < $radius; $y++) {
-            for ($x = 0; $x < $radius; $x++) {
-                $dx = $radius - $x;
-                $dy = $radius - $y;
-                if (($dx * $dx + $dy * $dy) > ($radius * $radius)) {
-                    imagesetpixel($img, $x, $y, $transparent);
-                    imagesetpixel($img, $w - 1 - $x, $y, $transparent);
-                }
-            }
-        }
-        for ($y = 0; $y < $radius; $y++) {
-            for ($x = 0; $x < $radius; $x++) {
-                $dx = $radius - $x;
-                $dy = $y;
-                if (($dx * $dx + $dy * $dy) > ($radius * $radius)) {
-                    imagesetpixel($img, $x, $h - 1 - $radius + $y, $transparent);
-                    imagesetpixel($img, $w - 1 - $x, $h - 1 - $radius + $y, $transparent);
-                }
-            }
-        }
+        // 5. (Removed: asep pengurusan sudut melengkung -- kanvas penuh square corners, tidak ada area transparan)
 
         // 6. Muat font TTF bawaan vendor/dompdf (tersedia di lokal dan production)
         $fontBold = base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ttf');
@@ -502,14 +528,14 @@ class DownloadCacheService
         $scanY = $qrActualBottom + 100; // 100px gap dari QR actual bottom = 1390
         imagettftext($img, $scanFontSize, 0, $scanX, $scanY, $dark, $fontBold, 'SCAN PRESENSI');
 
-        // 11. Footer - massal: 4.5pt ≈ 15px, italic, #64748b, vertical-align middle in 6.6mm footer
+        // 11. Footer - vertikal center di area navy (y 1584-1725, height 141px)
         $footerText = 'Tunjukkan kartu saat presensi masuk';
         $footerFontSize = 15; // 4.5pt ≈ 15px
         $footBbox = imagettfbbox($footerFontSize, 0, $fontOblique, $footerText);
         $footW = abs($footBbox[4] - $footBbox[0]);
         $footX = (int) round(($w - $footW) / 2);
-        // Footer vertikal tengah: footerY (1592) + footerH/2 (66.5) + fontSize/2 adjustment
-        $footY = $footerY + ($footerH / 2) + ($footerFontSize / 3) + 6; // +6 untuk target center ~1658
+        // Footer vertikal tengah: center di area navy (y 1584-1725)
+        $footY = $footerY + ($footerH / 2) + ($footerFontSize / 4); // ≈ 1658
         imagettftext($img, $footerFontSize, 0, $footX, $footY, $grayText, $fontOblique, $footerText);
 
         // 12. Tulis file PNG dengan kompresi maksimal (9)
@@ -520,107 +546,112 @@ class DownloadCacheService
     /**
      * Download Mass Cards PDF (Instan via Cache / Pre-generate)
      */
-    public static function downloadMassCards(Request $request, ?int $forceClassId = null, array $allowedClassIds = []): BinaryFileResponse
-    {
-        self::initDirs();
+   public static function downloadMassCards(Request $request, ?int $forceClassId = null, array $allowedClassIds = []): BinaryFileResponse
+{
+    self::initDirs();
 
-        ini_set('memory_limit', '1024M');
-        ini_set('max_execution_time', '300');
+    ini_set('memory_limit', '1024M');
+    ini_set('max_execution_time', '300');
 
-        $query = Student::with('schoolClass')->where('status', 'Aktif');
+    $query = Student::with('schoolClass')->where('status', 'Aktif');
 
-        $classId = $forceClassId;
-        if (!$classId && $request->filled('class_id') && $request->input('class_id') !== 'all') {
-            $classId = (int) $request->input('class_id');
-        }
+    $classId = $forceClassId;
+    if (!$classId && $request->filled('class_id') && $request->input('class_id') !== 'all') {
+        $classId = (int) $request->input('class_id');
+    }
 
-        if (!empty($allowedClassIds)) {
-            $query->whereIn('school_class_id', $allowedClassIds);
-            if ($classId && in_array($classId, $allowedClassIds)) {
-                $query->where('school_class_id', $classId);
-            }
-        } elseif ($classId) {
+    if (!empty($allowedClassIds)) {
+        $query->whereIn('school_class_id', $allowedClassIds);
+        if ($classId && in_array($classId, $allowedClassIds)) {
             $query->where('school_class_id', $classId);
         }
-
-        $studentIds = null;
-        if ($request->filled('student_ids') && is_array($request->student_ids)) {
-            $studentIds = array_filter(array_map('intval', $request->student_ids));
-            if (!empty($studentIds)) {
-                $query->whereIn('id', $studentIds);
-                sort($studentIds);
-            }
-        }
-
-        // Hitung identifikasi versi data untuk cache
-        $studentCount = (clone $query)->count();
-        $latestUpdate = (clone $query)->max('updated_at') ?? '0';
-        $settingStamp = self::getSettingStamp();
-
-        $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
-        $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-        $cacheFileName = "cards_mass_v14_{$scopeKey}.pdf";
-        $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
-
-        $targetClassName = '';
-        if ($classId) {
-            $cls = SchoolClass::find($classId);
-            if ($cls) $targetClassName = '_' . Str::slug($cls->name);
-        }
-        $downloadFileName = 'Kartu_Presensi_Massal' . $targetClassName . '_' . date('Ymd_His') . '.pdf';
-
-        if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-            $activeYear = AcademicYear::getActive();
-            $schoolName = Setting::getSchoolName();
-            $schoolAddress = Setting::getSchoolAddress();
-
-            $logoPath = public_path(Setting::getLogo());
-            $logoBase64 = null;
-            if (file_exists($logoPath)) {
-                $mime = mime_content_type($logoPath) ?: 'image/png';
-                $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
-            }
-
-            $students = collect();
-            $query->orderBy('school_class_id')->orderBy('name')->chunk(100, function ($chunk) use ($students) {
-                foreach ($chunk as $st) {
-                    $token = $st->nisn ?: $st->qr_token;
-                    try {
-                        // QR berupa PNG kecil (GD), jauh lebih hemat memori daripada SVG vektor
-                        $st->qr_base64 = self::qrPngDataUri((string) $token);
-                    } catch (\Throwable $e) {
-                        $st->qr_base64 = null;
-                    }
-                    $st->photo_base64 = null;
-                    $students->push($st);
-                }
-            });
-
-            if ($students->isEmpty()) {
-                abort(404, 'Tidak ada data siswa yang ditemukan untuk dicetak.');
-            }
-
-            $pdf = Pdf::loadView('shared.print-cards', array_merge(compact(
-                'students',
-                'schoolName',
-                'schoolAddress',
-                'activeYear',
-                'logoBase64'
-            ), ['isPdf' => true]))->setPaper('a4', 'landscape');
-
-            $output = $pdf->output();
-            File::put($cacheFilePath, $output);
-
-            unset($pdf, $output, $students);
-            gc_collect_cycles();
-        }
-
-        return response()->download($cacheFilePath, $downloadFileName, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
-            'Cache-Control' => 'no-cache, must-revalidate'
-        ]);
+    } elseif ($classId) {
+        $query->where('school_class_id', $classId);
     }
+
+    $studentIds = null;
+    if ($request->filled('student_ids') && is_array($request->student_ids)) {
+        $studentIds = array_filter(array_map('intval', $request->student_ids));
+        if (!empty($studentIds)) {
+            $query->whereIn('id', $studentIds);
+            sort($studentIds);
+        }
+    }
+
+    $studentCount = (clone $query)->count();
+    $latestUpdate = (clone $query)->max('updated_at') ?? '0';
+    $settingStamp = self::getSettingStamp();
+    $designStamp = self::getDesignStamp();
+
+    $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
+    $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
+    $cacheFileName = "cards_mass_v9_{$scopeKey}_{$designStamp}.pdf";
+    $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
+
+    $targetClassName = '';
+    if ($classId) {
+        $cls = SchoolClass::find($classId);
+        if ($cls) $targetClassName = '_' . Str::slug($cls->name);
+    }
+    $downloadFileName = 'Kartu_Presensi_Massal' . $targetClassName . '_' . date('Ymd_His') . '.pdf';
+
+    if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
+        $schoolName = Setting::getSchoolName();
+
+        $logoPath = public_path(Setting::getLogo());
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $mime = mime_content_type($logoPath) ?: 'image/png';
+            $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
+        // Urut: kelas natural (7A, 7B, ... 9F), lalu nama A-Z
+        $students = $query->get()->sort(function ($a, $b) {
+            $ca = $a->schoolClass->name ?? '';
+            $cb = $b->schoolClass->name ?? '';
+            if ($ca !== $cb) return strnatcmp($ca, $cb);
+            return strcmp(Str::ascii($a->name), Str::ascii($b->name));
+        })->values();
+
+        if ($students->isEmpty()) {
+            abort(404, 'Tidak ada data siswa yang ditemukan untuk dicetak.');
+        }
+
+        foreach ($students as $st) {
+            try {
+                $st->qr_base64 = self::qrPngDataUri((string) ($st->nisn ?: $st->qr_token));
+            } catch (\Throwable $e) {
+                $st->qr_base64 = null;
+            }
+            $st->photo_base64 = null;
+        }
+
+        $paper = self::CARD_PAPER;
+        $cfg = self::paperConfig()[$paper];
+
+        $pdf = Pdf::loadView('shared.print-cards', [
+            'students'   => $students,   // daftar datar, di-chunk di Blade
+            'schoolName' => $schoolName,
+            'logoBase64' => $logoBase64,
+            'paper'      => $paper,
+            'cols'       => $cfg['cols'],
+            'rows'       => $cfg['rows'],
+            'perSheet'   => $cfg['perSheet'],
+            'isPdf'      => true,
+        ])->setPaper($paper, 'landscape');
+
+        File::put($cacheFilePath, $pdf->output());
+
+        unset($pdf, $students);
+        gc_collect_cycles();
+    }
+
+    return response()->download($cacheFilePath, $downloadFileName, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
+        'Cache-Control' => 'no-cache, must-revalidate',
+    ]);
+}
 
     /**
      * Buat QR sebagai PNG (data URI) memakai GD. Tanpa quiet zone tambahan,

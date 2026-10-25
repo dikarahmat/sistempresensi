@@ -4,8 +4,6 @@
 @section('page_title', __('Detail Siswa'))
 @section('page_subtitle', __('Informasi biodata, kelas, dan kode QR presensi siswa'))
 
-
-
 @push('styles')
 <style>
     .card-modern {
@@ -15,82 +13,71 @@
         box-shadow: 0 1px 4px rgba(15, 23, 42, 0.02);
     }
 
-    .btn-edit-yellow {
-        background-color: #f59e0b;
-        color: #ffffff;
-        font-weight: 600;
-        font-size: 0.88rem;
-        border: none;
-        border-radius: var(--clean-radius);
-        padding: 0.5rem 1.25rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        text-decoration: none;
-    }
-    .btn-edit-yellow:hover { background-color: #d97706; color: #ffffff; }
-
-    .btn-back-white {
-        background-color: #ffffff;
-        color: #334155;
-        border: 1px solid #cbd5e1;
-        font-weight: 600;
-        font-size: 0.88rem;
-        border-radius: var(--clean-radius);
-        padding: 0.5rem 1.25rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        text-decoration: none;
-    }
-    .btn-back-white:hover { background-color: #f1f5f9; color: #0f172a; }
-
     .info-label {
         font-size: 0.85rem;
         color: #64748b;
-        margin-bottom: 0.15rem;
+        margin-bottom: 0.25rem;
     }
 
     .info-value {
         font-size: 0.95rem;
         font-weight: 700;
         color: #0f172a;
-        margin-bottom: 1.15rem;
+        margin-bottom: 1.1rem;
     }
 
-    .qr-display-box {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1.25rem;
-        background: #ffffff;
-        border-radius: 14px;
-        margin-bottom: 1.5rem;
+    .info-value:last-child {
+        margin-bottom: 0 !important;
     }
 
+    /* Tombol download: selebar isi box */
     .btn-download-green {
-        background-color: #059669;
+        background-color: #10b981;
         color: #ffffff;
         font-weight: 600;
         font-size: 0.9rem;
-        border-radius: var(--clean-radius);
+        border-radius: var(--clean-radius, 8px);
         border: none;
-        padding: 0.65rem 1rem;
+        padding: 0.75rem 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.4rem;
-        width: 100%;
         cursor: pointer;
         transition: all 0.2s ease;
+        text-decoration: none;
+        width: 100%;
+        min-height: 42px;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
     }
-    .btn-download-green:hover { background-color: #047857; color: #ffffff; }
+    .btn-download-green:hover { background-color: #059669; color: #ffffff; box-shadow: 0 6px 8px rgba(16, 185, 129, 0.3); }
+
+    /* Preview kartu: 1.6x ukuran CR80, di tengah box */
+    .kp-card-box {
+        width: calc(53.98mm * 1.6);
+        height: calc(85.6mm * 1.6);
+        max-width: 100%;
+        margin: 0 auto 1.5rem auto;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kp-card-scale {
+        width: 53.98mm;
+        height: 85.6mm;
+        transform: scale(1.6);
+        transform-origin: top left;
+    }
+
+    .kp-card-scale > * {
+        margin: 0;
+    }
+
+    
 </style>
 @endpush
 
 @section('content')
-    {{-- Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
-         Tombol X center vertikal oleh CSS notifikasi global di layout. --}}
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">
         <div class="flash-notice-body">
@@ -115,8 +102,8 @@
     </div>
     @endif
 
-    <div class="row g-4">
-        <!-- Informasi Siswa -->
+    <div class="row g-4 align-items-start">
+        <!-- Informasi Siswa (Kolom Kiri) -->
         <div class="col-12 col-lg-7">
             <div class="card card-modern p-4">
                 <h5 class="fw-bold mb-4" style="color: #0f172a;">{{ __('Informasi Siswa') }}</h5>
@@ -131,33 +118,29 @@
                 <div class="info-value">{{ $student->name }}</div>
 
                 <div class="info-label">{{ __('Jenis Kelamin') }}</div>
-                <div class="info-value">{{ __($student->gender ?? 'Laki-laki') }}</div>
+                <div class="info-value mb-0">{{ __($student->gender ?? 'Laki-laki') }}</div>
             </div>
         </div>
 
-        <!-- Box Kartu Presensi -->
+        <!-- Box Kartu Presensi (Kolom Kanan) -->
         <div class="col-12 col-lg-5">
             <div class="card card-modern p-4">
-                <h5 class="fw-bold mb-3" style="color: #0f172a;">{{ __('Kartu Presensi') }}</h5>
+                <h5 class="fw-bold mb-4" style="color: #0f172a;">{{ __('Kartu Presensi') }}</h5>
 
-                <div class="qr-display-box d-flex justify-content-center align-items-center mb-3" style="background: transparent; padding: 0.5rem 0;">
-    <div style="width: calc(53.98mm * 1.6); height: calc(85.6mm * 1.6);">
-        <div style="width: 53.98mm; height: 85.6mm; transform: scale(1.6); transform-origin: top left;">
-            @include('admin.students.partials.card-single', [
-                'studentItem' => $student,
-                'studentName' => $student->name,
-                'studentNisn' => $student->nisn,
-                'studentClass' => $student->schoolClass->name ?? '-',
-            ])
-        </div>
-    </div>
-</div>
+                <!-- Preview kartu (tengah) -->
+                <div class="kp-card-box">
+                    <div class="kp-card-scale">@include('admin.students.partials.card-single', [
+                        'studentItem' => $student,
+                        'studentName' => $student->name,
+                        'studentNisn' => $student->nisn,
+                        'studentClass' => $student->schoolClass->name ?? '-',
+                    ])</div>
+                </div>
 
-                <!-- Tombol Download Kartu Presensi PDF (Tanpa Ikon) -->
-                <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green btn-progress" id="btnDownloadCard" style="text-decoration: none;" data-download data-no-download data-dl-progress>
-                    {{ __('Download Kartu Presensi') }}
-                </a>
+                <!-- Tombol download (tepat di bawah kartu, selebar box, di luar kp-card-box) -->
+                <a href="{{ panel_route('students.download-card', $student->id) }}" class="btn-download-green btn-progress" id="btnDownloadCard" data-download data-no-download data-dl-progress>{{ __('Download Kartu Presensi') }}</a>
             </div>
         </div>
     </div>
 @endsection
+

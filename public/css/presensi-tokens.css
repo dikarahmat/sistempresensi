@@ -299,6 +299,7 @@
     text-decoration: none !important;
     cursor: pointer !important;
     transition: background-color 0.2s ease, opacity 0.2s ease !important;
+    min-height: 42px !important;
 }
 .btn-download-green:hover {
     background-color: #047857 !important;
