@@ -269,3 +269,7 @@ Route::post('/locale/{lang}', function (Request $request, string $lang) {
 
     return redirect()->back();
 })->middleware('auth')->name('locale.set');
+
+Route::get('/cek-int', function () {
+    return PHP_INT_SIZE . ' byte (' . (PHP_INT_SIZE * 8) . '-bit)';
+});
