@@ -296,6 +296,8 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
     }
+    .btn-row-action.action-detail { color: #16a34a; }      /* hijau */
+    .btn-row-action.action-detail:hover { color: #15803d; }
     .btn-row-action.action-edit { color: #f59e0b; }        /* kuning/oranye */
     .btn-row-action.action-edit:hover { color: #d97706; }
     .btn-row-action.action-delete { color: #dc2626; }      /* merah */
@@ -331,28 +333,28 @@
             table-layout: fixed !important;
             min-width: 640px !important;
         }
-        /* Lebar kolom eksplisit (total 890px; tabel digulir di dalam wadah, halaman tidak ikut scroll) */
+        /* Lebar kolom eksplisit (total 910px; tabel digulir di dalam wadah, halaman tidak ikut scroll) */
         .table-zebra-custom col:nth-child(1)  { width: 40px !important; }    /* No */
         .table-zebra-custom col:nth-child(2)  { width: 170px !important; }   /* NIP */
         .table-zebra-custom col:nth-child(3)  { width: 220px !important; }   /* Nama Lengkap Guru */
         .table-zebra-custom col:nth-child(4)  { width: 110px !important; }   /* Jenis Kelamin */
         .table-zebra-custom col:nth-child(5)  { width: 130px !important; }   /* Tugas Kelas */
         .table-zebra-custom col:nth-child(6)  { width: 140px !important; }   /* No. Telepon / WA */
-        .table-zebra-custom col:nth-child(7)  { width: 80px !important; }    /* Aksi */
+        .table-zebra-custom col:nth-child(7)  { width: 100px !important; }   /* Aksi */
         .table-zebra-custom thead th:nth-child(1)  { width: 40px !important; text-align: center !important; }
         .table-zebra-custom thead th:nth-child(2)  { width: 170px !important; text-align: left !important; white-space: nowrap !important; }
         .table-zebra-custom thead th:nth-child(3)  { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
         .table-zebra-custom thead th:nth-child(4)  { width: 110px !important; text-align: center !important; }
         .table-zebra-custom thead th:nth-child(5)  { width: 130px !important; text-align: center !important; }
         .table-zebra-custom thead th:nth-child(6)  { width: 140px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(7)  { width: 80px !important; text-align: center !important; }
+        .table-zebra-custom thead th:nth-child(7)  { width: 100px !important; text-align: center !important; }
         .table-zebra-custom tbody td:nth-child(1)  { width: 40px !important; text-align: center !important; }
         .table-zebra-custom tbody td:nth-child(2)  { width: 170px !important; text-align: left !important; white-space: nowrap !important; }
         .table-zebra-custom tbody td:nth-child(3)  { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
         .table-zebra-custom tbody td:nth-child(4)  { width: 110px !important; text-align: center !important; }
         .table-zebra-custom tbody td:nth-child(5)  { width: 130px !important; text-align: center !important; }
         .table-zebra-custom tbody td:nth-child(6)  { width: 140px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(7)  { width: 80px !important; text-align: center !important; }
+        .table-zebra-custom tbody td:nth-child(7)  { width: 100px !important; text-align: center !important; }
         /* Padding konsisten antar kolom (minimal 8px) */
         .table-zebra-custom th,
         .table-zebra-custom td {
@@ -489,6 +491,10 @@
                 @if(Auth::check() && Auth::user()->role === 'admin')
                 <!-- Sisi Kanan: Deretan Tombol Aksi -->
                 <div class="action-buttons-wrap">
+                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#printCardsModal">
+                        <span>{{ __('Cetak Kartu') }}</span>
+                    </button>
+
                     <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
                         <span>{{ __('Import Excel') }}</span>
@@ -517,9 +523,9 @@
                     <col style="width: 15%;">
                     <col style="width: 19%;">
                     <col style="width: 15%;">
+                    <col style="width: 16%;">
                     <col style="width: 17%;">
-                    <col style="width: 18%;">
-                    <col style="width: 11%;">
+                    <col style="width: 14%;">
                 </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
@@ -527,10 +533,10 @@
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('NIP') }}</th>
                         <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 19%;">{{ __('Nama Lengkap Guru') }}</th>
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('Jenis Kelamin') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 17%;">{{ __('Tugas Kelas') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 18%;">{{ __('No. Telepon / WA') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 16%;">{{ __('Tugas Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 17%;">{{ __('No. Telepon / WA') }}</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 11%;">{{ __('Aksi') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -559,7 +565,12 @@
                         @if(Auth::check() && Auth::user()->role === 'admin')
                         <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
-                                <!-- 1. Tombol Edit Guru -->
+                                <!-- 1. Tombol Detail Guru -->
+                                <a href="{{ panel_route('guru.show', $teacher->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+
+                                <!-- 2. Tombol Edit Guru -->
                                 <button type="button" class="btn-row-action action-edit"
                                         title="{{ __('Edit Data Guru') }}"
                                         aria-label="{{ __('Edit Data Guru') }}"
@@ -576,7 +587,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </button>
 
-                                <!-- 2. Tombol Hapus Guru -->
+                                <!-- 3. Tombol Hapus Guru -->
                                 <button type="button" class="btn-row-action action-delete"
                                         title="{{ __('Hapus Data Guru') }}"
                                         aria-label="{{ __('Hapus Data Guru') }}"
@@ -821,6 +832,37 @@
                     <div class="modal-footer border-top-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                         <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Mulai Import') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="printCardsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="fw-bold mb-0">{{ __('Cetak Kartu Presensi Guru Massal') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ panel_route('guru.print-cards') }}" method="POST" data-download>
+                    @csrf
+                    <div class="modal-body py-3">
+                        <p class="text-secondary small mb-3">
+                            {{ __('Semua guru aktif akan dicetak. Berkas PDF kartu akan siap dicetak pada kertas A4 landscape (10 kartu per lembar, ukuran kartu CR80 portrait).') }}
+                        </p>
+
+                        <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2">
+                            <i class='bx bx-info-circle me-1'></i> {{ __('QR Code kartu guru berisi NIP (jika valid) atau identifier sistem untuk guru tanpa NIP, dan digenerate secara otomatis saat proses cetak.') }}
+                        </div>
+
+                        <div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mb-0">
+                            <i class='bx bx-error-circle me-1'></i> {{ __('Guru yang belum memiliki NIP tetap dicetak dengan NIP ditampilkan sebagai "-"; QR Code tetap unik karena memakai identifier sistem.') }}
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                        <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen">{{ __('Generate & Unduh') }}</button>
                     </div>
                 </form>
             </div>

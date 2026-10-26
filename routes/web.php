@@ -5,14 +5,13 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\RekapController as AdminRekapController;
+use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\ScannerController as AdminScannerController;
 use App\Http\Controllers\Admin\SchoolClassController;
-use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\UserAccountController;
-
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -110,30 +109,32 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('students/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
     Route::get('students/{id}/print-card', [AdminStudentController::class, 'printCard'])->name('students.print-card');
     Route::get('students-print-all', [AdminStudentController::class, 'printCard'])->name('students.print-all');
-    
+
     // Soft Delete Routes
     Route::get('students/trash', [AdminStudentController::class, 'trash'])->name('students.trash');
     Route::post('students/{id}/restore', [AdminStudentController::class, 'restore'])->name('students.restore');
     Route::delete('students/{id}/force-delete', [AdminStudentController::class, 'forceDelete'])->name('students.force-delete');
-    
+
     // Riwayat Presensi per Siswa (akses dari menu Kehadiran)
-    Route::get('kehadiran/siswa/{student}/history', [\App\Http\Controllers\Admin\AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
-    
+    Route::get('kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+
     Route::resource('students', AdminStudentController::class);
 
     // Manajemen Data Guru (/admin/guru)
 
     Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAll'])->name('guru.destroy-all');
+    Route::match(['get', 'post'], 'guru/print-cards', [TeacherController::class, 'printCards'])->name('guru.print-cards');
     Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
     Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import')->middleware('throttle:10,1');
-    Route::resource('guru', TeacherController::class)->parameters(['guru' => 'teacher'])->only(['index', 'store', 'update', 'destroy']);
+    Route::get('guru/{teacher}/download-card', [TeacherController::class, 'downloadCard'])->name('guru.download-card');
+    Route::resource('guru', TeacherController::class)->parameters(['guru' => 'teacher'])->only(['index', 'show', 'store', 'update', 'destroy']);
 
     // Kompatibilitas Route Teachers
     Route::delete('teachers/destroy-all', [TeacherController::class, 'destroyAll'])->name('teachers.destroy-all');
     Route::get('teachers/template', [TeacherController::class, 'downloadTemplate'])->name('teachers.template');
     Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import')->middleware('throttle:10,1');
 
-    //WAJIB didaftarkan sebelum Route::resource('teachers') di bawah supaya tidak
+    // WAJIB didaftarkan sebelum Route::resource('teachers') di bawah supaya tidak
     // tertangkap parameter {teacher} pada route DELETE teachers/{teacher}.
     Route::delete('teachers/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('teachers.trash-destroy-all');
 
@@ -237,19 +238,19 @@ Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(functi
     // PRESENSI - identik admin/guru (absensi harian, detail kelas, scanner, kiosk)
     // Route statis WAJIB didaftarkan sebelum route berparameter dinamis,
     // supaya /piket/absensi/kiosk tidak ditangkap {schoolClass}.
-    Route::get('/absensi', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('absensi.index');
-    Route::get('/absensi-view', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('absensi');
-    Route::get('/presensi', [\App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('presensi.index');
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
     Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
-    Route::get('/absensi/{schoolClass}', [\App\Http\Controllers\Admin\AttendanceController::class, 'showClass'])->name('absensi.show');
+    Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
     Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
     // KEHADIRAN - READ-ONLY (route override absensi sengaja tidak ada => 403)
-    Route::get('/kehadiran', [\App\Http\Controllers\Admin\AttendanceController::class, 'kehadiran'])->name('kehadiran');
-    Route::get('/kehadiran/siswa/{student}/history', [\App\Http\Controllers\Admin\AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
-    Route::get('/kehadiran/{schoolClass}', [\App\Http\Controllers\Admin\AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
+    Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 });
 
 // ============================================================================

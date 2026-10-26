@@ -30,7 +30,7 @@ class DownloadCacheService
      * satu-satinya tempat ganti jenis kertas ('a4' atau 'a3').
      * Kolom/baris/per lembar dihitung otomatis dari sini.
      */
-    public const CARD_PAPER = 'a3';
+    public const CARD_PAPER = 'a4';
 
     /**
      * Peta ukuran kertas: lebar dan tinggi mm.
@@ -585,7 +585,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
 
     $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
     $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-    $cacheFileName = "cards_mass_v9_{$scopeKey}_{$designStamp}.pdf";
+    $cacheFileName = "cards_mass_v10_{$scopeKey}_{$designStamp}.pdf";
     $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
     $targetClassName = '';

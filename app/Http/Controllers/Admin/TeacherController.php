@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Exports\TeacherTemplateExport;
+use App\Http\Controllers\Controller;
 use App\Imports\TeachersImport;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
+use App\Services\DownloadCacheService;
+use App\Services\TeacherCardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -29,7 +32,7 @@ class TeacherController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('nip', 'like', "%{$search}%");
+                    ->orWhere('nip', 'like', "%{$search}%");
             });
         }
 
@@ -37,6 +40,43 @@ class TeacherController extends Controller
         $classes = SchoolClass::orderBy('name')->get();
 
         return view('admin.teachers.index', compact('teachers', 'classes'));
+    }
+
+    /**
+     * Tampilkan detail guru beserta preview kartu presensi.
+     */
+    public function show(Teacher $teacher): View
+    {
+        $teacher->load('schoolClass');
+
+        return view('admin.teachers.show', compact('teacher'));
+    }
+
+    /**
+     * Unduh kartu presensi satu guru (PDF).
+     */
+    public function downloadCard(Teacher $teacher)
+    {
+        return TeacherCardService::downloadSingleCardPdf($teacher);
+    }
+
+    /**
+     * Cetak kartu presensi guru massal (PDF).
+     */
+    public function printCards(Request $request)
+    {
+        try {
+            if ($request->isMethod('get') && ! $request->boolean('download')) {
+                return TeacherCardService::preview();
+            }
+
+            return TeacherCardService::downloadMassCards();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('admin.guru.index')
+                ->with('error', __('Gagal membuat kartu presensi guru. Silakan coba lagi.'));
+        }
     }
 
     /**
@@ -59,7 +99,7 @@ class TeacherController extends Controller
             $validated['phone'] = $validated['phone_number'] ?? null;
 
             // NIP kosong disimpan sebagai null
-            $validated['nip'] = !empty($validated['nip']) ? $validated['nip'] : null;
+            $validated['nip'] = ! empty($validated['nip']) ? $validated['nip'] : null;
 
             $classId = $validated['school_class_id'] ?? null;
             if ($classId === 'none' || $classId === '') {
@@ -77,6 +117,7 @@ class TeacherController extends Controller
             return $this->formErrorRedirect($e, 'add');
         } catch (\Throwable $ex) {
             report($ex);
+
             return redirect()->route('admin.guru.index')
                 ->withInput($request->all())
                 ->with('open_modal', 'add')
@@ -91,7 +132,7 @@ class TeacherController extends Controller
      */
     public function update(Request $request, Teacher $teacher): RedirectResponse
     {
-        if (!$teacher->exists) {
+        if (! $teacher->exists) {
             $id = $request->route('teacher') ?? $request->route('guru') ?? $request->route('id');
             if ($id instanceof Teacher) {
                 $teacher = $id;
@@ -114,7 +155,7 @@ class TeacherController extends Controller
             $validated['phone'] = $validated['phone_number'] ?? $teacher->phone;
 
             // NIP kosong disimpan sebagai null
-            $validated['nip'] = !empty($validated['nip']) ? $validated['nip'] : null;
+            $validated['nip'] = ! empty($validated['nip']) ? $validated['nip'] : null;
 
             $classId = $validated['school_class_id'] ?? null;
             if ($classId === 'none' || $classId === '') {
@@ -132,6 +173,7 @@ class TeacherController extends Controller
             return $this->formErrorRedirect($e, 'edit', $teacher->id);
         } catch (\Throwable $ex) {
             report($ex);
+
             return redirect()->route('admin.guru.index')
                 ->withInput($request->all())
                 ->with('open_modal', 'edit')
@@ -161,8 +203,8 @@ class TeacherController extends Controller
 
                 if ($existingClass) {
                     // Kelas sudah punya wali lain - tidak boleh menimpa
-                    throw new \Illuminate\Validation\ValidationException(
-                        \Illuminate\Validation\Validator::make([], [
+                    throw new ValidationException(
+                        Validator::make([], [
                             'school_class_id' => 'Kelas sudah memiliki wali kelas lain. Satu kelas hanya bisa memiliki satu wali kelas.',
                         ])
                     );
@@ -192,7 +234,7 @@ class TeacherController extends Controller
      */
     public function destroy(Request $request, Teacher $teacher): RedirectResponse
     {
-        if (!$teacher->exists) {
+        if (! $teacher->exists) {
             $id = $request->route('teacher') ?? $request->route('guru') ?? $request->route('id');
             if ($id instanceof Teacher) {
                 $teacher = $id;
@@ -216,10 +258,12 @@ class TeacherController extends Controller
             // (alert-danger) + ikon tempat sampah, sama seperti notifikasi
             // hapus lainnya. Flash 'success' (hijau) untuk tambah/ubah.
             $message = __('Data guru :name berhasil dihapus! Penugasan kelasnya otomatis dilepaskan.', ['name' => $name]);
+
             return redirect()->route('admin.guru.index')->with('deleted', $message);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return redirect()->route('admin.guru.index')->with('error', __('Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.'));
         }
     }
@@ -239,6 +283,7 @@ class TeacherController extends Controller
 
             if ($total === 0) {
                 DB::rollBack();
+
                 return redirect()->route('admin.guru.index')
                     ->with('error', __('Tidak ada data guru aktif yang bisa dihapus.'));
             }
@@ -258,6 +303,7 @@ class TeacherController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return redirect()->route('admin.guru.index')
                 ->with('error', __('Gagal menghapus data guru. Silakan coba lagi atau hubungi admin.'));
         }
@@ -268,9 +314,9 @@ class TeacherController extends Controller
      */
     public function downloadTemplate()
     {
-        return \App\Services\DownloadCacheService::downloadTemplate(
+        return DownloadCacheService::downloadTemplate(
             'teachers',
-            new TeacherTemplateExport(),
+            new TeacherTemplateExport,
             'Template_Guru.xlsx'
         );
     }
@@ -296,7 +342,7 @@ class TeacherController extends Controller
         }
 
         try {
-            $import = new TeachersImport();
+            $import = new TeachersImport;
             Excel::import($import, $request->file('file_excel'));
 
             $imported = $import->getImportedCount();
@@ -318,13 +364,14 @@ class TeacherController extends Controller
                 ->with('import_status', $status)
                 ->with('import_message', $message);
 
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 $redirect->with('import_errors', $errors);
             }
 
             return $redirect;
         } catch (\Throwable $e) {
             report($e);
+
             return redirect()->route('admin.guru.index')
                 ->with('error', __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.'));
         }
@@ -337,7 +384,7 @@ class TeacherController extends Controller
     private function teacherRules(?Teacher $teacher = null): array
     {
         $nipUnique = $teacher
-            ? 'unique:teachers,nip,' . $teacher->id
+            ? 'unique:teachers,nip,'.$teacher->id
             : 'unique:teachers,nip';
 
         return [
@@ -432,7 +479,7 @@ class TeacherController extends Controller
 
         // teachers.nip punya UNIQUE index yang TIDAK mengabaikan deleted_at.
         // Cek hanya bila NIP terisi (guru tanpa NIP boleh banyak).
-        if (!empty($teacher->nip)) {
+        if (! empty($teacher->nip)) {
             $duplikat = Teacher::where('nip', $teacher->nip)
                 ->where('id', '!=', $teacher->id)
                 ->exists();
@@ -468,11 +515,13 @@ class TeacherController extends Controller
             $teacher->forceDelete();
 
             DB::commit();
+
             return redirect()->route('admin.teachers.trash')
                 ->with('deleted', __('Data guru :name berhasil dihapus permanen!', ['name' => $teacherName]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return redirect()->route('admin.teachers.trash')
                 ->with('error', __('Gagal menghapus permanen guru. Silakan coba lagi atau hubungi admin.'));
         }
@@ -489,6 +538,7 @@ class TeacherController extends Controller
 
             if ($total === 0) {
                 DB::rollBack();
+
                 return redirect()->route('admin.teachers.trash')
                     ->with('error', __('Tempat Sampah Guru sudah kosong, tidak ada yang bisa dihapus.'));
             }
@@ -506,11 +556,13 @@ class TeacherController extends Controller
             Teacher::onlyTrashed()->forceDelete();
 
             DB::commit();
+
             return redirect()->route('admin.teachers.trash')
                 ->with('deleted', __('Seluruh data guru di Tempat Sampah (:total) berhasil dihapus permanen!', ['total' => $total]));
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
+
             return redirect()->route('admin.teachers.trash')
                 ->with('error', __('Gagal menghapus permanen data guru dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
         }

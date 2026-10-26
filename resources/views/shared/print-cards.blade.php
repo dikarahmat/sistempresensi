@@ -3,14 +3,22 @@
     $paper    = $paper ?? 'a4';
     $sizes    = ['a4' => [297, 210], 'a3' => [420, 297]];
     [$pw, $ph] = $sizes[$paper] ?? $sizes['a4'];
-    $cols     = $cols ?? max(1, (int) floor($pw / 53.98));
-    $rows     = $rows ?? max(1, (int) floor($ph / 85.6));
+
+    $cardW    = 53.98;
+    $cardH    = 85.6;
+    $gap      = $gap ?? 3; // jarak antar kartu & tepi grid (mm)
+
+    $cols     = $cols ?? max(1, (int) floor(($pw - $gap) / ($cardW + $gap)));
+    $rows     = $rows ?? max(1, (int) floor(($ph - $gap) / ($cardH + $gap)));
     $perSheet = $perSheet ?? ($cols * $rows);
-    $gridW    = round($cols * 53.98, 2);
-    $pageH    = round($rows * 85.6, 2);
-    // Offset supaya grid di tengah kertas
+
+    // Ukuran total grid (kartu + jarak di antara + jarak di tepi)
+    $gridW    = round($cols * $cardW + ($cols + 1) * $gap, 2);
+    $gridH    = round($rows * $cardH + ($rows + 1) * $gap, 2);
+
+    // Offset supaya grid tepat di tengah kertas
     $offX     = round(($pw - $gridW) / 2, 2);
-    $offY     = round(($ph - $pageH) / 2, 2);
+    $offY     = round(($ph - $gridH) / 2, 2);
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -20,15 +28,32 @@
     <style>
         @page { size: {{ strtoupper($paper) }} landscape; margin: 0; }
         html, body { margin: 0; padding: 0; background: #ffffff; font-size: 0; line-height: 0; font-family: Arial, Helvetica, sans-serif; }
-        .page { width: {{ $gridW }}mm; height: {{ $pageH }}mm; margin: 0; padding: {{ $offY }}mm 0 0 {{ $offX }}mm; overflow: hidden; }
-        .page-break { page-break-after: always; }
-        .grid { width: {{ $gridW }}mm; border-collapse: collapse; border-spacing: 0; table-layout: fixed; margin: 0; padding: 0; border: 0; }
-        .grid td { width: 53.98mm; height: 85.6mm; padding: 0; margin: 0; border: 0; vertical-align: top; }
+        .page {
+            margin: 0;
+            padding: {{ $offY }}mm 0 0 {{ $offX }}mm;
+        }
+        .grid {
+            width: {{ $gridW }}mm;
+            border-collapse: separate;
+            border-spacing: {{ $gap }}mm;
+            table-layout: fixed;
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+        .grid td {
+            width: {{ $cardW }}mm;
+            height: {{ $cardH }}mm;
+            padding: 0;
+            margin: 0;
+            border: 0;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
 @foreach($studentsList->chunk($perSheet) as $pageStudents)
-<div class="page{{ $loop->last ? '' : ' page-break' }}">
+<div class="page"@if(!$loop->first) style="page-break-before: always;"@endif>
     <table class="grid" cellpadding="0" cellspacing="0">
         @foreach($pageStudents->chunk($cols) as $rowStudents)
         <tr>

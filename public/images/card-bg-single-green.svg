@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="53.98mm" height="85.6mm" viewBox="0 0 1086 1725">
+  <!-- BADAN -->
+  <rect x="0" y="282" width="1086" height="1302" fill="#dcefe2"/>
+  <polygon points="219,282 110,282 0,392 0,483 90,483" fill="#cde6d7"/>
+  <polygon points="110,282 0,282 0,392" fill="#bedcca"/>
+  <path d="M915,282 A171,171 0 0 0 1086,453 L1086,282 Z" fill="#cde6d7"/>
+  <path d="M996,282 A90,90 0 0 0 1086,372 L1086,282 Z" fill="#bedcca"/>
+  <path d="M0,1276 A293,293 0 0 1 293,1569 L0,1569 Z" fill="#cde6d7"/>
+  <path d="M0,1409 A160,160 0 0 1 160,1569 L0,1569 Z" fill="#bedcca"/>
+  <polygon points="864,1292 994,1292 845,1569 696,1569" fill="#cde6d7"/>
+  <polygon points="994,1292 1086,1292 1086,1569 845,1569" fill="#bedcca"/>
+  <!-- HEADER -->
+  <rect x="0" y="0" width="1086" height="267" fill="#14532d"/>
+  <polygon points="602,0 843,0 695,267 453,267" fill="#1c6139"/>
+  <polygon points="843,0 1086,0 1086,267 695,267" fill="#256f44"/>
+  <path d="M902,0 A130,130 0 0 0 1086,157 L1086,0 Z" fill="#2f7e50"/>
+  <!-- FOOTER -->
+  <rect x="0" y="1584" width="1086" height="141" fill="#14532d"/>
+  <polygon points="244,1584 485,1584 602,1725 361,1725" fill="#1c6139"/>
+  <polygon points="0,1584 244,1584 361,1725 0,1725" fill="#256f44"/>
+  <path d="M0,1653 A91,91 0 0 1 151,1725 L0,1725 Z" fill="#2f7e50"/>
+  <!-- GARIS EMAS -->
+  <rect x="0" y="267" width="1086" height="15" fill="#d9a520"/>
+  <rect x="0" y="1569" width="1086" height="15" fill="#d9a520"/>
+</svg>
