@@ -6,7 +6,6 @@ use App\Models\Setting;
 use App\Models\Teacher;
 use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -16,20 +15,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TeacherCardService
 {
-    private const PAPER = 'a4';
-
-    private const CARD_WIDTH_MM = 53.9;
-
-    private const CARD_HEIGHT_MM = 85.6;
-
-    private const CARD_GAP_MM = 3;
-
-    private const CARD_COLUMNS = 5;
-
-    private const CARD_ROWS = 2;
-
-    private const CARDS_PER_SHEET = 10;
-
     private static string $cacheDir = '';
 
     /**
@@ -114,7 +99,7 @@ class TeacherCardService
     }
 
     /**
-     * Generate / ambil dari cache lalu unduh PDF kartu guru massal.
+     * Generate / ambil dari cache lalu unduh ZIP kartu guru massal.
      */
     public static function downloadMassCards(): BinaryFileResponse
     {
@@ -127,77 +112,98 @@ class TeacherCardService
         self::initCacheDir();
 
         ini_set('memory_limit', '1024M');
-        ini_set('max_execution_time', '300');
+        ini_set('max_execution_time', '900');
 
         $cacheFilePath = self::$cacheDir.'/'.self::cacheKey($teachers);
 
         if (! File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-            $pdf = Pdf::loadView('admin.teachers.partials.mass-card-pdf', [
-                'teachers' => $teachers,
-                'schoolName' => Setting::getSchoolName(),
-                'logoBase64' => self::logoDataUri(),
-            ])->setPaper(self::PAPER, 'landscape');
+            $tempFilePath = $cacheFilePath.'.tmp-'.Str::random(8);
+            $zip = new \ZipArchive();
 
-            $pdf->setOption('enable_font_subsetting', true);
-            $pdf->setOption('isHtml5ParserEnabled', true);
-            $pdf->setOption('dpi', 150);
-            $pdf->setOption('defaultFont', 'sans-serif');
+            if ($zip->open($tempFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+                @unlink($tempFilePath);
 
-            File::put($cacheFilePath, $pdf->output());
+                throw new \RuntimeException('Berkas ZIP kartu presensi guru gagal dibuat.');
+            }
+
+            $total = $teachers->count();
+            $padding = max(3, strlen((string) $total));
+            $successCount = 0;
+
+            try {
+                foreach ($teachers as $teacher) {
+                    $parts = self::cardFileParts($teacher);
+                    $entryName = str_pad((string) ($successCount + 1), $padding, '0', STR_PAD_LEFT)
+                        .'_'.$parts[0].'-'.$parts[1].'-GURU.jpg';
+                    $jpgPath = self::ensureSingleCardCache($teacher);
+
+                    if ($zip->addFile($jpgPath, $entryName) === false) {
+                        throw new \RuntimeException('Berkas kartu presensi guru gagal ditambahkan ke ZIP.');
+                    }
+                    $zip->setCompressionName($entryName, \ZipArchive::CM_DEFLATE, 1);
+
+                    $successCount++;
+                }
+
+                if ($successCount === 0 || $zip->numFiles !== $successCount) {
+                    throw new \RuntimeException('Tidak ada kartu presensi guru yang berhasil dibuat.');
+                }
+            } catch (\Throwable $e) {
+                $zip->close();
+                @unlink($tempFilePath);
+
+                throw $e;
+            }
+
+            if (! $zip->close()) {
+                @unlink($tempFilePath);
+
+                throw new \RuntimeException('Berkas ZIP kartu presensi guru gagal diselesaikan.');
+            }
+
+            if (File::exists($cacheFilePath)) {
+                File::delete($cacheFilePath);
+            }
+
+            if (! File::move($tempFilePath, $cacheFilePath)) {
+                @unlink($tempFilePath);
+
+                throw new \RuntimeException('Berkas ZIP kartu presensi guru gagal disimpan.');
+            }
 
             if (! File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
                 throw new \RuntimeException('Berkas kartu presensi guru gagal dibuat atau berukuran 0 byte.');
             }
 
-            unset($pdf, $teachers);
+            unset($zip, $teachers);
             gc_collect_cycles();
         }
 
-        $downloadFileName = 'Kartu_Presensi_Guru_Massal_'.date('Ymd_His').'.pdf';
+        $downloadFileName = 'Kartu_Presensi_Guru_'.date('Ymd_His').'.zip';
 
         return response()->download($cacheFilePath, $downloadFileName, [
-            'Content-Type' => 'application/pdf',
+            'Content-Type' => 'application/zip',
             'Content-Disposition' => 'attachment; filename="'.$downloadFileName.'"',
             'Cache-Control' => 'no-cache, must-revalidate',
         ]);
     }
 
     /**
-     * Unduh PDF kartu presensi satu guru (A4 portrait, 1 kartu).
+     * Unduh kartu presensi satu guru (JPG, 1 kartu).
      */
-    public static function downloadSingleCardPdf(Teacher $teacher)
+    public static function downloadSingleCardJpg(Teacher $teacher)
     {
         try {
             $teacher = clone $teacher;
-            $teacher->loadMissing('schoolClass');
             self::initCacheDir();
 
-            $cacheFilePath = self::$cacheDir.'/'.self::singleCardCacheKey($teacher);
+            $cacheFilePath = self::ensureSingleCardCache($teacher);
 
-            if (! File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-                $pdf = Pdf::loadView('admin.teachers.print-card-pdf', [
-                    'teacher' => $teacher,
-                    'schoolName' => Setting::getSchoolName(),
-                    'isPdf' => true,
-                ])->setPaper(self::PAPER, 'portrait');
-
-                $pdf->setOption('enable_font_subsetting', true);
-                $pdf->setOption('isHtml5ParserEnabled', true);
-                $pdf->setOption('dpi', 150);
-                $pdf->setOption('defaultFont', 'sans-serif');
-
-                File::put($cacheFilePath, $pdf->output());
-
-                if (! File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-                    throw new \RuntimeException('Berkas kartu presensi guru gagal dibuat atau berukuran 0 byte.');
-                }
-            }
-
-            $identifier = self::normalizeNip($teacher->nip) ?: ($teacher->qr_token ?: (string) $teacher->id);
-            $downloadFileName = 'kartu-presensi-guru-'.Str::slug($identifier).'-'.Str::slug($teacher->name).'.pdf';
+            $parts = self::cardFileParts($teacher);
+            $downloadFileName = $parts[0].'-'.$parts[1].'-GURU.jpg';
 
             return response()->download($cacheFilePath, $downloadFileName, [
-                'Content-Type' => 'application/pdf',
+                'Content-Type' => 'image/jpeg',
                 'Content-Disposition' => 'attachment; filename="'.$downloadFileName.'"',
                 'Cache-Control' => 'no-cache, must-revalidate',
             ]);
@@ -215,6 +221,65 @@ class TeacherCardService
 
             return redirect()->back()->with('error', __('Kartu belum bisa diunduh, coba lagi'));
         }
+    }
+
+    private static function ensureSingleCardCache(Teacher $teacher): string
+    {
+        self::initCacheDir();
+
+        $cacheFilePath = self::$cacheDir.'/'.self::singleCardCacheKey($teacher);
+
+        if (File::exists($cacheFilePath) && File::size($cacheFilePath) > 0) {
+            return $cacheFilePath;
+        }
+
+        if (File::exists($cacheFilePath)) {
+            @unlink($cacheFilePath);
+        }
+
+        $tempFilePath = $cacheFilePath.'.tmp-'.Str::random(8);
+
+        try {
+            DownloadCacheService::renderTeacherCardJpg($teacher, $tempFilePath);
+
+            if (! File::exists($tempFilePath) || File::size($tempFilePath) === 0) {
+                throw new \RuntimeException('Berkas kartu presensi guru gagal dibuat atau berukuran 0 byte.');
+            }
+
+            if (File::exists($cacheFilePath) && File::size($cacheFilePath) > 0) {
+                return $cacheFilePath;
+            }
+
+            if (File::exists($cacheFilePath)) {
+                File::delete($cacheFilePath);
+            }
+
+            if (! File::move($tempFilePath, $cacheFilePath)) {
+                throw new \RuntimeException('Berkas kartu presensi guru gagal disimpan.');
+            }
+
+            if (! File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
+                throw new \RuntimeException('Berkas kartu presensi guru gagal dibuat atau berukuran 0 byte.');
+            }
+
+            return $cacheFilePath;
+        } finally {
+            if (File::exists($tempFilePath)) {
+                @unlink($tempFilePath);
+            }
+        }
+    }
+
+    private static function cardFileParts(Teacher $teacher): array
+    {
+        $namePart = strtoupper(Str::ascii(trim((string) ($teacher->name ?? '')) ?: 'GURU'));
+        $namePart = preg_replace('/[^A-Z0-9]+/', '-', $namePart);
+        $namePart = trim((string) preg_replace('/-+/', '-', $namePart), '-');
+        $namePart = $namePart !== '' ? $namePart : 'GURU';
+
+        $nipPart = self::normalizeNip($teacher->nip) ?: 'TANPA-NIP';
+
+        return [$namePart, $nipPart];
     }
 
     private static function prepareTeacher(Teacher $teacher): Teacher
@@ -253,7 +318,7 @@ class TeacherCardService
             'design' => self::designStamp(),
         ]));
 
-        return 'teacher_cards_v3_'.$key.'.pdf';
+        return 'teacher_cards_v5_'.$key.'.zip';
     }
 
     private static function singleCardCacheKey(Teacher $teacher): string
@@ -273,7 +338,7 @@ class TeacherCardService
             'design' => self::designStamp(),
         ]));
 
-        return 'teacher_card_single_v1_'.$key.'.pdf';
+        return 'teacher_card_single_v3_'.$key.'.jpg';
     }
 
     private static function designStamp(): string
@@ -282,6 +347,8 @@ class TeacherCardService
             resource_path('views/admin/teachers/partials/card-single.blade.php'),
             resource_path('views/admin/teachers/partials/mass-card-pdf.blade.php'),
             resource_path('views/admin/teachers/print-card-pdf.blade.php'),
+            app_path('Services/DownloadCacheService.php'),
+            app_path('Services/TeacherCardService.php'),
             public_path('images/card-bg-single-green.png'),
             public_path(Setting::getLogo()),
         ];

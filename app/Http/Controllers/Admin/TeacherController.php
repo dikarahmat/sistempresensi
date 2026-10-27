@@ -57,7 +57,7 @@ class TeacherController extends Controller
      */
     public function downloadCard(Teacher $teacher)
     {
-        return TeacherCardService::downloadSingleCardPdf($teacher);
+        return TeacherCardService::downloadSingleCardJpg($teacher);
     }
 
     /**

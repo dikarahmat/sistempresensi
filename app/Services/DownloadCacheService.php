@@ -7,7 +7,7 @@ use App\Models\Attendance;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +19,15 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class DownloadCacheService
 {
     protected static string $baseDir = '';
+
+    /** @var array<string, \GdImage> */
+    private static array $cardJpgBackgroundCache = [];
+
+    /** @var array<string, \GdImage> */
+    private static array $cardJpgLogoCache = [];
+
+    /** @var array<string, \GdImage> */
+    private static array $cardJpgTemplateCache = [];
 
     /***
      * Versi cache rekap. Naikkan nilainya setiap logika perhitungan rekap berubah
@@ -54,6 +63,7 @@ class DownloadCacheService
         resource_path('views/shared/print-cards.blade.php'),
         resource_path('views/admin/students/partials/card-single.blade.php'),
         resource_path('views/admin/students/print-card-pdf.blade.php'),
+        app_path('Services/DownloadCacheService.php'),
         public_path('images/card-bg-single.svg'),
         public_path('images/card-bg-pdf.png'),
     ];
@@ -204,73 +214,95 @@ class DownloadCacheService
     }
 
     /**
-     * Download Single Student Card PDF — A4 portrait, 1 kartu (53,98 x 85,6 mm)
-     * di pojok kiri atas, memakai partial admin.students.partials.card-single
-     * (desain baru khusus fitur single: preview & unduh individual).
+     * Download Single Student Card JPG (1276 x 2022 px, ~600 DPI), memakai
+     * renderer yang sama dengan kartu massal agar tampilan identik.
      */
-   public static function downloadSingleCardPdf(Student $student)
-{
-    self::initDirs();
+    public static function downloadSingleCardJpg(Student $student)
+    {
+        self::initDirs();
 
-    try {
-        $student = clone $student;
-        $student->loadMissing('schoolClass');
-        $settingStamp = self::getSettingStamp();
+        try {
+            $student = clone $student;
+            $student->loadMissing('schoolClass');
+            $settingStamp = self::getSettingStamp();
+            $designStamp = self::getDesignStamp();
+            $cacheFilePath = self::ensureStudentCardJpgCache($student, $settingStamp, $designStamp);
+
+            [$namePart, $nisPart, $classPart] = self::cardFileParts($student);
+            $downloadFileName = "{$namePart}-{$nisPart}-{$classPart}.jpg";
+
+            return response()->download($cacheFilePath, $downloadFileName, [
+                'Content-Type' => 'image/jpeg',
+                'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
+                'Cache-Control' => 'no-cache, must-revalidate',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengunduh kartu presensi JPG siswa: ' . $e->getMessage(), [
+                'student_id' => $student->id ?? null,
+                'exception' => $e,
+            ]);
+
+            if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json(['message' => 'Kartu belum bisa diunduh, coba lagi'], 500);
+            }
+
+            return redirect()->back()->with('error', 'Kartu belum bisa diunduh, coba lagi');
+        }
+    }
+
+    private static function studentCardJpgCachePath(Student $student, string $settingStamp, string $designStamp): string
+    {
         $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-        $designStamp = self::getDesignStamp();
-        $cacheFileName = "card_single_v3_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.pdf";
-        $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-        $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.pdf';
+        return self::$baseDir . '/cards/'
+            . "card_single_jpg_v5_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.jpg";
+    }
 
-        if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
+    private static function ensureStudentCardJpgCache(Student $student, string $settingStamp, string $designStamp): string
+    {
+        $cacheFilePath = self::studentCardJpgCachePath($student, $settingStamp, $designStamp);
+
+        if (File::exists($cacheFilePath) && File::size($cacheFilePath) > 0) {
+            return $cacheFilePath;
+        }
+
+        if (File::exists($cacheFilePath)) {
             @unlink($cacheFilePath);
         }
 
-        if (!File::exists($cacheFilePath)) {
-            $schoolName = Setting::getSchoolName();
+        $tmpPath = $cacheFilePath . '.tmp_' . bin2hex(random_bytes(4));
 
-            // Gunakan file path instead of base64 data URL
-            $logoPath = public_path(Setting::getLogo());
+        try {
+            self::renderCardJpgPreview($student, $tmpPath);
 
-            $pdf = Pdf::loadView('admin.students.print-card-pdf', [
-                'student'      => $student,
-                'schoolName'   => $schoolName,
-                'logoPath'     => $logoPath,  // File path instead of base64
-                'qrCodePath'   => null,  // File path (null means view will generate)
-                'studentName'  => $student->name,
-                'studentNisn'  => $student->nisn,
-                'studentClass' => $student->schoolClass->name ?? '-',
-                'isPdf'        => true,
-            ])->setPaper('a4', 'portrait');
+            if (!File::exists($tmpPath) || File::size($tmpPath) === 0) {
+                throw new \RuntimeException("Berkas kartu presensi JPG siswa ID {$student->id} gagal dibuat atau berukuran 0 byte.");
+            }
 
-            // Set DomPDF options for optimization
-            $pdf->setOption('enable_font_subsetting', true);
-            $pdf->setOption('isHtml5ParserEnabled', true);
-            $pdf->setOption('dpi', 150);  // Reduce DPI for smaller filesize
-            $pdf->setOption('defaultFont', 'sans-serif');
+            if (File::exists($cacheFilePath) && File::size($cacheFilePath) > 0) {
+                return $cacheFilePath;
+            }
 
-            File::put($cacheFilePath, $pdf->output());
+            if (File::exists($cacheFilePath)) {
+                @unlink($cacheFilePath);
+            }
+
+            if (!File::move($tmpPath, $cacheFilePath)) {
+                throw new \RuntimeException("Berkas kartu presensi JPG siswa ID {$student->id} gagal dipindahkan ke cache.");
+            }
+
+            if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
+                throw new \RuntimeException("Berkas kartu presensi JPG siswa ID {$student->id} gagal dibuat atau berukuran 0 byte.");
+            }
+
+            return $cacheFilePath;
+        } finally {
+            if (File::exists($tmpPath)) {
+                @unlink($tmpPath);
+            }
         }
-
-        return response()->download($cacheFilePath, $downloadFileName, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
-            'Cache-Control' => 'no-cache, must-revalidate',
-        ]);
-    } catch (\Throwable $e) {
-        Log::error('Gagal mengunduh kartu presensi PDF siswa: ' . $e->getMessage(), [
-            'student_id' => $student->id ?? null,
-            'exception' => $e,
-        ]);
-
-        if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
-            return response()->json(['message' => 'Kartu belum bisa diunduh, coba lagi'], 500);
-        }
-
-        return redirect()->back()->with('error', 'Kartu belum bisa diunduh, coba lagi');
     }
-}
+
 /**
  * Render Single Student Card PNG menggunakan PHP GD murni.
  * Standar CR80 Portrait: 1086 x 1725 px (~500 DPI),
@@ -544,14 +576,14 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
     }
 
     /**
-     * Download Mass Cards PDF (Instan via Cache / Pre-generate)
+     * Download Mass Cards JPG dalam ZIP (Instan via Cache / Pre-generate)
      */
    public static function downloadMassCards(Request $request, ?int $forceClassId = null, array $allowedClassIds = []): BinaryFileResponse
 {
     self::initDirs();
 
     ini_set('memory_limit', '1024M');
-    ini_set('max_execution_time', '300');
+    ini_set('max_execution_time', '900');
 
     $query = Student::with('schoolClass')->where('status', 'Aktif');
 
@@ -585,73 +617,702 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
 
     $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
     $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-    $cacheFileName = "cards_mass_v10_{$scopeKey}_{$designStamp}.pdf";
+    $cacheFileName = "cards_mass_jpg_v8_{$scopeKey}_{$designStamp}.zip";
     $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-    $targetClassName = '';
+    $targetClassName = 'Semua_Siswa';
     if ($classId) {
         $cls = SchoolClass::find($classId);
-        if ($cls) $targetClassName = '_' . Str::slug($cls->name);
+        if ($cls) {
+            $classSlug = strtoupper(Str::slug((string) $cls->name, '_'));
+            $targetClassName = $classSlug !== '' ? $classSlug : 'KELAS_' . $classId;
+        }
     }
-    $downloadFileName = 'Kartu_Presensi_Massal' . $targetClassName . '_' . date('Ymd_His') . '.pdf';
+    $downloadFileName = 'Kartu_Presensi_JPG_' . $targetClassName . '_' . date('Ymd_His') . '.zip';
 
     if (!File::exists($cacheFilePath) || File::size($cacheFilePath) === 0) {
-        $schoolName = Setting::getSchoolName();
-
-        $logoPath = public_path(Setting::getLogo());
-        $logoBase64 = null;
-        if (file_exists($logoPath)) {
-            $mime = mime_content_type($logoPath) ?: 'image/png';
-            $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logoPath));
-        }
-
         // Urut: kelas natural (7A, 7B, ... 9F), lalu nama A-Z
         $students = $query->get()->sort(function ($a, $b) {
             $ca = $a->schoolClass->name ?? '';
             $cb = $b->schoolClass->name ?? '';
             if ($ca !== $cb) return strnatcmp($ca, $cb);
-            return strcmp(Str::ascii($a->name), Str::ascii($b->name));
+                return strnatcasecmp(Str::ascii($a->name), Str::ascii($b->name));
         })->values();
 
         if ($students->isEmpty()) {
             abort(404, 'Tidak ada data siswa yang ditemukan untuk dicetak.');
         }
 
-        foreach ($students as $st) {
-            try {
-                $st->qr_base64 = self::qrPngDataUri((string) ($st->nisn ?: $st->qr_token));
-            } catch (\Throwable $e) {
-                $st->qr_base64 = null;
-            }
-            $st->photo_base64 = null;
+        $buildPath = $cacheFilePath . '.partial_' . bin2hex(random_bytes(6));
+        $zip = new \ZipArchive();
+        if ($zip->open($buildPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('Gagal membuat berkas ZIP kartu JPG.');
         }
 
-        $paper = self::CARD_PAPER;
-        $cfg = self::paperConfig()[$paper];
+        $usedNames = [];
+        $successCount = 0;
+        $failedStudents = [];
+        $firstError = null;
+        $numberWidth = max(3, strlen((string) $students->count()));
 
-        $pdf = Pdf::loadView('shared.print-cards', [
-            'students'   => $students,   // daftar datar, di-chunk di Blade
-            'schoolName' => $schoolName,
-            'logoBase64' => $logoBase64,
-            'paper'      => $paper,
-            'cols'       => $cfg['cols'],
-            'rows'       => $cfg['rows'],
-            'perSheet'   => $cfg['perSheet'],
-            'isPdf'      => true,
-        ])->setPaper($paper, 'landscape');
+        try {
+            foreach ($students as $student) {
+                $studentName = trim((string) ($student->name ?? ''));
 
-        File::put($cacheFilePath, $pdf->output());
+                try {
+                    [$namePart, $nisPart, $classPart] = self::cardFileParts($student);
+                    $sequence = $successCount + 1;
 
-        unset($pdf, $students);
+                    $baseFileName = sprintf(
+                        '%0' . $numberWidth . 'd_%s-%s-%s',
+                        $sequence,
+                        $namePart,
+                        $nisPart,
+                        $classPart
+                    );
+                    $fileName = $baseFileName . '.jpg';
+                    $duplicate = 2;
+                    while (isset($usedNames[strtolower($fileName)])) {
+                        $fileName = $baseFileName . '_' . $duplicate . '.jpg';
+                        $duplicate++;
+                    }
+
+                    $jpgPath = self::ensureStudentCardJpgCache($student, $settingStamp, $designStamp);
+
+                    if (!File::exists($jpgPath) || File::size($jpgPath) === 0) {
+                        throw new \RuntimeException('Berkas JPG kartu kosong.');
+                    }
+
+                    if (!$zip->addFile($jpgPath, $fileName)) {
+                        throw new \RuntimeException('Gagal menambahkan JPG ke ZIP.');
+                    }
+                    $zip->setCompressionName($fileName, \ZipArchive::CM_DEFLATE, 1);
+
+                    $usedNames[strtolower($fileName)] = true;
+                    $successCount++;
+                } catch (\Throwable $e) {
+                    $failedStudents[] = $studentName !== '' ? $studentName : ('ID ' . $student->id);
+                    if ($firstError === null) {
+                        $firstError = $e->getMessage();
+                    }
+                    Log::error('Gagal membuat kartu JPG siswa: ' . $e->getMessage(), [
+                        'student_id' => $student->id ?? null,
+                        'student_name' => $studentName,
+                        'exception' => $e,
+                    ]);
+                }
+            }
+        } finally {
+            $zip->close();
+        }
+
+        if ($successCount === 0) {
+            if (File::exists($buildPath)) {
+                @unlink($buildPath);
+            }
+            throw new \RuntimeException('Tidak ada kartu JPG yang berhasil dibuat.' . ($firstError ? ' Kesalahan pertama: ' . $firstError : ''));
+        }
+
+        if (!empty($failedStudents)) {
+            Log::warning('Sebagian kartu JPG siswa gagal dibuat.', [
+                'failed_count' => count($failedStudents),
+                'students' => $failedStudents,
+            ]);
+        }
+
+        if (File::exists($cacheFilePath)) {
+            @unlink($cacheFilePath);
+        }
+        File::move($buildPath, $cacheFilePath);
+
+        unset($students);
         gc_collect_cycles();
     }
 
     return response()->download($cacheFilePath, $downloadFileName, [
-        'Content-Type' => 'application/pdf',
+        'Content-Type' => 'application/zip',
         'Content-Disposition' => 'attachment; filename="' . $downloadFileName . '"',
         'Cache-Control' => 'no-cache, must-revalidate',
     ]);
 }
+
+    private static function cardFileParts(Student $student): array
+    {
+        $studentName = trim((string) ($student->name ?? ''));
+        $studentNisn = trim((string) ($student->nisn ?? ''));
+        $classLabel = trim((string) ($student->schoolClass->name ?? '-')) ?: '-';
+
+        $namePart = strtoupper(Str::ascii($studentName !== '' ? $studentName : 'SISWA'));
+        $namePart = preg_replace('/[^A-Z0-9]+/', '-', $namePart);
+        $namePart = trim((string) preg_replace('/-+/', '-', $namePart), '-');
+        $namePart = trim((string) Str::limit($namePart !== '' ? $namePart : 'SISWA', 100, ''), '-');
+        $namePart = $namePart !== '' ? $namePart : 'SISWA';
+
+        $nisPart = strtoupper($studentNisn);
+        $nisPart = preg_replace('/[^A-Z0-9]+/', '', $nisPart);
+        if ($nisPart === '') {
+            $nisPart = (string) $student->id;
+        }
+
+        $classPart = strtoupper(Str::ascii($classLabel));
+        $classPart = preg_replace('/[^A-Z0-9]+/', '-', $classPart);
+        $classPart = trim((string) preg_replace('/-+/', '-', $classPart), '-');
+        $classPart = $classPart !== '' ? $classPart : 'TANPA-KELAS';
+
+        return [$namePart, $nisPart, $classPart];
+    }
+
+    private static function renderCardJpgPreview(Student $student, string $outputPath): void
+    {
+        $studentNisn = trim((string) ($student->nisn ?? ''));
+        if ($studentNisn === '-' || $studentNisn === 'null') {
+            $studentNisn = '';
+        }
+
+        self::renderCardJpgData([
+            'background' => public_path('images/card-bg-pdf.png'),
+            'school_name' => (string) Setting::getSchoolName(),
+            'name' => (string) ($student->name ?? ''),
+            'identifier' => $studentNisn,
+            'third_line' => trim((string) ($student->schoolClass->name ?? '-')) ?: '-',
+            'third_line_color' => [15, 23, 42],
+            'scan_color' => [15, 23, 42],
+            'qr_token' => trim((string) ($student->nisn ?: ($student->qr_token ?? ''))),
+        ], $outputPath);
+    }
+
+    public static function renderTeacherCardJpg(Teacher $teacher, string $outputPath): void
+    {
+        $nipLabel = TeacherCardService::displayNip($teacher->nip);
+
+        self::renderCardJpgData([
+            'scale' => 1276 / 53.9,
+            'background' => public_path('images/card-bg-single-green.png'),
+            'school_name' => (string) Setting::getSchoolName(),
+            'name' => (string) ($teacher->name ?? ''),
+            'identifier' => $nipLabel,
+            'identifier_top' => $nipLabel === '-' ? 443 : 423,
+            'third_line' => 'GURU',
+            'third_line_color' => [20, 83, 45],
+            'scan_color' => [20, 83, 45],
+            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, $teacher->qr_token),
+            'subtitle_top' => 134,
+            'scan_top' => 1312,
+            'footer_top' => 1640,
+            'qr_container_left' => 10.95,
+        ], $outputPath);
+    }
+
+    private static function renderCardJpgData(array $card, string $outputPath): void
+    {
+        $width = (int) ($card['width'] ?? 1276);
+        $height = (int) ($card['height'] ?? 2022);
+        $scale = (float) ($card['scale'] ?? ($width / 53.98));
+        $layoutX = $width / 1086;
+        $layoutY = $height / 1725;
+
+        $bold = self::cardJpgFontPath(false);
+        $italic = self::cardJpgFontPath(true);
+
+        $backgroundPath = (string) ($card['background'] ?? public_path('images/card-bg-pdf.png'));
+        $logoPath = public_path(Setting::getLogo());
+        $logoSize = (int) round(7 * $scale);
+        $logoX = (int) round(3 * $scale);
+        $logoY = (int) round(3.1 * $scale);
+
+        $subtitleTop = (int) ($card['subtitle_top'] ?? 135);
+        $nameTop = (int) ($card['name_top'] ?? 336);
+        $identifierTop = (int) ($card['identifier_top'] ?? 423);
+        $thirdTop = (int) ($card['third_top'] ?? 507);
+        $scanTop = (int) ($card['scan_top'] ?? 1311);
+        $footerTop = (int) ($card['footer_top'] ?? 1638);
+        $footerCenter = (int) ($card['footer_center'] ?? 545);
+
+        $schoolName = mb_strtoupper((string) ($card['school_name'] ?? ''));
+        $scanRgb = $card['scan_color'] ?? [15, 23, 42];
+
+        $templateKey = md5(json_encode([
+            'v' => 2,
+            'width' => $width,
+            'height' => $height,
+            'scale' => $scale,
+            'background' => $backgroundPath,
+            'logo' => $logoPath,
+            'logo_size' => $logoSize,
+            'school_name' => $schoolName,
+            'subtitle_top' => $subtitleTop,
+            'scan_top' => $scanTop,
+            'footer_top' => $footerTop,
+            'footer_center' => $footerCenter,
+            'scan_color' => $scanRgb,
+        ]));
+
+        if (!isset(self::$cardJpgTemplateCache[$templateKey])) {
+            $backgroundKey = $backgroundPath . '|' . $width . 'x' . $height;
+
+            if (!isset(self::$cardJpgBackgroundCache[$backgroundKey])) {
+                $sourceImage = self::loadCardRasterImage($backgroundPath);
+                if ($sourceImage === false) {
+                    throw new \RuntimeException('Background kartu JPG tidak ditemukan.');
+                }
+
+                $background = imagecreatetruecolor($width, $height);
+                if ($background === false) {
+                    imagedestroy($sourceImage);
+
+                    throw new \RuntimeException('Gagal membuat kanvas kartu JPG.');
+                }
+                imagecopyresampled($background, $sourceImage, 0, 0, 0, 0, $width, $height, imagesx($sourceImage), imagesy($sourceImage));
+                imagedestroy($sourceImage);
+
+                self::$cardJpgBackgroundCache[$backgroundKey] = $background;
+            }
+
+            $template = imagecreatetruecolor($width, $height);
+            if ($template === false) {
+                throw new \RuntimeException('Gagal membuat template kartu JPG.');
+            }
+            imagecopy($template, self::$cardJpgBackgroundCache[$backgroundKey], 0, 0, 0, 0, $width, $height);
+
+            if (is_file($logoPath)) {
+                $logoKey = $logoPath . '|' . $logoSize;
+
+                if (!isset(self::$cardJpgLogoCache[$logoKey])) {
+                    $logo = self::loadCardRasterImage($logoPath);
+                    if ($logo !== false) {
+                        $logoCanvas = imagecreatetruecolor($logoSize, $logoSize);
+                        if ($logoCanvas !== false) {
+                            imagealphablending($logoCanvas, false);
+                            imagesavealpha($logoCanvas, true);
+                            $transparent = imagecolorallocatealpha($logoCanvas, 0, 0, 0, 127);
+                            imagefilledrectangle($logoCanvas, 0, 0, $logoSize - 1, $logoSize - 1, $transparent);
+                            imagecopyresampled($logoCanvas, $logo, 0, 0, 0, 0, $logoSize, $logoSize, imagesx($logo), imagesy($logo));
+                            self::$cardJpgLogoCache[$logoKey] = $logoCanvas;
+                        }
+                        imagedestroy($logo);
+                    }
+                }
+
+                if (isset(self::$cardJpgLogoCache[$logoKey])) {
+                    imagealphablending($template, true);
+                    imagecopy($template, self::$cardJpgLogoCache[$logoKey], $logoX, $logoY, 0, 0, $logoSize, $logoSize);
+                }
+            }
+
+            $white = imagecolorallocate($template, 255, 255, 255);
+            $gold = imagecolorallocate($template, 252, 211, 77);
+            $scanColor = $scanRgb === [15, 23, 42]
+                ? imagecolorallocate($template, 15, 23, 42)
+                : imagecolorallocate($template, ...$scanRgb);
+
+            self::drawCardJpgText(
+                $template,
+                $schoolName,
+                $bold,
+                37.2 * $layoutX,
+                $white,
+                (int) round(218 * $layoutX),
+                null,
+                (int) round(80 * $layoutY)
+            );
+            self::drawCardJpgText(
+                $template,
+                'KARTU PRESENSI DIGITAL',
+                $bold,
+                26.4 * $layoutX,
+                $gold,
+                (int) round(221 * $layoutX),
+                null,
+                (int) round($subtitleTop * $layoutY)
+            );
+            self::drawCardJpgSpacedText(
+                $template,
+                'SCAN PRESENSI',
+                $bold,
+                26.0 * $layoutX,
+                $scanColor,
+                8.7 * $layoutX,
+                (int) round($scanTop * $layoutY),
+                $width
+            );
+            self::drawCardJpgText(
+                $template,
+                'Tunjukkan kartu saat presensi masuk',
+                $italic,
+                23.65 * $layoutX,
+                $white,
+                null,
+                (int) round($footerCenter * $layoutX),
+                (int) round($footerTop * $layoutY)
+            );
+
+            self::$cardJpgTemplateCache[$templateKey] = $template;
+        }
+
+        $image = imagecreatetruecolor($width, $height);
+        if ($image === false) {
+            throw new \RuntimeException('Gagal membuat kanvas kartu JPG.');
+        }
+        imagecopy($image, self::$cardJpgTemplateCache[$templateKey], 0, 0, 0, 0, $width, $height);
+
+        $dark = imagecolorallocate($image, 15, 23, 42);
+        $thirdRgb = $card['third_line_color'] ?? [15, 23, 42];
+        $thirdColor = $thirdRgb === [15, 23, 42] ? $dark : imagecolorallocate($image, ...$thirdRgb);
+
+        $subjectName = mb_strtoupper(trim((string) ($card['name'] ?? ''))) ?: '-';
+        self::drawCardJpgText(
+            $image,
+            $subjectName,
+            $bold,
+            37.3 * $layoutX,
+            $dark,
+            null,
+            (int) round($width / 2),
+            (int) round($nameTop * $layoutY)
+        );
+
+        $identifier = trim((string) ($card['identifier'] ?? ''));
+        if ($identifier !== '') {
+            self::drawCardJpgText(
+                $image,
+                $identifier,
+                $bold,
+                36.0 * $layoutX,
+                $dark,
+                null,
+                (int) round($width / 2),
+                (int) round($identifierTop * $layoutY)
+            );
+        }
+
+        $thirdLine = trim((string) ($card['third_line'] ?? '-')) ?: '-';
+        self::drawCardJpgText(
+            $image,
+            $thirdLine,
+            $bold,
+            42.4 * $layoutX,
+            $thirdColor,
+            null,
+            (int) round($width / 2),
+            (int) round($thirdTop * $layoutY)
+        );
+
+        $finalImage = $image;
+
+        $qrToken = trim((string) ($card['qr_token'] ?? ''));
+        if ($qrToken !== '') {
+            $whiteFinal = imagecolorallocate($finalImage, 255, 255, 255);
+            $blackFinal = imagecolorallocate($finalImage, 0, 0, 0);
+            self::drawCardJpgQr($finalImage, $qrToken, $card, $scale, $whiteFinal, $blackFinal);
+        }
+
+        foreach ([97, 95, 93, 92] as $quality) {
+            if (!imagejpeg($finalImage, $outputPath, $quality)) {
+                imagedestroy($finalImage);
+
+                throw new \RuntimeException('Gagal menulis JPG kartu.');
+            }
+
+            clearstatcache(true, $outputPath);
+            $size = filesize($outputPath);
+
+            if ($size !== false && $size <= 1048576) {
+                break;
+            }
+        }
+
+        imagedestroy($finalImage);
+        self::writeCardJpgDpi($outputPath, 600);
+    }
+
+    private static function drawCardJpgQr($image, string $token, array $card, float $scale, int $white, int $black): void
+    {
+        $containerX = (int) round(((float) ($card['qr_container_left'] ?? 10.99)) * $scale);
+        $containerY = (int) round(((float) ($card['qr_container_top'] ?? 30.5)) * $scale);
+        $containerSize = (int) round(((float) ($card['qr_container_size'] ?? 32)) * $scale);
+        $areaX = $containerX + (int) round(((float) ($card['qr_origin'] ?? 1)) * $scale);
+        $areaY = $containerY + (int) round(((float) ($card['qr_origin'] ?? 1)) * $scale);
+        $areaSize = (int) round(((float) ($card['qr_size'] ?? 30)) * $scale);
+
+        imagefilledrectangle(
+            $image,
+            $containerX,
+            $containerY,
+            $containerX + $containerSize - 1,
+            $containerY + $containerSize - 1,
+            $white
+        );
+
+        $matrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::L())->getMatrix();
+        $moduleW = $matrix->getWidth();
+        $moduleH = $matrix->getHeight();
+        $moduleSize = max(1, (int) floor($areaSize / max($moduleW, $moduleH)));
+        $qrWidth = $moduleSize * $moduleW;
+        $qrHeight = $moduleSize * $moduleH;
+        $qrX = $areaX + (int) floor(($areaSize - $qrWidth) / 2);
+        $qrY = $areaY + (int) floor(($areaSize - $qrHeight) / 2);
+
+        for ($y = 0; $y < $moduleH; $y++) {
+            for ($x = 0; $x < $moduleW; $x++) {
+                if ($matrix->get($x, $y) !== 1) {
+                    continue;
+                }
+
+                $x1 = $qrX + $x * $moduleSize;
+                $y1 = $qrY + $y * $moduleSize;
+                imagefilledrectangle($image, $x1, $y1, $x1 + $moduleSize - 1, $y1 + $moduleSize - 1, $black);
+            }
+        }
+    }
+
+    private static function drawCardJpgText(
+        $image,
+        string $text,
+        string $font,
+        float $size,
+        int $color,
+        ?int $inkLeft,
+        ?int $inkCenter,
+        int $inkTop
+    ): void {
+        if ($text === '') {
+            return;
+        }
+
+        $supersample = 2;
+        $renderSize = $size * $supersample;
+        $renderWidth = imagesx($image) * $supersample;
+        $bbox = imagettfbbox($renderSize, 0, $font, $text);
+        if ($bbox === false) {
+            throw new \RuntimeException('Gagal mengukur teks kartu JPG.');
+        }
+
+        $bboxTop = min($bbox[1], $bbox[3], $bbox[5], $bbox[7]);
+        $bboxBottom = max($bbox[1], $bbox[3], $bbox[5], $bbox[7]);
+        $pad = 6;
+        $canvasHeight = max(1, (int) ceil($bboxBottom - $bboxTop) + ($pad * 2));
+        $canvas = imagecreatetruecolor($renderWidth, $canvasHeight);
+        if ($canvas === false) {
+            throw new \RuntimeException('Gagal membuat kanvas teks kartu JPG.');
+        }
+
+        imagealphablending($canvas, false);
+        imagesavealpha($canvas, true);
+        $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+        imagefilledrectangle($canvas, 0, 0, $renderWidth - 1, $canvasHeight - 1, $transparent);
+
+        $red = ($color >> 16) & 0xFF;
+        $green = ($color >> 8) & 0xFF;
+        $blue = $color & 0xFF;
+        $ink = imagecolorallocatealpha($canvas, $red, $green, $blue, 0);
+
+        if ($inkLeft !== null) {
+            $x = (int) round(($inkLeft * $supersample) - $bbox[0]);
+        } else {
+            $x = (int) round(($renderWidth / 2) - (($bbox[0] + $bbox[2]) / 2));
+        }
+        $y = (int) round($pad - $bboxTop);
+
+        if (imagettftext($canvas, $renderSize, 0, $x, $y, $ink, $font, $text) === false) {
+            imagedestroy($canvas);
+
+            throw new \RuntimeException('Gagal menggambar teks kartu JPG.');
+        }
+
+        $smallWidth = imagesx($image);
+        $smallHeight = max(1, (int) round($canvasHeight / $supersample));
+        $small = imagecreatetruecolor($smallWidth, $smallHeight);
+        if ($small === false) {
+            imagedestroy($canvas);
+
+            throw new \RuntimeException('Gagal memperkecil teks kartu JPG.');
+        }
+        imagealphablending($small, false);
+        imagesavealpha($small, true);
+        $transparentSmall = imagecolorallocatealpha($small, 0, 0, 0, 127);
+        imagefilledrectangle($small, 0, 0, $smallWidth - 1, $smallHeight - 1, $transparentSmall);
+        imagecopyresampled($small, $canvas, 0, 0, 0, 0, $smallWidth, $smallHeight, $renderWidth, $canvasHeight);
+        imagedestroy($canvas);
+
+        $destY = (int) round($inkTop - ($pad / $supersample));
+        imagealphablending($image, true);
+        imagecopy($image, $small, 0, $destY, 0, 0, $smallWidth, $smallHeight);
+        imagedestroy($small);
+    }
+
+    private static function drawCardJpgSpacedText(
+        $image,
+        string $text,
+        string $font,
+        float $size,
+        int $color,
+        float $spacing,
+        int $inkTop,
+        int $width
+    ): void {
+        $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
+        if ($chars === false || empty($chars)) {
+            return;
+        }
+
+        $supersample = 2;
+        $renderSize = $size * $supersample;
+        $renderWidth = $width * $supersample;
+        $renderSpacing = $spacing * $supersample;
+
+        $count = count($chars);
+        $right = [];
+        $charLeft = [];
+        $charRight = [];
+        $charTop = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $prefix = implode('', array_slice($chars, 0, $i + 1));
+            $prefixBox = imagettfbbox($renderSize, 0, $font, $prefix);
+            $charBox = imagettfbbox($renderSize, 0, $font, $chars[$i]);
+            if ($prefixBox === false || $charBox === false) {
+                throw new \RuntimeException('Gagal mengukur teks kartu JPG.');
+            }
+            $right[$i] = $prefixBox[2];
+            $charLeft[$i] = $charBox[0];
+            $charRight[$i] = $charBox[2];
+            $charTop[$i] = min($charBox[1], $charBox[3], $charBox[5], $charBox[7]);
+        }
+
+        $advances = [];
+        for ($i = 1; $i < $count; $i++) {
+            $advances[$i - 1] = ($right[$i] - $right[$i - 1]) - $charRight[$i] + $charRight[$i - 1];
+        }
+
+        $sumAdvance = array_sum($advances);
+        $inkWidth = $sumAdvance + ($renderSpacing * ($count - 1)) + $charRight[$count - 1] - $charLeft[0];
+        $center = ($renderWidth / 2) - ($renderSpacing / 2);
+        $pen = $center - ($inkWidth / 2) - $charLeft[0];
+
+        $fullBox = imagettfbbox($renderSize, 0, $font, $text);
+        if ($fullBox === false) {
+            throw new \RuntimeException('Gagal mengukur teks kartu JPG.');
+        }
+        $fullTop = min($fullBox[1], $fullBox[3], $fullBox[5], $fullBox[7]);
+        $fullBottom = max($fullBox[1], $fullBox[3], $fullBox[5], $fullBox[7]);
+        $pad = 6;
+        $canvasHeight = max(1, (int) ceil($fullBottom - $fullTop) + ($pad * 2));
+        $canvas = imagecreatetruecolor($renderWidth, $canvasHeight);
+        if ($canvas === false) {
+            throw new \RuntimeException('Gagal membuat kanvas teks kartu JPG.');
+        }
+
+        imagealphablending($canvas, false);
+        imagesavealpha($canvas, true);
+        $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+        imagefilledrectangle($canvas, 0, 0, $renderWidth - 1, $canvasHeight - 1, $transparent);
+
+        $red = ($color >> 16) & 0xFF;
+        $green = ($color >> 8) & 0xFF;
+        $blue = $color & 0xFF;
+        $ink = imagecolorallocatealpha($canvas, $red, $green, $blue, 0);
+        $baseline = (int) round($pad - $charTop[0]);
+
+        for ($i = 0; $i < $count; $i++) {
+            if (imagettftext($canvas, $renderSize, 0, (int) round($pen), $baseline, $ink, $font, $chars[$i]) === false) {
+                imagedestroy($canvas);
+
+                throw new \RuntimeException('Gagal menggambar teks kartu JPG.');
+            }
+            if ($i < $count - 1) {
+                $pen += $advances[$i] + $renderSpacing;
+            }
+        }
+
+        $smallWidth = imagesx($image);
+        $smallHeight = max(1, (int) round($canvasHeight / $supersample));
+        $small = imagecreatetruecolor($smallWidth, $smallHeight);
+        if ($small === false) {
+            imagedestroy($canvas);
+
+            throw new \RuntimeException('Gagal memperkecil teks kartu JPG.');
+        }
+        imagealphablending($small, false);
+        imagesavealpha($small, true);
+        $transparentSmall = imagecolorallocatealpha($small, 0, 0, 0, 127);
+        imagefilledrectangle($small, 0, 0, $smallWidth - 1, $smallHeight - 1, $transparentSmall);
+        imagecopyresampled($small, $canvas, 0, 0, 0, 0, $smallWidth, $smallHeight, $renderWidth, $canvasHeight);
+        imagedestroy($canvas);
+
+        $destY = (int) round($inkTop - ($pad / $supersample));
+        imagealphablending($image, true);
+        imagecopy($image, $small, 0, $destY, 0, 0, $smallWidth, $smallHeight);
+        imagedestroy($small);
+    }
+
+    private static function cardJpgFontPath(bool $italic): string
+    {
+        static $cache = [];
+        $key = $italic ? 'italic' : 'bold';
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $names = $italic
+            ? ['ariali.ttf', 'Arial Italic.ttf', 'Arial_Italic.ttf', 'LiberationSans-Italic.ttf']
+            : ['arialbd.ttf', 'Arial Bold.ttf', 'Arial_Bold.ttf', 'LiberationSans-Bold.ttf'];
+
+        $directories = [
+            public_path('fonts'),
+            resource_path('fonts'),
+            storage_path('fonts'),
+            base_path('fonts'),
+            'C:/Windows/Fonts',
+            '/usr/share/fonts/truetype/msttcorefonts',
+            '/usr/share/fonts/truetype/liberation2',
+            '/usr/share/fonts/truetype/liberation',
+        ];
+
+        foreach ($directories as $directory) {
+            foreach ($names as $name) {
+                $path = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $name;
+                if (is_file($path)) {
+                    return $cache[$key] = $path;
+                }
+            }
+        }
+
+        throw new \RuntimeException('Font Arial untuk kartu JPG tidak ditemukan.');
+    }
+
+    private static function loadCardRasterImage(string $path)
+    {
+        if (!is_file($path)) {
+            return false;
+        }
+
+        $info = @getimagesize($path);
+        if ($info === false) {
+            return false;
+        }
+
+        return match ($info[2]) {
+            IMAGETYPE_PNG => @imagecreatefrompng($path),
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($path),
+            IMAGETYPE_WEBP => @imagecreatefromwebp($path),
+            IMAGETYPE_GIF => @imagecreatefromgif($path),
+            default => false,
+        };
+    }
+
+    private static function writeCardJpgDpi(string $path, int $dpi): void
+    {
+        $bytes = file_get_contents($path);
+        if (!is_string($bytes) || strlen($bytes) < 18) {
+            return;
+        }
+        if (substr($bytes, 0, 2) !== "\xFF\xD8" || substr($bytes, 6, 5) !== "JFIF\0") {
+            return;
+        }
+
+        $bytes = substr_replace($bytes, "\x01" . pack('n', $dpi) . pack('n', $dpi), 13, 5);
+        File::put($path, $bytes);
+    }
 
     /**
      * Buat QR sebagai PNG (data URI) memakai GD. Tanpa quiet zone tambahan,
