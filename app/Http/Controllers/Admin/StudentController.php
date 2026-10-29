@@ -9,8 +9,8 @@ use App\Models\Setting;
 use App\Models\Student;
 use App\Services\DownloadCacheService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -48,7 +48,96 @@ class StudentController extends Controller
     public function show(Student $student): View
     {
         $student->load('schoolClass');
-        return view('guru.students.show', compact('student'));
+        $classes = SchoolClass::orderBy('name')->get();
+
+        return view('admin.students.show', compact('student', 'classes'));
+    }
+
+    public function create(): View
+    {
+        $classes = SchoolClass::orderBy('name')->get();
+
+        return view('admin.students.create', compact('classes'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'school_class_id' => ['required', 'exists:school_classes,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'nisn' => ['required', 'digits:10', 'unique:students,nisn'],
+            'gender' => ['required', 'in:Laki-laki,Perempuan'],
+        ], [
+            'nisn.required' => __('NISN harus 10 digit angka.'),
+            'nisn.digits' => __('NISN harus 10 digit angka.'),
+            'nisn.unique' => __('NISN sudah terdaftar.'),
+        ]);
+
+        $validated['qr_token'] = (string) Str::uuid();
+        $validated['status'] = 'Aktif';
+
+        Student::create($validated);
+
+        return redirect()->route('admin.students.index')
+            ->with('success', __('Data siswa berhasil ditambahkan!'));
+    }
+
+    public function update(Request $request, Student $student)
+    {
+        $validated = $request->validate([
+            'school_class_id' => ['required', 'exists:school_classes,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'nisn' => ['required', 'digits:10', 'unique:students,nisn,' . $student->id],
+            'gender' => ['required', 'in:Laki-laki,Perempuan'],
+        ], [
+            'nisn.required' => __('NISN harus 10 digit angka.'),
+            'nisn.digits' => __('NISN harus 10 digit angka.'),
+            'nisn.unique' => __('NISN sudah terdaftar.'),
+        ]);
+
+        $student->update($validated);
+        $student->load('schoolClass');
+
+        if ($request->expectsJson() || $request->ajax()) {
+            $token = $student->nisn ?: $student->qr_token;
+            $qrSrc = null;
+            if ($token) {
+                try {
+                    $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->margin(0)->generate((string) $token);
+                    $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
+                } catch (\Throwable $e) {}
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Data siswa berhasil diperbarui!'),
+                'data' => [
+                    'name' => $student->name,
+                    'nisn' => $student->nisn,
+                    'school_class_id' => $student->school_class_id,
+                    'school_class_name' => $student->schoolClass->name ?? '-',
+                    'gender' => $student->gender,
+                    'qr_src' => $qrSrc,
+                ],
+            ]);
+        }
+
+        return redirect()->route('admin.students.show', $student->id)
+            ->with('success', __('Data siswa berhasil diperbarui!'));
+    }
+
+    public function destroy(Student $student): RedirectResponse
+    {
+        $studentName = $student->name;
+        $student->delete();
+
+        return redirect()->route('admin.students.index')
+            ->with('danger', __('Data siswa :name berhasil dipindahkan ke Tempat Sampah.', ['name' => $studentName]));
+    }
+
+    public function downloadCard(Student $student)
+    {
+        return DownloadCacheService::downloadSingleCard($student);
     }
 
     public function printCards(Request $request)
@@ -186,6 +275,10 @@ class StudentController extends Controller
     /** Hapus SELURUH siswa AKTIF menjadi soft delete (masuk Tempat Sampah). */
     public function destroyAllActive(Request $request): RedirectResponse
     {
+        if ($request->boolean('confirm_permanent')) {
+            return $this->destroyAllTrashed($request);
+        }
+
         try {
             $active = Student::whereNull('deleted_at')->count();
 
@@ -201,7 +294,7 @@ class StudentController extends Controller
             });
 
             return redirect()->route('admin.students.index')
-                ->with('success', "$deleted data siswa dipindahkan ke Tempat Sampah.");
+                ->with('danger', "$deleted data siswa dipindahkan ke Tempat Sampah.");
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.students.index')
@@ -258,11 +351,51 @@ class StudentController extends Controller
         }
     }
 
+    /** Hapus SELURUH data siswa di Tempat Sampah (permanen). */
+    public function destroyAllTrashed(Request $request): RedirectResponse
+    {
+        $count = Student::onlyTrashed()->count();
+
+        if ($count === 0) {
+            return redirect()->route('admin.students.trash')
+                ->with('info', __('Tempat sampah sudah kosong.'));
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $trashed = Student::onlyTrashed();
+            $deleted = 0;
+            $trashed->each(function (Student $s) use (&$deleted) {
+                SchoolClass::where('teacher_id', $s->id)->update(['teacher_id' => null]);
+                $s->attendances()->delete();
+
+                if ($s->photo && Storage::disk('public')->exists($s->photo)) {
+                    Storage::disk('public')->delete($s->photo);
+                }
+
+                $s->forceDelete();
+                $deleted++;
+            });
+
+            DB::commit();
+
+            return redirect()->route('admin.students.trash')
+                ->with('deleted', "$deleted siswa dihapus permanen.");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return redirect()->route('admin.students.trash')
+                ->with('error', __('Gagal menghapus permanen data siswa. Silakan coba lagi atau hubungi admin.'));
+        }
+    }
+
     /**
      * Import data siswa dari file Excel.
      * Selalu balas JSON {status, message}; HTTP 200 kalau sukses/partial, 422 kalau ada kesalahan.
      */
-    public function import(Request $request): JsonResponse
+    public function import(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -288,41 +421,87 @@ class StudentController extends Controller
             $totalErrors = count($orderedErrors);
 
             if ($imported > 0 && $totalErrors === 0) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => "{$imported} data berhasil diimpor.",
-                ]);
+                $message = "{$imported} data berhasil diimpor.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => $message,
+                    ]);
+                }
+                return redirect()->route('admin.students.index')
+                    ->with('success', $message);
             }
 
             if ($totalErrors === 0 && $imported === 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Tidak ada data yang diimpor.',
-                ], 422);
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Tidak ada data yang diimpor.',
+                    ], 422);
+                }
+                return redirect()->route('admin.students.index')
+                    ->with('warning', 'Tidak ada data yang diimpor.');
             }
 
             // Sebagian berhasil, sebagian gagal
-            $max = 5;
-            $shown = array_slice($orderedErrors, 0, $max);
-            $parts = [];
-            foreach ($shown as [$row, $reason]) {
-                $parts[] = "baris {$row}: {$reason}";
-            }
-            $message = "{$imported} berhasil, {$totalErrors} gagal: " . implode('; ', $parts);
-            $remaining = $totalErrors - $max;
-            if ($remaining > 0) {
-                $message .= "; ... dan {$remaining} baris lainnya.";
+            $errorGroups = [];
+            foreach ($orderedErrors as [$row, $reason]) {
+                $reason = trim((string) $reason);
+                $reason = preg_replace('/^[Bb]aris\s+\d+\s*[:,.]?\s*/u', '', $reason);
+                $reason = rtrim($reason, '.: ');
+                $reason = preg_replace('/[\.\?\!]+$/', '', $reason);
+                if ($reason === '') {
+                    $reason = 'Data tidak valid.';
+                }
+                $errorGroups[$reason][] = $row;
             }
 
-            return response()->json([
+            uksort($errorGroups, function ($a, $b) use ($errorGroups) {
+                return array_search($a, array_keys($errorGroups)) <=> array_search($b, array_keys($errorGroups));
+            });
+
+            $details = [];
+            foreach ($errorGroups as $reason => $rows) {
+                sort($rows);
+                $rowsList = implode(', ', $rows);
+                $details[] = "{$reason} (baris {$rowsList})";
+            }
+
+            $maxDetails = 5;
+            $shownDetails = array_slice($details, 0, $maxDetails);
+            $extraCount = count($details) - $maxDetails;
+            if ($extraCount > 0) {
+                $shownDetails[] = "Dan {$extraCount} alasan lainnya.";
+            }
+
+            $summary = "{$imported} berhasil, {$totalErrors} gagal.";
+
+            $payload = [
                 'status' => 'partial',
-                'message' => $message,
-            ], 200);
+                'message' => $summary,
+            ];
+            if (!empty($shownDetails)) {
+                $payload['details'] = $shownDetails;
+            }
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json($payload, 200);
+            }
+            $flashMessage = $summary;
+            if (!empty($shownDetails)) {
+                $flashMessage .= ' ' . implode('; ', $shownDetails);
+            }
+            return redirect()->route('admin.students.index')
+                ->with('warning', $flashMessage);
         } catch (\Throwable $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 422);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+            return redirect()->route('admin.students.index')
+                ->with('error', $e->getMessage());
         }
     }
 

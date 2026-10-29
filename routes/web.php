@@ -97,12 +97,16 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // Master Siswa, Import, Upload Foto ZIP, & Hapus Semua
     Route::get('/siswa', [AdminStudentController::class, 'index'])->name('siswa.index');
     Route::match(['get', 'post'], '/siswa/generate-qr', [AdminStudentController::class, 'printCards'])->name('siswa.generate-qr');
-    Route::delete('students/destroy-all', [AdminStudentController::class, 'destroyAll'])->name('students.destroy-all');
+    Route::delete('students/destroy-all', [AdminStudentController::class, 'destroyAllActive'])->name('students.destroy-all');
     // Hapus massal siswa AKTIF dari toolbar Data Siswa (soft delete -> Tempat Sampah).
     // Route statis WAJIB didaftarkan sebelum Route::resource('students') di bawah
     // supaya tidak tertangkap parameter {student}. Route students.destroy-all
     // di atas tetap utuh untuk aksi kosongkan Tempat Sampah.
     Route::delete('students/destroy-all-active', [AdminStudentController::class, 'destroyAllActive'])->name('students.destroy-all-active');
+    // Kosongkan Tempat Sampah Siswa: hapus PERMANEN seluruh siswa yang sudah
+    // soft delete (destroyAllActive = pindahkan ke sampah; destroyAllTrashed =
+    // hapus permanen isi sampah). Diberikan konfirmasi di view trash.
+    Route::delete('students/trash-destroy-all', [AdminStudentController::class, 'destroyAllTrashed'])->name('students.trash-destroy-all');
     Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
     Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
     Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import')->middleware('throttle:10,1');
@@ -118,7 +122,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // Riwayat Presensi per Siswa (akses dari menu Kehadiran)
     Route::get('kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
 
-    Route::resource('students', AdminStudentController::class);
+    Route::resource('students', AdminStudentController::class)->except(['edit']);
 
     // Manajemen Data Guru (/admin/guru)
 

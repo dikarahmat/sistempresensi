@@ -86,7 +86,7 @@ class ProductionReadinessSmokeTest extends TestCase
             'admin.absensi.show', 'admin.kehadiran', 'admin.kehadiran.detail', 'admin.rekap',
             'admin.scanner', 'admin.absensi.kiosk', 'admin.kiosk',
             'admin.students.index', 'admin.siswa.index', 'admin.students.create',
-            'admin.students.show', 'admin.students.edit', 'admin.students.trash',
+            'admin.students.show', 'admin.students.trash',
             'admin.students.print-cards',
             'admin.guru.index', 'admin.teachers.index', 'admin.teachers.trash',
             'admin.kelas.index', 'admin.classes.index', 'admin.academic-years.index',
@@ -96,7 +96,6 @@ class ProductionReadinessSmokeTest extends TestCase
             'admin.absensi.show' => [$this->schoolClass->id],
             'admin.kehadiran.detail' => [$this->schoolClass->id],
             'admin.students.show' => [$this->student->id],
-            'admin.students.edit' => [$this->student->id],
         ]);
     }
 
