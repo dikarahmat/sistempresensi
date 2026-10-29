@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', {!! __('Presensi Hari Ini') !!})
-@section('page_title', {!! __('Presensi Hari Ini') !!})
+@section('title', __('Presensi Hari Ini'))
+@section('page_title', __('Presensi Hari Ini'))
 @section('page_subtitle')
     @php
         \Carbon\Carbon::setLocale(app()->getLocale());
@@ -246,7 +246,7 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 28px;
+            gap: 18px;
             padding: 0;
             background: none;
             border: 0;
@@ -261,18 +261,18 @@
         .stat-chip {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 15px;
+            gap: 6px;
+            font-size: 13.5px;
             line-height: 1;
         }
         .stat-chip strong {
-            font-size: 20px;
+            font-size: 17px;
             font-weight: 700;
             line-height: 1;
         }
         .stat-ico {
-            width: 22px;
-            height: 22px;
+            width: 17px;
+            height: 17px;
             flex: none;
             background: none;
             border: 0;

@@ -143,8 +143,8 @@
        ------------------------------------------------------------------ */
     .dashboard-section .dash-stats-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 0.25rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        column-gap: 0.5rem;
     }
 
     .dashboard-section .dash-stat-cell {
@@ -208,7 +208,8 @@
         margin-bottom: 0;        /* label kini elemen terakhir */
     }
 
-    .dashboard-section .dash-stat-value {
+    .dashboard-section .dash-stat-value,
+    .dashboard-section .dash-att-value {
         display: block;
         font-size: 1.75rem;         /* 28px di HP, 32px di desktop */
         font-weight: 800;           /* angka besar & tebal */
@@ -218,7 +219,7 @@
         margin-bottom: 0.25rem;     /* jarak rapat angka -> label (4px) */
     }
 
-    /* Palet warna angka dashboard ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â dipakai SAMA PERSIS di bagian "Data Sekolah"
+    /* Palet warna angka dashboard — dipakai SAMA PERSIS di bagian "Data Sekolah"
        dan "Ketidakhadiran Hari Ini" (satu biru, satu kuning, satu hijau, satu
        merah). Class KHUSUS elemen dashboard ini; definisi class bersama
        (text-danger, text-primary, text-purple, dll) tidak disentuh. */
@@ -239,11 +240,11 @@
     }
 
     @media (min-width: 768px) {
-        /* 4 kolom sejajar dengan gap yang sama persis seperti grid Pintasan
-           Cepat. Padding kiri/kanan sel 0 supaya sejajar dengan isi konten. */
+        /* 3 kolom sama lebar, isi rata tengah, tampil seimbang di tengah.
+           Padding kiri/kanan sel 0 supaya sejajar dengan isi konten. */
         .dashboard-section .dash-stats-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            column-gap: 0.5rem;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            column-gap: 1rem;
         }
         .dashboard-section .dash-stat-cell {
             padding: 1.35rem 0 0;
@@ -251,7 +252,8 @@
         .dashboard-section .dash-stat-label {
             font-size: 0.7rem;
         }
-        .dashboard-section .dash-stat-value {
+        .dashboard-section .dash-stat-value,
+        .dashboard-section .dash-att-value {
             font-size: 2rem;            /* 32px */
         }
     }
@@ -433,21 +435,9 @@
         }
     }
 
-    /* Angka sebagai TEKS POLOS (tanpa kontainer/wadah), warna hitam sama seperti
-       statistik, ukuran disamakan dengan Bagian A; label tetap di bawahnya. */
+    /* Angka Ketidakhadiran Hari Ini: font tebal SAMA persis dengan angka Data Sekolah. */
     .dashboard-section .dash-att-figure {
         margin-bottom: 0.25rem;
-    }
-    .dashboard-section .dash-att-value {
-        font-size: 1.75rem;
-        font-weight: 800;
-        line-height: 1.1;
-        color: #0f172a;
-    }
-    @media (min-width: 768px) {
-        .dashboard-section .dash-att-value {
-            font-size: 2rem;
-        }
     }
 
     /* ==================================================================
@@ -516,27 +506,28 @@
         text-decoration: none;
     }
 
-    /* Jam besar + "WIB" dalam SATU BARIS (WIB sedikit lebih kecil),
-       bukan lagi baris terpisah di bawahnya. */
+    /* Jam besar + "WIB" dalam SATU BARIS (WIB sedikit lebih kecil)
+       memakai font tebal yang SAMA PERSIS dengan angka Data Sekolah (bukan monospace). */
     body .dashboard-section .dashboard-clock .clock-value {
         margin-top: 0.2rem !important;
         line-height: 1.15;
         white-space: nowrap;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em;
     }
     body .dashboard-section .dashboard-clock .clock-wib {
         font-size: 0.62em;
-        font-weight: 600;
-        letter-spacing: 0.03em;
+        font-weight: 700;
+        letter-spacing: 0.02em;
         margin-left: 0.35rem;
         vertical-align: baseline;
     }
 
     /* Di 2 kolom (>=768px) tiap kolom hanya setengah lebar konten, jadi
-       angka jam ikut menyesuaikan (tidak ikut melebar atau terpotong).
-       Nilai asal 1.75rem dipakai lagi kalau layar >= ~1330px. */
+       angka jam ikut menyesuaikan (tidak ikut melebar atau terpotong). */
     @media (min-width: 768px) {
         body .dashboard-section .dashboard-clock .clock-value {
-            font-size: clamp(1.05rem, 2.1vw, 1.75rem) !important;
+            font-size: clamp(1.2rem, 1.8vw, 1.65rem) !important;
         }
     }
 
@@ -548,13 +539,13 @@
             padding: 0.5rem 0.35rem !important;
         }
         body .dashboard-section .dashboard-clock .clock-value {
-            font-size: 1.25rem !important;
+            font-size: 1.15rem !important;
         }
     }
 
     /* ==================================================================
        HANYA MOBILE (< 768px)
-       4 statistik "Data Sekolah" SEJAJAR satu baris (4 kolom sama lebar)
+       3 statistik "Data Sekolah" SEJAJAR satu baris (3 kolom sama lebar)
        dan 3 item "Ketidakhadiran Hari Ini" sejajar satu baris (3 kolom),
        dengan angka & label yang mengecil supaya muat di layar 320-500px
        tanpa scroll horizontal. Desktop (md ke atas) TIDAK tersentuh: nilai
@@ -562,17 +553,18 @@
        Blok ini diletakkan SESUDAH aturan dasar karena specificity-nya sama.
        ================================================================== */
     @media (max-width: 767.98px) {
-        /* Data Sekolah: 4 kolom sejajar; align-items start supaya semua
+        /* Data Sekolah: 3 kolom sejajar rapat; align-items start supaya semua
            angka berada pada satu garis despite label 2 baris. */
         .dashboard-section .dash-stats-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             column-gap: 0.25rem;
             align-items: start;
         }
         .dashboard-section .dash-stat-cell {
             padding: 0.875rem 0.25rem 0;   /* padding kolom kecil */
         }
-        .dashboard-section .dash-stat-value {
+        .dashboard-section .dash-stat-value,
+        .dashboard-section .dash-att-value {
             font-size: 1.375rem;            /* 22px */
             line-height: 1.1;
         }
@@ -585,14 +577,11 @@
             overflow-wrap: break-word;
         }
 
-        /* Ketidakhadiran Hari Ini: 3 kolom sejajar, angka sama ukurannya. */
+        /* Ketidakhadiran Hari Ini: 3 kolom sejajar, angka sama ukurannya dengan Data Sekolah. */
         .dashboard-section .dash-absence-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 0.5rem;
             align-items: start;
-        }
-        .dashboard-section .dash-att-value {
-            font-size: 1.375rem;            /* 22px */
         }
         /* Label (Sakit / Izin / Alpha) disamakan dengan label statistik HP. */
         .dashboard-section .dash-absence-grid .fw-bold {
@@ -725,9 +714,11 @@
         }
         .dashboard-clock .clock-label {
             font-size: 0.7rem !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
         }
         .dashboard-clock .clock-value {
-            font-size: 1.75rem !important;
+            font-size: 1.55rem !important;
         }
         /* Catatan: "WIB" kini menyatu dalam satu baris bersama jamnya
            (span .clock-wib, diatur di blok "BAGIAN BAWAH" di atas), jadi
@@ -976,19 +967,6 @@
                 @else
                 </div>
                 @endif
-
-                <!-- 4. Tidak Hadir (angka memakai warna ikon "Hari Libur")
-                     Link ke halaman KEHADIRAN - sama dengan menu "Kehadiran"
-                     di sidebar. Halaman itu tidak menerima parameter tanggal
-                     (selalu memakai hari ini), jadi tidak ada ?tanggal= di sini. -->
-                <a href="{{ panel_route('kehadiran') }}"
-                   class="dash-stat-cell"
-                   aria-label="{{ __('Buka halaman kehadiran') }}"
-                   title="{{ __('Buka halaman kehadiran') }}">
-                    <strong class="dash-stat-value is-red">{{ number_format($totalKetidakhadiran ?? 0, 0, ',', '.') }}</strong>
-                    <span class="dash-stat-label">{{ __('Tidak Hadir') }}</span>
-                </a>
-
             </div>
         </div>
     </div>
@@ -1217,7 +1195,7 @@
                     <!-- 1. Sakit -->
                     <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
-                            <span class="dash-att-value is-sidebar-blue font-monospace">{{ $countSakit ?? 0 }}</span>
+                            <strong class="dash-stat-value dash-att-value is-sidebar-blue">{{ $countSakit ?? 0 }}</strong>
                         </span>
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
@@ -1225,7 +1203,7 @@
                     <!-- 2. Izin -->
                     <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
-                            <span class="dash-att-value is-yellow font-monospace">{{ $countIzin ?? 0 }}</span>
+                            <strong class="dash-stat-value dash-att-value is-yellow">{{ $countIzin ?? 0 }}</strong>
                         </span>
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
@@ -1233,7 +1211,7 @@
                     <!-- 3. Alpha -->
                     <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
-                            <span class="dash-att-value is-red font-monospace">{{ $countAlfa ?? 0 }}</span>
+                            <strong class="dash-stat-value dash-att-value is-red">{{ $countAlfa ?? 0 }}</strong>
                         </span>
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Alfa') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
@@ -1272,15 +1250,15 @@
                      $lateLimitTime) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tidak ada data yang di-hardcode. -->
                 <div class="dash-clock-grid grid grid-cols-2 gap-3">
                     <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Jam masuk sekolah') }}">
-                        <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Jam Masuk') }}</span>
-                        <strong class="text-dark mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
+                        <span class="text-uppercase fw-bold text-dark d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Jam Masuk') }}</span>
+                        <strong class="text-dark mt-1.5 d-block clock-value">
                             {{ $checkInTime }}<span class="clock-wib">WIB</span>
                         </strong>
                     </div>
 
                     <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Batas keterlambatan sekolah') }}">
-                        <span class="text-uppercase fw-semibold text-secondary d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Batas Terlambat') }}</span>
-                        <strong class="text-amber-600 mt-1.5 d-block font-monospace clock-value" style="font-size: 1.3rem; font-weight: 700;">
+                        <span class="text-uppercase fw-bold text-dark d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Batas Terlambat') }}</span>
+                        <strong class="text-amber-600 mt-1.5 d-block clock-value">
                             {{ $lateLimitTime }}<span class="clock-wib">WIB</span>
                         </strong>
                     </div>
