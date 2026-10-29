@@ -15,6 +15,44 @@
         width: 100% !important;
     }
 
+    #btnSaveTeacher {
+        transition: background-color .15s ease, color .15s ease, opacity .15s ease;
+    }
+    #btnSaveTeacher:disabled {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        cursor: not-allowed !important;
+        opacity: 0.5 !important;
+        box-shadow: none !important;
+    }
+    .field-error {
+        min-height: 0;
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.2;
+        color: #dc2626;
+    }
+    .field-error:empty {
+        display: none;
+    }
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 .15rem rgba(220, 38, 38, .12) !important;
+    }
+
+    /* Modal Tambah Guru: jarak seragam grup kolom */
+    #addTeacherModal .modal-body > .mb-3 {
+        margin-bottom: 14px !important;
+    }
+    #addTeacherModal .modal-body > .mb-3:last-child {
+        margin-bottom: 18px !important;
+    }
+    #addTeacherModal .form-label {
+        margin-bottom: 6px !important;
+    }
+
     /* Zebra Striping Khusus */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
@@ -49,7 +87,6 @@
     .table-zebra-custom tbody td {
         color: #1e293b !important;
         font-weight: 400 !important;
-        text-transform: uppercase !important;
         letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
         font-size: 0.78rem;
@@ -60,7 +97,7 @@
     }
     @media (min-width: 992px) {
         .indent-nama {
-            padding-left: 4rem !important;
+            padding-left: 2rem !important;
         }
     }
 
@@ -256,26 +293,30 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
     }
-    .btn-row-action.action-detail { color: #16a34a; }
-    .btn-row-action.action-detail:hover { color: #15803d; }
     .btn-row-action.action-edit { color: #f59e0b; }
     .btn-row-action.action-edit:hover { color: #d97706; }
     .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    .btn-solid-pill.is-disabled,
-    button.btn-solid-pill.is-disabled,
-    a.btn-solid-pill.is-disabled {
-        background-color: #9ca3af !important;
+    /* === Matikan Cetak Kartu saat data kosong, biarkan tombol lain normal ===
+       Biru aktif yang dipudarkan (opacity .5, teks putih, cursor not-allowed). BUKAN abu-abu. */
+    .btn-cetak-kartu.is-disabled {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        opacity: 0.5 !important;
         cursor: not-allowed !important;
-        opacity: 0.6;
+        pointer-events: none;
+        box-shadow: none !important;
     }
-    .btn-solid-pill.is-disabled:hover,
-    button.btn-solid-pill.is-disabled:hover,
-    a.btn-solid-pill.is-disabled:hover {
-        filter: none;
-        transform: none;
-        opacity: 0.6;
+
+    /* Unggah & Import hijau pudar dan disabled sampai file dipilih */
+    .btn-download-green:disabled {
+        background-color: #059669 !important;
+        color: #ffffff !important;
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
     }
 </style>
 @endpush
@@ -294,6 +335,18 @@
     </div>
     @endif
 
+    @if(session('danger'))
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" style="background-color: #fee2e2 !important; color: #991b1b !important;" role="alert">
+        <div class="flash-notice-body">
+            <div class="d-flex align-items-center">
+                <i class='bx bx-error-circle fs-5 me-2' style="color: #991b1b !important;"></i>
+                <span>{{ session('danger') }}</span>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
+    </div>
+    @endif
+
     @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -306,56 +359,19 @@
     </div>
     @endif
 
-    @if(session('deleted'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+    @if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-trash fs-5 me-2 text-danger'></i>
-                <span>{{ session('deleted') }}</span>
+                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <span>{{ session('warning') }}</span>
             </div>
         </div>
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
     </div>
     @endif
 
-    @if(session('import_status'))
-    @php
-        $importStatus = in_array(session('import_status'), ['success', 'warning', 'danger'], true) ? session('import_status') : 'info';
-        $importIcons = ['success' => 'bx-check-circle', 'warning' => 'bx-error-circle', 'danger' => 'bx-x-circle', 'info' => 'bx-info-circle'];
-    @endphp
-    <div class="alert alert-{{ $importStatus }} alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 guru-import-alert" role="alert">
-        <div class="flash-notice-body">
-            <div class="d-flex align-items-center">
-                <i class='bx {{ $importIcons[$importStatus] }} fs-5 me-2 flex-shrink-0'></i>
-                <span>{{ session('import_message') }}</span>
-            </div>
-            @if(session('import_errors') && count(session('import_errors')) > 0)
-            <div class="guru-import-notes mt-2">
-                <ul class="mb-0 ps-3 small">
-                    @foreach(session('import_errors') as $err)
-                    <li>{{ $err }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-        </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
-    </div>
-    @endif
-
-    @if($errors->any() && !session('open_modal'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
-        <div class="flash-notice-body">
-            <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> {{ __('Periksa data input:') }}</div>
-            <ul class="mb-0 ps-3 small">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
-    </div>
-    @endif
+    <div id="importAlertBox"></div>
 
     @if(Auth::check() && Auth::user()->role === 'admin')
     <form id="deleteAllTeachersForm" action="{{ panel_route('guru.destroy-all') }}" method="POST" class="d-none">
@@ -386,14 +402,14 @@
 
                 @if(Auth::check() && Auth::user()->role === 'admin')
                 <div class="action-buttons-wrap">
-                    <button type="button" class="btn-solid-pill btn-solid-blue {{ $totalTeachers == 0 ? 'is-disabled' : '' }}"
+                    <button type="button" class="btn-solid-pill btn-solid-blue btn-cetak-kartu {{ $totalTeachers == 0 ? 'is-disabled' : '' }}"
                             data-bs-toggle="modal"
                             data-bs-target="#printCardsModal"
-                            {{ $totalTeachers == 0 ? 'tabindex="-1" aria-disabled="true" title="Belum ada data untuk dicetak. Buat data guru melalui Pengaturan > Data Guru lalu coba lagi."' : '' }}>
+                            {{ $totalTeachers == 0 ? 'disabled aria-disabled="true" tabindex="-1" title="Belum ada data untuk dicetak"' : '' }}>
                         <span>{{ __('Cetak Kartu') }}</span>
                     </button>
 
-                    <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
+                    <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
                         <span>{{ __('Import Excel') }}</span>
                     </button>
 
@@ -414,20 +430,20 @@
                 <colgroup>
                     <col style="width: 5%;">
                     <col style="width: 15%;">
-                    <col style="width: 19%;">
+                    <col style="width: 25%;">
+                    <col style="width: 12%;">
+                    <col style="width: 14%;">
                     <col style="width: 15%;">
-                    <col style="width: 16%;">
-                    <col style="width: 17%;">
                     <col style="width: 14%;">
                 </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 5%;">{{ __('No') }}</th>
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('NIP') }}</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 19%;">{{ __('Nama Lengkap Guru') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('Jenis Kelamin') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 16%;">{{ __('Tugas Kelas') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 17%;">{{ __('No. Telepon / WA') }}</th>
+                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 25%;">{{ __('Nama Lengkap Guru') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">{{ __('Jenis Kelamin') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Tugas Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('No. Telepon / WA') }}</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
                         <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Aksi') }}</th>
                         @endif
@@ -458,29 +474,13 @@
                         @if(Auth::check() && Auth::user()->role === 'admin')
                         <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
-                                <a href="{{ panel_route('guru.show', $teacher->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <a href="{{ panel_route('guru.show', $teacher->id) }}" class="btn-row-action action-edit" title="{{ __('Lihat / Edit') }}" aria-label="{{ __('Lihat / Edit') }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </a>
 
-                                <button type="button" class="btn-row-action action-edit"
-                                        title="{{ __('Edit Data Guru') }}"
-                                        aria-label="{{ __('Edit Data Guru') }}"
-                                        onclick="openEditModal({
-                                            id: '{{ $teacher->id }}',
-                                            name: '{{ addslashes($teacher->name) }}',
-                                            nip: '{{ $teacher->nip ?? '' }}',
-                                            gender: '{{ $teacher->gender ?? 'Laki-laki' }}',
-                                            birth_place: '{{ addslashes($teacher->birth_place ?? '') }}',
-                                            birth_date: '{{ $teacher->birth_date ? $teacher->birth_date->format('Y-m-d') : '' }}',
-                                            phone: '{{ $teacher->phone_number ?? $teacher->phone ?? '' }}',
-                                            class_id: '{{ $assignedClass?->id ?? '' }}'
-                                        })">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
-                                </button>
-
                                 <button type="button" class="btn-row-action action-delete"
-                                        title="{{ __('Hapus Data Guru') }}"
-                                        aria-label="{{ __('Hapus Data Guru') }}"
+                                        title="{{ __('Hapus') }}"
+                                        aria-label="{{ __('Hapus') }}"
                                         onclick="confirmDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
@@ -494,7 +494,7 @@
                     </tr>
                     @empty
                     <tr class="align-middle">
-                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 7 : 6 }}" class="text-center py-5 text-muted text-nowrap empty-state">
+                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 7 : 6 }}" class="text-center py-5 text-muted empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search'))
                                 {{ __('Tidak ada data guru yang cocok dengan pencarian.') }}
@@ -512,196 +512,87 @@
     </div>
 
     @if(Auth::check() && Auth::user()->role === 'admin')
+    <!-- MODAL TAMBAH GURU -->
     <div class="modal fade" id="addTeacherModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="fw-bold mb-0">{{ __('Tambah Data Guru') }}</h5>
+                    <h5 class="fw-bold mb-0">{{ __('Tambah Guru Baru') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ panel_route('guru.store') }}" method="POST" novalidate id="addTeacherForm" data-teacher-form>
+                <form action="{{ panel_route('guru.store') }}" method="POST" novalidate id="addTeacherForm" data-no-loader>
                     @csrf
                     <div class="modal-body py-3">
-
-                        @if(session('open_modal') === 'add' && session('form_error'))
-                        <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
-                            <i class='bx bx-x-circle fs-6 me-1'></i> {{ session('form_error') }}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">{{ __('Nama Lengkap Guru') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="teacherName" class="form-control rounded-3" placeholder="{{ __('Masukkan nama lengkap & gelar guru') }}" maxlength="255" autocomplete="off">
+                            <div class="field-error"></div>
                         </div>
-                        @endif
 
-                        @if(session('open_modal') === 'add' && $errors->any())
-                        <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
-                            <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="nip" id="teacherNip" class="form-control rounded-3" placeholder="{{ __('18 digit angka') }}" inputmode="numeric" maxlength="18" autocomplete="off">
+                            <div class="field-error"></div>
                         </div>
-                        @endif
 
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold" for="add_name">{{ __('Nama Lengkap & Gelar') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="name" id="add_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Contoh: Dra. Hj. Siti Aminah, M.Pd') }}" value="{{ session('open_modal') === 'add' ? old('name') : '' }}" maxlength="255">
-                                <div class="invalid-feedback {{ $errors->has('name') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="name">{{ session('open_modal') === 'add' ? $errors->first('name') : '' }}</div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold" for="add_nip">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="nip" id="add_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="16 atau 18 digit angka" inputmode="numeric" maxlength="18">
-                                <div class="invalid-feedback {{ $errors->has('nip') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="nip">{{ session('open_modal') === 'add' ? $errors->first('nip') : '' }}</div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_gender">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
-                                <select name="gender" id="add_gender" class="form-select rounded-3 {{ $errors->has('gender') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" required>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
+                                <select name="gender" id="teacherGender" class="form-select rounded-3">
                                     <option value="">{{ __('Pilih jenis kelamin') }}</option>
-                                    <option value="Laki-laki" {{ session('open_modal') === 'add' && old('gender') === 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
-                                    <option value="Perempuan" {{ session('open_modal') === 'add' && old('gender') === 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
+                                    <option value="Laki-laki">{{ __('Laki-laki') }}</option>
+                                    <option value="Perempuan">{{ __('Perempuan') }}</option>
                                 </select>
-                                <div class="invalid-feedback {{ $errors->has('gender') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="gender">{{ session('open_modal') === 'add' ? $errors->first('gender') : '' }}</div>
+                                <div class="field-error"></div>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_class">{{ __('Penugasan Kelas') }}</label>
-                                <select name="school_class_id" id="add_class" class="form-select rounded-3 {{ $errors->has('school_class_id') && session('open_modal') === 'add' ? 'is-invalid' : '' }}">
-                                    <option value="">{{ __('-- Tidak Ditugaskan (Guru Pengajar Saja) --') }}</option>
-                                    @foreach($classes as $c)
-                                    <option value="{{ $c->id }}" {{ session('open_modal') === 'add' && (string) old('school_class_id') === (string) $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }} ({{ __('Tingkat') }} {{ $c->grade ?? $c->level }})</option>
-                                    @endforeach
-                                </select>
-                                <div class="invalid-feedback {{ $errors->has('school_class_id') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="school_class_id">{{ session('open_modal') === 'add' ? $errors->first('school_class_id') : '' }}</div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_birth_place">{{ __('Tempat Lahir') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="birth_place" id="add_birth_place" class="form-control rounded-3 {{ $errors->has('birth_place') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Kota / Kabupaten Lahir') }}" value="{{ session('open_modal') === 'add' ? old('birth_place') : '' }}" maxlength="100">
-                                <div class="invalid-feedback {{ $errors->has('birth_place') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="birth_place">{{ session('open_modal') === 'add' ? $errors->first('birth_place') : '' }}</div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_birth_date">{{ __('Tanggal Lahir') }} <span class="text-danger">*</span></label>
-                                <input type="date" name="birth_date" id="add_birth_date" class="form-control rounded-3 {{ $errors->has('birth_date') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'add' ? old('birth_date') : '' }}">
-                                <div class="invalid-feedback {{ $errors->has('birth_date') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="birth_date">{{ session('open_modal') === 'add' ? $errors->first('birth_date') : '' }}</div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_phone">{{ __('No. Telepon / WhatsApp') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" id="add_phone" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('08xxxxxxxxxx (10-15 digit)') }}" value="{{ session('open_modal') === 'add' ? old('phone_number') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
-                                <div class="invalid-feedback {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="phone_number">{{ session('open_modal') === 'add' ? $errors->first('phone_number') : '' }}</div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">{{ __('No. Telepon / WA') }} <span class="text-danger">*</span></label>
+                                <input type="text" name="phone_number" id="teacherPhone" class="form-control rounded-3" placeholder="{{ __('10-15 digit') }}" inputmode="numeric" maxlength="15" autocomplete="off">
+                                <div class="field-error"></div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Data Guru') }}</button>
+                        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" id="btnSaveTeacher" disabled>{{ __('Simpan Data Guru') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="fw-bold mb-0">{{ __('Edit Data Guru') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="editTeacherForm" method="POST" novalidate data-teacher-form>
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-body py-3">
-                        @if(session('open_modal') === 'edit' && session('form_error'))
-                        <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
-                            <i class='bx bx-x-circle fs-6 me-1'></i> {{ session('form_error') }}
-                        </div>
-                        @endif
-
-                        @if(session('open_modal') === 'edit' && $errors->any())
-                        <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
-                            <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}
-                        </div>
-                        @endif
-
-                        <div class="text-muted mb-3" style="font-size: 0.72rem;"><span class="text-danger">*</span> {{ __('wajib diisi') }}</div>
-
-                        <div class="row g-3">
-                            <div class="col-12 col-md-8">
-                                <label class="form-label small fw-semibold" for="edit_name">{{ __('Nama Lengkap & Gelar') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="name" id="edit_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('name') : '' }}" maxlength="255">
-                                <div class="invalid-feedback {{ $errors->has('name') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="name">{{ session('open_modal') === 'edit' ? $errors->first('name') : '' }}</div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold" for="edit_nip">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="nip" id="edit_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('nip') : '' }}" inputmode="numeric" placeholder="16 atau 18 digit angka" maxlength="18" >
-                                <div class="invalid-feedback {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="nip">{{ session('open_modal') === 'edit' ? $errors->first('nip') : '' }}</div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_gender">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
-                                <select name="gender" id="edit_gender" class="form-select rounded-3 {{ $errors->has('gender') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" required>
-                                    <option value="">{{ __('Pilih jenis kelamin') }}</option>
-                                    <option value="Laki-laki" {{ session('open_modal') === 'edit' && old('gender') === 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
-                                    <option value="Perempuan" {{ session('open_modal') === 'edit' && old('gender') === 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
-                                </select>
-                                <div class="invalid-feedback {{ $errors->has('gender') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="gender">{{ session('open_modal') === 'edit' ? $errors->first('gender') : '' }}</div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_class_id">{{ __('Penugasan Kelas') }}</label>
-                                <select name="school_class_id" id="edit_class_id" class="form-select rounded-3 {{ $errors->has('school_class_id') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}">
-                                    <option value="">{{ __('-- Tidak Ditugaskan (Guru Pengajar Saja) --') }}</option>
-                                    @foreach($classes as $c)
-                                    <option value="{{ $c->id }}" {{ session('open_modal') === 'edit' && (string) old('school_class_id') === (string) $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }} ({{ __('Tingkat') }} {{ $c->grade ?? $c->level }})</option>
-                                    @endforeach
-                                </select>
-                                <div class="invalid-feedback {{ $errors->has('school_class_id') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="school_class_id">{{ session('open_modal') === 'edit' ? $errors->first('school_class_id') : '' }}</div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_birth_place">{{ __('Tempat Lahir') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="birth_place" id="edit_birth_place" class="form-control rounded-3 {{ $errors->has('birth_place') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('birth_place') : '' }}" maxlength="100">
-                                <div class="invalid-feedback {{ $errors->has('birth_place') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="birth_place">{{ session('open_modal') === 'edit' ? $errors->first('birth_place') : '' }}</div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_birth_date">{{ __('Tanggal Lahir') }} <span class="text-danger">*</span></label>
-                                <input type="date" name="birth_date" id="edit_birth_date" class="form-control rounded-3 {{ $errors->has('birth_date') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('birth_date') : '' }}">
-                                <div class="invalid-feedback {{ $errors->has('birth_date') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="birth_date">{{ session('open_modal') === 'edit' ? $errors->first('birth_date') : '' }}</div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_phone">{{ __('No. Telepon / WhatsApp') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" id="edit_phone" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('phone') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
-                                <div class="invalid-feedback {{ $errors->has('phone_number') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="phone_number">{{ session('open_modal') === 'edit' ? $errors->first('phone_number') : '' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0">
-                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                        <button type="submit" class="btn btn-warning text-white rounded-3 px-4 fw-semibold">{{ __('Simpan Perubahan') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="importTeacherModal" tabindex="-1" aria-hidden="true">
+    <!-- MODAL IMPORT EXCEL -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0">
-                    <h5 class="fw-bold mb-0">{{ __('Import Data Guru dari Excel') }}</h5>
+                    <h5 class="fw-bold mb-0">{{ __('Import Data Guru Excel') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body py-3">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold" for="importTeacherFile">{{ __('Pilih File Excel / CSV') }} <span class="text-danger">*</span></label>
-                        <input type="file" name="file_excel" id="importTeacherFile" class="form-control rounded-3 @error('file_excel') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>
-                        @error('file_excel')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
+                <form id="teacherImportForm" action="{{ panel_route('guru.import') }}" method="POST" enctype="multipart/form-data" data-no-loader>
+                    @csrf
+                    <div class="modal-body">
+                        <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
+                            <div class="mb-2">
+                                {{ __('Format kolom file Excel:') }} <strong>{{ __('NIP, Nama Lengkap, Jenis Kelamin, No. Telepon') }}</strong> {{ __('(.xlsx atau .csv)') }}
+                            </div>
+                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
+                        </div>
+                        <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
+                        <input type="file" name="file_excel" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
+                        <div class="field-error"></div>
                     </div>
-                    <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ __('Maksimal ukuran file 5 MB.') }}</div>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Mulai Import') }}</button>
-                </div>
+                    <div class="modal-footer border-top-0">
+                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                        <button type="submit" class="btn-download-green px-4" id="btnImportSubmit" disabled>{{ __('Unggah & Import') }}</button>
+                    </div>
+                    <div id="importMessage" class="px-3 pb-3 small d-none" style="min-height:1.2rem;"></div>
+                </form>
             </div>
         </div>
     </div>
 
+    <!-- MODAL CETAK KARTU MASSAL -->
     <div class="modal fade" id="printCardsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -709,24 +600,20 @@
                     <h5 class="fw-bold mb-0">{{ __('Cetak Kartu Presensi Guru Massal') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ panel_route('guru.print-cards') }}" method="POST" data-download>
+                <form action="{{ panel_route('guru.print-cards') }}" method="POST">
                     @csrf
                     <div class="modal-body py-3">
                         <p class="text-secondary small mb-3">
-                            {{ __('Semua guru aktif akan dicetak. Hasil unduhan berupa file ZIP berisi satu kartu (JPG) untuk setiap guru.') }}
+                            {{ __('Kartu seluruh guru aktif akan diunduh sebagai file ZIP, berisi satu kartu (JPG) untuk setiap guru.') }}
                         </p>
 
-                        <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2">
-                            <i class='bx bx-info-circle me-1'></i> {{ __('QR Code kartu guru berisi NIP (jika valid); guru tanpa NIP memakai identifier sistem.') }}
-                        </div>
-
-                        <div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mb-0">
-                            <i class='bx bx-error-circle me-1'></i> {{ __('Guru tanpa NIP tetap dicetak; QR Code tetap unik.') }}
+                        <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-0" id="printInfoBox">
+                            <i class='bx bx-info-circle me-1'></i> {{ __('Setiap kartu dilengkapi QR Code presensi yang dibuat otomatis.') }}
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                        <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen">{{ __('Unduh ZIP Kartu') }}</button>
+                        <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen" id="kartuUnduhBtn">{{ __('Unduh Kartu') }}</button>
                     </div>
                 </form>
             </div>
@@ -738,32 +625,413 @@
 
 @push('scripts')
 <script>
-    function openEditModal(data) {
-        document.getElementById('editTeacherForm').action = `{{ url('admin/guru') }}/${data.id}`;
-        document.getElementById('edit_name').value = data.name;
-        document.getElementById('edit_nip').value = data.nip;
-        document.getElementById('edit_gender').value = data.gender;
-        document.getElementById('edit_birth_place').value = data.birth_place;
-        document.getElementById('edit_birth_date').value = data.birth_date;
-        document.getElementById('edit_phone').value = data.phone;
-        document.getElementById('edit_class_id').value = data.class_id ? data.class_id : 'none';
+console.log('[import-handler] aktif');
+(function () {
+  var form = document.getElementById('teacherImportForm');
+  var btn = document.getElementById('btnImportSubmit');
+  if (!form || !btn) return;
+  var file = form.querySelector('input[type="file"]');
+  function sync() { btn.disabled = !(file.files && file.files.length); }
+  file.addEventListener('change', sync);
+  document.addEventListener('click', function () { setTimeout(sync, 0); });
+  sync();
 
-        const modal = new bootstrap.Modal(document.getElementById('editTeacherModal'));
-        modal.show();
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (btn.disabled) return;
+    var original = btn.innerHTML;
+    btn.disabled = true;
+    btn.style.position = 'relative';
+    btn.style.overflow = 'hidden';
+    btn.innerHTML = '<span class="imp-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(0,0,0,.25);transition:width .15s"></span><span class="imp-txt" style="position:relative">0%</span>';
+    var bar = btn.querySelector('.imp-bar'), txt = btn.querySelector('.imp-txt');
+    var shown = 0, real = 0, done = false;
+    var timer = setInterval(function () {
+      var target = done ? 100 : Math.max(real, Math.min(shown + 1, 92));
+      if (shown < target) {
+        shown++;
+        bar.style.width = shown + '%';
+        txt.textContent = shown + '%';
+      }
+      if (shown >= 100) {
+        clearInterval(timer);
+        setTimeout(function () { location.reload(); }, 400);
+      }
+    }, 40);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', form.action);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.upload.onprogress = function (ev) {
+      if (!ev.lengthComputable) return;
+      real = Math.min(90, Math.round(ev.loaded / ev.total * 90));
+    };
+    xhr.onload = function () {
+      var json = {};
+      try { json = JSON.parse(xhr.responseText); } catch (_) {}
+      sessionStorage.setItem('importAlert', JSON.stringify({
+        status: json.status || (xhr.status < 400 ? 'success' : 'error'),
+        msg: json.message || (xhr.status < 400 ? 'Import selesai.' : 'Import gagal. Periksa file lalu coba lagi.'),
+        details: json.details || []
+      }));
+      done = true;
+    };
+    xhr.onerror = function () {
+      clearInterval(timer);
+      btn.innerHTML = original; sync();
+      alert('Import gagal. Periksa koneksi lalu coba lagi.');
+    };
+    xhr.send(new FormData(form));
+  }, true);
+
+  var modal = document.getElementById('importModal');
+  if (modal) modal.addEventListener('hidden.bs.modal', function () { form.reset(); sync(); });
+})();
+
+(function () {
+  var box = document.getElementById('importAlertBox');
+  if (!box) return;
+  var raw = sessionStorage.getItem('importAlert');
+  if (!raw) return;
+  sessionStorage.removeItem('importAlert');
+  var data = {};
+  try { data = JSON.parse(raw) || {}; } catch (e) { data = {}; }
+  var status = data.status || 'error';
+  var msg = data.msg || data.message || '';
+  var details = Array.isArray(data.details) ? data.details : [];
+  if (!msg && !details.length) return;
+  var palette = {
+    success: { bg: '#dcfce7', fg: '#166534', icon: 'bx-check-circle' },
+    partial: { bg: '#fef3c7', fg: '#854d0e', icon: 'bx-error-circle' },
+    error: { bg: '#fee2e2', fg: '#991b1b', icon: 'bx-x-circle' }
+  };
+  var color = palette[status] || palette.error;
+  var alertEl = document.createElement('div');
+  alertEl.className = 'alert alert-dismissible fade show border-0 rounded-3 small mb-3';
+  alertEl.setAttribute('role', 'alert');
+  alertEl.style.backgroundColor = color.bg;
+  alertEl.style.color = color.fg;
+  var head = document.createElement('div');
+  head.className = 'd-flex align-items-center';
+  var icon = document.createElement('i');
+  icon.className = 'bx ' + color.icon + ' fs-5 me-2';
+  var text = document.createElement('span');
+  text.textContent = msg;
+  head.appendChild(icon);
+  head.appendChild(text);
+  alertEl.appendChild(head);
+  if (details.length) {
+    var list = document.createElement('ul');
+    list.className = 'mb-0 mt-2 ps-3';
+    details.forEach(function (item) {
+      var li = document.createElement('li');
+      li.textContent = String(item);
+      list.appendChild(li);
+    });
+    alertEl.appendChild(list);
+  }
+  var closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'btn-close';
+  closeBtn.setAttribute('data-bs-dismiss', 'alert');
+  closeBtn.setAttribute('aria-label', 'Tutup');
+  closeBtn.addEventListener('click', function () { alertEl.remove(); });
+  alertEl.appendChild(closeBtn);
+  box.appendChild(alertEl);
+})();
+</script>
+
+<script>
+    /* Cegah pembukaan modal Cetak Kartu jika tombol berstatus nonaktif */
+    (function () {
+        var printBtn = document.querySelector('.btn-cetak-kartu');
+        if (printBtn) {
+            printBtn.addEventListener('click', function (e) {
+                if (this.disabled || this.classList.contains('is-disabled') || this.getAttribute('aria-disabled') === 'true') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        }
+    })();
+
+    /* Pesan error kecil di bawah field (clear + set) */
+    function setFieldError(field, msg) {
+        if (!field) return;
+        const msgEl = field.parentNode.querySelector('.field-error');
+        if (!msgEl) return;
+        if (!msg) {
+            msgEl.textContent = '';
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            return;
+        }
+        msgEl.textContent = msg;
+        field.classList.add('is-invalid');
+        field.style.borderColor = '#dc2626';
     }
+
+    /* Validasi form Tambah Guru (JS murni) */
+    function cekValiditasGuru(showErrors) {
+        const name = document.getElementById('teacherName');
+        const nip = document.getElementById('teacherNip');
+        const jk = document.getElementById('teacherGender');
+        const phone = document.getElementById('teacherPhone');
+        let ok = true;
+
+        function apply(field, message) {
+            if (showErrors || !message) {
+                setFieldError(field, message);
+            }
+        }
+
+        const namaVal = (name ? name.value : '').trim();
+        if (namaVal === '') {
+            apply(name, 'Nama guru wajib diisi.');
+            ok = false;
+        } else if (!/^[\p{L}\s.,'\-]+$/u.test(namaVal)) {
+            apply(name, 'Format nama hanya boleh huruf dan tanda baca.');
+            ok = false;
+        } else {
+            apply(name, '');
+        }
+
+        const nipVal = (nip ? nip.value : '').trim();
+        if (!/^\d{18}$/.test(nipVal)) {
+            apply(nip, 'NIP harus 18 digit angka.');
+            ok = false;
+        } else {
+            apply(nip, '');
+        }
+
+        const jkVal = (jk ? jk.value : '').trim();
+        if (jkVal === '') {
+            apply(jk, 'Pilih jenis kelamin.');
+            ok = false;
+        } else {
+            apply(jk, '');
+        }
+
+        const phoneVal = (phone ? phone.value : '').trim();
+        if (!/^\d{10,15}$/.test(phoneVal)) {
+            apply(phone, 'Nomor telepon harus 10-15 digit angka.');
+            ok = false;
+        } else {
+            apply(phone, '');
+        }
+
+        return ok;
+    }
+
+    /* Tombol Simpan aktif bila semua kolom wajib terisi dan valid */
+    function updateTombolSimpan() {
+        var btn = document.getElementById('btnSaveTeacher');
+        if (!btn || btn.dataset.saving === '1') return;
+        var isValid = cekValiditasGuru(false);
+        btn.disabled = !isValid;
+        btn.setAttribute('aria-disabled', isValid ? 'false' : 'true');
+    }
+
+    /* Sanitasi input NIP: hanya angka, maks 18 digit */
+    function sanitizeNipInput(e) {
+        const el = e.target;
+        if (!el || el.id !== 'teacherNip') return;
+        const before = el.value;
+        const cleaned = before.replace(/[^0-9]/g, '').slice(0, 18);
+        if (cleaned !== before) {
+            const start = el.selectionStart;
+            el.value = cleaned;
+            const newStart = Math.min(start, el.value.length);
+            el.setSelectionRange(newStart, newStart);
+        }
+    }
+
+    /* Sanitasi input No Telepon: hanya angka, maks 15 digit */
+    function sanitizePhoneInput(e) {
+        const el = e.target;
+        if (!el || el.id !== 'teacherPhone') return;
+        const before = el.value;
+        const cleaned = before.replace(/[^0-9]/g, '').slice(0, 15);
+        if (cleaned !== before) {
+            const start = el.selectionStart;
+            el.value = cleaned;
+            const newStart = Math.min(start, el.value.length);
+            el.setSelectionRange(newStart, newStart);
+        }
+    }
+
+    /* Sanitasi input Nama: hapus angka saat mengetik */
+    function sanitizeNameInput(e) {
+        const el = e.target;
+        if (!el || el.id !== 'teacherName') return;
+        const before = el.value;
+        const cleaned = before.replace(/\p{Nd}/gu, '');
+        if (cleaned !== before) {
+            const start = el.selectionStart;
+            el.value = cleaned;
+            const newStart = Math.min(start, el.value.length);
+            el.setSelectionRange(newStart, newStart);
+        }
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str == null ? '' : String(str)));
+        return div.innerHTML;
+    }
+
+    /* Handler form Tambah Guru */
+    (function () {
+        var nameEl = document.getElementById('teacherName');
+        var nipEl = document.getElementById('teacherNip');
+        var jkEl = document.getElementById('teacherGender');
+        var phoneEl = document.getElementById('teacherPhone');
+        var form = document.getElementById('addTeacherForm');
+        if (!form) return;
+
+        function attach(el, evt, fn) {
+            if (!el) return;
+            el.addEventListener(evt, fn);
+        }
+
+        attach(nipEl, 'input', sanitizeNipInput);
+        attach(phoneEl, 'input', sanitizePhoneInput);
+        attach(nameEl, 'input', sanitizeNameInput);
+
+        [nameEl, nipEl, jkEl, phoneEl].forEach(function (el) {
+            if (!el) return;
+            attach(el, 'input', function () {
+                setFieldError(el, '');
+                updateTombolSimpan();
+            });
+            attach(el, 'change', function () {
+                setFieldError(el, '');
+                updateTombolSimpan();
+            });
+            attach(el, 'blur', function () {
+                setFieldError(el, '');
+                updateTombolSimpan();
+            });
+        });
+
+        var btnSubmit = document.getElementById('btnSaveTeacher');
+        var originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            if (!cekValiditasGuru(true)) {
+                var firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            if (btnSubmit) {
+                btnSubmit.dataset.saving = '1';
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...';
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',
+                redirect: 'manual'
+            })
+            .then(function (response) {
+                if (response.status === 422) {
+                    return response.json().then(function (data) {
+                        var errors = data.errors || {};
+                        Object.keys(errors).forEach(function (key) {
+                            var field = form.querySelector('[name="' + key + '"]');
+                            if (field) setFieldError(field, errors[key][0]);
+                        });
+                        if (btnSubmit) {
+                            delete btnSubmit.dataset.saving;
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = originalBtnHtml;
+                        }
+                        var firstInvalid = form.querySelector('.is-invalid');
+                        if (firstInvalid) firstInvalid.focus();
+                    });
+                }
+                if (response.type === 'opaqueredirect' || response.status === 0) {
+                    window.location.reload();
+                    return;
+                }
+                if (!response.ok) {
+                    return response.json().catch(function () { return {}; }).then(function () {
+                        if (btnSubmit) {
+                            delete btnSubmit.dataset.saving;
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = originalBtnHtml;
+                        }
+                        alert('Gagal menyimpan data. Coba lagi.');
+                    });
+                }
+                window.location.reload();
+            })
+            .catch(function () {
+                if (btnSubmit) {
+                    delete btnSubmit.dataset.saving;
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalBtnHtml;
+                }
+                alert('Gagal menyimpan data. Periksa koneksi lalu coba lagi.');
+            });
+        }, true);
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            document.addEventListener('show.bs.modal', function (e) {
+                var modal = e.target;
+                if (modal && modal.id === 'addTeacherModal') {
+                    setFieldError(nameEl, '');
+                    setFieldError(nipEl, '');
+                    setFieldError(jkEl, '');
+                    setFieldError(phoneEl, '');
+                    cekValiditasGuru(false);
+                    updateTombolSimpan();
+                }
+            });
+
+            document.addEventListener('hidden.bs.modal', function (e) {
+                var modal = e.target;
+                if (modal && modal.id === 'addTeacherModal') {
+                    form.reset();
+                    setFieldError(nameEl, '');
+                    setFieldError(nipEl, '');
+                    setFieldError(jkEl, '');
+                    setFieldError(phoneEl, '');
+                    updateTombolSimpan();
+                }
+            });
+        }
+
+        updateTombolSimpan();
+    })();
+
+    /* Konfirmasi hapus SATU guru */
     function confirmDeleteTeacher(id, name) {
         confirmUniversalDelete({
             title: {!! json_encode(__('Hapus Data Guru?')) !!},
-            html: {!! json_encode(__('Guru')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
+            html: {!! json_encode(__('Guru')) !!} + ' <strong>' + escapeHtml(name) + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
             confirmText: {!! json_encode(__('Hapus')) !!},
             cancelText: {!! json_encode(__('Tidak')) !!},
             onConfirm: function () {
-                const form = document.getElementById(`deleteTeacherForm-${id}`);
+                var form = document.getElementById('deleteTeacherForm-' + id);
                 if (!form) {
                     console.error('HAPUS: form deleteTeacherForm-' + id + ' tidak ditemukan. Muat ulang halaman.');
                     return;
                 }
-                const qs = window.location.search;
+                var qs = window.location.search;
                 if (qs && form.action.indexOf('?') === -1) {
                     form.action = form.action + qs;
                 }
@@ -771,21 +1039,30 @@
             }
         });
     }
+
+    /* Konfirmasi hapus SEMUA guru */
     function confirmDeleteAllTeachers() {
-        confirmUniversalDelete({
-            title: {!! json_encode(__('Hapus Seluruh Data Guru?')) !!},
-            icon: 'bx-error-circle',
-            html: {!! json_encode(__('Seluruh data guru aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan.')) !!},
-            confirmText: {!! json_encode(__('Hapus Semua')) !!},
-            cancelText: {!! json_encode(__('Tidak')) !!},
-            checks: [
-                {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
-                {!! json_encode(__('Saya yakin ingin menghapus semua data guru aktif.')) !!}
-            ],
-            onConfirm: function () {
-                document.getElementById('deleteAllTeachersForm').submit();
-            }
-        });
+        if (typeof confirmUniversalDelete === 'function') {
+            confirmUniversalDelete({
+                title: {!! json_encode(__('Pindahkan SEMUA guru aktif ke Tempat Sampah?')) !!},
+                icon: 'bx-error-circle',
+                html: {!! json_encode(__('Seluruh data guru aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan.')) !!},
+                confirmText: {!! json_encode(__('Hapus Semua')) !!},
+                cancelText: {!! json_encode(__('Tidak')) !!},
+                checks: [
+                    {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
+                    {!! json_encode(__('Saya yakin ingin menghapus semua data guru aktif.')) !!}
+                ],
+                onConfirm: function () {
+                    document.getElementById('deleteAllTeachersForm').submit();
+                }
+            });
+        } else if (confirm({!! json_encode(__('Pindahkan SEMUA guru aktif ke Tempat Sampah?')) !!})) {
+            document.getElementById('deleteAllTeachersForm').submit();
+        }
     }
+
+    window.confirmDeleteTeacher = confirmDeleteTeacher;
+    window.confirmDeleteAllTeachers = confirmDeleteAllTeachers;
 </script>
 @endpush

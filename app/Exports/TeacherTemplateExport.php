@@ -10,16 +10,17 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class TeacherTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, WithStyles
 {
+    /**
+     * Template Excel guru (kolom: NIP, Nama Lengkap, Jenis Kelamin, No. Telepon).
+     * NIP boleh kosong.
+     */
     public function headings(): array
     {
         return [
             'nip',
-            'nama',
+            'nama_lengkap',
             'jenis_kelamin',
-            'tempat_lahir',
-            'tanggal_lahir',
-            'no_hp',
-            'kelas',
+            'no_telepon',
         ];
     }
 
@@ -30,19 +31,13 @@ class TeacherTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
                 '198501012010011001',
                 'Drs. Muhammad Hidayat, M.Pd.',
                 'Laki-laki',
-                'Surabaya',
-                '1985-01-01',
                 '081334567890',
-                '7A',
             ],
             [
-                '199002152015022002',
+                '',
                 'Sri Wahyuni, S.Pd.',
                 'Perempuan',
-                'Semarang',
-                '1990-02-15',
                 '081223344556',
-                '7B',
             ],
         ];
     }
@@ -54,7 +49,7 @@ class TeacherTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
                 'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['argb' => 'FF059669'],
+                    'startColor' => ['argb' => 'FF2563EB'],
                 ],
             ],
         ];

@@ -2,162 +2,30 @@
 
 namespace App\Imports;
 
-use App\Models\SchoolClass;
 use App\Models\Teacher;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class TeachersImport implements ToCollection, WithHeadingRow
 {
     protected int $importedCount = 0;
     protected int $skippedCount = 0;
-    protected array $errors = [];
 
-    private function normalizePhone(string $raw): string
+    /** @var array<string, int> */
+    private array $seenNipInFile = [];
+
+    /** @var array<string, true> */
+    private array $existingNip = [];
+
+    /** @var array<int, array{0: int, 1: string}> */
+    private array $orderedErrors = [];
+
+    /** @return array<int, array{0: int, 1: string}> */
+    public function getOrderedErrors(): array
     {
-        $value = trim($raw);
-
-        $value = str_replace([' ', '-', '(', ')'], '', $value);
-
-        if (str_starts_with($value, '+62')) {
-            $value = '0' . substr($value, 3);
-        }
-
-        $value = preg_replace('/[^0-9]/', '', $value);
-
-        return $value;
-    }
-
-    public function collection(Collection $rows): void
-    {
-        $rowIndex = 1;
-
-        $classMap = SchoolClass::pluck('id', 'name')->toArray();
-        $classNameMap = SchoolClass::pluck('name', 'id')->toArray();
-
-        $assignedWaliKelasInFile = [];
-
-        foreach ($rows as $row) {
-            $rowIndex++;
-
-            $nip = trim((string) ($row['nip'] ?? $row['nomor_induk_pegawai'] ?? $row['id_guru'] ?? ''));
-            $name = trim((string) ($row['nama'] ?? $row['nama_lengkap'] ?? $row['nama_guru'] ?? $row['name'] ?? ''));
-
-            if (!empty($nip)) {
-                if (!preg_match('/^(\d{16}|\d{18})$/', $nip)) {
-                    $this->skippedCount++;
-                    $this->errors[] = "Baris {$rowIndex}: NIP harus 16 atau 18 digit angka. Baris dilewati.";
-                    continue;
-                }
-            }
-
-            $nip = $nip !== '' ? $nip : null;
-
-            if (empty($name)) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama Guru wajib diisi (kosong).";
-                continue;
-            }
-
-            if (preg_match('/\p{Nd}/u', $name) === 1) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama tidak boleh mengandung angka. Baris dilewati.";
-                continue;
-            }
-
-            if (! empty($row['nip'] ?? '')) {
-                if (! preg_match('/^(\d{16}|\d{18})$/', trim((string) ($row['nip'] ?? '')))) {
-                    $this->skippedCount++;
-                    $this->errors[] = "Baris {$rowIndex}: NIP harus 16 atau 18 digit angka. Baris dilewati.";
-                }
-            }
-
-            $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
-            if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
-                $gender = 'Perempuan';
-            } else {
-                $gender = 'Laki-laki';
-            }
-
-            $rawBirthDate = $row['tanggal_lahir'] ?? $row['tgl_lahir'] ?? $row['birth_date'] ?? null;
-            $birthDate = null;
-
-            if (!empty($rawBirthDate)) {
-                try {
-                    if (is_numeric($rawBirthDate)) {
-                        $birthDate = ExcelDate::excelToDateTimeObject($rawBirthDate)->format('Y-m-d');
-                    } else {
-                        $birthDate = Carbon::parse(str_replace('/', '-', $rawBirthDate))->format('Y-m-d');
-                    }
-                } catch (\Throwable $e) {
-                    $birthDate = null;
-                }
-            }
-
-            $birthPlace = trim((string) ($row['tempat_lahir'] ?? $row['birth_place'] ?? ''));
-            $phone = $this->normalizePhone((string) ($row['no_hp'] ?? $row['phone_number'] ?? $row['no_wa'] ?? $row['telepon'] ?? $row['phone'] ?? ''));
-            $address = trim((string) ($row['alamat'] ?? $row['address'] ?? ''));
-
-            $schoolClassId = null;
-            $rawClass = trim((string) ($row['kelas'] ?? $row['tugas_kelas'] ?? $row['school_class_id'] ?? $row['class_id'] ?? ''));
-
-            if ($rawClass !== '') {
-                $cleanRawClass = strtolower(str_replace(['kelas', ' ', '-'], '', $rawClass));
-                $matchedClass = null;
-
-                foreach ($classMap as $className => $classId) {
-                    $cleanClassName = strtolower(str_replace(['kelas', ' ', '-'], '', $className));
-                    if ($cleanClassName === $cleanRawClass || strcasecmp($className, $rawClass) === 0) {
-                        $matchedClass = $classId;
-                        break;
-                    }
-                }
-
-                if ($matchedClass) {
-                    $schoolClassId = $matchedClass;
-                } else {
-                    $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Kelas '{$rawClass}' tidak ditemukan, guru diimpor tanpa penugasan kelas.";
-                }
-            }
-
-            try {
-                $data = [
-                    'name' => $name,
-                    'gender' => $gender,
-                    'birth_place' => $birthPlace ?: null,
-                    'birth_date' => $birthDate ?: null,
-                    'phone_number' => $phone ?: null,
-                    'phone' => $phone ?: null,
-                    'school_class_id' => $schoolClassId,
-                ];
-
-                if ($nip !== null) {
-                    Teacher::updateOrCreate(['nip' => $nip], $data);
-                } else {
-                    $teacher = Teacher::withTrashed()
-                        ->whereNull('nip')
-                        ->where('name', $name)
-                        ->first();
-
-                    if ($teacher) {
-                        if ($teacher->trashed()) {
-                            $teacher->restore();
-                        }
-                        $teacher->update($data);
-                    } else {
-                        Teacher::create($data + ['nip' => null]);
-                    }
-                }
-
-                $this->importedCount++;
-            } catch (\Throwable $e) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): " . $e->getMessage();
-            }
-        }
+        return $this->orderedErrors;
     }
 
     public function getImportedCount(): int
@@ -172,6 +40,148 @@ class TeachersImport implements ToCollection, WithHeadingRow
 
     public function getErrors(): array
     {
-        return $this->errors;
+        return array_column($this->orderedErrors, 1);
+    }
+
+    private function normalizeNip($raw): string
+    {
+        $value = trim((string) $raw);
+
+        // Buang separator yang sering muncul dari Excel (. , spasi)
+        $value = str_replace([' ', '.', ',', "'", '-'], '', $value);
+
+        // scientific notation dari Excel (mis. 1.985E+17)
+        if (stripos($value, 'e') !== false && is_numeric($value)) {
+            $value = sprintf('%.0f', (float) $value);
+        }
+
+        return $value;
+    }
+
+    private function normalizePhone(string $raw): string
+    {
+        $value = trim($raw);
+        $value = str_replace([' ', '-', '(', ')', '.', "'"], '', $value);
+
+        if (str_starts_with($value, '+62')) {
+            $value = '0' . substr($value, 3);
+        } elseif (str_starts_with($value, '62') && strlen($value) > 10) {
+            $value = '0' . substr($value, 2);
+        }
+
+        return preg_replace('/[^0-9]/', '', $value);
+    }
+
+    private function registerError(int $rowIndex, string $reason): void
+    {
+        $this->orderedErrors[] = [$rowIndex, $reason];
+    }
+
+    public function collection(Collection $rows): void
+    {
+        $this->existingNip = Teacher::withTrashed()
+            ->get(['nip'])
+            ->filter(fn ($t) => $t->nip !== null && trim((string) $t->nip) !== '')
+            ->map(fn ($t) => trim((string) $t->nip))
+            ->reduce(function (array $carry, string $nip) {
+                $carry[$nip] = true;
+                return $carry;
+            }, []);
+
+        $rowIndex = 1;
+
+        foreach ($rows as $row) {
+            $rowIndex++;
+
+            $nip = $this->normalizeNip($row['nip'] ?? $row['nomor_induk_pegawai'] ?? $row['id_guru'] ?? '');
+            $name = trim((string) ($row['nama_lengkap'] ?? $row['nama'] ?? $row['nama_guru'] ?? $row['name'] ?? ''));
+            $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? '')));
+            $phone = $this->normalizePhone((string) ($row['no_telepon'] ?? $row['no_hp'] ?? $row['phone_number'] ?? $row['phone'] ?? $row['telepon'] ?? ''));
+
+            // Abaikan jika seluruh kolom penting kosong
+            if ($nip === '' && $name === '' && $rawGender === '' && $phone === '') {
+                continue;
+            }
+
+            // Validasi NIP (opsional di Excel, tapi jika diisi harus 18 digit dan unik)
+            if ($nip !== '') {
+                if (!preg_match('/^[0-9]{18}$/', $nip)) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP harus 18 digit angka. Baris dilewati.");
+                    continue;
+                }
+
+                if (isset($this->seenNipInFile[$nip])) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP {$nip} duplikat di dalam file (sudah dipakai baris {$this->seenNipInFile[$nip]}). Baris dilewati.");
+                    continue;
+                }
+
+                if (isset($this->existingNip[$nip])) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP sudah terdaftar. Baris dilewati.");
+                    continue;
+                }
+
+                $this->seenNipInFile[$nip] = $rowIndex;
+                $this->existingNip[$nip] = true;
+            }
+
+            // Validasi Nama Lengkap
+            if ($name === '') {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: Nama Guru wajib diisi (kosong).");
+                continue;
+            }
+
+            if (!preg_match('/^[\pL\s.,\'\-]+$/u', $name)) {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: Format nama hanya boleh huruf dan tanda baca. Baris dilewati.");
+                continue;
+            }
+
+            // Validasi Jenis Kelamin
+            if ($rawGender === '') {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: Jenis kelamin wajib diisi. Baris dilewati.");
+                continue;
+            }
+
+            if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
+                $gender = 'Perempuan';
+            } else {
+                $gender = 'Laki-laki';
+            }
+
+            // Validasi Nomor Telepon
+            if ($phone === '') {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: No. telepon wajib diisi. Baris dilewati.");
+                continue;
+            }
+
+            if (strlen($phone) < 10 || strlen($phone) > 15) {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: No. telepon harus 10-15 digit angka. Baris dilewati.");
+                continue;
+            }
+
+            try {
+                Teacher::create([
+                    'nip' => $nip !== '' ? $nip : null,
+                    'name' => $name,
+                    'gender' => $gender,
+                    'phone' => $phone,
+                    'phone_number' => $phone,
+                    'status' => 'Aktif',
+                    'qr_token' => (string) Str::uuid(),
+                ]);
+
+                $this->importedCount++;
+            } catch (\Throwable $e) {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: " . $e->getMessage());
+            }
+        }
     }
 }
