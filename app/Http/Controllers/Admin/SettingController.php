@@ -16,14 +16,17 @@ class SettingController extends Controller
     {
         $rawPhone = Setting::get('school_phone', '');
         $rawNip = Setting::get('headmaster_nip', '');
+        $rawNpsn = Setting::get('school_npsn', '');
 
         // Normalisasi: simpan hanya digit untuk validasi & penyimpanan.
         // Tampilkan nilai normalisasi supaya user bisa mengoreksi format lama.
         $normalizedPhone = preg_replace('/[^0-9]/', '', (string) $rawPhone);
         $normalizedNip = preg_replace('/[^0-9]/', '', (string) $rawNip);
+        $normalizedNpsn = preg_replace('/[^0-9]/', '', (string) $rawNpsn);
 
         $settings = [
             'school_name' => Setting::get('school_name', 'SMP Presensi PGRI'),
+            'school_npsn' => $normalizedNpsn,
             'app_title' => Setting::get('app_title', 'Sistem Presensi Sekolah'),
             'school_logo' => Setting::get('school_logo'),
             'school_address' => Setting::get('school_address', 'Jl. Pendidikan No. 45, Kota Pelajar'),
@@ -43,7 +46,7 @@ class SettingController extends Controller
     {
         // Kolom opsional yang dikosongkan dinormalkan ke null SEBELUM validasi:
         // string kosong '' selalu gagal regex digit, padahal field-nya opsional.
-        foreach (['school_phone', 'headmaster_nip'] as $optionalDigit) {
+        foreach (['school_phone', 'headmaster_nip', 'school_npsn'] as $optionalDigit) {
             if (trim((string) $request->input($optionalDigit, '')) === '') {
                 $request->merge([$optionalDigit => null]);
             }
@@ -51,7 +54,6 @@ class SettingController extends Controller
 
         $request->validate([
             'school_name' => ['required', 'string', 'max:255'],
-            'app_title' => ['nullable', 'string', 'max:255'],
             'school_logo' => ['nullable', 'file', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
             'school_address' => ['nullable', 'string', 'max:255'],
             'school_phone' => ['nullable', 'string', 'regex:/^[0-9]{10,15}$/'],
@@ -59,10 +61,9 @@ class SettingController extends Controller
             'headmaster_nip' => ['nullable', 'string', 'regex:/^[0-9]{18}$/'],
             'check_in_time' => ['required', 'string', 'date_format:H:i'],
             'late_limit_time' => ['required', 'string', 'date_format:H:i', 'after:check_in_time'],
-            'school_npsn' => ['nullable', 'string', 'regex:/^[0-9]{0,8}$/'],
+            'school_npsn' => ['nullable', 'string', 'regex:/^[0-9]{8}$/'],
             'school_name.required' => 'Nama sekolah wajib diisi.',
             'school_name.max' => 'Nama sekolah maksimal 255 karakter.',
-            'app_title.max' => 'Judul aplikasi maksimal 255 karakter.',
             'school_logo.file' => 'Logo harus berupa gambar PNG, JPG, atau WEBP, maksimal 2 MB.',
             'school_logo.mimes' => 'Logo harus berupa gambar PNG, JPG, atau WEBP, maksimal 2 MB.',
             'school_logo.max' => 'Logo harus berupa gambar PNG, JPG, atau WEBP, maksimal 2 MB.',
@@ -83,7 +84,9 @@ class SettingController extends Controller
         // tidak writable), isian user TIDAK hilang dan pesannya jelas.
         try {
             Setting::set('school_name', strip_tags(trim($request->school_name)));
-            Setting::set('app_title', strip_tags(trim($request->app_title ?? '')));
+            if ($request->has('app_title')) {
+                Setting::set('app_title', strip_tags(trim($request->app_title ?? '')));
+            }
             Setting::set('school_address', strip_tags(trim($request->school_address ?? '')));
             Setting::set('school_phone', trim($request->school_phone ?? ''));
             Setting::set('headmaster_name', strip_tags(trim($request->headmaster_name ?? '')));

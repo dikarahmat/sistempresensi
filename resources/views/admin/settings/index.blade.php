@@ -2,7 +2,7 @@
 
 @section('title', __('Pengaturan Sistem'))
 @section('page_title', __('PENGATURAN'))
-@section('page_subtitle', __('Atur data sekolah dan jam presensi.'))
+@section('page_subtitle', __('Kelola identitas sekolah, jadwal presensi, tahun ajaran, hari libur, dan tempat sampah.'))
 
 {{-- Kanvas dikunci setinggi satu layar dan isi form menggulir di dalam kanvas,
      sama seperti halaman acuan Presensi / Data Guru / Data Kelas. Class ini
@@ -86,11 +86,7 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin-bottom: 1.25rem;
-        /* REVISI CLEAN LOOK: garis pemisah dekoratif di bawah judul/subjudul
-           (padding-bottom 0.75rem + border-bottom 1px #f1f5f9) DIHAPUS.
-           Jarak judul -> isi sekarang hanya dari margin-bottom (20px desktop,
-           16px mobile). Teks judul, subjudul, dan ikon tidak diubah. */
+        margin-bottom: 14px !important;
     }
 
     .section-icon {
@@ -104,31 +100,11 @@
         flex-shrink: 0;
     }
 
-    .logo-preview-box {
-        width: 90px;
-        height: 90px;
-        border-radius: 12px;
-        border: 2px dashed #cbd5e1;
-        background-color: #f8fafc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-    .logo-preview-box img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-
     /* ===== Optimalisasi Mobile (< 768px): Clean Look — desktop tidak tersentuh ===== */
     @media (max-width: 767.98px) {
         .section-header {
             gap: 0.6rem;
-            margin-bottom: 1rem;
-            /* padding-bottom + border-bottom (garis dekoratif) dihapus, ikut
-               revisi clean look - lihat aturan .section-header di atas. */
+            margin-bottom: 14px !important;
         }
         .section-icon {
             width: 32px;
@@ -138,11 +114,6 @@
         }
         .section-header h5 {
             font-size: 1rem;
-        }
-        .logo-preview-box {
-            width: 64px;
-            height: 64px;
-            border-radius: 10px;
         }
     }
 /* ===== Tombol Pengelolaan Sistem: susunan ke BAWAH di mobile =====
@@ -167,70 +138,333 @@
         }
     }
 
-    /* ===== GRID IDENTITAS & LOGO SEKOLAH: 3 kolom konsisten (hanya desktop) =====
-       Penyebab celah kosong: tiap .identitas-field masih membawa class
-       Bootstrap col-md-6 yang di >=768px memaksa width:50%. Di dalam grid
-       1fr 1fr, tiap field hanya selebar setengah sel grid (~285px) sehingga
-       input (yang sudah width:100% dari wrapper-nya) tidak pernah penuh dan
-       ada celah besar sebelum kolom Logo. Perbaikan: netralkan width/padding
-       kolom Bootstrap di breakpoint desktop saja + nol-kan gutter .row agar
-       tepi kiri/kanan lurus. Markup mobile, name/id/label/value tidak diubah. */
-    @media (min-width: 768px) {
-        .identitas-grid {
-            display: flex !important;
-            align-items: stretch !important;
-            column-gap: 1.5rem !important; /* gap-x-6 (24px) */
-            --bs-gutter-x: 0 !important;
-            --bs-gutter-y: 0 !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
+    /* Header ke konten: hilangkan margin-bottom bawaan layout bersama khusus di Pengaturan,
+       agar jarak header -> tombol murni diatur oleh margin-top wrapper (38px),
+       sehingga presisi sama dengan margin-bottom tombol -> Identitas (38px). */
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar .app-header-bar {
+        margin-bottom: 0 !important;
+    }
+
+    /* ===== ALERT NOTIFIKASI DI PENGATURAN =====
+       Berada tepat di tengah vertikal antara deskripsi header dan baris tiga tombol:
+       - Jarak atas notifikasi (dari deskripsi header): 22px (rentang 20-24px)
+       - Jarak bawah notifikasi (ke baris tiga tombol): 22px (rentang 20-24px)
+       - Saat TIDAK ada notifikasi, jarak header ke tiga tombol tetap 38px semula.
+       - Rata kiri dan lebar penuh (width: 100%). */
+    .pengaturan-alert {
+        margin-top: 22px !important;
+        margin-bottom: 22px !important;
+        width: 100% !important;
+    }
+
+    /* Saat ada notifikasi tepat sebelum .pengaturan-page-body, hilangkan margin-top
+       wrapper konten agar jarak bawah alert ke tombol murni ditentukan margin-bottom alert (22px) */
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar .pengaturan-alert + .pengaturan-page-body,
+    body .content-scroll-wrapper > main.pengaturan-no-scrollbar:has(.pengaturan-alert) .pengaturan-page-body {
+        margin-top: 0 !important;
+    }
+
+    /* ===== POSISI TIGA TOMBOL DI TENGAH: Jarak atas & bawah identik 38px ===== */
+    .pengaturan-page-body {
+        margin-top: 38px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .pengaturan-modul-wrap {
+        margin-bottom: 38px !important;
+    }
+
+    /* ===== WADAH UTAMA FORM: Selebar penuh, flex kolom dengan gap seragam 28px ===== */
+    .settings-form-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 28px !important;
+    }
+
+    .settings-section {
+        width: 100%;
+    }
+
+    /* ===== IDENTITAS & LOGO SEKOLAH =====
+       Wadah luar 3 kolom sama lebar (repeat(3, 1fr)), gap 16px.
+       Kolom 1-2: Wrapper grid dalam 2 kolom sama lebar (repeat(2, 1fr)), gap 14px 16px.
+       Kolom 3: Blok Logo align-self: stretch, display: flex, flex-direction: column, justify-content: space-between. */
+    .identitas-outer-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        align-items: start;
+        width: 100%;
+    }
+
+    .identitas-fields-wrap {
+        grid-column: 1 / span 2;
+        width: 100%;
+    }
+
+    .identitas-inner-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px 16px;
+        width: 100%;
+    }
+
+    .identitas-inner-grid .identitas-field {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .identitas-inner-grid .identitas-field .form-control {
+        width: 100% !important;
+        height: 38px !important;
+        font-size: 0.875rem !important;
+        color: #0f172a !important;
+        font-weight: 400 !important;
+    }
+
+    .settings-form-wrapper .form-control::placeholder {
+        color: #94a3b8 !important;
+        font-weight: 400 !important;
+    }
+
+    /* Jarak label ke input 6px rapat */
+    .settings-form-wrapper label.form-label {
+        margin-bottom: 6px !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        color: #0f172a !important;
+        font-weight: 600 !important;
+        display: block;
+    }
+
+    /* Kolom 3: Blok Logo (Desktop >= 1024px)
+       align-self: stretch setinggi 3 baris field, space-between
+       Bagian atas: label + pratinjau logo 130px x 130px
+       Bagian bawah: input file sejajar NIP baris 3 + catatan */
+    .identitas-logo-col {
+        grid-column: 3;
+        align-self: stretch;
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: transparent !important;
+        border: 0 !important;
+        padding: 0 !important;
+        position: relative;
+    }
+
+    .logo-top-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .logo-preview-box {
+        width: 130px !important;
+        height: 130px !important;
+        min-width: 130px !important;
+        min-height: 130px !important;
+        aspect-ratio: 1 / 1 !important;
+        border-radius: 12px !important;
+        border: 2px dashed #cbd5e1 !important;
+        background-color: #f8fafc !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
+    }
+    .logo-preview-box img {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    .logo-bottom-group {
+        width: 100%;
+        min-width: 0;
+        position: relative;
+    }
+
+    .identitas-logo-col input[type="file"].form-control {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 38px !important;
+        box-sizing: border-box !important;
+        font-size: 0.8125rem !important;
+        color: #0f172a !important;
+        font-weight: 400 !important;
+    }
+
+    /* Catatan tepat di bawah input file, menjorok sedikit tanpa menambah tinggi baris */
+    .logo-sub-text {
+        position: relative;
+        margin-bottom: -24px;
+        width: 100%;
+    }
+
+    .logo-note {
+        color: #0f172a !important;
+        font-weight: 400 !important;
+    }
+
+    /* Layar < 1024px: wrapper field span 3 kolom penuh, blok logo turun di bawahnya susunan vertikal biasa */
+    @media (max-width: 1023.98px) {
+        .identitas-outer-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
         }
-        .identitas-grid > .identitas-main {
-            flex: 0 0 calc((100% - 1.5rem) * 2 / 3) !important;
-            max-width: calc((100% - 1.5rem) * 2 / 3) !important;
-            min-width: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            column-gap: 1.5rem !important; /* kolom 1 & 2 sama persis */
-            row-gap: 1rem !important;
-            align-items: start !important;
-            align-content: start !important;
+        .identitas-fields-wrap {
+            grid-column: 1 / -1 !important;
         }
-        .identitas-grid > .identitas-main > .identitas-field {
-            width: 100% !important; /* timpa width:50% bawaan col-md-6 */
+        .identitas-logo-col {
+            grid-column: 1 / -1 !important;
             max-width: 100% !important;
-            flex: 0 0 auto !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            min-width: 0 !important;
+            align-self: auto !important;
+            justify-content: flex-start !important;
+            gap: 10px !important;
+        }
+        .logo-sub-text {
+            position: static !important;
             margin-bottom: 0 !important;
         }
-        .identitas-grid > .identitas-logo {
-            flex: 0 0 calc((100% - 1.5rem) / 3) !important;
-            max-width: calc((100% - 1.5rem) / 3) !important;
-            min-width: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+    }
+
+    /* Layar < 768px: grid dalam jadi 1 kolom */
+    @media (max-width: 767.98px) {
+        .identitas-inner-grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
         }
-        .identitas-grid .form-control {
-            width: 100% !important;
-            height: 38px !important; /* tinggi seragam semua input */
-            font-size: 0.875rem !important;
+    }
+
+    /* ===== KARTU JADWAL OPERASIONAL: 2 Kartu, Watermark Ikon Bayangan di Sisi Kiri ===== */
+    .jadwal-cards-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 16px !important;
+        width: 100% !important;
+        align-items: stretch !important;
+    }
+    @media (max-width: 767.98px) {
+        .jadwal-cards-grid {
+            grid-template-columns: 1fr !important;
         }
-        .identitas-logo-stack {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.5rem !important;
-            margin-bottom: 0 !important;
-        }
-        .identitas-logo-stack .logo-preview-box {
-            width: 100% !important;
-            max-width: 120px !important;
-            height: 90px !important;
-        }
+    }
+
+    .jadwal-card {
+        position: relative !important;
+        overflow: hidden !important;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+        padding: 1.25rem 1.5rem !important;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .jadwal-card:focus-within {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Ikon BESAR sebagai bayangan/watermark di sisi KIRI kartu */
+    .jadwal-card-watermark {
+        position: absolute !important;
+        left: -8px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        font-size: 135px !important;
+        line-height: 1 !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+        user-select: none !important;
+    }
+    .jadwal-card-watermark.watermark-masuk {
+        color: #3b82f6 !important; /* Biru muda */
+        opacity: 0.10 !important;   /* 0.08 - 0.12 */
+    }
+    .jadwal-card-watermark.watermark-terlambat {
+        color: #f59e0b !important; /* Oranye */
+        opacity: 0.10 !important;   /* 0.08 - 0.12 */
+    }
+
+    /* Isi kartu: display flex, justify-content space-between, align-items center */
+    .jadwal-card-content {
+        position: relative !important;
+        z-index: 1 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    .jadwal-card-left {
+        flex-shrink: 0;
+    }
+    .jadwal-card-right {
+        text-align: right;
+    }
+
+    .dashboard-time-input {
+        background: transparent !important;
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        font-size: 34px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.15 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: auto !important;
+        cursor: pointer;
+        font-family: inherit;
+        width: 145px !important;
+        max-width: 155px !important;
+        display: inline-block !important;
+        text-align: right !important;
+    }
+    .dashboard-time-input.clock-time-masuk {
+        color: #0f172a !important; /* Hitam */
+    }
+    .dashboard-time-input.clock-time-terlambat {
+        color: #d97706 !important; /* Oranye */
+    }
+    .dashboard-time-input::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.15s ease;
+        margin-left: 4px;
+    }
+    .dashboard-time-input:hover::-webkit-calendar-picker-indicator,
+    .dashboard-time-input:focus::-webkit-calendar-picker-indicator {
+        opacity: 1;
+    }
+    .dashboard-time-input:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    .dashboard-time-input.is-invalid {
+        color: #dc2626 !important;
+    }
+    .clock-time-wrap .time-client-error {
+        width: 100% !important;
+        flex-basis: 100% !important;
+        display: block !important;
+        text-align: right !important;
     }
 
     /* ===== SATU CLASS BERSAMA buat ketiga tombol Pengelolaan Sistem =====
@@ -305,7 +539,7 @@
     <!-- Alert Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
          Tombol X center vertikal oleh CSS notifikasi global di layout. -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs mb-4" role="alert">
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs pengaturan-alert" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-check-circle fs-5 me-2'></i>
@@ -317,7 +551,7 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs mb-4" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs pengaturan-alert" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-error-circle fs-5 me-2'></i>
@@ -331,7 +565,7 @@
     @if(isset($errors) && $errors->any())
     {{-- Error validasi form: TETAP tampil (tidak hilang otomatis) sampai user
          memperbaikinya atau menekan tombol X. --}}
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs mb-4" role="alert" data-flash-persist>
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs pengaturan-alert" role="alert" data-flash-persist>
         <div class="flash-notice-body">
             <div class="fw-bold mb-1"><i class='bx bx-error-circle me-1'></i> {{ __('Data belum bisa disimpan. Periksa isian yang bertanda merah.') }}</div>
             <ul class="mb-0 small">
@@ -344,43 +578,33 @@
     </div>
     @endif
 
-    <!-- PENGELOLAAN SISTEM: modul yang dikelola dari halaman Pengaturan.
-         Tombol memakai route() nama route yang SUDAH ADA (tidak route baru)
-         dan href/aksi tiap tombol tidak berubah.
-         Ukuran & perataan ketiga tombol dibawa SATU class bersama
-         .pengaturan-modul-btn (lihat CSS di atas); SATU-SATUNYA pembeda
-         adalah warna kelas Bootstrap:
-           Tahun Ajaran  -> btn-primary (biru primer)  TANPA ikon
-           Hari Libur    -> btn-success (hijau)        TANPA ikon
-           Tempat Sampah -> btn-danger  (merah)        TANPA ikon (ikon
-                           tong sampah sudah dihapus, tidak ada sisa margin)
-         Susunan dalam satu array $pengaturanModules supaya mudah ditambah
-         tombol lain tanpa mengubah struktur.
+    <!-- WRAPPER KONTEN PENGATURAN: Menambah jarak vertikal dari header (44px) -->
+    <div class="pengaturan-page-body">
+        <!-- PENGELOLAAN SISTEM: modul yang dikelola dari halaman Pengaturan.
+             Tombol memakai route() nama route yang SUDAH ADA (tidak route baru)
+             dan href/aksi tiap tombol tidak berubah.
+             Ukuran & perataan ketiga tombol dibawa SATU class bersama
+             .pengaturan-modul-btn (lihat CSS di atas); SATU-SATUNYA pembeda
+             adalah warna kelas Bootstrap:
+               Tahun Ajaran  -> btn-primary (biru primer)  TANPA ikon
+               Hari Libur    -> btn-success (hijau)        TANPA ikon
+               Tempat Sampah -> btn-danger  (merah)        TANPA ikon (ikon
+                               tong sampah sudah dihapus, tidak ada sisa margin)
+             Susunan dalam satu array $pengaturanModules supaya mudah ditambah
+             tombol lain tanpa mengubah struktur.
 
-         CATATAN: tombol "KELOLA AKUN" yang tadinya ada di baris ini SUDAH
-         DIHAPUS (21 Okt 2026) karena jalur masuknya dipindah ke item
-         "Kelola Akun" pada pop-up kartu akun di sidebar (sidebar.blade.php),
-         memakai route yang sama persis (admin.accounts.index). Route dan
-         halaman Kelola Akun (/admin/kelola-akun) TIDAK dihapus. -->
-    @php
-        $pengaturanModules = [
-            ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => __('TAHUN AJARAN')],
-            ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => __('HARI LIBUR')],
-            ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => __('TEMPAT SAMPAH')], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
-        ];
-    @endphp
-    {{-- DULU: <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white mb-3">
-         REVISI CLEAN LOOK: border/latar/shadow/radius kartu LUAR DIHAPUS, padding
-         dalam 12px -> 0 sehingga konten sejajar tepi kiri halaman, dan jarak
-         antar bagian memakai margin 24px (mb-5). Isi di dalam (judul, tombol,
-         input, kolom upload, kotak info) TIDAK diubah. --}}
-    <div class="mb-5">
-        <div class="section-header">
-            <div>
-                <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Pengelolaan Sistem') }}</h5>
-                <div class="text-muted small">{{ __('Atur tahun ajaran, hari libur, akun pengguna, dan data yang sudah dihapus.') }}</div>
-            </div>
-        </div>
+             CATATAN: tombol "KELOLA AKUN" yang tadinya ada di baris ini SUDAH
+             DIHAPUS (21 Okt 2026) karena jalur masuknya dipindah ke item
+             "Kelola Akun" pada pop-up kartu akun di sidebar (sidebar.blade.php),
+             memakai route yang sama persis (admin.accounts.index). Route dan
+             halaman Kelola Akun (/admin/kelola-akun) TIDAK dihapus. -->
+        @php
+            $pengaturanModules = [
+                ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => __('TAHUN AJARAN')],
+                ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => __('HARI LIBUR')],
+                ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => __('TEMPAT SAMPAH')], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
+            ];
+        @endphp
         <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">
             @foreach($pengaturanModules as $modul)
             {{-- Satu class bersama .pengaturan-modul-btn untuk ukuran ketiganya;
@@ -393,163 +617,202 @@
             </a>
             @endforeach
         </div>
-    </div>
 
-    <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data" class="settings-mobile-form">
-        @csrf
+        <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data" 
+              class="settings-mobile-form settings-form-wrapper"
+              x-data="{ 
+                  checkIn: '{{ old('check_in_time', $settings['check_in_time'] ?? '06:45') }}', 
+                  lateLimit: '{{ old('late_limit_time', $settings['late_limit_time'] ?? '07:15') }}' 
+              }">
+            @csrf
 
-        <!-- Card 1: Identitas Sekolah -->
-        {{-- Kartu LUAR tanpa border/latar/shadow/radius/padding (lihat catatan di atas). --}}
-        <div class="mb-5">
-            <div class="section-header">
-                <div>
-                    <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Identitas & Logo Sekolah') }}</h5>
-                    <div class="text-muted small">{{ __('Data ini muncul di halaman scan, kartu pelajar, dan laporan PDF.') }}</div>
+            <!-- Bagian 1: Identitas & Logo Sekolah -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Identitas & Logo Sekolah') }}</h5>
+                        <div class="small" style="color: #0f172a;">{{ __('Data ini muncul di halaman scan, kartu pelajar, dan laporan PDF.') }}</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="row g-4 identitas-grid">
-                <div class="col-12 col-md-8 identitas-main">
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('Nama Sekolah Resmi') }}</label>
-                            <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name'] ?? '') }}" required placeholder="{{ __('Contoh: SMP Presensi PGRI') }}">
-                            @error('school_name')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                <!-- Wadah Luar: Grid 3 Kolom Sama Lebar (repeat(3, 1fr)), gap 16px -->
+                <div class="identitas-outer-grid">
+                    <!-- Kolom 1-2: Wrapper Grid Dalam 2 Kolom Sama Lebar (repeat(2, 1fr)), gap 14px 16px -->
+                    <div class="identitas-fields-wrap">
+                        <div class="identitas-inner-grid">
+                            <!-- 1. Nama Sekolah Resmi -->
+                            <div class="identitas-field">
+                                <label class="form-label small fw-semibold" for="school_name">{{ __('Nama Sekolah Resmi') }}</label>
+                                <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name'] ?? '') }}" required placeholder="{{ __('Contoh: SMP Presensi PGRI') }}">
+                                @error('school_name')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- 2. NPSN Sekolah -->
+                            <div class="identitas-field">
+                                <label class="form-label small fw-semibold" for="school_npsn">{{ __('NPSN Sekolah') }}</label>
+                                <input type="text" name="school_npsn" id="school_npsn" inputmode="numeric" pattern="[0-9]*" maxlength="8" class="form-control rounded-3 @error('school_npsn') is-invalid @enderror" value="{{ old('school_npsn', $settings['school_npsn'] ?? '') }}" placeholder="{{ __('Contoh: 20102030') }}">
+                                @error('school_npsn')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div id="npsnClientError" class="text-danger small mt-1" style="display:none;">{{ __('NPSN harus 8 digit angka.') }}</div>
+                            </div>
+
+                            <!-- 3. Alamat Sekolah -->
+                            <div class="identitas-field">
+                                <label class="form-label small fw-semibold" for="school_address">{{ __('Alamat Sekolah') }}</label>
+                                <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address'] ?? '') }}" placeholder="{{ __('Jl. Raya Pendidikan...') }}">
+                                @error('school_address')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- 4. No. Telepon / Kontak -->
+                            <div class="identitas-field">
+                                <label class="form-label small fw-semibold" for="school_phone">{{ __('No. Telepon / Kontak') }}</label>
+                                <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone'] ?? '') }}" placeholder="{{ __('Contoh: 081234567890') }}">
+                                @error('school_phone')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">{{ __('Nomor telepon harus 10-15 digit angka.') }}</div>
+                            </div>
+
+                            <!-- 5. Nama Kepala Sekolah -->
+                            <div class="identitas-field">
+                                <label class="form-label small fw-semibold" for="headmaster_name">{{ __('Nama Kepala Sekolah') }}</label>
+                                <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name'] ?? '') }}" placeholder="{{ __('Contoh: Drs. H. Ahmad Sudrajat, M.Pd') }}">
+                                @error('headmaster_name')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- 6. NIP Kepala Sekolah -->
+                            <div class="identitas-field">
+                                <label class="form-label small fw-semibold" for="headmaster_nip">{{ __('NIP Kepala Sekolah') }}</label>
+                                <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip'] ?? '') }}" placeholder="{{ __('18 digit angka tanpa spasi') }}">
+                                @error('headmaster_nip')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div id="nipClientError" class="text-danger small mt-1" style="display:none;">{{ __('NIP harus 18 digit angka.') }}</div>
+                            </div>
                         </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('Judul Aplikasi (tampil di tab browser)') }}</label>
-                            <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title'] ?? '') }}" placeholder="{{ __('Contoh: Sistem Presensi Sekolah') }}">
-                            @error('app_title')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
+                    </div>
+
+                    <!-- Kolom 3: Blok Logo Sekolah (Polos, align-self: stretch) -->
+                    <div class="identitas-logo-col">
+                        <div class="logo-top-group">
+                            <label class="form-label small fw-semibold" for="school_logo">{{ __('Logo Sekolah (.webp, .png, .jpg, .jpeg)') }}</label>
+                            <div class="logo-preview-box">
+                                <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="{{ __('Logo') }}">
+                            </div>
                         </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('NPSN Sekolah') }}</label>
-                            <input type="text" name="school_npsn" id="school_npsn" inputmode="numeric" pattern="[0-9]*" maxlength="8" class="form-control rounded-3 @error('school_npsn') is-invalid @enderror" value="{{ old('school_npsn', $settings['school_npsn'] ?? '') }}" placeholder="{{ __('Contoh: 20102030') }}">
-                            @error('school_npsn')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('Alamat Sekolah') }}</label>
-                            <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address'] ?? '') }}" placeholder="{{ __('Jl. Raya Pendidikan...') }}">
-                            @error('school_address')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('Nama Kepala Sekolah') }}</label>
-                            <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name'] ?? '') }}" placeholder="{{ __('Contoh: Drs. H. Ahmad Sudrajat, M.Pd') }}">
-                            @error('headmaster_name')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('NIP Kepala Sekolah') }}</label>
-                            <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip'] ?? '') }}" placeholder="{{ __('18 digit angka tanpa spasi') }}">
-                            @error('headmaster_nip')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            <div id="nipClientError" class="text-danger small mt-1" style="display:none;">{{ __('NIP harus 18 digit angka.') }}</div>
-                        </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('No. Telepon / Kontak') }}</label>
-                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone'] ?? '') }}" placeholder="{{ __('Contoh: 081234567890') }}">
-                            @error('school_phone')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">{{ __('Nomor telepon harus 10-15 digit angka.') }}</div>
-                        </div>
-                </div>
-                <div class="col-12 col-md-4 identitas-logo">
-                    <label class="form-label small fw-semibold">{{ __('Logo Sekolah (.webp, .png, .jpg, .jpeg)') }}</label>
-                    <div class="d-flex align-items-center gap-3 mb-2 identitas-logo-stack">
-                        <div class="logo-preview-box">
-                            <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="{{ __('Logo') }}">
-                        </div>
-                        <div class="flex-grow-1 w-100">
+                        <div class="logo-bottom-group">
                             <input type="file" name="school_logo" id="school_logo" class="form-control rounded-3 w-100 @error('school_logo') is-invalid @enderror" accept=".webp,.png,.jpg,.jpeg">
-                            <span class="text-muted" style="font-size: 11px;">{{ __('Ukuran rasio 1:1 disarankan. Maksimal 2MB.') }}</span>
-                            @error('school_logo')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            <div id="logoClientError" class="text-danger small mt-1" style="display:none;"></div>
+                            <div class="logo-sub-text">
+                                <span class="logo-note d-block mt-1" style="font-size: 11px;">{{ __('Ukuran rasio 1:1 disarankan. Maksimal 2MB.') }}</span>
+                                @error('school_logo')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div id="logoClientError" class="text-danger small mt-1" style="display:none;"></div>
+                                <div id="logoFileInfo" class="small mt-1" style="display:none;">
+                                    <i class='bx bx-image me-1'></i><span id="logoFileName"></span>
+                                </div>
+                                <div id="logoNewPreviewWrap" class="mt-2" style="display:none;">
+                                    <div style="font-size: 11px; color: #0f172a;">{{ __('Pratinjau logo baru:') }}</div>
+                                    <div class="logo-preview-box mt-1">
+                                        <img id="logoNewPreview" alt="{{ __('Pratinjau logo baru') }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div id="logoFileInfo" class="small text-muted" style="display:none;">
-                        <i class='bx bx-image me-1'></i><span id="logoFileName"></span>
+                </div>
+            </div>
+
+            <!-- Bagian 2: Pengaturan Waktu Presensi -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Presensi & Toleransi Keterlambatan') }}</h5>
+                        <div class="small" style="color: #0f172a;">{{ __('Atur jam masuk dan batas waktu agar siswa dicatat tepat waktu atau terlambat.') }}</div>
                     </div>
-                    <div id="logoNewPreviewWrap" class="mt-2" style="display:none;">
-                        <div class="text-muted" style="font-size: 11px;">{{ __('Pratinjau logo baru:') }}</div>
-                        <div class="logo-preview-box mt-1">
-                            <img id="logoNewPreview" alt="{{ __('Pratinjau logo baru') }}">
+                </div>
+
+                <!-- Dua Kartu Berdampingan (Gaya Dashboard Modern) -->
+                <div class="jadwal-cards-grid">
+                    <!-- Kartu JAM MASUK -->
+                    <div class="jadwal-card">
+                        <!-- Watermark Icon Besar di Sisi Kiri -->
+                        <i class='bx bx-log-in jadwal-card-watermark watermark-masuk' aria-hidden="true"></i>
+
+                        <!-- Isi Kartu: Kiri & Kanan -->
+                        <div class="jadwal-card-content">
+                            <div class="jadwal-card-left">
+                                <span class="text-uppercase fw-bold clock-card-label" style="font-size: 0.72rem; letter-spacing: 0.05em; color: #0f172a;">{{ __('JAM MASUK') }}</span>
+                            </div>
+                            <div class="jadwal-card-right d-flex align-items-baseline clock-time-wrap flex-wrap justify-content-end">
+                                <input type="time" name="check_in_time" id="check_in_time" x-model="checkIn" class="dashboard-time-input clock-time-masuk" value="{{ old('check_in_time', $settings['check_in_time'] ?? '') }}" required>
+                                <span class="clock-wib" style="font-size: 0.75rem; font-weight: 700; color: #0f172a; margin-left: 4px; letter-spacing: 0.02em;">WIB</span>
+                            </div>
                         </div>
+                        @error('check_in_time')
+                        <div class="text-danger small mt-1 text-end position-relative" style="z-index: 1;">{{ $message }}</div>
+                        @enderror
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Card 2: Pengaturan Waktu Presensi -->
-        {{-- Kartu LUAR tanpa border/latar/shadow/radius/padding (lihat catatan di atas). --}}
-        <div class="mb-5"
-             x-data="{ 
-                 checkIn: '{{ old('check_in_time', $settings['check_in_time'] ?? '06:45') }}', 
-                 lateLimit: '{{ old('late_limit_time', $settings['late_limit_time'] ?? '07:15') }}' 
-             }">
-            <div class="section-header">
-                <div>
-                    <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Presensi & Toleransi Keterlambatan') }}</h5>
-                    <div class="text-muted small">{{ __('Atur jam masuk dan batas waktu agar siswa dicatat tepat waktu atau terlambat.') }}</div>
-                </div>
-            </div>
+                    <!-- Kartu BATAS TERLAMBAT -->
+                    <div class="jadwal-card">
+                        <!-- Watermark Icon Besar di Sisi Kiri -->
+                        <i class='bx bx-alarm-exclamation jadwal-card-watermark watermark-terlambat' aria-hidden="true"></i>
 
-            <div class="row g-3">
-                <div class="col-12 col-md-6">
-                    <label class="form-label small fw-semibold">{{ __('Jam Buka Masuk (Check-In)') }}</label>
-                    <div class="position-relative">
-                        <i class='bx bx-log-in text-primary position-absolute top-50 start-0 translate-middle-y ms-3' style="font-size: 1.1rem; z-index: 10; pointer-events: none;" aria-hidden="true"></i>
-                        <input type="time" name="check_in_time" id="check_in_time" x-model="checkIn" class="form-control rounded-3 ps-5" value="{{ old('check_in_time', $settings['check_in_time'] ?? '') }}" required style="padding-left: 2.75rem;">
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <label class="form-label small fw-semibold">{{ __('Batas Toleransi Keterlambatan') }}</label>
-                    <div class="position-relative">
-                        <i class='bx bx-alarm-exclamation text-danger position-absolute top-50 start-0 translate-middle-y ms-3' style="font-size: 1.1rem; z-index: 10; pointer-events: none;" aria-hidden="true"></i>
-                        <input type="time" name="late_limit_time" id="late_limit_time" x-model="lateLimit" class="form-control rounded-3 ps-5" value="{{ old('late_limit_time', $settings['late_limit_time'] ?? '') }}" required style="padding-left: 2.75rem;">
+                        <!-- Isi Kartu: Kiri & Kanan -->
+                        <div class="jadwal-card-content">
+                            <div class="jadwal-card-left">
+                                <span class="text-uppercase fw-bold clock-card-label" style="font-size: 0.72rem; letter-spacing: 0.05em; color: #0f172a;">{{ __('BATAS TERLAMBAT') }}</span>
+                            </div>
+                            <div class="jadwal-card-right d-flex align-items-baseline clock-time-wrap flex-wrap justify-content-end">
+                                <input type="time" name="late_limit_time" id="late_limit_time" x-model="lateLimit" class="dashboard-time-input clock-time-terlambat" value="{{ old('late_limit_time', $settings['late_limit_time'] ?? '') }}" required>
+                                <span class="clock-wib" style="font-size: 0.75rem; font-weight: 700; color: #0f172a; margin-left: 4px; letter-spacing: 0.02em;">WIB</span>
+                            </div>
+                        </div>
+                        @error('late_limit_time')
+                        <div class="text-danger small mt-1 text-end position-relative" style="z-index: 1;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
 
-            <div class="mt-3 small" style="line-height: 1.6; color: #1e293b;">
+            <!-- Bagian 3: Catatan Biru -->
+            <div class="alert alert-info border-0 m-0 small w-100" style="display: flex; width: 100%; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: 8px; gap: 4px; line-height: 1.6; color: #0f172a;">
                 <i class='bx bx-info-circle text-primary me-1' style="font-size: 14px; vertical-align: -0.125em;"></i>
                 <span>{{ __('Siswa yang melakukan scan antara') }}</span>
                 <strong style="color: #166534; font-weight: 700;" x-text="checkIn">{{ $settings['check_in_time'] ?? '' }}</strong>
                 <span>{{ __('hingga') }}</span>
                 <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
-<span>{{ __('dicatat Tepat Waktu.') }}</span>
+                <span>{{ __('dicatat Tepat Waktu.') }}</span>
                 <span>{{ __('Scan di atas') }}</span>
                 <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
                 <span>{{ __('otomatis tercatat') }}</span>
                 <strong style="color: #c2410c; font-weight: 700;">{{ __('Terlambat') }}</strong>
                 <span>{{ __('lengkap dengan selisih menit keterlambatannya.') }}</span>
             </div>
-        </div>
 
-        <div class="d-flex justify-content-end md:mb-4">
-            <!-- Tombol SIMPAN: teks saja (tanpa ikon), desktop & mobile. -->
-            <button type="submit" class="btn btn-primary btn-sm w-100 w-md-auto px-4 py-2 rounded-3 fw-semibold shadow-xs d-inline-flex align-items-center justify-content-center">
-                {{ __('Simpan Semua Pengaturan') }}
-            </button>
-        </div>
-    </form>
+            <!-- Bagian 4: Tombol Simpan -->
+            <div class="w-100 m-0">
+                <!-- Tombol SIMPAN: selebar penuh wadah (width 100%), teks saja (tanpa ikon). -->
+                <button type="submit" class="btn btn-primary btn-sm w-100 py-2.5 rounded-3 fw-semibold shadow-xs d-flex align-items-center justify-content-center">
+                    {{ __('Simpan Semua Pengaturan') }}
+                </button>
+            </div>
+        </form>
+    </div>
 
     @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // 1. Field angka hanya menerima angka saat diketik (HP & NIP).
-        ['school_phone', 'headmaster_nip'].forEach(function (id) {
+        // 1. Field angka hanya menerima angka saat diketik (HP, NIP, NPSN).
+        ['school_phone', 'headmaster_nip', 'school_npsn'].forEach(function (id) {
             var el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('input', function () {
@@ -612,17 +875,20 @@
             form.addEventListener('submit', function (e) {
                 var nip = document.getElementById('headmaster_nip');
                 var phone = document.getElementById('school_phone');
+                var npsn = document.getElementById('school_npsn');
                 var checkIn = document.getElementById('check_in_time');
                 var lateLimit = document.getElementById('late_limit_time');
                 var ok = true;
 
-                [nip, phone, checkIn, lateLimit].forEach(function (el) {
+                [nip, phone, npsn, checkIn, lateLimit].forEach(function (el) {
                     if (el) el.classList.remove('is-invalid');
                 });
                 var nipErr = document.getElementById('nipClientError');
                 var phoneErr = document.getElementById('phoneClientError');
+                var npsnErr = document.getElementById('npsnClientError');
                 if (nipErr) nipErr.style.display = 'none';
                 if (phoneErr) phoneErr.style.display = 'none';
+                if (npsnErr) npsnErr.style.display = 'none';
 
                 function tandai(el) {
                     el.classList.add('is-invalid');
@@ -636,6 +902,10 @@
                 if (phone && phone.value !== '' && !/^[0-9]{10,15}$/.test(phone.value)) {
                     tandai(phone);
                     if (phoneErr) phoneErr.style.display = '';
+                }
+                if (npsn && npsn.value !== '' && !/^[0-9]{8}$/.test(npsn.value)) {
+                    tandai(npsn);
+                    if (npsnErr) npsnErr.style.display = '';
                 }
                 if (checkIn && lateLimit && checkIn.value && lateLimit.value && lateLimit.value <= checkIn.value) {
                     tandai(lateLimit);
