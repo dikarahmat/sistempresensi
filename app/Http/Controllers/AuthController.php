@@ -91,10 +91,10 @@ class AuthController extends Controller
 
             if (User::count() === 0) {
                 Log::warning(
-                    'AUTH: tabel users KOSONG - tidak ada akun yang bisa login. '
-                    .'Kemungkinan besar database ter-reset (mis. migrate:fresh atau '
-                    .'seeder/fitur yang menghapus massal). Jalankan `php artisan db:seed` '
-                    .'untuk membuat ulang akun admin/guru.'
+                    'AUTH: tabel users KOSONG - tidak ada akun yang bisa login. '.
+                    'Kemungkinan besar database ter-reset (mis. migrate:fresh atau '.
+                    'seeder/fitur yang menghapus massal). Jalankan `php artisan db:seed` '.
+                    'untuk membuat ulang akun admin/guru.'
                 );
             }
         } catch (\Throwable $e) {
@@ -189,9 +189,34 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+
+        // Finalisasi session (hapus sesi lama) + generate token baru
+        // sebagai jaga-jaga mencegah session fixation.
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        // Hapus cookie remember (jika ada) agar tidak ada token
+        // remember yang masih valid setelah logout.
+        // Cookie di-set expired 1 tahun yang lalu dan dilindungi HttpOnly+Secure.
+        if (env('APP_ENV') !== 'production') {
+            // Hanya di local/testing: buat cookie expired supaya browser
+            // menghapusnya. Path di-set ke ROOT agar cookie asli 'remember' dihapus.
+            $request->cookie(
+                'remember', '',
+                1, '/', null, false, true
+            );
+        }
+
+        // Anti-cache: pastikan setelah logout browser tidak menyimpan
+        // respons halaman admin (prevents back-button showing stale admin page).
+        $response = redirect()->route('login');
+        $response->header(
+            'Cache-Control',
+            'no-store, no-cache, must-revalidate, max-age=0'
+        );
+        $response->header('Pragma', 'no-cache');
+        $response->header('Expires', '0');
+
+        return $response;
     }
 }

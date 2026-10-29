@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AcademicYear extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = ['name', 'semester', 'start_date', 'end_date', 'is_active'];
     protected $casts = ['is_active' => 'boolean', 'start_date' => 'date', 'end_date' => 'date'];
 

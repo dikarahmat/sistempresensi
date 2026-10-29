@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\AcademicYear;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Support\Collection;
@@ -15,11 +16,51 @@ class StudentsImport implements ToCollection, WithHeadingRow
     protected int $skippedCount = 0;
     protected array $errors = [];
 
-    /**
-     *NISN selalu 10 digit angka. Bila Excel membaca sel angka (mis. 0081234567
-     * tersimpan sebagai 81234567) nol di depan hilang, sehingga nilainya
-     * dipad dengan nol di depan sampai 10 digit.
-     */
+    /** @var array<string, true> */
+    private array $seenNisnInFile = [];
+    /** @var array<string, true> */
+    private array $existingNisn = [];
+
+    /** @var array<string, string> */
+    private array $errorsByRow = [];
+
+    /** @var array<int, array{0: int, 1: string}> */
+    private array $orderedErrors = [];
+
+    /** @var array<string, SchoolClass> */
+    private array $classMap = [];
+
+    private static function normalizeClassName(string $s): string
+    {
+        return mb_strtolower(preg_replace('/[\s\-_]+/u', '', trim((string) $s)), 'UTF-8');
+    }
+
+    public function __construct(
+        private bool $allowAutoCreateClass = true,
+    ) {
+    }
+
+    /** @return array<int, array{0: int, 1: string}> */
+    public function getOrderedErrors(): array
+    {
+        return $this->orderedErrors;
+    }
+
+    public function getImportedCount(): int
+    {
+        return $this->importedCount;
+    }
+
+    public function getSkippedCount(): int
+    {
+        return $this->skippedCount;
+    }
+
+    public function getErrors(): array
+    {
+        return array_column($this->orderedErrors, 1);
+    }
+
     private function normalizeNisn($raw): string
     {
         $value = trim((string) $raw);
@@ -43,62 +84,123 @@ class StudentsImport implements ToCollection, WithHeadingRow
         return str_pad($value, 10, '0', STR_PAD_LEFT);
     }
 
-    public function collection(Collection $rows)
+    private function registerError(int $rowIndex, string $reason): void
     {
-        $allClasses = SchoolClass::all();
-        $rowIndex = 1; // Row 1 is header, data starts at row 2
+        $this->errorsByRow[$rowIndex] = $reason;
+        $this->orderedErrors[] = [$rowIndex, $reason];
+    }
 
-        // NISN yang sudah dipakai file ini (deteksi duplikat di dalam file) dan
-        // NISN yang sudah ada di database (termasuk yang di Tempat Sampah / soft deleted).
-        $seenNisnInFile = [];
-        $existingNisn = Student::withTrashed()->pluck('nisn')
-            ->filter(fn ($v) => $v !== null && $v !== '')
-            ->map(fn ($v) => (string) $v)
-            ->flip()
-            ->all();
+    private function resolveClassForRow(string $rawClass, int $rowIndex): ?SchoolClass
+    {
+        if ($rawClass === '') {
+            return null;
+        }
+
+        $key = self::normalizeClassName($rawClass);
+        $class = $this->classMap[$key] ?? null;
+
+        if ($class !== null) {
+            return $class;
+        }
+
+        if ($this->allowAutoCreateClass) {
+            if (!AcademicYear::getActive()) {
+                $this->registerError($rowIndex, 'Tahun ajaran aktif belum diatur. Buat dan aktifkan tahun ajaran di Pengaturan lebih dulu.');
+                return null;
+            }
+
+            $grade = '7';
+            if (str_contains($key, '8') || str_contains($key, 'viii')) {
+                $grade = '8';
+            } elseif (str_contains($key, '9') || str_contains($key, 'ix')) {
+                $grade = '9';
+            }
+
+            $level = match ($grade) {
+                '8' => 'VIII',
+                '9' => 'IX',
+                default => 'VII',
+            };
+
+            $class = SchoolClass::create([
+                'name' => strtoupper($rawClass),
+                'grade' => $grade,
+                'level' => $level,
+            ]);
+
+            if ($class !== null) {
+                $this->classMap[$key] = $class;
+            }
+
+            return $class;
+        }
+
+        $this->registerError($rowIndex, "Kelas '{$rawClass}' tidak ditemukan.");
+        return null;
+    }
+
+    public function collection(Collection $rows): void
+    {
+        $activeYear = AcademicYear::getActive();
+
+        if (!$activeYear) {
+            $this->registerError(0, 'Tahun ajaran aktif belum diatur. Buat dan aktifkan tahun ajaran di Pengaturan lebih dulu.');
+            return;
+        }
+
+        $this->existingNisn = Student::withTrashed()
+            ->get(['nisn'])
+            ->filter(fn ($s) => $s->nisn !== null && trim((string) $s->nisn) !== '')
+            ->map(fn ($s) => trim((string) $s->nisn))
+            ->reduce(function (array $carry, string $nisn) {
+                $carry[$nisn] = true;
+                return $carry;
+            }, []);
+
+        $this->classMap = [];
+        foreach (SchoolClass::all() as $class) {
+            if ($class->name === null) {
+                continue;
+            }
+            $this->classMap[self::normalizeClassName($class->name)] = $class;
+        }
+
+        $rowIndex = 1;
 
         foreach ($rows as $row) {
             $rowIndex++;
 
-            // 1. Kolom NISN (identitas tunggal siswa)
             $nisn = $this->normalizeNisn($row['nisn'] ?? '');
-            // 2. Kolom Nama
             $name = trim((string) ($row['nama'] ?? $row['nama_siswa'] ?? $row['nama_lengkap'] ?? $row['name'] ?? ''));
 
             if ($nisn === '') {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: Kolom NISN wajib diisi (kosong).";
+                $this->registerError($rowIndex, "Baris {$rowIndex}: Kolom NISN wajib diisi (kosong).");
                 continue;
             }
 
             if (!preg_match('/^[0-9]{10}$/', $nisn)) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: NISN harus 10 digit angka. Baris dilewati.";
+                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN harus 10 digit angka. Baris dilewati.");
                 continue;
             }
 
-            if (isset($seenNisnInFile[$nisn])) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: NISN {$nisn} duplikat di dalam file (sudah dipakai baris {$seenNisnInFile[$nisn]}). Baris dilewati.";
+            if (isset($this->seenNisnInFile[$nisn])) {
+                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN {$nisn} duplikat di dalam file (sudah dipakai baris {$this->seenNisnInFile[$nisn]}). Baris dilewati.");
                 continue;
             }
 
-            if (isset($existingNisn[$nisn])) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex}: NISN sudah terdaftar. Baris dilewati.";
+            if (isset($this->existingNisn[$nisn])) {
+                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN sudah terdaftar. Baris dilewati.");
                 continue;
             }
 
             if (empty($name)) {
-                $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NISN {$nisn}): Nama Siswa wajib diisi (kosong).";
+                $this->registerError($rowIndex, "Baris {$rowIndex} (NISN {$nisn}): Nama Siswa wajib diisi (kosong).");
                 continue;
             }
 
-            $seenNisnInFile[$nisn] = $rowIndex;
-            $existingNisn[$nisn] = true;
+            $this->seenNisnInFile[$nisn] = $rowIndex;
+            $this->existingNisn[$nisn] = true;
 
-            // 3. Kolom Gender / Jenis Kelamin
             $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
             if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
                 $gender = 'Perempuan';
@@ -106,59 +208,15 @@ class StudentsImport implements ToCollection, WithHeadingRow
                 $gender = 'Laki-laki';
             }
 
-            // 4. Kolom Kelas
             $rawClass = trim((string) ($row['kelas'] ?? $row['class'] ?? $row['nama_kelas'] ?? ''));
-            $class = null;
-            if ($rawClass !== '') {
-                $cleanSearch = strtolower(str_replace(['kelas', ' ', '-'], '', $rawClass));
-                $class = $allClasses->first(function ($c) use ($cleanSearch, $rawClass) {
-                    $cleanName = strtolower(str_replace(['kelas', ' ', '-'], '', $c->name));
-                    return $cleanName === $cleanSearch || strcasecmp($c->name, $rawClass) === 0;
-                });
-
-                // Jika kelas belum ada di DB, buat kelas baru secara otomatis
-                if (!$class) {
-                    $grade = '7';
-                    if (str_contains($cleanSearch, '8') || str_contains($cleanSearch, 'viii')) {
-                        $grade = '8';
-                    } elseif (str_contains($cleanSearch, '9') || str_contains($cleanSearch, 'ix')) {
-                        $grade = '9';
-                    }
-
-                    $level = match ($grade) {
-                        '8' => 'VIII',
-                        '9' => 'IX',
-                        default => 'VII',
-                    };
-
-                    $class = SchoolClass::create([
-                        'name' => strtoupper($rawClass),
-                        'grade' => $grade,
-                        'level' => $level,
-                    ]);
-                    $allClasses->push($class);
-                }
-            }
+            $class = $this->resolveClassForRow($rawClass, $rowIndex);
 
             if (!$class) {
-                $class = $allClasses->first();
-                if (!$class) {
-                    $class = SchoolClass::create([
-                        'name' => '7A',
-                        'grade' => '7',
-                        'level' => 'VII',
-                    ]);
-                    $allClasses->push($class);
-                }
+                continue;
             }
 
             $classId = $class->id;
 
-            // 5. Simpan Data Siswa.
-            // Data siswa hanya 4 kolom (NISN, Nama, Kelas, Jenis Kelamin).
-            // Kolom lain di file Excel (tempat/tanggal lahir, alamat, nama
-            // wali, nomor WhatsApp) sengaja DIABAIKAN dan tidak disimpan lagi.
-            // NISN wajib & unik -> selalu create, bukan update.
             try {
                 Student::create([
                     'nisn' => $nisn,
@@ -172,23 +230,8 @@ class StudentsImport implements ToCollection, WithHeadingRow
                 $this->importedCount++;
             } catch (\Throwable $e) {
                 $this->skippedCount++;
-                $this->errors[] = "Baris {$rowIndex} (NISN {$nisn}): " . $e->getMessage();
+                $this->registerError($rowIndex, "Baris {$rowIndex} (NISN {$nisn}): " . $e->getMessage());
             }
         }
-    }
-
-    public function getImportedCount(): int
-    {
-        return $this->importedCount;
-    }
-
-    public function getSkippedCount(): int
-    {
-        return $this->skippedCount;
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
     }
 }

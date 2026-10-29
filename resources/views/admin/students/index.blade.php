@@ -41,6 +41,8 @@
 
     .table-zebra-custom {
         width: 100%;
+        table-layout: fixed;
+        min-width: 860px;
         margin-bottom: 0;
     }
 
@@ -49,17 +51,6 @@
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
         display: block;
-    }
-
-    .table-zebra-custom {
-        width: 100%;
-        table-layout: fixed;
-        /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
-           kolom-kolomnya dipipihkan. Semua kolom (termasuk Jenis Kelamin)
-           ikut dihitung; nilai desktop tidak berubah karena tabel
-           selalu lebih lebar dari ini. */
-        min-width: 860px;
-        margin-bottom: 0;
     }
 
     .table-zebra-custom th,
@@ -112,7 +103,6 @@
     }
 
 @media (max-width: 767px) {
-        /* Table responsive */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -120,7 +110,6 @@
             overscroll-behavior-x: contain;
         }
 
-        /* Zebra striping & table layout */
         .table-zebra-custom {
             table-layout: auto;
             border-collapse: collapse;
@@ -133,7 +122,6 @@
             font-size: 11px !important;
         }
 
-        /* Column widths */
         .table-zebra-custom th.no, .table-zebra-custom td.no { display: none; }
         .table-zebra-custom th.kelas, .table-zebra-custom td.kelas { width: 1%; text-align: center; }
         .table-zebra-custom th.nisn, .table-zebra-custom td.nisn { width: 1%; text-align: center; }
@@ -141,19 +129,16 @@
         .table-zebra-custom th.jenis_kelamin, .table-zebra-custom td.jenis_kelamin { width: 1%; text-align: center; }
         .table-zebra-custom th.aksi, .table-zebra-custom td.aksi { width: 1%; white-space: nowrap; }
 
-        /* Header text alignment */
         .table-zebra-custom thead th.no, .table-zebra-custom thead th.kelas,
         .table-zebra-custom thead th.nisn, .table-zebra-custom thead th.jenis_kelamin,
         .table-zebra-custom thead th.aksi { text-align: center; }
         .table-zebra-custom thead th.nama { text-align: left; }
 
-        /* Cell text alignment (same as header) */
         .table-zebra-custom tbody td.no, .table-zebra-custom tbody td.kelas,
         .table-zebra-custom tbody td.nisn, .table-zebra-custom tbody td.jenis_kelamin,
         .table-zebra-custom tbody td.aksi { text-align: center; }
         .table-zebra-custom tbody td.nama { text-align: left; }
 
-        /* Aksi column */
         .table-zebra-custom tbody td.aksi {
             display: inline-flex;
             justify-content: center;
@@ -168,18 +153,10 @@
             gap: 8px;
         }
 
-        /* Nama siswa wrapper */
         .nama-siswa-wrapper {
             padding-left: 0 !important;
             padding-right: 0 !important;
             text-align: left !important;
-        }
-    }
-            flex-wrap: wrap;
-            gap: 2px;
-        }
-    }: wrap;
-            gap: 2px;
         }
     }
 
@@ -197,9 +174,7 @@
     }
 
     /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
-       semibold + SATU garis tipis (sebelumnya latar abu #f8fafc sehingga
-       header terlihat "kotor" di atas baris zebra). Desktop >= 1024px
-       sengaja TIDAK disentuh, sesuai batas yang diminta. */
+       semibold + SATU garis tipis. Desktop >= 1024px sengaja TIDAK disentuh. */
     @media (max-width: 1023.98px) {
         .table-zebra-custom thead th {
             background-color: #ffffff !important;
@@ -210,11 +185,7 @@
 
     /* ===== Action Bar Layout =====
        Satu baris rata tengah: [input cari][ikon search][dropdown kelas]
-       ..... [CETAK KARTU][IMPORT EXCEL][TAMBAH SISWA].
-       (Tombol ARSIP sengaja tidak ada di sini: data siswa yang dihapus
-        dipindah ke Pengaturan > Pengelolaan Sistem > TEMPAT SAMPAH,
-        URL tetap admin/students/trash.)
-       Semua elemen tinggi 38px; wrap rapi (bukan elemen terpotong) di layar sempit. */
+       ..... [CETAK KARTU][IMPORT EXCEL][TAMBAH SISWA]. -->
     .action-bar-section {
         display: flex;
         flex-wrap: wrap;
@@ -232,7 +203,6 @@
         margin: 0;
     }
 
-    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
     .action-search-form .search-box-wrap {
         display: flex;
         flex-wrap: nowrap;
@@ -263,7 +233,6 @@
         height: 38px;
     }
 
-    /* Deretan tombol aksi di kanan: tidak mengecil (teks tetap utuh) dan tidak menumpuk */
     .action-buttons-wrap {
         display: flex;
         flex-wrap: wrap;
@@ -277,12 +246,6 @@
         flex: 0 0 auto;
     }
 
-    /* CATATAN: aturan susunan mobile untuk action bar (tumpuk vertikal,
-       kontrol lebar penuh) sudah dipindah ke layout bersama
-       (layouts/app.blade.php, blok @media max-width: 767.98px) dan standar
-       mobile (public/css/presensi-tokens.css, @media max-width: 640px),
-       jadi di sini tidak ada duplikasi yang bentrok. */
-
     .btn-solid-pill,
     button.btn-solid-pill,
     a.btn-solid-pill {
@@ -292,7 +255,7 @@
         text-align: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: var(--clean-radius) !important; /* token radius bersama (6px) */
+        border-radius: var(--clean-radius) !important;
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -303,17 +266,8 @@
         box-shadow: none !important;
         letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
-        /* === UKURAN 4 TOMBOL ACTION BAR DISAMAkan ===
-           Tanpa min-width, tiap tombol lebarnya mengikuti panjang teksnya
-           sendiri, sehingga "Cetak Kartu" lebih kecil dari "Tambah Siswa".
-           Teks terpanjang adalah "TAMBAH SISWA" (12 karakter, uppercase,
-           font 0.85rem + letter-spacing 0.03em + padding 0 1rem) yang
-           membutuhkan sekitar 138px. min-width 150px sengaja sedikit lebih
-           besar agar keempat tombol benar-benar sama persis (tidak ada satu
-           pun yang melebihi nilai ini), dan teks tetap rata tengah.
-           Di layar kecil (< 1024px) aturan layout bersama membuat keempat
-           tombol full-width, jadi ukurannya tetap seragam. */
         min-width: 150px;
+        text-align: center;
     }
     .btn-solid-pill:hover {
         filter: brightness(0.94);
@@ -322,11 +276,8 @@
     .btn-solid-pill:active {
         transform: scale(0.98);
     }
-    .btn-solid-green { background-color: #16a34a; }
-    .btn-solid-blue { background-color: #2563eb; }
-    .btn-solid-red { background-color: #dc2626; }
 
-    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
+
     .btn-row-action {
         display: inline-flex;
         align-items: center;
@@ -361,134 +312,72 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
     }
-    .btn-row-action.action-detail { color: #16a34a; }      /* hijau */
+    .btn-row-action.action-detail { color: #16a34a; }
     .btn-row-action.action-detail:hover { color: #15803d; }
-    .btn-row-action.action-edit { color: #f59e0b; }        /* kuning/oranye */
+    .btn-row-action.action-edit { color: #f59e0b; }
     .btn-row-action.action-edit:hover { color: #d97706; }
-    .btn-row-action.action-delete { color: #dc2626; }      /* merah */
+    .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    /* Search bar & dropdown filter */
-    .search-input-wrap input.form-control,
-    .filter-select-wrap select.form-select,
-    .search-filter-group input.form-control,
-    .search-filter-group select.form-select,
-    .search-filter-group .btn {
-        border-radius: var(--clean-radius) !important;
-    }
-    .search-input-wrap .input-group input.form-control,
-    .search-filter-group .input-group input.form-control {
-        border-radius: var(--clean-radius) 0 0 var(--clean-radius) !important;
-    }
-    .search-input-wrap .input-group button.btn,
-    .search-filter-group .input-group button.btn {
-        border-radius: 0 var(--clean-radius) var(--clean-radius) 0 !important;
+    /* === Matikan Cetak Kartu saat data kosong, biarkan tombol lain normal ===
+       Hanya selector .btn-cetak-kartu ditargetkan, bukan class tombol umum.
+       Saat data ada: tombol Cetak Kartu tetap biru normal (btn-solid-blue). */
+    .btn-cetak-kartu.is-disabled {
+        background-color: #cbd5e1 !important;
+        color: #64748b !important;
+        border-color: #cbd5e1 !important;
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none;
+        opacity: 1;
     }
 
-    /* ==========================================================================
-       LAYOUT KARTU DATA SISWA - SAMA PERSIS dengan Catatan Kehadiran & Rekap
-       - kartu tabel mengisi sisa tinggi layar sampai mentok bawah,
-       - hanya .table-responsive yang jadi area scroll vertikal (scrollbar kanan),
-       - header kolom sticky & bersih (latar pekat, di atas baris data),
-       - pagination berada DI DALAM area scroll, tepat di bawah baris ke-100,
-       - bar pencarian + tombol aksi ada di luar area scroll (tidak ikut scroll),
-       - margin-bottom kartu dipaksa 0 supaya tidak ada ruang kosong di bawah.
-       ========================================================================== */
-    #daftar-siswa {
+    /* ===== Validasi format (client-side) =====
+     - Nama   : blokir ANGKA (blacklist). Valid: huruf, spasi, titik, koma, apostrof, strip.
+     - NISN   : blokir semua selain angka (replace /\D/g, '') dan batasi 10 digit.
+     - Kelas  : wajib pilih (placeholder value="").
+     - Jenis Kelamin: wajib pilih (placeholder value="" + opsi pertama). */
+     /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
+    .btn-row-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent !important;
+        border-radius: 0 !important;
+        padding: 0.2rem;
+        font-size: 16px;
+        color: inherit;
+        white-space: nowrap;
+        transition: color 0.15s ease, opacity 0.15s ease;
+        box-shadow: none !important;
+        cursor: pointer;
+        font-family: 'Poppins', 'Roboto', sans-serif;
+    }
+    .btn-row-action svg {
         display: block;
-        /* MODEL SATU AREA SCROLL: kartu mengikuti isi, tanpa tinggi paksa
-           calc(100dvh - ...) dan tanpa scroll vertikal sendiri. */
-        height: auto;
-        min-height: 0;
-        margin-bottom: 0 !important;   /* tidak ada ruang kosong di bawah card */
+        width: 20px;
+        height: 20px;
     }
-
-    /* Bar aksi (pencarian + tombol) TIDAK ikut mengecil/terpotong: berada di
-       luar area scroll, jadi selalu terlihat penuh. */
-    #daftar-siswa > .p-3 {
-        flex: 0 0 auto;
-    }
-
-    #daftar-siswa .table-responsive {
-        /* MODEL SATU AREA SCROLL: tanpa scroll vertikal sendiri. */
-        max-height: none !important;
-        overflow-y: visible !important;
-    }
-
-    /* Header sticky - bersih, baris tidak menimpa / tidak bocor melewatinya.
-       Latarnya mengikuti header tabel: putih khusus tablet/HP (>= 1024px
-       tetap #f8fafc seperti desktop pada umumnya). */
-    #daftar-siswa .table-responsive > table > thead { z-index: 5 !important; }
-    #daftar-siswa .table-responsive > table > thead th {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 5 !important;
-        background-color: #f8fafc !important;
-    }
-    @media (max-width: 1023.98px) {
-        #daftar-siswa .table-responsive > table > thead th {
-            background-color: #ffffff !important;
+    @media (max-width: 767.98px) {
+        .btn-row-action svg {
+            width: 18px;
+            height: 18px;
         }
     }
-
-    /* Baris data selalu berlapis di bawah header. */
-    #daftar-siswa .table-responsive > table > tbody > tr > td {
-        position: relative;
-        z-index: 1;
+    .btn-row-action:hover {
+        opacity: 0.8;
     }
-
-    /* Gaya pagination TIDAK ditulis di sini: memakai blok bersama
-       .kehadiran-pagination* di layouts/app.blade.php (satu sumber gaya,
-       sama persis dengan Catatan Kehadiran & Rekap). */
-
-    /* ===== Data Siswa: aturan MOBILE (max-width: 767px) =====
-       Semua aturan di dalam media query ini; desktop (>= 768px) tidak terpengaruh. */
-    @media (max-width: 767px) {
-        .table-responsive {
-            width: 100% !important;
-            display: block !important;
-            overflow-x: auto !important;
-            overflow-y: visible !important;
-            max-height: none !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-x: contain !important;
-        }
-        .table-zebra-custom {
-            table-layout: fixed !important;
-            min-width: 650px !important;
-        }
-        /* Lebar kolom eksplisit (total 650px; tabel digulir di dalam wadah, halaman tidak ikut scroll) */
-        .table-zebra-custom col:nth-child(1)  { width: 40px !important; }    /* No */
-        .table-zebra-custom col:nth-child(2)  { width: 60px !important; }     /* Kelas */
-        .table-zebra-custom col:nth-child(3)  { width: 120px !important; }    /* NISN */
-        .table-zebra-custom col:nth-child(4)  { width: 220px !important; }    /* Nama Siswa */
-        .table-zebra-custom col:nth-child(5)  { width: 110px !important; }    /* Jenis Kelamin */
-        .table-zebra-custom col:nth-child(6)  { width: 100px !important; }    /* Aksi */
-        .table-zebra-custom thead th:nth-child(1) { width: 40px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(2) { width: 60px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(3) { width: 120px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(4) { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
-        .table-zebra-custom thead th:nth-child(5) { width: 110px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(6) { width: 100px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(1) { width: 40px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(2) { width: 60px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(3) { width: 120px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(4) { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
-        .table-zebra-custom tbody td:nth-child(5) { width: 110px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(6) { width: 100px !important; text-align: center !important; }
-        /* Padding konsisten antar kolom (minimal 8px) */
-        .table-zebra-custom th,
-        .table-zebra-custom td {
-            padding-left: 8px !important;
-            padding-right: 8px !important;
-        }
-        /* Nama siswa tidak boleh didorong ke kanan: teks rata kiri, pas di sebelah kanan NISN. */
-        .nama-siswa-wrapper {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            text-align: left !important;
-        }
+    .btn-row-action:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
     }
+    .btn-row-action.action-detail { color: #16a34a; }
+    .btn-row-action.action-detail:hover { color: #15803d; }
+    .btn-row-action.action-edit { color: #f59e0b; }
+    .btn-row-action.action-edit:hover { color: #d97706; }
+    .btn-row-action.action-delete { color: #dc2626; }
+    .btn-row-action.action-delete:hover { color: #b91c1c; }
 
     /* ===== Data Siswa: kolom Nama Siswa rata kiri di DESKTOP =====
        Hanya berlaku di lebar >= 768px; mobile (di bawah 768px) tidak terpengaruh.
@@ -508,13 +397,16 @@
             padding-right: 0 !important;
         }
     }
+
+    /* Eksplisit: warna latar + teks putih pakai !important biar tidak ter-override */
+    .btn-solid-green { background-color: #059669 !important; color: #ffffff !important; }
+    .btn-solid-blue { background-color: #2563eb !important; color: #ffffff !important; }
+    .btn-solid-red { background-color: #dc2626 !important; color: #ffffff !important; }
 </style>
 @endpush
 
 @section('content')
 
-    {{-- Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
-         Tombol X center vertikal oleh CSS notifikasi global di layout. --}}
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -539,9 +431,8 @@
     </div>
     @endif
 
-    {{-- Notifikasi sukses HAPUS: MERAH (alert-danger) + ikon tempat sampah. --}}
     @if(session('deleted'))
-    <div class="alert alert-danger alert-deleted alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-trash fs-5 me-2 text-danger'></i>
@@ -552,7 +443,6 @@
     </div>
     @endif
 
-    {{-- Notifikasi import sebagian berhasil (kuning/oranye) --}}
     @if(session('warning'))
     <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -565,7 +455,6 @@
     </div>
     @endif
 
-    {{-- Rincian baris Excel yang dilewati --}}
     @if(session('import_errors') && count(session('import_errors')) > 0)
     <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -586,35 +475,23 @@
     </div>
     @endif
 
-    <!-- Form Hapus Semua Siswa (Hidden, dipanggil via confirmDeleteAllStudents()).
-         Ditempatkan DI LUAR blok script, persis seperti pola halaman Data
-         Guru & Data Kelas. Dua input konfirmasi ikut dikirim karena
-         controller memvalidasinya di server, bukan hanya lewat checkbox. -->
-    @if(Auth::check() && Auth::user()->role === 'admin')
     <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all-active') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
         <input type="hidden" name="confirm_active" value="1">
         <input type="hidden" name="confirm_all" value="1">
     </form>
-    @endif
 
-    <!-- KARTU UTAMA DATA SISWA -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-siswa">
-        
-        <!-- Action Bar & Filter -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
-                
-                <!-- Sisi Kiri: Form Pencarian & Dropdown Kelas (satu baris sejajar) -->
                 <form method="GET" action="{{ panel_route('students.index') }}" class="action-search-form">
-                    <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
                     <div class="input-group search-box-wrap">
-                        <input type="text" 
-                               name="search" 
+                        <input type="text"
+                               name="search"
                                id="studentSearchInput"
-                               class="form-control shadow-none" 
-                               placeholder="{{ __('Cari nama atau NISN...') }}" 
+                               class="form-control shadow-none"
+                               placeholder="{{ __('Cari nama atau NISN...') }}"
                                value="{{ request('search') }}"
                                aria-label="{{ __('Cari nama atau NISN') }}"
                                autocomplete="off"
@@ -624,7 +501,6 @@
                         </button>
                     </div>
 
-                    <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang (pola Catatan Kehadiran) -->
                     <div class="filter-box-wrap">
                         <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Pilih kelas') }}">
                             <option value="">{{ __('Semua Kelas') }}</option>
@@ -635,12 +511,13 @@
                             @endforeach
                         </select>
                     </div>
-
                 </form>
 
-                <!-- Sisi Kanan: Deretan Tombol Aksi -->
                 <div class="action-buttons-wrap">
-                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#printCardsModal">
+                    <button type="button" class="btn-solid-pill btn-solid-blue btn-cetak-kartu {{ $totalStudents == 0 ? 'is-disabled' : '' }}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#printCardsModal"
+                            {{ $totalStudents == 0 ? 'disabled aria-disabled="true" tabindex="-1" title="Belum ada data untuk dicetak"' : '' }}>
                         <span>{{ __('Cetak Kartu') }}</span>
                     </button>
 
@@ -653,21 +530,14 @@
                         <span>{{ __('Tambah Siswa') }}</span>
                     </button>
 
-                    <!-- Hapus Semua Siswa (merah) - di sebelah Tambah Siswa,
-                         sama seperti halaman Data Guru & Data Kelas.
-                         Memakai route students.destroy-all-active: siswa aktif
-                         di-soft-delete sehingga bisa dipulihkan dari
-                         TEMPAT SAMPAH di Pengaturan. -->
                     <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Siswa') }}" onclick="confirmDeleteAllStudents()">
                         <span>{{ __('Hapus') }}</span>
                     </button>
                     @endif
                 </div>
-
             </div>
         </div>
 
-        <!-- Tabel Data Siswa -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <colgroup>
@@ -736,25 +606,13 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
 
-        <!-- ==========================================================================
-         PAGINASI DATA SISWA - TEKS MURNI (TANPA KONTAINER)
-         Markup & gaya SAMA PERSIS dengan Catatan Kehadiran dan Rekap:
-         "‹ Sebelumnya  1 2 3 4 5  Berikutnya ›" + "Menampilkan 1-100 dari 500 siswa".
-         Gaya memakai kelas .kehadiran-pagination* dari blok bersama di
-         layouts/app.blade.php (bukan salinan baru, bukan helper lama).
-
-         POSISI: blok ini sengaja DI DALAM .table-responsive (area scroll),
-         tepat di bawah baris terakhir, jadi ikut ter-scroll dan baru terlihat
-         setelah user menggulir sampai baris ke-100.
-         ======================================================================= -->
         @php
             $pgCurrent = $students->currentPage();
             $pgLast = $students->lastPage();
             $pgHash = '#daftar-siswa';
 
-            // Semua nomor ditampilkan bila <= 7 halaman (500 siswa / 100 = 5 hal).
-            // Kalau lebih, sisipkan "..." di kiri & kanan sekitar halaman aktif.
             $pgPages = [];
             if ($pgLast <= 7) {
                 $pgPages = range(1, $pgLast);
@@ -822,7 +680,7 @@
                 @csrf
                 <div class="modal-body py-3">
                     <p class="text-secondary small mb-3">
-                        {{ __('Pilih opsi pencetakan kartu presensi siswa. Berkas PDF kartu akan siap dicetak pada kertas A4 landscape (10 kartu per lembar, ukuran kartu CR80 portrait).') }}
+                        {{ __('Pilih kartu siswa yang ingin dicetak. Hasil unduhan berupa file ZIP berisi satu kartu (JPG) untuk setiap siswa.') }}
                     </p>
 
                     <div class="mb-3">
@@ -851,12 +709,12 @@
                     </div>
 
                     <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2" id="printInfoBox">
-                        <i class='bx bx-info-circle me-1'></i> {{ __('Kartu akan digenerate dengan QR Code presensi siswa secara otomatis.') }}
+                        <i class='bx bx-info-circle me-1'></i> {{ __('Setiap kartu dilengkapi QR Code presensi siswa yang dibuat otomatis.') }}
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen" id="kartuUnduhBtn">{{ __('Generate & Unduh') }}</button>
+                    <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen" id="kartuUnduhBtn">{{ __('Unduh ZIP Kartu') }}</button>
                 </div>
             </form>
         </div>
@@ -872,7 +730,7 @@
                 <h5 class="fw-bold mb-0">{{ __('Tambah Siswa Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ panel_route('students.store') }}" method="POST">
+            <form id="addStudentForm" action="{{ panel_route('students.store') }}" method="POST" novalidate data-no-loader>
                 @csrf
                 <div class="modal-body py-3">
                     @if($errors->any() && !$errors->has('file_excel'))
@@ -883,40 +741,41 @@
 
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">{{ __('Nama Siswa') }} <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control rounded-3 @error('name') is-invalid @enderror" placeholder="{{ __('Masukkan nama lengkap siswa') }}" value="{{ old('name') }}" required>
-                        @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <input id="studentName" type="text" name="name" class="form-control rounded-3" placeholder="{{ __('Masukkan nama lengkap siswa') }}" value="{{ old('name') }}">
+                        <div class="invalid-msg small text-danger"></div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-12">
                             <label class="form-label small fw-semibold">{{ __('NISN') }} <span class="text-danger">*</span></label>
-                            <input type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="{{ __('Contoh: 0081234567') }}" value="{{ old('nisn') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
-                            @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <input id="studentNisn" type="text" name="nisn" class="form-control rounded-3" placeholder="{{ __('Contoh: 0081234567') }}" value="{{ old('nisn') }}" inputmode="numeric" maxlength="10" autocomplete="off">
+                            <div class="invalid-msg small text-danger"></div>
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small fw-semibold">{{ __('Kelas') }} <span class="text-danger">*</span></label>
-                            <select name="school_class_id" class="form-select rounded-3 @error('school_class_id') is-invalid @enderror" required>
+                            <select id="studentKelas" name="school_class_id" class="form-select rounded-3">
                                 <option value="">{{ __('Pilih Kelas') }}</option>
                                 @foreach($classes as $c)
                                 <option value="{{ $c->id }}" {{ old('school_class_id') == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
                                 @endforeach
                             </select>
-                            @error('school_class_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="invalid-msg small text-danger"></div>
                         </div>
                         <div class="col-6">
                             <label class="form-label small fw-semibold">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
-                            <select name="gender" class="form-select rounded-3 @error('gender') is-invalid @enderror" required>
-                                <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
-                                <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
+                            <select id="studentJk" name="gender" class="form-select rounded-3">
+                                <option value="" selected>{{ __('Pilih jenis kelamin') }}</option>
+                                <option value="Laki-laki">{{ __('Laki-laki') }}</option>
+                                <option value="Perempuan">{{ __('Perempuan') }}</option>
                             </select>
-                            @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="invalid-msg small text-danger"></div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Siswa') }}</button>
+                    <button id="btnSimpanSiswa" type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Siswa') }}</button>
                 </div>
             </form>
         </div>
@@ -931,7 +790,7 @@
                 <h5 class="fw-bold mb-0">{{ __('Import Data Siswa Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ panel_route('students.import') }}" method="POST" enctype="multipart/form-data">
+            <form id="importForm" action="{{ panel_route('students.import') }}" method="POST" enctype="multipart/form-data" data-no-loader>
                 @csrf
                 <div class="modal-body">
                     @if($errors->any() && $errors->has('file_excel'))
@@ -952,8 +811,9 @@
                 </div>
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Unggah & Import') }}</button>
+                    <button type="submit" class="btn-download-green px-4">{{ __('Unggah & Import') }}</button>
                 </div>
+                <div id="importMessage" class="px-3 pb-3 small" style="min-height:1.2rem;"></div>
             </form>
         </div>
     </div>
@@ -964,36 +824,181 @@
 
 @push('scripts')
 <script>
+    /* ===== Cetak Kartu: toggle pilihan cetak per kelas / semua ===== */
     function togglePrintScope() {
-        const isClass = document.getElementById('printTypeClass').checked;
+        const rbClass = document.getElementById('printTypeClass');
+        const rbAll = document.getElementById('printTypeAll');
         const classContainer = document.getElementById('classSelectContainer');
         const classSelect = document.getElementById('modalClassId');
-        
-        if (isClass) {
-            classContainer.style.display = 'block';
-            classSelect.disabled = false;
+
+        if (rbClass && rbClass.checked) {
+            if (classContainer) classContainer.style.display = '';
+            if (classSelect) classSelect.disabled = false;
         } else {
-            classContainer.style.display = 'none';
-            classSelect.disabled = true;
+            if (classContainer) classContainer.style.display = 'none';
+            if (classSelect) classSelect.disabled = true;
         }
     }
 
+    /* Pesan error kecil di bawah field (clear + set). */
+    function setFieldError(field, msg) {
+        if (!field) return;
+        const msgEl = field.parentNode.querySelector('.invalid-msg');
+        if (!msgEl) return;
+        if (!msg) {
+            msgEl.textContent = '';
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+            return;
+        }
+        msgEl.textContent = msg;
+        field.classList.add('is-invalid');
+        field.style.borderColor = '#dc2626';
+    }
+
+    /* Validasi form Tambah Siswa (JS murni, tanpa jQuery). */
+    function cekValiditasSiswa() {
+        const name = document.getElementById('studentName');
+        const nisn = document.getElementById('studentNisn');
+        const kelas = document.getElementById('studentKelas');
+        const jk = document.getElementById('studentJk');
+        const btn = document.getElementById('btnSimpanSiswa');
+        let ok = true;
+
+        // --- Nama ---
+        const nama = (name ? name.value : '').trim();
+        if (nama === '') {
+            setFieldError(name, 'Nama siswa wajib diisi.');
+            ok = false;
+        } else if (/\p{Nd}/u.test(nama)) {
+            setFieldError(name, 'Nama siswa tidak boleh mengandung angka.');
+            ok = false;
+        } else {
+            setFieldError(name, '');
+        }
+
+        // --- NISN ---
+        const nisnRaw = (nisn ? nisn.value : '').trim();
+        if (nisnRaw === '') {
+            setFieldError(nisn, 'NISN wajib diisi.');
+            ok = false;
+        } else if (!/^[0-9]{10}$/.test(nisnRaw)) {
+            setFieldError(nisn, 'NISN harus berupa 10 digit angka.');
+            ok = false;
+        } else {
+            setFieldError(nisn, '');
+        }
+
+        // --- Kelas ---
+        const kelasVal = (kelas ? kelas.value : '').trim();
+        if (kelasVal === '') {
+            setFieldError(kelas, 'Pilih kelas terlebih dahulu.');
+            ok = false;
+        } else {
+            setFieldError(kelas, '');
+        }
+
+        // --- Jenis Kelamin ---
+        const jkVal = (jk ? jk.value : '').trim();
+        if (jkVal === '') {
+            setFieldError(jk, 'Pilih jenis kelamin.');
+            ok = false;
+        } else {
+            setFieldError(jk, '');
+        }
+
+        // --- Status tombol: abu biasa TANPA disabled, biru bila valid ---
+        if (btn) {
+            if (ok) {
+                btn.className = 'btn btn-primary rounded-3 px-4 fw-semibold';
+                btn.setAttribute('aria-disabled', 'false');
+                btn.disabled = false;
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+            } else {
+                btn.className = 'btn btn-primary rounded-3 px-4 fw-semibold';
+                btn.setAttribute('aria-disabled', 'true');
+                btn.disabled = false;
+                btn.style.backgroundColor = '#cbd5e1';
+                btn.style.color = '#64748b';
+                btn.style.cursor = 'not-allowed';
+            }
+        }
+        return ok;
+    }
+
+    /* Hapus angka saat mengetik di NISN; kursor terjaga. */
+    function sanitizeNisnInput(e) {
+        const el = e.target;
+        if (!el || el.id !== 'studentNisn') return;
+        if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop' || e.inputType === 'insertReplacementText') {
+            const cleaned = el.value.replace(/[^0-9]/g, '').slice(0, 10);
+            const start = el.selectionStart;
+            const prevLen = el.value.length;
+            el.value = cleaned;
+            const newLen = el.value.length;
+            const keepStart = Math.min(start, newLen);
+            el.setSelectionRange(keepStart, keepStart);
+            return;
+        }
+        if (e.inputType === 'insertText' || e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward' || !e.inputType) {
+            const before = el.value;
+            let cleaned = before.replace(/[^0-9]/g, '').slice(0, 10);
+            if (cleaned !== before) {
+                const start = el.selectionStart;
+                const prevLen = before.length;
+                el.value = cleaned;
+                const newLen = el.value.length;
+                let newStart = Math.min(start, newLen);
+                if (e.inputType === 'insertText' && e.data) {
+                    const digit = String(e.data).replace(/[^0-9]/g, '');
+                    if (digit && start < prevLen && /[^0-9]/.test(before[start])) {
+                        newStart = start;
+                    }
+                }
+                el.setSelectionRange(newStart, newStart);
+            }
+        }
+    }
+
+    /* Hapus angka di nama saat mengetik/paste. Kursor terjaga. */
+    function sanitizeNameInput(e) {
+        const el = e.target;
+        if (!el || el.id !== 'studentName') return;
+        const before = el.value;
+        const cleaned = before.replace(/\p{Nd}/gu, '');
+        if (cleaned !== before) {
+            const start = el.selectionStart;
+            const prevLen = before.length;
+            el.value = cleaned;
+            let newStart = Math.min(start, el.value.length);
+            if (e.inputType === 'insertText' && e.data) {
+                const badRun = String(e.data).match(/\p{Nd}+/u);
+                if (badRun && start <= prevLen) {
+                    newStart = Math.min(start, el.value.length);
+                }
+            }
+            if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop' || e.inputType === 'insertReplacementText') {
+                newStart = Math.min(start, el.value.length);
+            }
+            el.setSelectionRange(newStart, newStart);
+        }
+    }
+
+    /* ===== Konfirmasi hapus SATU siswa ===== */
     function confirmDeleteStudent(id, name) {
         confirmUniversalDelete({
             title: {!! json_encode(__('Hapus Data Siswa?')) !!},
-            html: {!! json_encode(__('Siswa')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
+            html: {!! json_encode(__('Siswa')) !!} + ' <strong>' + escapeHtml(name) + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
             confirmText: {!! json_encode(__('Hapus')) !!},
             cancelText: {!! json_encode(__('Tidak')) !!},
-            onConfirm: function() {
-                // Dicek null dulu: kalau form tidak ada,error ini akan
-                // dilempar sebagai TypeError dan tombol Hapus akan terlihat
-                // "tidak berfungsi" tanpa pesan apa pun.
-                const form = document.getElementById(`deleteStudentForm-${id}`);
+            onConfirm: function () {
+                var form = document.getElementById('deleteStudentForm-' + id);
                 if (!form) {
                     console.error('HAPUS: form deleteStudentForm-' + id + ' tidak ditemukan. Muat ulang halaman.');
                     return;
                 }
-                const qs = window.location.search;
+                var qs = window.location.search;
                 if (qs && form.action.indexOf('?') === -1) {
                     form.action = form.action + qs;
                 }
@@ -1002,10 +1007,7 @@
         });
     }
 
-    // Konfirmasi Hapus Semua Siswa Massal.
-    // Memakai confirmUniversalDelete() dari layout bersama supaya tema,
-    // ukuran, animasi, dan tombol nonaktif-hingga-checkbox-nya SAMA PERSIS
-    // dengan dialog hapus di halaman lain.
+    /* ===== Konfirmasi hapus SEMUA siswa ===== */
     function confirmDeleteAllStudents() {
         confirmUniversalDelete({
             title: {!! json_encode(__('Hapus Seluruh Data Siswa?')) !!},
@@ -1023,16 +1025,161 @@
         });
     }
 
-    // Buka kembali modal form (Tambah Siswa / Import Excel) bila validasi
-    // server gagal, supaya isian lama (old) dan pesan error tetap terlihat.
+    /* ===== Handler form Tambah Siswa ===== */
     (function () {
-        var hasError = {{ $errors->any() ? 'true' : 'false' }};
-        if (!hasError) return;
-        var targetId = @json($errors->has('file_excel') ? 'importModal' : 'addStudentModal');
-        var modalEl = document.getElementById(targetId);
-        if (modalEl) {
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        var nameEl = document.getElementById('studentName');
+        var nisnEl = document.getElementById('studentNisn');
+        var kelasEl = document.getElementById('studentKelas');
+        var jkEl = document.getElementById('studentJk');
+        var form = document.getElementById('addStudentForm');
+
+        function attach(el, evt, fn) {
+            if (!el) return;
+            if (el.addEventListener) {
+                el.addEventListener(evt, fn, false);
+            } else if (el.attachEvent) {
+                el.attachEvent('on' + evt, fn);
+            }
+        }
+
+        attach(nisnEl, 'input', sanitizeNisnInput);
+        attach(nisnEl, 'beforeinput', function (e) {
+            if (e && e.inputType === 'insertFromPaste' || e && e.inputType === 'insertFromDrop' || e && e.inputType === 'insertReplacementText') {
+                sanitizeNisnInput(e);
+            }
+        });
+        attach(nameEl, 'input', sanitizeNameInput);
+        attach(nameEl, 'beforeinput', sanitizeNameInput);
+
+        function onSelectionChange() {
+            cekValiditasSiswa();
+        }
+
+        [namaEl, nisnEl, kelasEl, jkEl].forEach(function (el) {
+            if (!el) return;
+            attach(el, 'change', function () {
+                cekValiditasSiswa();
+            });
+        });
+
+        document.addEventListener('submit', function (e) {
+            if (form && e.target === form) {
+                if (!cekValiditasSiswa()) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    var firstInvalid = form.querySelector('.invalid-msg');
+                    var focusTarget = null;
+                    [namaEl, nisnEl, kelasEl, jkEl].forEach(function (el) {
+                        if (el && el.parentNode.querySelector('.invalid-msg') && el.parentNode.querySelector('.invalid-msg').textContent) {
+                            focusTarget = el;
+                        }
+                    });
+                    if (focusTarget) {
+                        focusTarget.focus();
+                    }
+                }
+            }
+        });
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            document.addEventListener('show.bs.modal', function (e) {
+                var modal = e.target;
+                if (modal && (modal.id === 'addStudentModal' || (modal.querySelector && modal.querySelector('#addStudentForm')))) {
+                    cekValiditasSiswa();
+                }
+            });
         }
     })();
+
+    /* ===== Import Siswa via AJAX (JS murni, capture phase) ===== */
+    (function () {
+        var form = document.getElementById('importForm');
+        if (!form) return;
+
+        var btn = form.querySelector('button[type="submit"]');
+        var messageEl = document.getElementById('importMessage');
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            var txt = document.createTextNode(str);
+            div.appendChild(txt);
+            return div.innerHTML;
+        }
+
+        function setMessage(text, color) {
+            if (!messageEl) return;
+            messageEl.innerHTML = '<strong>' + escapeHtml(text) + '</strong>';
+            messageEl.style.color = color || '#1e293b';
+        }
+
+        function resetButton() {
+            if (!btn) return;
+            btn.disabled = false;
+            btn.textContent = 'Unggah & Import';
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            if (!btn || !messageEl) return;
+
+            setMessage('', '');
+            btn.disabled = true;
+            btn.textContent = 'Memproses...';
+
+            var formData = new FormData(form);
+            var action = form.getAttribute('action') || window.location.href;
+
+            fetch(action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function (res) {
+                return res.json().catch(function () {
+                    return null;
+                });
+            })
+            .then(function (data) {
+                var msg = (data && data.message) ? data.message : '';
+                var status = (data && data.status) ? data.status : '';
+
+                if (!msg) {
+                    if (data === null || (data && data.status === undefined)) {
+                        msg = 'Import gagal. Periksa format file.';
+                    } else {
+                        msg = 'Import selesai.';
+                    }
+                }
+
+                if (status === 'error') {
+                    setMessage(msg, '#b91c1c');
+                } else if (status === 'partial') {
+                    setMessage(msg, '#b45309');
+                } else if (status === 'success') {
+                    setMessage(msg, '#15803d');
+                } else {
+                    setMessage(msg, '#b91c1c');
+                }
+
+                if (status === 'success' || status === 'partial') {
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 2000);
+                }
+                resetButton();
+            })
+            .catch(function () {
+                setMessage('Import terlalu lama, coba lagi.', '#b91c1c');
+                resetButton();
+            });
+        }, true);
+    })();
+
 </script>
 @endpush

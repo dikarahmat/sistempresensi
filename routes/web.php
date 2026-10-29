@@ -79,7 +79,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 
     // Master Kelas, Import, & Hapus Semua
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
-    Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAll'])->name('classes.destroy-all');
+    Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAllActive'])->name('classes.destroy-all');
     Route::get('classes/template', [SchoolClassController::class, 'template'])->name('classes.template');
     Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import')->middleware('throttle:10,1');
 
@@ -122,7 +122,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 
     // Manajemen Data Guru (/admin/guru)
 
-    Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAll'])->name('guru.destroy-all');
+    Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAllActive'])->name('guru.destroy-all');
     Route::match(['get', 'post'], 'guru/print-cards', [TeacherController::class, 'printCards'])->name('guru.print-cards');
     Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
     Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import')->middleware('throttle:10,1');

@@ -261,7 +261,7 @@ class SchoolClassController extends Controller
                     return;
                 }
 
-                if ($class->students()->exists()) {
+                if ($class->students()->whereNull('deleted_at')->exists()) {
                     $skipped[] = $class->name;
                     return;
                 }
@@ -286,11 +286,68 @@ class SchoolClassController extends Controller
                 $message .= ' ' . count($skipped) . ' kelas dilewati karena masih ada siswa aktif: ' . implode(', ', $skipped) . '.';
             }
 
-            return redirect()->route('admin.classes.index')->with('deleted', $message);
+            return redirect()->route('admin.classes.index')->with('success', $message);
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
             return redirect()->route('admin.classes.index')->with('error', __('Gagal menghapus semua data kelas. Silakan coba lagi atau hubungi admin.'));
+        }
+    }
+
+    /**
+     * Hapus SELURUH kelas KOSONG (tanpa siswa aktif) menjadi soft delete.
+     * Kelas yang masih punya siswa AKTIF dilewati dan dilaporkan.
+     * Admin-only.
+     */
+    public function destroyAllActive(Request $request): RedirectResponse
+    {
+        try {
+            $emptyCount = 0;
+            $skipped = [];
+
+            SchoolClass::whereHas('students', function ($q) {
+                $q->whereNull('deleted_at');
+            })->doesntExist()
+            || SchoolClass::doesntHave('students')->with('students')->each(function ($class) use (&$emptyCount, &$skipped) {
+                if ($class->students()->whereNull('deleted_at')->exists()) {
+                    $skipped[] = $class->name;
+                    return;
+                }
+                $class->delete();
+                $emptyCount++;
+            });
+
+            // Alternatif yang lebih jelas:
+            $skipped = [];
+            $emptyCount = 0;
+            SchoolClass::whereNull('deleted_at')->orderBy('id')->each(function (SchoolClass $class) use (&$emptyCount, &$skipped) {
+                if ($class->trashed()) {
+                    return;
+                }
+                if ($class->students()->whereNull('deleted_at')->exists()) {
+                    $skipped[] = $class->name;
+                    return;
+                }
+                $class->delete();
+                $emptyCount++;
+            });
+
+            if ($emptyCount === 0 && $skipped === []) {
+                return redirect()->route('admin.classes.index')
+                    ->with('error', __('Tidak ada kelas kosong yang bisa dihapus.'));
+            }
+
+            $message = "{$emptyCount} kelas kosong dipindahkan ke Tempat Sampah.";
+            if ($skipped !== []) {
+                $message .= ' ' . count($skipped) . ' kelas dilewati karena masih memiliki siswa aktif: ' . implode(', ', $skipped) . '.';
+            }
+
+            return redirect()->route('admin.classes.index')
+                ->with('success', $message);
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('admin.classes.index')
+                ->with('error', __('Gagal menghapus data. Coba lagi.'));
         }
     }
 

@@ -306,7 +306,11 @@
 
     {{-- ================= DIALOG TAMBAH ================= --}}
     <dialog id="dialogTambah" class="acc-dialog">
-        <form method="POST" action="{{ route('admin.accounts.store') }}">
+        <div class="mb-3">
+        <span class="badge bg-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Info</span>
+        <span class="text-muted small">Setiap role hanya memiliki satu akun.</span>
+    </div>
+    <form method="POST" action="{{ route('admin.accounts.store') }}">
             @csrf
             <input type="hidden" name="_form" value="create">
             <div class="akun-dialog-head d-flex align-items-start justify-content-between">
@@ -350,7 +354,14 @@
             </div>
             <div class="akun-dialog-footer">
                 <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-dialog-close="dialogTambah">{{ __('Batal') }}</button>
-                <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan') }}</button>
+                @if(count($roleOptions)>0)
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan') }}</button>
+                @else
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" disabled>
+                        <i class="bi bi-check-circle"></i>
+                        Semua role sudah terisi
+                    </button>
+                @endif
             </div>
         </form>
     </dialog>

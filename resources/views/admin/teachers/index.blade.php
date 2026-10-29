@@ -15,7 +15,7 @@
         width: 100% !important;
     }
 
-    /* Zebra Striping Khusus (disamakan persis dengan Data Siswa) */
+    /* Zebra Striping Khusus */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
         background-color: #f8fafc !important;
@@ -32,10 +32,6 @@
 
     .table-zebra-custom {
         width: 100%;
-        /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
-           kolom-kolomnya dipipihkan. Semua kolom (NO, NIP, NAMA LENGKAP GURU,
-           JENIS KELAMIN, TUGAS KELAS, NO. TELEPON / WA, AKSI) ikut dihitung;
-           nilai desktop tidak berubah karena tabel selalu lebih lebar dari ini. */
         min-width: 760px;
         margin-bottom: 0;
         table-layout: fixed;
@@ -68,17 +64,14 @@
         }
     }
 
-    /* ===== Kolom NO & NIP: font biasa, bukan monospace ===== */
     .no-col, .nip-col {
         font-family: 'Poppins', 'Roboto', sans-serif !important;
     }
 
-    /* ===== JENIS KELAMIN & TUGAS KELAS: rata tengah ===== */
     .jk-col, .tugas-col {
         text-align: center !important;
     }
 
-    /* ===== NO. TELEPON: font biasa, rata tengah ===== */
     .phone-col {
         text-align: center !important;
         font-family: 'Poppins', 'Roboto', sans-serif !important;
@@ -106,8 +99,7 @@
             flex-wrap: wrap;
             gap: 2px;
         }
-        
-        /* Mobile: Data Guru table column alignment */
+
         .table-zebra-custom th.nip-col, .table-zebra-custom td.nip-col {
             text-align: center !important;
             padding-left: 0.5rem !important;
@@ -128,7 +120,6 @@
         }
     }
 
-    /* Header tabel Data Guru: nilai DESKTOP (>= 1024px) tidak berubah. */
     .table-zebra-custom thead th {
         color: #111827 !important;
         font-size: 0.75rem !important;
@@ -143,9 +134,6 @@
         font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
-    /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
-       semibold + SATU garis tipis (sebelumnya latar abu #f8fafc). Desktop
-       >= 1024px sengaja TIDAK disentuh, sesuai batas yang diminta. */
     @media (max-width: 1023.98px) {
         .table-zebra-custom thead th {
             background-color: #ffffff !important;
@@ -154,7 +142,6 @@
         }
     }
 
-    /* ===== Action bar: SATU BARIS RATA (pola sama dengan Data Siswa) ===== */
     .action-bar-section {
         display: flex;
         flex-wrap: wrap;
@@ -172,7 +159,6 @@
         margin: 0;
     }
 
-    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
     .action-search-form .search-box-wrap {
         display: flex;
         flex-wrap: nowrap;
@@ -193,7 +179,6 @@
         flex: 0 0 auto;
     }
 
-    /* Deretan tombol aksi di kanan: tidak mengecil dan tidak menumpuk */
     .action-buttons-wrap {
         display: flex;
         flex-wrap: wrap;
@@ -203,17 +188,6 @@
         margin-left: auto;
     }
 
-    /* CATATAN: aturan susunan mobile untuk action bar sudah dipindah ke
-       layout bersama (layouts/app.blade.php) dan standar mobile
-       (public/css/presensi-tokens.css) — tidak ada duplikasi di sini. */
-
-    /* Notifikasi import: tombol X + posisi diatur CSS notifikasi global di layout.
-       Yang khas halaman ini hanya daftar alasan error yang boleh discroll. */
-    .guru-import-notes {
-        max-height: 200px;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-    }
     .btn-solid-pill,
     button.btn-solid-pill,
     a.btn-solid-pill {
@@ -222,7 +196,7 @@
         justify-content: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: var(--clean-radius) !important; /* token radius bersama (6px), sama dengan .form-control */
+        border-radius: var(--clean-radius) !important;
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -234,19 +208,6 @@
         text-transform: uppercase;
         letter-spacing: 0.03em;
         font-family: 'Poppins', 'Roboto', sans-serif;
-        /* === UKURAN 3 TOMBOL ACTION BAR DISAMAkan (SAMA NILAI DENGAN DATA SISWA) ===
-           Tanpa min-width, tiap tombol lebarnya mengikuti panjang teksnya
-           sendiri, sehingga "IMPORT EXCEL" (12 karakter) jauh lebih lebar dari
-           "HAPUS" (5 karakter).
-           min-width 150px — nilai yang PERSIS sama dengan acuan Data Siswa,
-           yang di sana sudah cukup untuk "IMPORT EXCEL" (12 karakter) dan
-           "TAMBAH SISWA" (12 karakter). Di halaman ini teks terpanjang juga
-           12 karakter ("IMPORT EXCEL"), jadi 150px sudah cukup dan ketiga
-           tombol benar-benar sama lebar, teksnya rata tengah.
-           Tinggi sudah sama sejak awal (height: 38px di atas), dan jarak antar
-           tombol juga sudah sama (gap 0.5rem pada .action-buttons-wrap).
-           Di bawah 1024px, aturan layout bersama sudah memaksa tiap tombol
-           full width satu per satu, jadi tampilan mobile tidak berubah. */
         min-width: 150px;
         text-align: center;
     }
@@ -261,7 +222,6 @@
     .btn-solid-blue { background-color: #2563eb; }
     .btn-solid-red { background-color: #dc2626; }
 
-    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
@@ -296,79 +256,32 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
     }
-    .btn-row-action.action-detail { color: #16a34a; }      /* hijau */
+    .btn-row-action.action-detail { color: #16a34a; }
     .btn-row-action.action-detail:hover { color: #15803d; }
-    .btn-row-action.action-edit { color: #f59e0b; }        /* kuning/oranye */
+    .btn-row-action.action-edit { color: #f59e0b; }
     .btn-row-action.action-edit:hover { color: #d97706; }
-    .btn-row-action.action-delete { color: #dc2626; }      /* merah */
+    .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    /* Search bar disamakan bentuknya (kotak sudut tumpul) */
-    .search-input-wrap input.form-control,
-    .search-filter-group input.form-control,
-    .search-filter-group .btn {
-        border-radius: var(--clean-radius) !important;
+    .btn-solid-pill.is-disabled,
+    button.btn-solid-pill.is-disabled,
+    a.btn-solid-pill.is-disabled {
+        background-color: #9ca3af !important;
+        cursor: not-allowed !important;
+        opacity: 0.6;
     }
-    .search-input-wrap .input-group input.form-control,
-    .search-filter-group .input-group input.form-control {
-        border-radius: var(--clean-radius) 0 0 var(--clean-radius) !important;
-    }
-    .search-input-wrap .input-group button.btn,
-    .search-filter-group .input-group button.btn {
-        border-radius: 0 var(--clean-radius) var(--clean-radius) 0 !important;
-    }
-
-    /* ===== Data Guru: aturan MOBILE (max-width: 767px) =====
-       Semua aturan di dalam media query ini; desktop (>= 768px) tidak terpengaruh. */
-    @media (max-width: 767px) {
-        .table-responsive {
-            width: 100% !important;
-            display: block !important;
-            overflow-x: auto !important;
-            overflow-y: visible !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-x: contain !important;
-        }
-        .table-zebra-custom {
-            table-layout: fixed !important;
-            min-width: 640px !important;
-        }
-        /* Lebar kolom eksplisit (total 910px; tabel digulir di dalam wadah, halaman tidak ikut scroll) */
-        .table-zebra-custom col:nth-child(1)  { width: 40px !important; }    /* No */
-        .table-zebra-custom col:nth-child(2)  { width: 170px !important; }   /* NIP */
-        .table-zebra-custom col:nth-child(3)  { width: 220px !important; }   /* Nama Lengkap Guru */
-        .table-zebra-custom col:nth-child(4)  { width: 110px !important; }   /* Jenis Kelamin */
-        .table-zebra-custom col:nth-child(5)  { width: 130px !important; }   /* Tugas Kelas */
-        .table-zebra-custom col:nth-child(6)  { width: 140px !important; }   /* No. Telepon / WA */
-        .table-zebra-custom col:nth-child(7)  { width: 100px !important; }   /* Aksi */
-        .table-zebra-custom thead th:nth-child(1)  { width: 40px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(2)  { width: 170px !important; text-align: left !important; white-space: nowrap !important; }
-        .table-zebra-custom thead th:nth-child(3)  { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
-        .table-zebra-custom thead th:nth-child(4)  { width: 110px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(5)  { width: 130px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(6)  { width: 140px !important; text-align: center !important; }
-        .table-zebra-custom thead th:nth-child(7)  { width: 100px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(1)  { width: 40px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(2)  { width: 170px !important; text-align: left !important; white-space: nowrap !important; }
-        .table-zebra-custom tbody td:nth-child(3)  { width: 220px !important; text-align: left !important; white-space: normal !important; word-break: break-word !important; }
-        .table-zebra-custom tbody td:nth-child(4)  { width: 110px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(5)  { width: 130px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(6)  { width: 140px !important; text-align: center !important; }
-        .table-zebra-custom tbody td:nth-child(7)  { width: 100px !important; text-align: center !important; }
-        /* Padding konsisten antar kolom (minimal 8px) */
-        .table-zebra-custom th,
-        .table-zebra-custom td {
-            padding-left: 8px !important;
-            padding-right: 8px !important;
-        }
+    .btn-solid-pill.is-disabled:hover,
+    button.btn-solid-pill.is-disabled:hover,
+    a.btn-solid-pill.is-disabled:hover {
+        filter: none;
+        transform: none;
+        opacity: 0.6;
     }
 </style>
 @endpush
 
 @section('content')
 
-    {{-- Alert Notifikasi: [ .flash-notice-body (ikon + teks) ] [ tombol X ].
-         Tombol X center vertikal oleh CSS notifikasi global di layout. --}}
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -393,9 +306,8 @@
     </div>
     @endif
 
-    {{-- Notifikasi sukses HAPUS: MERAH (alert-danger) + ikon tempat sampah. --}}
     @if(session('deleted'))
-    <div class="alert alert-danger alert-deleted alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
                 <i class='bx bx-trash fs-5 me-2 text-danger'></i>
@@ -406,9 +318,6 @@
     </div>
     @endif
 
-    {{-- Notifikasi import Excel. Warna mengikuti session('import_status'):
-         success = hijau, warning = kuning, danger = merah (0 baris terimpor).
-         Tombol X adalah anak LANGSUNG dari kotak alert supaya center vertikal. --}}
     @if(session('import_status'))
     @php
         $importStatus = in_array(session('import_status'), ['success', 'warning', 'danger'], true) ? session('import_status') : 'info';
@@ -434,8 +343,6 @@
     </div>
     @endif
 
-    {{-- Error validasi form: TETAP tampil (tidak hilang otomatis) sampai user
-         memperbaikinya atau menekan tombol X. --}}
     @if($errors->any() && !session('open_modal'))
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
         <div class="flash-notice-body">
@@ -451,25 +358,15 @@
     @endif
 
     @if(Auth::check() && Auth::user()->role === 'admin')
-    {{-- Form Hapus Semua Guru (Hidden, dipanggil via confirmDeleteAllTeachers()) --}}
     <form id="deleteAllTeachersForm" action="{{ panel_route('guru.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
     @endif
 
-    <!-- ========================================================================= -->
-    <!-- KARTU UTAMA DATA GURU: CLEAN ACTION BAR & TABEL TERPADU      -->
-    <!-- (Layout & container disamakan persis dengan Data Siswa)                  -->
-    <!-- ========================================================================= -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-guru">
-
-        <!-- Action Bar & Search (Stretch Memanjang, Tombol Radius Konsisten).
-             p-3 (16px) = patokan inset toolbar Data Siswa/Kelas/Catatan Kehadiran. -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section d-flex flex-column flex-md-row justify-content-between">
-
-                <!-- Sisi Kiri: Form Pencarian -->
                 <form method="GET" action="{{ url()->current() }}" class="action-search-form" id="teacherSearchForm">
                     <div class="input-group search-box-wrap">
                         <input type="text"
@@ -485,37 +382,33 @@
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
-
                 </form>
 
                 @if(Auth::check() && Auth::user()->role === 'admin')
-                <!-- Sisi Kanan: Deretan Tombol Aksi -->
                 <div class="action-buttons-wrap">
-                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#printCardsModal">
+                    <button type="button" class="btn-solid-pill btn-solid-blue {{ $totalTeachers == 0 ? 'is-disabled' : '' }}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#printCardsModal"
+                            {{ $totalTeachers == 0 ? 'tabindex="-1" aria-disabled="true" title="Belum ada data untuk dicetak. Buat data guru melalui Pengaturan > Data Guru lalu coba lagi."' : '' }}>
                         <span>{{ __('Cetak Kartu') }}</span>
                     </button>
 
-                    <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
                         <span>{{ __('Import Excel') }}</span>
                     </button>
 
-                    <!-- 2. Tambah Guru (Solid Biru, Aksi Utama) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
                         <span>{{ __('Tambah Guru') }}</span>
                     </button>
 
-                    <!-- 3. Hapus Semua Guru (Solid Merah - Urutan Terakhir) -->
                     <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Guru') }}" onclick="confirmDeleteAllTeachers()">
                         <span>{{ __('Hapus') }}</span>
                     </button>
                 </div>
                 @endif
-
             </div>
         </div>
 
-        {{-- Tabel Data Guru (Alignment & style disamakan persis dengan Data Siswa) --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <colgroup>
@@ -565,12 +458,10 @@
                         @if(Auth::check() && Auth::user()->role === 'admin')
                         <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
-                                <!-- 1. Tombol Detail Guru -->
                                 <a href="{{ panel_route('guru.show', $teacher->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
 
-                                <!-- 2. Tombol Edit Guru -->
                                 <button type="button" class="btn-row-action action-edit"
                                         title="{{ __('Edit Data Guru') }}"
                                         aria-label="{{ __('Edit Data Guru') }}"
@@ -587,7 +478,6 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </button>
 
-                                <!-- 3. Tombol Hapus Guru -->
                                 <button type="button" class="btn-row-action action-delete"
                                         title="{{ __('Hapus Data Guru') }}"
                                         aria-label="{{ __('Hapus Data Guru') }}"
@@ -622,9 +512,6 @@
     </div>
 
     @if(Auth::check() && Auth::user()->role === 'admin')
-    <!-- ========================================================================= -->
-    <!-- MODAL 1: TAMBAH GURU                                                      -->
-    <!-- ========================================================================= -->
     <div class="modal fade" id="addTeacherModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -651,18 +538,19 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label small fw-semibold" for="add_name">{{ __('Nama Lengkap & Gelar') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="name" id="add_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Contoh: Dra. Hj. Siti Aminah, M.Pd') }}" value="{{ session('open_modal') === 'add' ? old('name') : '' }}" required maxlength="255">
+                                <input type="text" name="name" id="add_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Contoh: Dra. Hj. Siti Aminah, M.Pd') }}" value="{{ session('open_modal') === 'add' ? old('name') : '' }}" maxlength="255">
                                 <div class="invalid-feedback {{ $errors->has('name') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="name">{{ session('open_modal') === 'add' ? $errors->first('name') : '' }}</div>
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-semibold" for="add_nip">NIP (Nomor Induk Pegawai)</label>
-                                <input type="text" name="nip" id="add_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="16 atau 18 digit angka (boleh kosong)" inputmode="numeric" maxlength="18">
+                                <label class="form-label small fw-semibold" for="add_nip">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
+                                <input type="text" name="nip" id="add_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="16 atau 18 digit angka" inputmode="numeric" maxlength="18">
                                 <div class="invalid-feedback {{ $errors->has('nip') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="nip">{{ session('open_modal') === 'add' ? $errors->first('nip') : '' }}</div>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold" for="add_gender">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
                                 <select name="gender" id="add_gender" class="form-select rounded-3 {{ $errors->has('gender') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" required>
+                                    <option value="">{{ __('Pilih jenis kelamin') }}</option>
                                     <option value="Laki-laki" {{ session('open_modal') === 'add' && old('gender') === 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
                                     <option value="Perempuan" {{ session('open_modal') === 'add' && old('gender') === 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
                                 </select>
@@ -680,22 +568,21 @@
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_birth_place">{{ __('Tempat Lahir') }}</label>
+                                <label class="form-label small fw-semibold" for="add_birth_place">{{ __('Tempat Lahir') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="birth_place" id="add_birth_place" class="form-control rounded-3 {{ $errors->has('birth_place') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Kota / Kabupaten Lahir') }}" value="{{ session('open_modal') === 'add' ? old('birth_place') : '' }}" maxlength="100">
                                 <div class="invalid-feedback {{ $errors->has('birth_place') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="birth_place">{{ session('open_modal') === 'add' ? $errors->first('birth_place') : '' }}</div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="add_birth_date">{{ __('Tanggal Lahir') }}</label>
+                                <label class="form-label small fw-semibold" for="add_birth_date">{{ __('Tanggal Lahir') }} <span class="text-danger">*</span></label>
                                 <input type="date" name="birth_date" id="add_birth_date" class="form-control rounded-3 {{ $errors->has('birth_date') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'add' ? old('birth_date') : '' }}">
                                 <div class="invalid-feedback {{ $errors->has('birth_date') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="birth_date">{{ session('open_modal') === 'add' ? $errors->first('birth_date') : '' }}</div>
                             </div>
 
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold" for="add_phone_number">{{ __('No. Telepon / WhatsApp') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" id="add_phone_number" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('08xxxxxxxxxx (10-15 digit)') }}" value="{{ session('open_modal') === 'add' ? old('phone_number') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-semibold" for="add_phone">{{ __('No. Telepon / WhatsApp') }} <span class="text-danger">*</span></label>
+                                <input type="text" name="phone_number" id="add_phone" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('08xxxxxxxxxx (10-15 digit)') }}" value="{{ session('open_modal') === 'add' ? old('phone_number') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
                                 <div class="invalid-feedback {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'd-block' : '' }}" data-error-for="phone_number">{{ session('open_modal') === 'add' ? $errors->first('phone_number') : '' }}</div>
                             </div>
-
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
@@ -707,9 +594,6 @@
         </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- MODAL 2: EDIT GURU                                                        -->
-    <!-- ========================================================================= -->
     <div class="modal fade" id="editTeacherModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -738,18 +622,19 @@
                         <div class="row g-3">
                             <div class="col-12 col-md-8">
                                 <label class="form-label small fw-semibold" for="edit_name">{{ __('Nama Lengkap & Gelar') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="name" id="edit_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('name') : '' }}" required maxlength="255">
+                                <input type="text" name="name" id="edit_name" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('name') : '' }}" maxlength="255">
                                 <div class="invalid-feedback {{ $errors->has('name') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="name">{{ session('open_modal') === 'edit' ? $errors->first('name') : '' }}</div>
                             </div>
                             <div class="col-12 col-md-4">
-                                <label class="form-label small fw-semibold" for="edit_nip">{{ __('NIP') }}</label>
-                                <input type="text" name="nip" id="edit_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('nip') : '' }}" inputmode="numeric" placeholder="16 atau 18 digit angka (boleh kosong)" maxlength="18" >
+                                <label class="form-label small fw-semibold" for="edit_nip">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
+                                <input type="text" name="nip" id="edit_nip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('nip') : '' }}" inputmode="numeric" placeholder="16 atau 18 digit angka" maxlength="18" >
                                 <div class="invalid-feedback {{ $errors->has('nip') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="nip">{{ session('open_modal') === 'edit' ? $errors->first('nip') : '' }}</div>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold" for="edit_gender">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
                                 <select name="gender" id="edit_gender" class="form-select rounded-3 {{ $errors->has('gender') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" required>
+                                    <option value="">{{ __('Pilih jenis kelamin') }}</option>
                                     <option value="Laki-laki" {{ session('open_modal') === 'edit' && old('gender') === 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
                                     <option value="Perempuan" {{ session('open_modal') === 'edit' && old('gender') === 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
                                 </select>
@@ -758,7 +643,7 @@
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold" for="edit_class_id">{{ __('Penugasan Kelas') }}</label>
                                 <select name="school_class_id" id="edit_class_id" class="form-select rounded-3 {{ $errors->has('school_class_id') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}">
-                                    <option value="none">{{ __('-- Tidak Ditugaskan (Guru Pengajar Saja) --') }}</option>
+                                    <option value="">{{ __('-- Tidak Ditugaskan (Guru Pengajar Saja) --') }}</option>
                                     @foreach($classes as $c)
                                     <option value="{{ $c->id }}" {{ session('open_modal') === 'edit' && (string) old('school_class_id') === (string) $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }} ({{ __('Tingkat') }} {{ $c->grade ?? $c->level }})</option>
                                     @endforeach
@@ -767,22 +652,21 @@
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_birth_place">{{ __('Tempat Lahir') }}</label>
+                                <label class="form-label small fw-semibold" for="edit_birth_place">{{ __('Tempat Lahir') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="birth_place" id="edit_birth_place" class="form-control rounded-3 {{ $errors->has('birth_place') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('birth_place') : '' }}" maxlength="100">
                                 <div class="invalid-feedback {{ $errors->has('birth_place') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="birth_place">{{ session('open_modal') === 'edit' ? $errors->first('birth_place') : '' }}</div>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label small fw-semibold" for="edit_birth_date">{{ __('Tanggal Lahir') }}</label>
+                                <label class="form-label small fw-semibold" for="edit_birth_date">{{ __('Tanggal Lahir') }} <span class="text-danger">*</span></label>
                                 <input type="date" name="birth_date" id="edit_birth_date" class="form-control rounded-3 {{ $errors->has('birth_date') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('birth_date') : '' }}">
                                 <div class="invalid-feedback {{ $errors->has('birth_date') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="birth_date">{{ session('open_modal') === 'edit' ? $errors->first('birth_date') : '' }}</div>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold" for="edit_phone">{{ __('No. Telepon / WhatsApp') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" id="edit_phone" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('phone_number') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
+                                <input type="text" name="phone_number" id="edit_phone" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'edit' ? 'is-invalid' : '' }}" value="{{ session('open_modal') === 'edit' ? old('phone') : '' }}" inputmode="numeric" pattern="[0-9]{10,15}" maxlength="15" required>
                                 <div class="invalid-feedback {{ $errors->has('phone_number') && session('open_modal') === 'edit' ? 'd-block' : '' }}" data-error-for="phone_number">{{ session('open_modal') === 'edit' ? $errors->first('phone_number') : '' }}</div>
                             </div>
-
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
@@ -794,46 +678,26 @@
         </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- MODAL 3: IMPORT EXCEL                                                     -->
-    <!-- ========================================================================= -->
     <div class="modal fade" id="importTeacherModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0">
                     <h5 class="fw-bold mb-0">{{ __('Import Data Guru dari Excel') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ panel_route('guru.import') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-body">
-                        @if(session('open_modal') === 'import' && $errors->any())
-                        <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
-                            <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Import belum bisa diproses. Periksa isian yang bertanda merah.') }}
-                        </div>
-                        @endif
-
-                        <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
-                            <div class="mb-2">
-                                {{ __('Format kolom file Excel:') }} <strong>{{ __('NIP, Nama, Jenis Kelamin, Tempat Lahir, Tanggal Lahir, No. HP') }}</strong> {{ __('(.xlsx atau .csv)') }}
-                            </div>
-                            <a href="{{ panel_route('guru.template') }}" class="btn-download-green w-100" data-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">{{ __('Pilih File Excel / CSV') }} <span class="text-danger">*</span></label>
-                            <input type="file" name="file_excel" class="form-control rounded-3 {{ $errors->has('file_excel') && session('open_modal') === 'import' ? 'is-invalid' : '' }}" accept=".xlsx,.xls,.csv" required>
-                            @if($errors->has('file_excel') && session('open_modal') === 'import')
-                            <div class="invalid-feedback d-block">{{ $errors->first('file_excel') }}</div>
-                            @endif
-                            <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ __('Maksimal ukuran file 5 MB.') }}</div>
-                        </div>
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="importTeacherFile">{{ __('Pilih File Excel / CSV') }} <span class="text-danger">*</span></label>
+                        <input type="file" name="file_excel" id="importTeacherFile" class="form-control rounded-3 @error('file_excel') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>
+                        @error('file_excel')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div class="modal-footer border-top-0">
-                        <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                        <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Mulai Import') }}</button>
-                    </div>
-                </form>
+                    <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ __('Maksimal ukuran file 5 MB.') }}</div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn-download-green px-4" data-import data-dl-progress>{{ __('Mulai Import') }}</button>
+                </div>
             </div>
         </div>
     </div>
@@ -849,53 +713,31 @@
                     @csrf
                     <div class="modal-body py-3">
                         <p class="text-secondary small mb-3">
-                            {{ __('Semua guru aktif akan dicetak. Berkas PDF kartu akan siap dicetak pada kertas A4 landscape (10 kartu per lembar, ukuran kartu CR80 portrait).') }}
+                            {{ __('Semua guru aktif akan dicetak. Hasil unduhan berupa file ZIP berisi satu kartu (JPG) untuk setiap guru.') }}
                         </p>
 
                         <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2">
-                            <i class='bx bx-info-circle me-1'></i> {{ __('QR Code kartu guru berisi NIP (jika valid) atau identifier sistem untuk guru tanpa NIP, dan digenerate secara otomatis saat proses cetak.') }}
+                            <i class='bx bx-info-circle me-1'></i> {{ __('QR Code kartu guru berisi NIP (jika valid); guru tanpa NIP memakai identifier sistem.') }}
                         </div>
 
                         <div class="alert alert-warning py-2 px-3 small border-0 rounded-3 mb-0">
-                            <i class='bx bx-error-circle me-1'></i> {{ __('Guru yang belum memiliki NIP tetap dicetak dengan NIP ditampilkan sebagai "-"; QR Code tetap unik karena memakai identifier sistem.') }}
+                            <i class='bx bx-error-circle me-1'></i> {{ __('Guru tanpa NIP tetap dicetak; QR Code tetap unik.') }}
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                        <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen">{{ __('Generate & Unduh') }}</button>
+                        <button type="submit" class="btn-download-blue btn-progress px-4" data-download data-dl-progress data-dl-progress-mode="persen">{{ __('Unduh ZIP Kartu') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
     @endif
+
 @endsection
 
 @push('scripts')
 <script>
-    // Pencarian otomatis saat mengetik (debounce 400ms). Enter & klik ikon search
-    // tetap berfungsi karena input berada di dalam form GET yang sama.
-    (function () {
-        var input = document.getElementById('teacherSearchInput');
-        if (!input) return;
-        var timer = null;
-        input.addEventListener('input', function () {
-            clearTimeout(timer);
-            timer = setTimeout(function () {
-                input.form.submit();
-            }, 400);
-        });
-        input.form.addEventListener('submit', function () {
-            clearTimeout(timer);
-        });
-    })();
-</script>
-@endpush
-
-@if(Auth::check() && Auth::user()->role === 'admin')
-@push('scripts')
-<script>
-    // 1. Buka Modal Edit dengan Nilai yang Sudah Terisi
     function openEditModal(data) {
         document.getElementById('editTeacherForm').action = `{{ url('admin/guru') }}/${data.id}`;
         document.getElementById('edit_name').value = data.name;
@@ -909,111 +751,26 @@
         const modal = new bootstrap.Modal(document.getElementById('editTeacherModal'));
         modal.show();
     }
-
-    // 4. Buka kembali modal yang gagal divalidasi server (isian & pesan error tetap ada)
-    (function () {
-        var openModal = @json(session('open_modal'));
-        var openTeacherId = @json(session('open_teacher_id'));
-
-        if (openModal === 'add') {
-            new bootstrap.Modal(document.getElementById('addTeacherModal')).show();
-        } else if (openModal === 'edit' && openTeacherId) {
-            var editForm = document.getElementById('editTeacherForm');
-            if (editForm) {
-                editForm.action = '{{ url('admin/guru') }}/' + openTeacherId;
-            }
-            new bootstrap.Modal(document.getElementById('editTeacherModal')).show();
-        } else if (openModal === 'import') {
-            new bootstrap.Modal(document.getElementById('importTeacherModal')).show();
-        }
-    })();
-
-    // 5. Validasi klien: pesan tampil di dalam form, field salah diberi penanda merah
-    (function () {
-        var rules = {
-            name: {
-                validate: function (v) {
-                    return v.trim() !== '' ? '' : {!! json_encode(__('Nama lengkap wajib diisi.')) !!};
-                }
-            },
-            nip: {
-                digitOnly: true,
-                validate: function (v) {
-                    if (v.trim() === '') return {!! json_encode(__('NIP wajib diisi.')) !!};
-                    return /^[0-9]{18}$/.test(v) ? '' : {!! json_encode(__('NIP harus 18 digit angka.')) !!};
-                }
-            },
-            phone_number: {
-                digitOnly: true,
-                validate: function (v) {
-                    if (v.trim() === '') return {!! json_encode(__('Nomor telepon wajib diisi.')) !!};
-                    return /^[0-9]{10,15}$/.test(v) ? '' : {!! json_encode(__('Nomor telepon harus 10-15 digit angka.')) !!};
-                }
-            }
-        };
-
-        function applyError(form, name, msg) {
-            var field = form.querySelector('[name="' + name + '"]');
-            var box = form.querySelector('[data-error-for="' + name + '"]');
-            if (!field || !box) return;
-            if (msg) {
-                field.classList.add('is-invalid');
-                box.textContent = msg;
-                box.classList.add('d-block');
-            } else {
-                field.classList.remove('is-invalid');
-                box.textContent = '';
-                box.classList.remove('d-block');
-            }
-        }
-
-        document.querySelectorAll('form[data-teacher-form]').forEach(function (form) {
-            form.addEventListener('input', function (e) {
-                var t = e.target;
-                var rule = rules[t.name];
-                if (!rule) return;
-                if (rule.digitOnly) {
-                    var cleaned = t.value.replace(/[^0-9]/g, '');
-                    if (cleaned !== t.value) t.value = cleaned;
-                }
-                applyError(form, t.name, rule.validate(t.value));
-            });
-
-            form.addEventListener('submit', function (e) {
-                var first = null;
-                Object.keys(rules).forEach(function (name) {
-                    var field = form.querySelector('[name="' + name + '"]');
-                    if (!field) return;
-                    var msg = rules[name].validate(field.value);
-                    applyError(form, name, msg);
-                    if (msg && !first) first = field;
-                });
-                if (first) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    first.focus();
-                }
-            });
-        });
-    })();
-
-    // 2. Konfirmasi Hapus Guru Satuan
     function confirmDeleteTeacher(id, name) {
         confirmUniversalDelete({
             title: {!! json_encode(__('Hapus Data Guru?')) !!},
-            html: {!! json_encode(__('Data guru')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
+            html: {!! json_encode(__('Guru')) !!} + ' <strong>' + name + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
             confirmText: {!! json_encode(__('Hapus')) !!},
             cancelText: {!! json_encode(__('Tidak')) !!},
-            onConfirm: function() {
-                document.getElementById('deleteTeacherForm-' + id).submit();
+            onConfirm: function () {
+                const form = document.getElementById(`deleteTeacherForm-${id}`);
+                if (!form) {
+                    console.error('HAPUS: form deleteTeacherForm-' + id + ' tidak ditemukan. Muat ulang halaman.');
+                    return;
+                }
+                const qs = window.location.search;
+                if (qs && form.action.indexOf('?') === -1) {
+                    form.action = form.action + qs;
+                }
+                form.submit();
             }
         });
     }
-
-    // 3. Konfirmasi Hapus Semua Guru Massal.
-    // Memakai confirmUniversalDelete() dari layout bersama supaya tema,
-    // ukuran, animasi, dan tombol nonaktif-hingga-checkbox-nya SAMA PERSIS
-    // dengan dialog hapus di halaman lain.
     function confirmDeleteAllTeachers() {
         confirmUniversalDelete({
             title: {!! json_encode(__('Hapus Seluruh Data Guru?')) !!},
@@ -1032,4 +789,3 @@
     }
 </script>
 @endpush
-@endif

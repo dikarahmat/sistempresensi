@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', __('Catatan Kehadiran'))
-@section('page_title', __('Catatan Kehadiran'))
-@section('page_subtitle', __('Lihat histori kehadiran hari ini'))
+@section('title', {!! __('Catatan Kehadiran') !!})
+@section('page_title', {!! __('Catatan Kehadiran') !!})
+@section('page_subtitle', {!! __('Lihat histori kehadiran hari ini') !!})
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
@@ -512,21 +512,21 @@
                            name="search"
                            id="filterSearch"
                            class="form-control shadow-none"
-                           placeholder="{{ __('Cari nama atau NISN...') }}"
+                           placeholder="{{ {!! __('Cari nama atau NISN...') !!} }}"
                            value="{{ $search }}"
-                           aria-label="{{ __('Cari nama atau NISN') }}"
+                           aria-label="{{ {!! __('Cari nama atau NISN') !!} }}"
                            autocomplete="off"
                            style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                    <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
+                    <button class="btn shadow-none" type="submit" title="{{ {!! __('Cari') !!} }}" aria-label="{{ {!! __('Cari') !!} }}">
                         <i class='bx bx-search fs-6'></i>
                     </button>
                 </div>
 
                 <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang -->
                 <div class="filter-box-wrap">
-                    <select name="class_filter" id="classFilter" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Semua Kelas') }}">
+                    <select name="class_filter" id="classFilter" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ {!! __('Semua Kelas') !!} }}">
                         {{-- Opsi "Semua Kelas" memakai nilai kosong (tidak ada filter). --}}
-                        <option value="" {{ request('class_filter') == '' ? 'selected' : '' }}>{{ __('Semua Kelas') }}</option>
+                        <option value="" {{ request('class_filter') == '' ? 'selected' : '' }}>{{ {!! __('Semua Kelas') !!} }}</option>
                         {{-- Daftar kelas SELALU lengkap: tidak lagi ikut ter-filter
                              oleh kata pencarian. --}}
                         @foreach($classHistories as $class)
@@ -542,7 +542,7 @@
         <!-- Periode angka pada tabel (sama dengan mode "Semua" di Riwayat
              Presensi) supaya user tahu angka mana yang sedang ditampilkan. -->
         <div class="kehadiran-period-caption">
-            {{ __('Periode:') }} <strong>{{ $periodeLabel ?? '-' }}</strong>
+            {{ {!! __('Periode:') !!} }} <strong>{{ $periodeLabel ?? '-' }}</strong>
         </div>
 
         <!-- Tabel Histori Kehadiran per Siswa -->
@@ -550,16 +550,16 @@
             <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
                 <thead class="bg-light">
                     <tr class="small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
-                        <th class="text-center py-3" style="width: 5%;">{{ __('No') }}</th>
-                        <th class="text-center py-3" style="width: 10%;">{{ __('NISN') }}</th>
-                        <th class="text-start py-3" style="width: 25%;">{{ __('Nama Siswa') }}</th>
-                        <th class="text-center py-3" style="width: 10%;">{{ __('Kelas') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Hadir') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Terlambat') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Sakit') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Izin') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Alfa') }}</th>
-                        <th class="text-center py-3" style="width: 10%;">{{ __('Aksi') }}</th>
+                        <th class="text-center py-3" style="width: 5%;">{{ {!! __('No') !!} }}</th>
+                        <th class="text-center py-3" style="width: 10%;">{{ {!! __('NISN') !!} }}</th>
+                        <th class="text-start py-3" style="width: 25%;">{{ {!! __('Nama Siswa') !!} }}</th>
+                        <th class="text-center py-3" style="width: 10%;">{{ {!! __('Kelas') !!} }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ {!! __('Hadir') !!} }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ {!! __('Terlambat') !!} }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ {!! __('Sakit') !!} }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ {!! __('Izin') !!} }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ {!! __('Alfa') !!} }}</th>
+                        <th class="text-center py-3" style="width: 10%;">{{ {!! __('Aksi') !!} }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -580,7 +580,7 @@
                         <td class="text-center fw-normal" style="color: #7e22ce;">{{ $item->izin }}</td>
                         <td class="text-center fw-normal" style="color: #ef4444;">{{ $item->alfa }}</td>
                         <td class="text-center text-nowrap">
-                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
+                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ {!! __('Lihat riwayat presensi') !!} }} {{ $item->name }}" aria-label="{{ {!! __('Lihat riwayat presensi') !!} }} {{ $item->name }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                             </a>
                         </td>
@@ -590,9 +590,9 @@
                         <td colspan="10" class="text-center py-5 text-muted fw-normal empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_filter'))
-                                {{ __('TIDAK ADA DATA SISWA YANG COCOK DENGAN PENCARIAN/FILTER.') }}
+                                {!! __('TIDAK ADA DATA SISWA YANG COCAK DENGAN PENCARIAN/FILTER.') !!}
                             @else
-                                {{ __('BELUM ADA DATA SISWA YANG TERDAFTAR.') }}
+                                {!! __('BELUM ADA DATA SISWA YANG TERDAFTAR.') !!}
                             @endif
                         </td>
                     </tr>
@@ -641,9 +641,9 @@
             <nav class="kehadiran-pagination" id="kehadiran-pagination" aria-label="{{ __('Navigasi halaman catatan kehadiran') }}">
                 <ul class="kehadiran-pagination-list">
                     @if ($pgCurrent <= 1)
-                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; {{ __('Sebelumnya') }}</span></li>
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">&lsaquo; {{ {!! __('Sebelumnya') !!} }}</span></li>
                     @else
-                        <li><a class="kehadiran-pagination-step" href="{{ $studentHistories->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; {{ __('Sebelumnya') }}</a></li>
+                        <li><a class="kehadiran-pagination-step" href="{{ $studentHistories->previousPageUrl() }}{{ $pgHash }}" rel="prev">&lsaquo; {{ {!! __('Sebelumnya') !!} }}</a></li>
                     @endif
 
                     @foreach ($pgPages as $pgItem)
@@ -657,14 +657,14 @@
                     @endforeach
 
                     @if ($pgCurrent >= $pgLast)
-                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">{{ __('Berikutnya') }} &rsaquo;</span></li>
+                        <li><span class="kehadiran-pagination-step is-disabled" aria-disabled="true">{{ {!! __('Berikutnya') !!} }} &rsaquo;</span></li>
                     @else
-                        <li><a class="kehadiran-pagination-step" href="{{ $studentHistories->nextPageUrl() }}{{ $pgHash }}" rel="next">{{ __('Berikutnya') }} &rsaquo;</a></li>
+                        <li><a class="kehadiran-pagination-step" href="{{ $studentHistories->nextPageUrl() }}{{ $pgHash }}" rel="next">{{ {!! __('Berikutnya') !!} }} &rsaquo;</a></li>
                     @endif
                 </ul>
 
                 <p class="kehadiran-pagination-info">
-                    {{ __('Menampilkan') }} {{ $studentHistories->firstItem() ?? 0 }}&ndash;{{ $studentHistories->lastItem() ?? 0 }}
+                    {{ {!! __('Menampilkan') !!} }} {{ $studentHistories->firstItem() ?? 0 }}&ndash;{{ $studentHistories->lastItem() ?? 0 }}
                     {{ __('dari') }} {{ $studentHistories->total() }} {{ __('siswa') }}
                 </p>
             </nav>

@@ -91,6 +91,24 @@ class Setting extends Model
         self::clearCache();
     }
 
+    /**
+     * Ambil NPSN sekolah (Nomor Pokok Siswa Nasional).
+     * Status: opsional. Kembalikan string 8 digit, atau kosong jika tidak diisi.
+     */
+    public static function getSchoolNpsn(): string
+    {
+        $value = static::get('school_npsn', '');
+        if (filled($value)) {
+            // Hanya ambil digit, lalu format 8 digit (jika ada)
+            $digits = preg_replace('/[^0-9]/', '', (string) $value);
+            if (strlen($digits) >= 8) {
+                return substr($digits, 0, 8);
+            }
+            return $digits;
+        }
+        return '';
+    }
+
     public static function getSchoolName(): string
     {
         return (string) self::get('school_name', 'SMP Presensi PGRI');
@@ -167,12 +185,6 @@ class Setting extends Model
      * TIDAK ditampilkan di form pengaturan, TIDAK disimpan via form.
      * Dipakai oleh ScannerController::processScan() untuk logika check-out.
      */
-    public static function getSchoolNpsn(): string
-    {
-        $value = static::get('school_npsn', '');
-        return filled($value) ? (string) $value : '-';
-    }
-
     public static function getCheckOutTime(): string
     {
         return (string) self::get('check_out_time', '14:00');
@@ -205,5 +217,35 @@ class Setting extends Model
         $version = @filemtime(public_path($path));
 
         return asset($path) . '?v=' . ($version ?: time());
+    }
+
+    /**
+     * Ambil logo sebagai data URI (base64) untuk PDF (DomPDF tidak bisa pakai URL).
+     * Fallback ke logo bawaan jika file tidak ditemukan.
+     */
+    public static function getLogoDataUri(): string
+    {
+        $logo = self::get('school_logo');
+        $fallback = public_path('images/logo.webp');
+        $source = $logo ?: $fallback;
+
+        // Coba dari storage/app/public (setelah symlink ingin)
+        $localPath = 'storage/app/public/' . ltrim($logo ?? '', '/');
+        if ($logo && file_exists($localPath)) {
+            $source = $localPath;
+        } elseif (file_exists($fallback)) {
+            $source = $fallback;
+        } else {
+            // Fallback default: jika tidak ada file gambar, pakai placeholder teks
+            return 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏫</text></svg>');
+        }
+
+        $mime = mime_content_type($source) ?: 'image/png';
+        $data = file_get_contents($source);
+        if ($data === false) {
+            return 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏫</text></svg>');
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode($data);
     }
 }

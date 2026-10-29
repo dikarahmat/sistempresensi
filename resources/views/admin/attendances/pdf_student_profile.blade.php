@@ -163,36 +163,36 @@
             </td>
             <td style="padding-left: 8px;">
                 <div class="school-title">{{ $schoolName }}</div>
-                <div class="school-subtitle">{{ $schoolAddress }} &bull; NPSN: {{ $npsn }} &bull; {{ __('Tahun Ajaran') }}: {{ $yearName }}</div>
+                <div class="school-subtitle">{{ $schoolAddress }} &bull; NPSN: {{ $npsn }} &bull; {!! __('Tahun Ajaran') !!} : {{ $yearName }}</div>
             </td>
             <td class="printed-at" style="width: 150px;">
-                {{ __('Dicetak pada:') }}<br>
-                <strong>{{ $printedAt }}</strong>
+                {!! __('Dicetak pada:') !!}<br>
+                <strong>{!! $printedAt !!}</strong>
             </td>
         </tr>
     </table>
 
-    <div class="report-title">{{ __('Laporan Riwayat Presensi Siswa') }}{{ $periodTitle ? ' - ' . $periodTitle : '' }}</div>
-    <div class="report-subtitle">{{ __('Periode:') }} {{ $periodLabel }} | {{ __('Kelas:') }} {{ $className }} | {{ __('Tahun Ajaran') }}: {{ $yearName }}</div>
+    <div class="report-title">{!! __('Laporan Riwayat Presensi Siswa') !!}{!! $periodTitle ? ' - ' . $periodTitle : '' !!}</div>
+    <div class="report-subtitle">{!! __('Periode:') !!} {{ $periodLabel }} | {!! __('Kelas:') !!} {{ $className }} | {!! __('Tahun Ajaran') !!} : {{ $yearName }}</div>
 
     <!-- IDENTITAS SISWA: blok rapat 74% lebar, dipusatkan pakai margin
          kiri/kanan 13% (DomPDF tidak mendukung margin: 0 auto). -->
     <table class="identity">
         <tr>
-            <td class="lbl" style="width: 19%">{{ __('Nama') }}</td>
+            <td class="lbl" style="width: 19%">{!! __('Nama') !!}</td>
             <td class="sep" style="width: 4%">:</td>
             <td class="val" style="width: 31%">{{ mb_strtoupper($student->name ?? '', 'UTF-8') }}</td>
             <td style="width: 7%"></td>
-            <td class="lbl2" style="width: 21%">{{ __('Kelas ') }}</td>
+            <td class="lbl2" style="width: 21%">{!! __('Kelas ') !!}</td>
             <td class="sep" style="width: 4%">:</td>
             <td class="val" style="width: 14%">{{ $className }}</td>
         </tr>
         <tr>
-            <td class="lbl" style="width: 19%">{{ __('NISN') }}</td>
+            <td class="lbl" style="width: 19%">{!! __('NISN') !!}</td>
             <td class="sep" style="width: 4%">:</td>
             <td class="val" style="width: 31%">{{ $student->nisn ?: '-' }}</td>
             <td style="width: 7%"></td>
-            <td class="lbl2" style="width: 21%">{{ __('Jenis Kelamin') }}</td>
+            <td class="lbl2" style="width: 21%">{!! __('Jenis Kelamin') !!}</td>
             <td class="sep" style="width: 4%">:</td>
             <td class="val" style="width: 14%">{{ $student->gender ?? '-' }}</td>
         </tr>
@@ -202,23 +202,23 @@
     <table class="tbl">
         <thead>
             <tr>
-                <th style="width: 5%;">{{ __('No') }}</th>
-                <th style="width: 12%;">{{ __('Hari') }}</th>
-                <th style="width: 14%;">{{ __('Tanggal') }}</th>
-                <th style="width: 14%;">{{ __('Jam Masuk') }}</th>
-                <th style="width: 10%;">{{ __('Status') }}</th>
-                <th style="width: 17%;">{{ __('Keterlambatan') }}</th>
-                <th style="width: 28%;">{{ __('Keterangan') }}</th>
+                <th style="width: 5%;">{!! __('No') !!}</th>
+                <th style="width: 12%;">{!! __('Hari') !!}</th>
+                <th style="width: 14%;">{!! __('Tanggal') !!}</th>
+                <th style="width: 14%;">{!! __('Jam Masuk') !!}</th>
+                <th style="width: 10%;">{!! __('Status') !!}</th>
+                <th style="width: 17%;">{!! __('Keterlambatan') !!}</th>
+                <th style="width: 28%;">{!! __('Keterangan') !!}</th>
             </tr>
         </thead>
         <tbody>
             @forelse($rows as $index => $row)
                 @php $sym = $statusSymbol[$row['status']] ?? null; @endphp
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($row['tanggal_raw'])->translatedFormat('l') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($row['tanggal_raw'])->translatedFormat('d/m/Y') }}</td>
-                    <td>{{ $row['jam_masuk'] }}</td>
+                    <td>{!! $index + 1 !!}</td>
+                    <td>{!! \Carbon\Carbon::parse($row['tanggal_raw'])->translatedFormat('l') !!}</td>
+                    <td>{!! \Carbon\Carbon::parse($row['tanggal_raw'])->translatedFormat('d/m/Y') !!}</td>
+                    <td>{!! $row['jam_masuk'] !!}</td>
                     <td>
                         @if($sym)
                             <span class="st st-{{ $sym }}">{{ $sym }}</span>
@@ -226,12 +226,12 @@
                             {{ $row['status'] ?: '-' }}
                         @endif
                     </td>
-                    <td>{{ $row['keterlambatan'] }}</td>
-                    <td class="text-left">{{ $row['keterangan'] }}</td>
+                    <td>{!! $row['keterlambatan'] !!}</td>
+                    <td class="text-left">{!! $row['keterangan'] !!}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="padding: 14px; color: #64748b;">{{ __('Tidak ada data presensi untuk periode ini.') }}</td>
+                    <td colspan="7" style="padding: 14px; color: #64748b;">{!! __('Tidak ada data presensi untuk periode ini.') !!}</td>
                 </tr>
             @endforelse
         </tbody>
@@ -240,25 +240,25 @@
     <!-- KETERANGAN + TANDA TANGAN (satu blok) -->
     <div class="closing">
         <div class="legend-box">
-            <div class="legend-title">{{ __('KETERANGAN:') }}</div>
+            <div class="legend-title">{!! __('KETERANGAN:') !!}</div>
             <div class="legend-text">
-                <span class="st st-H">H</span> = {{ __('Hadir') }},
-                <span class="st st-T">T</span> = {{ __('Terlambat') }},
-                <span class="st st-S">S</span> = {{ __('Sakit') }},
-                <span class="st st-I">I</span> = {{ __('Izin') }},
-                <span class="st st-A">A</span> = {{ __('Alfa') }},
-                <span class="st st-L">L</span> = {{ __('Libur') }},
-                <span style="color: #647489;">-</span> = {{ __('Belum ada data') }}
+                <span class="st st-H">H</span> = {!! __('Hadir') !!}
+                <span class="st st-T">T</span> = {!! __('Terlambat') !!}
+                <span class="st st-S">S</span> = {!! __('Sakit') !!}
+                <span class="st st-I">I</span> = {!! __('Izin') !!}
+                <span class="st st-A">A</span> = {!! __('Alfa') !!}
+                <span class="st st-L">L</span> = {!! __('Libur') !!}
+                <span style="color: #647489;">-</span> = {!! __('Belum ada data') !!}
             </div>
-            <div class="legend-note">{{ __('Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".') }}</div>
-            <div class="legend-note">{{ __('Jam masuk:') }} {{ $checkInTime ?? \App\Models\Setting::getCheckInTime() }}, {{ __('batas keterlambatan:') }} {{ $lateLimitTime ?? \App\Models\Setting::getLateLimitTime() }}</div>
+            <div class="legend-note">{!! __('Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".') !!}</div>
+            <div class="legend-note">{!! __('Jam masuk:') !!} {{ $checkInTime ?? \App\Models\Setting::getCheckInTime() }}, {!! __('batas keterlambatan:') !!} {{ $lateLimitTime ?? \App\Models\Setting::getLateLimitTime() }}</div>
         </div>
 
         <table class="signature-table">
             <tr>
                 <td>
-                    {{ __('Mengetahui,') }}<br>
-                    {{ __('Kepala Sekolah') }}
+                    {!! __('Mengetahui,') !!}<br>
+                    {!! __('Kepala Sekolah') !!}
                     <div class="signature-line"></div>
                     <strong><u>{{ $headmasterName ?: $signPlaceholder }}</u></strong><br>
                     NIP. {{ $headmasterNip ?: '-' }}
@@ -269,7 +269,7 @@
                          "Wali Kelas" sejajar di bawah huruf pertama "Parung Panjang". --}}
                     <div class="sig-inline">
                         Parung Panjang, {{ $signedAt }}<br>
-                        {{ __('Wali Kelas') }}
+                        {!! __('Wali Kelas') !!}
                         <div class="signature-line"></div>
                         <strong><u>{{ $waliName ?: $signPlaceholder }}</u></strong><br>
                         NIP. {{ $waliNip ?: '-' }}

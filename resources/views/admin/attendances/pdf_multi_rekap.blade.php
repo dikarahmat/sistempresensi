@@ -205,7 +205,7 @@
             <td style="padding-left: 10px;">
                 <div class="school-title">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</div>
                 <div class="school-subtitle">
-                    {{ $schoolAddress ?? \App\Models\Setting::getSchoolAddress() }} &bull; NPSN: {{ $npsn }} &bull; {{ __('Tahun Ajaran') }}: {{ $resolvedActiveYear?->name ?? '2025/2026' }}
+                    {{ $schoolAddress ?? \App\Models\Setting::getSchoolAddress() }} &bull; NPSN: {{ $npsn }} &bull; {!! __('Tahun Ajaran') !!} : {{ $resolvedActiveYear?->name ?? '2025/2026' }}
                 </div>
             </td>
             <td style="text-align: right; font-size: 8pt; color: #64748b;">
@@ -223,15 +223,15 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 4%;">{{ __('No') }}</th>
-                <th style="width: 9%;">{{ __('NISN') }}</th>
-                <th style="text-align: left; width: 20%;">{{ __('Nama Siswa') }}</th>
-                <th style="width: 8%;">{{ __('Kelas') }}</th>
-                <th style="width: 3%;">{{ __('JK') }}</th>
-                <th style="width: 10%;">{{ __('Jam Masuk') }}</th>
-                <th style="width: 12%;">{{ __('Keterlambatan') }}</th>
-                <th style="width: 8%;">{{ __('Status') }}</th>
-                <th style="text-align: left; width: 26%;">{{ __('Catatan') }}</th>
+                <th style="width: 4%;">{!! __('No') !!}</th>
+                <th style="width: 9%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: 20%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: 8%;">{!! __('Kelas') !!}</th>
+                <th style="width: 3%;">{!! __('JK') !!}</th>
+                <th style="width: 10%;">{!! __('Jam Masuk') !!}</th>
+                <th style="width: 12%;">{!! __('Keterlambatan') !!}</th>
+                <th style="width: 8%;">{!! __('Status') !!}</th>
+                <th style="text-align: left; width: 26%;">{!! __('Catatan') !!}</th>
             </tr>
         </thead>
         <tbody>
@@ -241,22 +241,22 @@
                 <td>{{ $row['student']->nisn ?: '-' }}</td>
                 <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
-                <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
-                <td>{{ $row['check_in'] }}</td>
-                <td>{{ $row['late_text'] }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td>{!! $row['check_in'] !!}</td>
+                <td>{!! $row['late_text'] !!}</td>
                 <td>
                     @if($row['status'] === 'Hadir')
-                        <span class="badge-h">{{ __('Hadir') }}</span>
+                        <span class="badge-h">{!! __('Hadir') !!}</span>
                     @elseif($row['status'] === 'Terlambat')
-                        <span class="badge-t">{{ __('Terlambat') }}</span>
+                        <span class="badge-t">{!! __('Terlambat') !!}</span>
                     @elseif($row['status'] === 'Sakit')
-                        <span class="badge-s">{{ __('Sakit') }}</span>
+                        <span class="badge-s">{!! __('Sakit') !!}</span>
                     @elseif($row['status'] === 'Izin')
-                        <span class="badge-i">{{ __('Izin') }}</span>
+                        <span class="badge-i">{!! __('Izin') !!}</span>
                     @elseif($row['status'] === 'Alfa')
-                        <span class="badge-a">{{ __('Alfa') }}</span>
+                        <span class="badge-a">{!! __('Alfa') !!}</span>
                     @elseif($row['status'] === 'Libur')
-                        <span class="badge-l">{{ __('Libur') }}</span>
+                        <span class="badge-l">{!! __('Libur') !!}</span>
                     @elseif(str_contains($row['status'], 'Belum'))
                         <span class="badge-l">-</span>
                     @else
@@ -267,7 +267,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="9" style="padding: 16px; color: #64748b;">{{ __('Tidak ada data presensi.') }}</td>
+                <td colspan="9" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>
@@ -285,11 +285,11 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: {{ $wNo }}%;">{{ __('No') }}</th>
-                <th style="width: {{ $wNisn }}%;">{{ __('NISN') }}</th>
-                <th style="text-align: left; width: {{ $wNama }}%;">{{ __('Nama Siswa') }}</th>
-                <th style="width: {{ $wKelas }}%;">{{ __('Kelas') }}</th>
-                <th style="width: {{ $wJk }}%;">{{ __('JK') }}</th>
+                <th style="width: {{ $wNo }}%;">{!! __('No') !!}</th>
+                <th style="width: {{ $wNisn }}%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
+                <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
                 @foreach($dateColumns as $d)
                     <th style="width: {{ $wKolomTanggalMingguan }}%;">{{ $d['label'] }}</th>
                 @endforeach
@@ -308,7 +308,7 @@
                 <td>{{ $row['student']->nisn ?: '-' }}</td>
                 <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
-                <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @foreach($dateColumns as $d)
                     @php
                         $code = $row['days'][$d['date']] ?? '-';
@@ -325,16 +325,16 @@
                     @endphp
                     <td class="{{ $cls }}">{{ $val }}</td>
                 @endforeach
-                <td class="badge-h">{{ $row['hadir'] }}</td>
-                <td class="badge-t">{{ $row['terlambat'] }}</td>
-                <td class="badge-s">{{ $row['sakit'] }}</td>
-                <td class="badge-i">{{ $row['izin'] }}</td>
-                <td class="badge-a">{{ $row['alfa'] }}</td>
-                <td><strong>{{ $row['percentage'] }}%</strong></td>
+                <td class="badge-h">{!! $row['hadir'] !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] !!}</td>
+                <td class="badge-s">{!! $row['sakit'] !!}</td>
+                <td class="badge-i">{!! $row['izin'] !!}</td>
+                <td class="badge-a">{!! $row['alfa'] !!}</td>
+                <td><strong>{!! $row['percentage'] !!}%</strong></td>
             </tr>
             @empty
             <tr>
-                <td colspan="{{ count($dateColumns) + 11 }}" style="padding: 16px; color: #64748b;">{{ __('Tidak ada data presensi.') }}</td>
+                <td colspan="{{ count($dateColumns) + 11 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>
@@ -353,11 +353,11 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: {{ $wNo }}%;">{{ __('No') }}</th>
-                <th style="width: {{ $wNisn }}%;">{{ __('NISN') }}</th>
-                <th style="text-align: left; width: {{ $wNama }}%;">{{ __('Nama Siswa') }}</th>
-                <th style="width: {{ $wKelas }}%;">{{ __('Kelas') }}</th>
-                <th style="width: {{ $wJk }}%;">{{ __('JK') }}</th>
+                <th style="width: {{ $wNo }}%;">{!! __('No') !!}</th>
+                <th style="width: {{ $wNisn }}%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
+                <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     <th style="padding: 2px 1px; width: {{ $wKolomTanggalBulanan }}%;">{{ $d }}</th>
                 @endfor
@@ -376,7 +376,7 @@
                 <td>{{ $row['student']->nisn ?: '-' }}</td>
                 <td class="text-left" style="font-size: 7pt;"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
-                <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     @php
                         $code = $row['days'][$d] ?? '-';
@@ -392,16 +392,16 @@
                     @endphp
                     <td class="{{ $cls }}" style="padding: 2px 1px; font-size: 7pt;">{{ $code }}</td>
                 @endfor
-                <td class="badge-h">{{ $row['hadir'] }}</td>
-                <td class="badge-t">{{ $row['terlambat'] }}</td>
-                <td class="badge-s">{{ $row['sakit'] }}</td>
-                <td class="badge-i">{{ $row['izin'] }}</td>
-                <td class="badge-a">{{ $row['alfa'] }}</td>
-                <td><strong>{{ $row['percentage'] }}%</strong></td>
+                <td class="badge-h">{!! $row['hadir'] !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] !!}</td>
+                <td class="badge-s">{!! $row['sakit'] !!}</td>
+                <td class="badge-i">{!! $row['izin'] !!}</td>
+                <td class="badge-a">{!! $row['alfa'] !!}</td>
+                <td><strong>{!! $row['percentage'] !!}%</strong></td>
             </tr>
             @empty
             <tr>
-                <td colspan="{{ $daysInMonth + 11 }}" style="padding: 16px; color: #64748b;">{{ __('Tidak ada data presensi.') }}</td>
+                <td colspan="{{ $daysInMonth + 11 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>
@@ -428,8 +428,8 @@
         <table class="signature-table">
             <tr>
                 <td>
-                    {{ __('Mengetahui,') }}<br>
-                    {{ __('Kepala Sekolah') }}
+                    {!! __('Mengetahui,') !!}<br>
+                    {!! __('Kepala Sekolah') !!}
                     <div class="signature-space"></div>
                     <strong><u>{{ $headmasterName ?: $signPlaceholder }}</u></strong><br>
                     NIP. {{ $headmasterNip ?: '-' }}
@@ -441,7 +441,7 @@
                          "Parung Panjang" dan NIP-nya juga sejajar. --}}
                     <div class="sig-inline">
                         Parung Panjang, {{ $signedAt }}<br>
-                        {{ __('Wali Kelas') }}
+                        {!! __('Wali Kelas') !!}
                         <div class="signature-space"></div>
                         <strong><u>{{ $section['waliName'] ?: $signPlaceholder }}</u></strong><br>
                         NIP. {{ $section['waliNip'] ?: '-' }}

@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', __('Data Guru'))
-@section('page_title', __('Data Guru'))
-@section('page_subtitle', __('Kelola data guru pendidik'))
+@section('title', __('Data Siswa'))
+@section('page_title', __('Data Siswa'))
+@section('page_subtitle', __('Kelola data siswa pendidik'))
 
 @push('styles')
 <style>
-    /* Subtitle Data Guru: full width, tidak terpotong (mobile & desktop) */
+    /* Subtitle Data Siswa: full width, tidak terpotong (mobile & desktop) */
     .header-main-subtitle {
         white-space: normal !important;
         overflow: visible !important;
@@ -148,7 +148,7 @@
         }
     }
 
-    /* Header tabel Data Guru: nilai DESKTOP (>= 1024px) tidak berubah. */
+    /* Header tabel Data Siswa: nilai DESKTOP (>= 1024px) tidak berubah. */
     .table-zebra-custom thead th {
         color: #475569 !important;
         font-size: 0.72rem !important;
@@ -257,7 +257,7 @@
     }
     .btn-solid-blue { background-color: #2563eb; }
 
-    /* ===== Data Guru: aturan MOBILE (max-width: 767px) ===== */
+    /* ===== Data Siswa: aturan MOBILE (max-width: 767px) ===== */
     @media (max-width: 767px) {
         .table-responsive {
             width: 100% !important;
@@ -297,7 +297,7 @@
         }
     }
 
-    /* ===== Data Guru: kolom Nama LENGKAP GURU rata kiri di DESKTOP =====
+    /* ===== Data Siswa: kolom Nama LENGKAP SISWA rata kiri di DESKTOP =====
        Hanya berlaku di lebar >= 768px; mobile (di bawah 768px) tidak terpengaruh. */
     @media (min-width: 768px) {
         .table-zebra-custom thead th:nth-child(3),
@@ -314,7 +314,7 @@
 
 @section('content')
 
-    <!-- Kartu utama Data Guru -->
+    <!-- Kartu utama Data Siswa -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-guru">
 
         <!-- Action Bar & Search -->
@@ -326,7 +326,7 @@
                     <div class="input-group search-box-wrap">
                         <input type="text"
                                name="search"
-                               id="teacherSearchInput"
+                               id="studentSearchInput"
                                class="form-control shadow-none"
                                placeholder="{{ __('Cari nama atau NIP...') }}"
                                value="{{ request('search') }}"
@@ -349,7 +349,7 @@
             </div>
         </div>
 
-        <!-- Tabel Data Guru: read-only, kolom NO, NIP, NAMA LENGKAP GURU, JENIS KELAMIN, TUGAS KELAS, NO. TELEPON / WA, AKSI(ikon mata) -->
+        <!-- Tabel Data Siswa: read-only, kolom NO, NISN, NAMA LENGKAP SISWA, JENIS KELAMIN, KELAS, NO. TELEPON / WA, AKSI(ikon mata) -->
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <colgroup>
@@ -373,30 +373,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($teachers as $index => $teacher)
+                    @forelse($students as $index => $student)
                     @php
-                        $assignedClass = $teacher->schoolClass ?? null;
+                        $assignedClass = $student->school_class_id ?? null;
                     @endphp
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $teachers->firstItem() + $index }}</td>
-                        <td data-label="{{ __('NIP') }}" class="text-center text-nowrap px-3">{{ $teacher->nip ?? '-' }}</td>
-                        <td data-label="{{ __('Nama Guru') }}" class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $teacher->name }}</td>
+                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $students->firstItem() + $index }}</td>
+                        <td data-label="{{ __('NIP') }}" class="text-center text-nowrap px-3">{{ $student->nisn ?? '-' }}</td>
+                        <td data-label="{{ __('Nama Guru') }}" class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $student->name }}</td>
                         <td data-label="{{ __('Jenis Kelamin') }}" class="text-center text-nowrap px-3">
-                            {{ ($teacher->gender == 'Perempuan' || $teacher->gender == 'P') ? __('Perempuan') : __('Laki-laki') }}
+                            {{ ($student->gender == 'Perempuan' || $student->gender == 'P') ? __('Perempuan') : __('Laki-laki') }}
                         </td>
                         <td data-label="{{ __('Tugas Kelas') }}" class="text-center text-nowrap px-3">
                             @if($assignedClass)
                                 {{ __('Kelas ') }}{{ $assignedClass->name }}
                             @else
-                                {{ __('Guru Pengajar') }}
+                                {{ __('Siswa Pekerja') }}
                             @endif
                         </td>
                         <td data-label="{{ __('No. Telepon / WA') }}" class="text-center text-nowrap px-3">
-                            {{ $teacher->phone_number ?? $teacher->phone ?? '-' }}
+                            {{ $student->phone_number ?? $student->phone ?? '-' }}
                         </td>
                         <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
                             <div class="crud-center-wrapper">
-                                <a href="{{ panel_route('guru.show', $teacher->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">
+                                <a href="{{ panel_route('students.show', $student->id) }}" class="btn-row-action action-detail" title="{{ __('Detail') }}" aria-label="{{ __('Detail') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
                             </div>
@@ -407,9 +407,9 @@
                         <td colspan="7" class="text-center py-5 text-muted text-nowrap empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search'))
-                                {{ __('Tidak ada data guru yang cocok dengan pencarian.') }}
+                                {{ __('Tidak ada data siswa yang cocok dengan pencarian.') }}
                             @else
-                                {{ __('BELUM ADA DATA GURU YANG TERDAFTAR.') }}
+                                {{ __('BELUM ADA DATA SISWA YANG TERDAFTAR.') }}
                             @endif
                         </td>
                     </tr>
@@ -418,7 +418,7 @@
             </table>
         </div>
 
-        {!! render_compact_pagination($teachers, 'daftar-guru') !!}
+        {!! render_compact_pagination($students, 'daftar-siswa') !!}
     </div>
 
     <!-- MODAL CETAK KARTU MASSAL (sama persis pola Data Siswa) -->
@@ -441,13 +441,13 @@
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="radio" name="print_type" id="printTypeAll" value="all" checked onchange="togglePrintScope()">
                                 <label class="form-check-label fw-medium small" for="printTypeAll">
-                                    {{ __('Cetak Semua Guru Aktif') }}
+                                    {{ __('Cetak Semua Siswa Aktif') }}
                                 </label>
                             </div>
                         </div>
 
                         <div class="alert alert-info py-2 px-3 small border-0 rounded-3 mb-2" id="printInfoBox">
-                            <i class='bx bx-info-circle me-1'></i> {{ __('Kartu akan digenerate dengan QR Code presensi guru secara otomatis.') }}
+                            <i class='bx bx-info-circle me-1'></i> {{ __('Kartu akan digenerate dengan QR Code presensi siswa secara otomatis.') }}
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">

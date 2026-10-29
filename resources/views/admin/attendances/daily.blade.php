@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', __('Presensi Hari Ini'))
-@section('page_title', __('Presensi Hari Ini'))
+@section('title', {!! __('Presensi Hari Ini') !!})
+@section('page_title', {!! __('Presensi Hari Ini') !!})
 @section('page_subtitle')
     @php
         \Carbon\Carbon::setLocale(app()->getLocale());
@@ -770,9 +770,9 @@
     <!-- ========================================================================= -->
     <div class="badges-scroll-container mb-3 no-scrollbar d-none d-md-block" style="scrollbar-width: none; -ms-overflow-style: none;">
         <div class="stats-bar">
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {{ __('sudah presensi') }}</span></div>
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5"/></svg><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {{ __('belum presensi') }}</span></div>
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--all" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.6"/><path d="M5.5 21v-2.2a6.5 6.5 0 0 1 13 0V21z"/><circle cx="4.6" cy="9.2" r="2.4" opacity=".75"/><path d="M0 19.5v-1.3a4.6 4.6 0 0 1 4.6-4.6c.7 0 1.3.1 1.9.4A8 8 0 0 0 4.4 19.5z" opacity=".75"/><circle cx="19.4" cy="9.2" r="2.4" opacity=".75"/><path d="M24 19.5v-1.3a4.6 4.6 0 0 0-4.6-4.6c-.7 0-1.3.1-1.9.4a8 8 0 0 1 2.1 5.5z" opacity=".75"/></svg><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {{ __('total siswa') }}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {!! __('sudah presensi') !!}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5"/></svg><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {!! __('belum presensi') !!}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--all" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.6"/><path d="M5.5 21v-2.2a6.5 6.5 0 0 1 13 0V21z"/><circle cx="4.6" cy="9.2" r="2.4" opacity=".75"/><path d="M0 19.5v-1.3a4.6 4.6 0 0 1 4.6-4.6c.7 0 1.3.1 1.9.4A8 8 0 0 0 4.4 19.5z" opacity=".75"/><circle cx="19.4" cy="9.2" r="2.4" opacity=".75"/><path d="M24 19.5v-1.3a4.6 4.6 0 0 0-4.6-4.6c-.7 0-1.3.1-1.9.4a8 8 0 0 1 2.1 5.5z" opacity=".75"/></svg><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {!! __('total siswa') !!}</span></div>
         </div>
     </div>
 
@@ -788,10 +788,10 @@
                 <!-- Switcher Button (Kamera / Alat Scanner) -->
                 <div class="kiosk-switcher">
                     <button type="button" id="btnTabCamera" class="kiosk-switch-btn active" onclick="switchMode('camera')">
-                        <i class='bx bx-camera fs-5'></i> {{ __('Kamera') }}
+                        <i class='bx bx-camera fs-5'></i> {!! __('Kamera') !!}
                     </button>
                     <button type="button" id="btnTabHardware" class="kiosk-switch-btn" onclick="switchMode('hardware')">
-                        <i class='bx bx-barcode-reader fs-5'></i> {{ __('Alat Scanner') }}
+                        <i class='bx bx-barcode-reader fs-5'></i> {!! __('Alat Scanner') !!}
                     </button>
                 </div>
 
@@ -812,7 +812,7 @@
                         <div id="cameraError" class="alert alert-danger d-none mt-2" role="alert" style="font-size: 0.85rem;"></div>
                         <div id="cameraPlaceholder" class="py-4 position-absolute top-50 start-50 translate-middle w-100" style="background: #fafbfd; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5;">
                             <i class='bx bx-qr-scan text-secondary' style="font-size: 3rem;"></i>
-                            <p class="text-secondary small mt-2 mb-0 fw-semibold">{{ __('Tempelkan kartu QR ke kamera') }}</p>
+                            <p class="text-secondary small mt-2 mb-0 fw-semibold">{!! __('Tempelkan kartu QR ke kamera') !!}</p>
                         </div>
                     </div>
 
@@ -820,9 +820,9 @@
                          Class .d-none tetap dipakai JS untuk
                          menyembunyikan/menampilkan panel ini. -->
                     <div id="hardwareView" class="d-none w-100 py-3 hardware-view-panel">
-                        <i class='bx bx-scan text-primary hardware-scan-icon'></i><p class="hardware-hint fw-semibold small mb-0 px-2">{{ __('Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter') }}</p>
+                        <i class='bx bx-scan text-primary hardware-scan-icon'></i><p class="hardware-hint fw-semibold small mb-0 px-2">{!! __('Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter') !!}</p>
                             <div class="hardware-input-wrap">
-                                <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Ketik NIS/NIP untuk Siswa/Guru') }}" autofocus autocomplete="off">
+                                <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{!! __('Ketik NIS/NIP untuk Siswa/Guru') !!}" autofocus autocomplete="off">
                         </div>
                     </div>
 
@@ -845,8 +845,8 @@
                                 </g>
                             </svg>
                             <div class="scan-result-text">
-                                <div class="scan-result-name" id="scanResultTitle">{{ __('Nama Siswa') }}</div>
-                                <div class="scan-result-status" id="scanResultSubtitle">{{ __('Status Presensi') }}</div>
+                                <div class="scan-result-name" id="scanResultTitle">{!! __('Nama Siswa') !!}</div>
+                                <div class="scan-result-status" id="scanResultSubtitle">{!! __('Status Presensi') !!}</div>
                             </div>
                         </div>
                     </div>
@@ -858,7 +858,7 @@
                      getCheckOutTime, sama seperti Dashboard) - TANPA nilai
                      hardcode, format HH:mm WIB tanpa detik. -->
                 <div class="text-secondary scanner-time-text" style="font-size: 0.78rem;">
-                    {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ substr((string) ($formattedCheckIn ?? $jam_masuk ?? $checkInTime ?? ''), 0, 5) }} WIB</span>
+                    {!! __('Jam masuk') !!} <span class="fw-semibold text-dark">{{ substr((string) ($formattedCheckIn ?? $jam_masuk ?? $checkInTime ?? ''), 0, 5) }} WIB</span>
                 </div>
 
             </div>
@@ -870,7 +870,7 @@
             <div class="alert alert-primary d-flex align-items-center justify-content-between py-2 px-3 mb-3 rounded-3 shadow-xs">
                 <div class="d-flex align-items-center gap-2">
                     <i class='bx bx-filter-alt fs-5'></i>
-                    <span class="small fw-semibold">{{ __('Menampilkan siswa dengan status:') }} <strong class="badge bg-primary fs-7">{{ ucfirst(request('status')) }}</strong> {{ __('pada tanggal') }} {{ \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('d F Y') }} ({{ count($processedStudents ?? []) }} {{ __('Siswa') }})</span>
+                    <span class="small fw-semibold">{!! __('Menampilkan siswa dengan status:') !!} <strong class="badge bg-primary fs-7">{{ ucfirst(request('status')) }}</strong> {!! __('pada tanggal') !!} {{ \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('d F Y') }} ({{ count($processedStudents ?? []) }} {!! __('Siswa') !!})</span>
                 </div>
             </div>
             
@@ -880,12 +880,12 @@
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">
-                                <th style="width: 5%;" class="text-nowrap">{{ __('NO') }}</th>
-                                <th style="width: 35%;" class="text-nowrap">{{ __('Nama Siswa') }}</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('NISN') }}</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('Kelas') }}</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('Status') }}</th>
-                                <th class="text-center text-nowrap" style="width: 15%;">{{ __('Keterangan') }}</th>
+                                <th style="width: 5%;" class="text-nowrap">{!! __('NO') !!}</th>
+                                <th style="width: 35%;" class="text-nowrap">{!! __('Nama Siswa') !!}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{!! __('NISN') !!}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{!! __('Kelas') !!}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{!! __('Status') !!}</th>
+                                <th class="text-center text-nowrap" style="width: 15%;">{!! __('Keterangan') !!}</th>
                             </tr>
                         </thead>
                         <tbody class="text-nowrap">
@@ -943,14 +943,14 @@
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">
-                                <th class="text-center align-middle col-th-kelas text-nowrap" style="width: 16%;">{{ __('Kelas') }}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Total') }}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Hadir') }}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Sakit') }}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Izin') }}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{{ __('Alfa') }}</th>
-                                <th class="text-center align-middle col-th-kehadiran text-nowrap" style="width: 22%;">{{ __('Kehadiran') }}</th>
-                                <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 17%;">{{ __('Aksi') }}</th>
+                                <th class="text-center align-middle col-th-kelas text-nowrap" style="width: 16%;">{!! __('Kelas') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Total') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Hadir') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Sakit') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Izin') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Alfa') !!}</th>
+                                <th class="text-center align-middle col-th-kehadiran text-nowrap" style="width: 22%;">{!! __('Kehadiran') !!}</th>
+                                <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 17%;">{!! __('Aksi') !!}</th>
                             </tr>
                         </thead>
                         <tbody class="text-nowrap">
@@ -1004,19 +1004,19 @@
                                 </td>
                                 <td class="text-center align-middle col-td-stat text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
-                                        <span class="text-slate-900 text-nowrap" style="color: #0f172a !important; font-size: 0.875rem; font-weight: 400;">{{ $alpha }}</span>
+                                        <span class="text-slate-900 text-nowrap" style="color: #0f172a !important; font-size: 0.875rem; font-weight: 400;">{!! $alpha !!}</span>
                                     </div>
                                 </td>
                                 <td class="text-center align-middle col-td-kehadiran text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
                                         <span class="text-slate-900 text-nowrap" style="font-size: 0.875rem; color: #0f172a !important; font-weight: 400;">
-                                            {{ $persentase ?? 0 }}%
+                                            {!! $persentase ?? 0 !!}%
                                         </span>
                                     </div>
                                 </td>
                                 <td class="text-center align-middle col-td-aksi text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
-                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap" title="{{ __('Buka Kelas') }}" aria-label="{{ __('Buka Kelas') }}">
+                                        <a href="{{ panel_route('absensi.show', ['schoolClass' => $clsId, 'tanggal' => $tanggal ?? date('Y-m-d')]) }}" class="btn-buka-kelas text-nowrap" title="{!! __('Buka Kelas') !!}" aria-label="{!! __('Buka Kelas') !!}">
                                             <i class='bx bx-door-open' style="font-size: 22px !important; font-weight: 400 !important; width: 24px !important; height: 24px !important; min-width: 24px !important; min-height: 24px !important; display: inline-flex; align-items: center; justify-content: center; color: #3b62f6 !important;"></i>
                                         </a>
                                     </div>
@@ -1026,7 +1026,7 @@
                             <tr class="text-nowrap">
                                 <td colspan="8" class="text-center py-3 text-secondary text-nowrap empty-state">
                                     <i class='bx bx-error' aria-hidden='true'></i>
-                                    {{ __('Belum ada data kelas tersedia.') }}
+                                    {!! __('Belum ada data kelas tersedia.') !!}
                                 </td>
                             </tr>
                             @endforelse

@@ -119,20 +119,50 @@ class AcademicYearController extends Controller
     public function destroy(AcademicYear $academicYear): RedirectResponse
     {
         if ($academicYear->is_active) {
-            // Pesan sengaja DIPERBANDINGKAN dengan tooltip tombol Hapus di view.
             return redirect()->route('admin.academic-years.index')
-                ->with('error', __('Tahun ajaran sedang berlangsung, tidak dapat dihapus.'));
+                ->with('error', __('Tahun ajaran yang sedang aktif tidak bisa dihapus. Aktifkan tahun ajaran lain dulu.'));
         }
 
         if ($academicYear->schoolClasses()->exists() || $academicYear->attendances()->exists()) {
             return redirect()->route('admin.academic-years.index')
-                ->with('error', __('Tahun ajaran tidak dapat dihapus karena memiliki data kelas atau presensi terkait!'));
+                ->with('error', __('Tahun ajaran masih punya data terkait, tidak bisa dihapus permanen.'));
         }
 
         $academicYear->delete();
 
-        // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
-        // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
-        return redirect()->route('admin.academic-years.index')->with('deleted', __('Tahun ajaran berhasil dihapus!'));
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', __('Tahun ajaran dipindahkan ke Tempat Sampah.'));
+    }
+
+    /**
+     * Pulihkan tahun ajaran dari Tempat Sampah.
+     */
+    public function restore($id): RedirectResponse
+    {
+        $year = AcademicYear::onlyTrashed()->findOrFail($id);
+        $year->restore();
+
+        AcademicYear::clearActiveCache();
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', __('Tahun ajaran berhasil dipulihkan.'));
+    }
+
+    /**
+     * Hapus permanen tahun ajaran dari Tempat Sampah.
+     */
+    public function forceDelete($id): RedirectResponse
+    {
+        $year = AcademicYear::onlyTrashed()->findOrFail($id);
+
+        if ($year->schoolClasses()->exists() || $year->attendances()->exists()) {
+            return redirect()->route('admin.academic-years.index')
+                ->with('error', __('Tahun ajaran masih punya data terkait, tidak bisa dihapus permanen.'));
+        }
+
+        $year->forceDelete();
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', __('Tahun ajaran permanen dihapus.'));
     }
 }

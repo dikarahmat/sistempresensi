@@ -116,6 +116,8 @@ class UserAccountController extends Controller
      *
      * Nama SENGAJA tidak bisa diubah lewat form lagi: kolom `name` tidak lagi
      * dipakai untuk tampilan dan nilainya otomatis mengikuti username.
+     *
+     * Hanya simpan password BARU jika password admin saat ini benar.
      */
     public function update(Request $request, User $user)
     {
@@ -134,12 +136,28 @@ class UserAccountController extends Controller
         $passwordChanged = false;
         $hasEncryptedColumn = Schema::hasColumn('users', 'password_terenkripsi');
 
-        if (!empty($validated['password'])) {
-            $data['password'] = $validated['password'];
-            if ($hasEncryptedColumn) {
-                $data['password_terenkripsi'] = Crypt::encryptString($validated['password']);
+        // Hanya perbarui password kalau field kosong / password baru diisi
+        // DAN password admin saat ini diverifikasi benar.
+        if (isset($validated['password_current'])) {
+            if (empty($validated['password']) || !Hash::check((string) $validated['password_current'], $user->password)) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Password admin saat ini salah. Password baru TIDAK disimpan.',
+                    ], 422);
+                }
+                return redirect()->route('admin.accounts.index')
+                    ->withInput()
+                    ->with('error', __('Password admin saat ini salah. Password baru TIDAK disimpan.'));
             }
-            $passwordChanged = true;
+
+            if (!empty($validated['password'])) {
+                $data['password'] = $validated['password'];
+                if ($hasEncryptedColumn) {
+                    $data['password_terenkripsi'] = Crypt::encryptString($validated['password']);
+                }
+                $passwordChanged = true;
+            }
         }
 
         try {

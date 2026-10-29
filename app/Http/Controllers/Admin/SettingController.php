@@ -54,14 +54,12 @@ class SettingController extends Controller
             'app_title' => ['nullable', 'string', 'max:255'],
             'school_logo' => ['nullable', 'file', 'mimes:webp,png,jpg,jpeg', 'max:2048'],
             'school_address' => ['nullable', 'string', 'max:255'],
-            // Telepon: hanya angka, 10-15 digit (kode negara tanpa tanda +).
             'school_phone' => ['nullable', 'string', 'regex:/^[0-9]{10,15}$/'],
             'headmaster_name' => ['nullable', 'string', 'max:100'],
-            // NIP: hanya angka, tepat 18 digit.
             'headmaster_nip' => ['nullable', 'string', 'regex:/^[0-9]{18}$/'],
             'check_in_time' => ['required', 'string', 'date_format:H:i'],
             'late_limit_time' => ['required', 'string', 'date_format:H:i', 'after:check_in_time'],
-        ], [
+            'school_npsn' => ['nullable', 'string', 'regex:/^[0-9]{0,8}$/'],
             'school_name.required' => 'Nama sekolah wajib diisi.',
             'school_name.max' => 'Nama sekolah maksimal 255 karakter.',
             'app_title.max' => 'Judul aplikasi maksimal 255 karakter.',
@@ -72,6 +70,8 @@ class SettingController extends Controller
             'school_phone.regex' => 'Nomor telepon harus 10-15 digit angka.',
             'headmaster_name.max' => 'Nama kepala sekolah maksimal 100 karakter.',
             'headmaster_nip.regex' => 'NIP harus 18 digit angka.',
+            'school_npsn.regex' => 'NPSN harus 8 digit angka.',
+            'school_npsn.max' => 'NPSN harus maksimal 8 digit angka.',
             'check_in_time.required' => 'Jam buka masuk wajib diisi.',
             'check_in_time.date_format' => 'Format jam buka masuk tidak valid.',
             'late_limit_time.required' => 'Batas toleransi keterlambatan wajib diisi.',
@@ -88,6 +88,7 @@ class SettingController extends Controller
             Setting::set('school_phone', trim($request->school_phone ?? ''));
             Setting::set('headmaster_name', strip_tags(trim($request->headmaster_name ?? '')));
             Setting::set('headmaster_nip', trim($request->headmaster_nip ?? ''));
+            Setting::set('school_npsn', trim($request->school_npsn ?? ''));
             Setting::set('check_in_time', $request->check_in_time);
             Setting::set('late_limit_time', $request->late_limit_time);
 

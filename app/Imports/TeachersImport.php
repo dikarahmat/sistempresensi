@@ -16,37 +16,28 @@ class TeachersImport implements ToCollection, WithHeadingRow
     protected int $skippedCount = 0;
     protected array $errors = [];
 
-    /**
-     * Normalize phone number: handle +62, 0, and spaces/dashes.
-     * Returns normalized phone with leading 0 (e.g., 081234567890).
-     */
     private function normalizePhone(string $raw): string
     {
         $value = trim($raw);
 
-        // Remove spaces, dashes, parentheses
         $value = str_replace([' ', '-', '(', ')'], '', $value);
 
-        // Handle +62 prefix
         if (str_starts_with($value, '+62')) {
             $value = '0' . substr($value, 3);
         }
 
-        // Remove any remaining non-digits
         $value = preg_replace('/[^0-9]/', '', $value);
 
         return $value;
     }
 
-    public function collection(Collection $rows)
+    public function collection(Collection $rows): void
     {
         $rowIndex = 1;
 
-        // Cache kelas untuk validasi tugas kelas
         $classMap = SchoolClass::pluck('id', 'name')->toArray();
         $classNameMap = SchoolClass::pluck('name', 'id')->toArray();
 
-        // Track wali kelas yang sudah di-assign dalam file ini
         $assignedWaliKelasInFile = [];
 
         foreach ($rows as $row) {
@@ -56,7 +47,6 @@ class TeachersImport implements ToCollection, WithHeadingRow
             $name = trim((string) ($row['nama'] ?? $row['nama_lengkap'] ?? $row['nama_guru'] ?? $row['name'] ?? ''));
 
             if (!empty($nip)) {
-                // NIP (18 digit, PNS/PPPK) atau NUPTK (16 digit, guru non-PNS)
                 if (!preg_match('/^(\d{16}|\d{18})$/', $nip)) {
                     $this->skippedCount++;
                     $this->errors[] = "Baris {$rowIndex}: NIP harus 16 atau 18 digit angka. Baris dilewati.";
@@ -64,9 +54,6 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 }
             }
 
-            // Normalisasi NIP: jika kosong jadi null, jika ada tetap tetap
-            // Gunakan $nip !== '' untuk memastikan hanya string kosong yang jadi null,
-            // bukan nilai 0 atau null lainnya
             $nip = $nip !== '' ? $nip : null;
 
             if (empty($name)) {
@@ -81,7 +68,13 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Parse Gender
+            if (! empty($row['nip'] ?? '')) {
+                if (! preg_match('/^(\d{16}|\d{18})$/', trim((string) ($row['nip'] ?? '')))) {
+                    $this->skippedCount++;
+                    $this->errors[] = "Baris {$rowIndex}: NIP harus 16 atau 18 digit angka. Baris dilewati.";
+                }
+            }
+
             $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
             if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
                 $gender = 'Perempuan';
@@ -89,7 +82,6 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 $gender = 'Laki-laki';
             }
 
-            // Parse Tanggal Lahir Fleksibel
             $rawBirthDate = $row['tanggal_lahir'] ?? $row['tgl_lahir'] ?? $row['birth_date'] ?? null;
             $birthDate = null;
 
@@ -109,14 +101,13 @@ class TeachersImport implements ToCollection, WithHeadingRow
             $phone = $this->normalizePhone((string) ($row['no_hp'] ?? $row['phone_number'] ?? $row['no_wa'] ?? $row['telepon'] ?? $row['phone'] ?? ''));
             $address = trim((string) ($row['alamat'] ?? $row['address'] ?? ''));
 
-            // Parse Tugas Kelas (school_class_id)
             $schoolClassId = null;
             $rawClass = trim((string) ($row['kelas'] ?? $row['tugas_kelas'] ?? $row['school_class_id'] ?? $row['class_id'] ?? ''));
 
             if ($rawClass !== '') {
-                // Cari kelas berdasarkan nama (case-insensitive, dengan prefiks "Kelas ")
                 $cleanRawClass = strtolower(str_replace(['kelas', ' ', '-'], '', $rawClass));
                 $matchedClass = null;
+
                 foreach ($classMap as $className => $classId) {
                     $cleanClassName = strtolower(str_replace(['kelas', ' ', '-'], '', $className));
                     if ($cleanClassName === $cleanRawClass || strcasecmp($className, $rawClass) === 0) {
@@ -127,37 +118,12 @@ class TeachersImport implements ToCollection, WithHeadingRow
 
                 if ($matchedClass) {
                     $schoolClassId = $matchedClass;
+                } else {
+                    $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Kelas '{$rawClass}' tidak ditemukan, guru diimpor tanpa penugasan kelas.";
                 }
             }
 
-            // Validasi wali kelas unik (di database + dalam file ini)
-            if ($schoolClassId) {
-                $existingWaliInDb = \App\Models\SchoolClass::where('teacher_id', '!=', null)
-                    ->where('id', $schoolClassId)
-                    ->exists();
-
-                if ($existingWaliInDb) {
-                    $this->skippedCount++;
-                    $className = $classNameMap[$schoolClassId] ?? 'ID ' . $schoolClassId;
-                    $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Kelas {$className} sudah memiliki wali kelas. Baris dilewati.";
-                    continue;
-                }
-
-                // Cek di dalam file ini
-                if (in_array($schoolClassId, $assignedWaliKelasInFile)) {
-                    $this->skippedCount++;
-                    $className = $classNameMap[$schoolClassId] ?? 'ID ' . $schoolClassId;
-                    $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Kelas {$className} sudah ditugaskan wali kelas di baris lain dalam file ini. Baris dilewati.";
-                    continue;
-                }
-
-                $assignedWaliKelasInFile[] = $schoolClassId;
-            }
-
-                       try {
-                // Hanya simpan data guru ke tabel teachers.
-                // Akun User tidak lagi dibuat otomatis melalui import —
-                // login hanya melalui username + password (lihat AuthController).
+            try {
                 $data = [
                     'name' => $name,
                     'gender' => $gender,
@@ -169,11 +135,8 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 ];
 
                 if ($nip !== null) {
-                    // Punya NIP/NUPTK: NIP jadi kunci.
                     Teacher::updateOrCreate(['nip' => $nip], $data);
                 } else {
-                    // Tanpa NIP: kuncinya NAMA, supaya guru tanpa NIP
-                    // tidak saling menimpa.
                     $teacher = Teacher::withTrashed()
                         ->whereNull('nip')
                         ->where('name', $name)

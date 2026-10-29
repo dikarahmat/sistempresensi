@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('title', __('Pengaturan Sistem'))
-@section('page_title', __('Pengaturan Sistem Dinamis'))
-@section('page_subtitle', __('Sesuaikan profil sekolah, toleransi keterlambatan'))
+@section('page_title', __('PENGATURAN'))
+@section('page_subtitle', __('Atur data sekolah dan jam presensi.'))
 
 {{-- Kanvas dikunci setinggi satu layar dan isi form menggulir di dalam kanvas,
      sama seperti halaman acuan Presensi / Data Guru / Data Kelas. Class ini
@@ -378,7 +378,7 @@
         <div class="section-header">
             <div>
                 <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Pengelolaan Sistem') }}</h5>
-                <div class="text-muted small">{{ __('Kelola tahun ajaran, kalender libur, akun pengguna, dan tempat sampah data.') }}</div>
+                <div class="text-muted small">{{ __('Atur tahun ajaran, hari libur, akun pengguna, dan data yang sudah dihapus.') }}</div>
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">
@@ -404,7 +404,7 @@
             <div class="section-header">
                 <div>
                     <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Identitas & Logo Sekolah') }}</h5>
-                    <div class="text-muted small">{{ __('Tampil pada Header Scanner QR, Cetak Kartu Pelajar, dan Rekap Laporan PDF.') }}</div>
+                    <div class="text-muted small">{{ __('Data ini muncul di halaman scan, kartu pelajar, dan laporan PDF.') }}</div>
                 </div>
             </div>
 
@@ -418,9 +418,16 @@
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('Judul Aplikasi / Tab Browser') }}</label>
+                            <label class="form-label small fw-semibold">{{ __('Judul Aplikasi (tampil di tab browser)') }}</label>
                             <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title'] ?? '') }}" placeholder="{{ __('Contoh: Sistem Presensi Sekolah') }}">
                             @error('app_title')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6 identitas-field">
+                            <label class="form-label small fw-semibold">{{ __('NPSN Sekolah') }}</label>
+                            <input type="text" name="school_npsn" id="school_npsn" inputmode="numeric" pattern="[0-9]*" maxlength="8" class="form-control rounded-3 @error('school_npsn') is-invalid @enderror" value="{{ old('school_npsn', $settings['school_npsn'] ?? '') }}" placeholder="{{ __('Contoh: 20102030') }}">
+                            @error('school_npsn')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
@@ -430,21 +437,6 @@
                             @error('school_address')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
-                        </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('NPSN Sekolah') }}</label>
-                            <input type="text" name="school_npsn" id="school_npsn" inputmode="numeric" pattern="[0-9]*" maxlength="30" class="form-control rounded-3 @error('school_npsn') is-invalid @enderror" value="{{ old('school_npsn', $settings['school_npsn'] ?? '') }}" placeholder="{{ __('Contoh: 20102030') }}">
-                            @error('school_npsn')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 identitas-field">
-                            <label class="form-label small fw-semibold">{{ __('No. Telepon / Kontak') }}</label>
-                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone'] ?? '') }}" placeholder="{{ __('10-15 digit angka, tanpa spasi') }}">
-                            @error('school_phone')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">{{ __('Nomor telepon harus 10-15 digit angka.') }}</div>
                         </div>
                         <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('Nama Kepala Sekolah') }}</label>
@@ -460,6 +452,14 @@
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                             <div id="nipClientError" class="text-danger small mt-1" style="display:none;">{{ __('NIP harus 18 digit angka.') }}</div>
+                        </div>
+                        <div class="col-md-6 identitas-field">
+                            <label class="form-label small fw-semibold">{{ __('No. Telepon / Kontak') }}</label>
+                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone'] ?? '') }}" placeholder="{{ __('Contoh: 081234567890') }}">
+                            @error('school_phone')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                            <div id="phoneClientError" class="text-danger small mt-1" style="display:none;">{{ __('Nomor telepon harus 10-15 digit angka.') }}</div>
                         </div>
                 </div>
                 <div class="col-12 col-md-4 identitas-logo">
@@ -500,7 +500,7 @@
             <div class="section-header">
                 <div>
                     <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Presensi & Toleransi Keterlambatan') }}</h5>
-                    <div class="text-muted small">{{ __('Menentukan status tepat waktu atau terlambat pada scanner dan rekap kehadiran.') }}</div>
+                    <div class="text-muted small">{{ __('Atur jam masuk dan batas waktu agar siswa dicatat tepat waktu atau terlambat.') }}</div>
                 </div>
             </div>
 
@@ -528,8 +528,7 @@
                 <strong style="color: #166534; font-weight: 700;" x-text="checkIn">{{ $settings['check_in_time'] ?? '' }}</strong>
                 <span>{{ __('hingga') }}</span>
                 <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
-                <span>{{ __('tercatat') }}</span>
-                <strong style="color: #166534; font-weight: 700;">{{ __('Tepat Waktu') }}</strong>.
+<span>{{ __('dicatat Tepat Waktu.') }}</span>
                 <span>{{ __('Scan di atas') }}</span>
                 <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
                 <span>{{ __('otomatis tercatat') }}</span>
