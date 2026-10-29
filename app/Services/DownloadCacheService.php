@@ -795,7 +795,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
             'third_line' => 'GURU',
             'third_line_color' => [20, 83, 45],
             'scan_color' => [20, 83, 45],
-            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, $teacher->qr_token),
+            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, (string) $teacher->id),
             'subtitle_top' => 134,
             'scan_top' => 1312,
             'footer_top' => 1640,

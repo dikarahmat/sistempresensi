@@ -240,7 +240,7 @@
                     {{ __('Bulanan') }}
                 </a>
                 <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'tanggal' => $anchor->toDateString()]) }}" class="period-link {{ $period === 'semua' ? 'active' : '' }}">
-                    {{ __('Semua') }}
+                    {{ __('Per Semester/Tahun') }}
                 </a>
             </div>
 

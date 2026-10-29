@@ -49,11 +49,11 @@ class TeacherCardService
     }
 
     /**
-     * Token QR guru: NIP valid bila tersedia; jika tidak, pakai qr_token guru
-     * (identifier yang dipakai sistem) agar setiap guru tanpa NIP tetap punya
-     * QR unik, bukan "-" yang sama untuk semua orang.
+     * Token QR guru: NIP valid bila tersedia; jika tidak, pakai ID guru
+     * agar setiap guru tanpa NIP tetap punya QR unik, bukan "-" yang sama
+     * untuk semua orang.
      */
-    public static function qrTokenFor(?string $nip, ?string $qrToken = null): string
+    public static function qrTokenFor(?string $nip, ?string $fallback = null): string
     {
         $normalizedNip = self::normalizeNip($nip);
 
@@ -61,9 +61,9 @@ class TeacherCardService
             return $normalizedNip;
         }
 
-        $qrToken = trim((string) $qrToken);
+        $fallback = trim((string) $fallback);
 
-        return $qrToken !== '' ? $qrToken : '-';
+        return $fallback !== '' ? $fallback : '-';
     }
 
     /**
@@ -288,7 +288,7 @@ class TeacherCardService
         $teacher->nip_display = self::displayNip($teacher->nip);
 
         try {
-            $teacher->qr_base64 = self::qrPngDataUri(self::qrTokenFor($teacher->nip, $teacher->qr_token));
+            $teacher->qr_base64 = self::qrPngDataUri(self::qrTokenFor($teacher->nip, (string) $teacher->id));
         } catch (\Throwable $e) {
             Log::warning('Gagal membuat QR kartu guru: '.$e->getMessage(), [
                 'teacher_id' => $teacher->id,

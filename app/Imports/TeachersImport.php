@@ -57,9 +57,9 @@ class TeachersImport implements ToCollection, WithHeadingRow
 
             if (!empty($nip)) {
                 // NIP (18 digit, PNS/PPPK) atau NUPTK (16 digit, guru non-PNS)
-                if (!preg_match('/^([0-9]{16}|[0-9]{18})$/', $nip)) {
+                if (!preg_match('/^(\d{16}|\d{18})$/', $nip)) {
                     $this->skippedCount++;
-                    $this->errors[] = "Baris {$rowIndex}: Format NIP/NUPTK tidak valid (harus 16 atau 18 digit angka). Baris dilewati.";
+                    $this->errors[] = "Baris {$rowIndex}: NIP harus 16 atau 18 digit angka. Baris dilewati.";
                     continue;
                 }
             }
@@ -72,6 +72,12 @@ class TeachersImport implements ToCollection, WithHeadingRow
             if (empty($name)) {
                 $this->skippedCount++;
                 $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama Guru wajib diisi (kosong).";
+                continue;
+            }
+
+            if (preg_match('/\p{Nd}/u', $name) === 1) {
+                $this->skippedCount++;
+                $this->errors[] = "Baris {$rowIndex} (NIP {$nip}): Nama tidak boleh mengandung angka. Baris dilewati.";
                 continue;
             }
 

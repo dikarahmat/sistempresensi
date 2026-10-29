@@ -564,13 +564,13 @@
                     @csrf
 
                     <div class="form-group-item">
-                        <div class="input-box-wrapper @error('login') is-invalid-field @enderror">
+                        <div class="input-box-wrapper @error('username') is-invalid-field @enderror">
                             <label class="input-label-custom" for="login">Username</label>
                             <input type="text" id="login" name="login" class="form-input-field"
-                                   value="{{ old('login') }}"
+                                   value="{{ old('username') }}"
                                    autocomplete="username" required autofocus>
                         </div>
-                        @error('login')
+                        @error('username')
                             <div class="field-error-feedback"><i class='bx bx-error-circle'></i>{{ $message }}</div>
                         @enderror
                     </div>
@@ -595,11 +595,10 @@
                             <label class="remember-label" for="remember">{{ __('Ingat saya') }}</label>
                         </div>
                     </div>
-
                     <button type="submit" class="btn-submit-action" id="btnLogin">
-                        <span id="btnText">{{ __('Masuk') }}</span>
-                        <span class="app-loader d-none" id="btnLoader"></span>
-                    </button>
+                         <span id="btnText">{{ __('Masuk') }}</span>
+                         <span class="app-loader d-none" id="btnLoader"></span>
+                     </button>
                 </form>
             </div>
 

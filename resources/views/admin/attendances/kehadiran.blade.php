@@ -2,7 +2,7 @@
 
 @section('title', __('Catatan Kehadiran'))
 @section('page_title', __('Catatan Kehadiran'))
-@section('page_subtitle', __('Lihat histori kehadiran per kelas'))
+@section('page_subtitle', __('Lihat histori kehadiran hari ini'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
@@ -481,8 +481,7 @@
          CATATAN: tombol RESET DIHAPUS. Tidak ada lagi aksi manual yang
          diperlukan karena:
            - dropdown kelas langsung memuat ulang data saat diganti,
-           - pencarian berjalan otomatis (debounce 400ms) + tetap bisa Enter,
-           - mengosongkan kolom pencarian kembali ke tampilan default.
+           - pencarian hanya jalan saat Enter atau klik ikon kaca pembesar (event input/keyup/auto-submit debounce dihapus).
          Tampilan search + dropdown disamakan PERSIS dengan Data Siswa / Data
          Guru / Data Kelas (tinggi 38px, ikon search di kanan input, dropdown
          "Semua Kelas" max 200px, jarak 0.5rem). Fungsi tidak berubah. -->
@@ -686,9 +685,9 @@
                 });
             }
 
-            // 2. Pencarian otomatis (debounce 400ms + tombol "x" di input)
-            //    ditangani secara bersama oleh script auto-filter di
-            //    layouts/app.blade.php - tidak diubah.
+            // 2. Pencarian HANYA saat Enter atau klik ikon submit
+            //    (event input/keyup/debounce auto-submit dihapus).
+            //    Ditangani secarasam mungkin oleh form action GET.
 
             // 3. Fokus ke tabel saat datang dari paginasi: scroll INSTAN di
             //    dalam area scroll halaman (bukan smooth) supaya header sticky

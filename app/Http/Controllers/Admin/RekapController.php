@@ -243,6 +243,128 @@ class RekapController extends Controller
             'studentPaginator' => $studentPaginator,
         ];
 
+        // Compute month labels and per-student monthly H counts for semester/tahunann
+        if ($type === 'semester') {
+            $semester = $inputs['period_semester'] ?? 'ganjil';
+            $academicYearId = $inputs['period_academic_year'] ?? ($activeYear?->id ?? null);
+            $ay = AcademicYear::find($academicYearId) ?: $activeYear;
+            $semesterLabel = ucfirst($semester); // Ganjil or Genap
+
+            if ($ay) {
+                $ayStart = Carbon::parse($ay->start_date ?? '07-01');
+                $ayEnd = Carbon::parse($ay->end_date ?? '06-30');
+            } else {
+                $ayStart = Carbon::parse('07-01');
+                $ayEnd = Carbon::parse('06-30');
+            }
+
+            // Build date range covering the semester
+            $semStart = Carbon::parse($startDate);
+            $semEnd = Carbon::parse($endDate);
+
+            // Determine semester months: ganjil = Jul-Dec, genap = Jan-Jun
+            $allSemMonths = [];
+            if ($semester === 'ganjil') {
+                // Ganjil: July to December
+                $m = clone $semStart;
+                while ($m->lte($semEnd)) {
+                    $monthLabel = $m->translatedFormat('M Y');
+                    $allSemMonths[] = ['label' => $monthLabel, 'month' => (int) $m->format('m'), 'year' => (int) $m->format('Y')];
+                    $m->addMonth(1);
+                }
+            } else {
+                // Genap: January to June
+                $m = clone $semStart;
+                while ($m->lte($semEnd)) {
+                    $monthLabel = $m->translatedFormat('M Y');
+                    $allSemMonths[] = ['label' => $monthLabel, 'month' => (int) $m->format('m'), 'year' => (int) $m->format('Y')];
+                    $m->addMonth(1);
+                }
+            }
+
+            // Short labels as required: Ganil=Jul,Agu,Sep,Okt,Nov,Des; Genap=Jan,Feb,Mar,Apr,Mei,Jun
+            $shortLabels = $semester === 'ganjil'
+                ? ['Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+                : ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
+            $months = [];
+            foreach ($allSemMonths as $i => $mInfo) {
+                $months[] = $shortLabels[$i] ?? $mInfo['label'];
+            }
+
+            // Compute per-student monthly H counts
+            $monthlyPresent = [];
+            foreach ($students as $student) {
+                $stAtts = $attendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
+                $monthHCounts = [];
+                foreach ($allSemMonths as $mInfo) {
+                    $monthH = 0;
+                    $cur = $mInfo['carbon'] = Carbon::createFromDate($mInfo['year'], $mInfo['month'], 1);
+                    $daysInMonth = $cur->daysInMonth;
+                    for ($d = 1; $d <= $daysInMonth; $d++) {
+                        $cDate = sprintf('%04d-%02d-%02d', $mInfo['year'], $mInfo['month'], $d);
+                        $att = $stAtts->get($cDate);
+                        if ($att && $att->effective_status === 'Hadir') {
+                            $monthH++;
+                        }
+                    }
+                    $monthHCounts[] = $monthH;
+                }
+                $monthlyPresent[$student->id] = $monthHCounts;
+            }
+
+            $extra['months'] = $months;
+            $extra['monthlyPresent'] = $monthlyPresent;
+            $extra['period_semester'] = $semester;
+            $extra['period_academic_year'] = $academicYearId;
+        }
+
+        if ($type === 'tahunan') {
+            $academicYearId = $inputs['period_academic_year'] ?? ($activeYear?->id ?? null);
+            $ay = AcademicYear::find($academicYearId) ?: $activeYear;
+
+            // Build 12 months: July to June (tahun ajaran Indonesia)
+            $allTahunMonths = [];
+            $ayStartYear = $ay ? Carbon::parse($ay->start_date ?? '07-01')->year : $now->year;
+            $m = Carbon::parse("$ayStartYear-07-01");
+            for ($i = 0; $i < 12; $i++) {
+                $monthLabel = $m->translatedFormat('M Y');
+                $allTahunMonths[] = ['label' => $monthLabel, 'month' => (int) $m->format('m'), 'year' => (int) $m->format('Y')];
+                $m->addMonth(1);
+            }
+
+            // Short labels: Jul, Agu, Sep, Okt, Nov, Des, Jan, Feb, Mar, Apr, Mei, Jun
+            $shortLabels = ['Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
+            $months = [];
+            foreach ($allTahunMonths as $i => $mInfo) {
+                $months[] = $shortLabels[$i] ?? $mInfo['label'];
+            }
+
+            // Compute per-student monthly H counts
+            $monthlyPresent = [];
+            foreach ($students as $student) {
+                $stAtts = $attendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
+                $monthHCounts = [];
+                foreach ($allTahunMonths as $mInfo) {
+                    $monthH = 0;
+                    $cur = Carbon::createFromDate($mInfo['year'], $mInfo['month'], 1);
+                    $daysInMonth = $cur->daysInMonth;
+                    for ($d = 1; $d <= $daysInMonth; $d++) {
+                        $cDate = sprintf('%04d-%02d-%02d', $mInfo['year'], $mInfo['month'], $d);
+                        $att = $stAtts->get($cDate);
+                        if ($att && $att->effective_status === 'Hadir') {
+                            $monthH++;
+                        }
+                    }
+                    $monthHCounts[] = $monthH;
+                }
+                $monthlyPresent[$student->id] = $monthHCounts;
+            }
+
+            $extra['months'] = $months;
+            $extra['monthlyPresent'] = $monthlyPresent;
+            $extra['period_academic_year'] = $academicYearId;
+        }
+
         // Add monthly-specific data for bulanan
         if ($type === 'bulanan') {
             $month = (int) ($inputs['month'] ?? $now->month);
@@ -538,13 +660,13 @@ class RekapController extends Controller
 
                 // Ambil logo sekolah jika ada
                 $logoPath = Setting::getLogo();
-                $logoBase64 = null;
+            $logoBase64 = null;
                 if (file_exists(public_path($logoPath))) {
-                    $logoData = file_get_contents(public_path($logoPath));
-                    $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
+                $logoData = file_get_contents(public_path($logoPath));
+                $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
                 }
 
-                $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
+            $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
                     'title' => "Laporan Presensi {$type} - {$className}",
                     'schoolName' => $schoolName,
                     'schoolAddress' => $schoolAddress,
@@ -977,38 +1099,44 @@ class RekapController extends Controller
 
         $fileName = "Rekap_Presensi_{$type}_" . Str::slug($className) . ".pdf";
 
-        return \App\Services\DownloadCacheService::downloadRekapFile('pdf', $type, $classId, $inputs, function() use ($type, $classId, $recap, $className, $inputs) {
-            $activeYear = AcademicYear::getActive();
-            $schoolName = Setting::getSchoolName();
-            $schoolAddress = Setting::getSchoolAddress();
+        $schoolName = Setting::getSchoolName();
+        $schoolAddress = Setting::getSchoolAddress();
+        $activeYear = AcademicYear::getActive();
 
-            $logoPath = public_path(Setting::getLogo());
-            $logoBase64 = null;
-            if (file_exists($logoPath)) {
-                $logoData = file_get_contents(public_path(Setting::getLogo()));
-                $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
-            }
+        $sections = MultiPeriodAttendanceExport::buildSections(
+            $recap['dataRows']->toArray(),
+            $recap['type'],
+            $inputs,
+            $classId
+        );
 
-            $sections = MultiPeriodAttendanceExport::buildSections(
-                $recap['dataRows']->toArray(),
-                $recap['type'],
-                $inputs,
-                $classId
-            );
+        $logoPath = public_path(Setting::getLogo());
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $logoData = file_get_contents(public_path(Setting::getLogo()));
+            $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
+        }
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
-                'title' => "Laporan Presensi {$recap['type']} - {$className}",
-                'schoolName' => Setting::getSchoolName(),
-                'schoolAddress' => Setting::getSchoolAddress(),
-                'logoBase64' => $logoBase64,
-                'activeYear' => $activeYear,
-                'headmasterName' => Setting::getHeadmasterName(),
-                'headmasterNip' => Setting::getHeadmasterNip(),
-                'sections' => $sections,
-            ]))->setPaper('a4', 'landscape');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
+            'title' => "Laporan Presensi {$recap['type']} - {$className}",
+            'schoolName' => Setting::getSchoolName(),
+            'schoolAddress' => Setting::getSchoolAddress(),
+            'logoBase64' => $logoBase64,
+            'activeYear' => $activeYear,
+            'headmasterName' => Setting::getHeadmasterName(),
+            'headmasterNip' => Setting::getHeadmasterNip(),
+            'sections' => $sections,
+        ]));
 
-            return $pdf->output();
-        }, "Rekap_Presensi_{$type}_" . Str::slug($className) . ".pdf");
+        $response = response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+
+        return $response;
     }
 
     /**

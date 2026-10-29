@@ -56,7 +56,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
 
     public function __construct(string $type, array $params = [], ?array $section = null)
     {
-        $this->type = in_array($type, ['harian', 'mingguan', 'bulanan']) ? $type : 'bulanan';
+        $this->type = in_array($type, ['harian', 'mingguan', 'bulanan', 'semester', 'tahunan']) ? $type : 'bulanan';
         $this->params = $params;
         $this->section = $section;
     }
@@ -170,7 +170,13 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         Carbon::setLocale('id');
         $schoolName = Setting::getSchoolName();
 
-        return 'LAPORAN REKAPITULASI PRESENSI ' . strtoupper($type) . ' - ' . ($schoolName ?: '-');
+        $label = match ($type) {
+            'semester' => 'SEMESTER',
+            'tahunan' => 'TAHUNAN',
+            default => strtoupper($type),
+        };
+
+        return 'LAPORAN REKAPITULASI PRESENSI ' . $label . ' - ' . ($schoolName ?: '-');
     }
 
     /** Sub-judul: periode | kelas | tahun ajaran - sama persis di PDF dan Excel. */
@@ -183,13 +189,27 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $date = $params['date'] ?? $now->toDateString();
             $period = 'Tanggal: ' . Carbon::parse($date)->translatedFormat('l, d F Y');
         } elseif ($type === 'mingguan') {
-            $startDate = $params['start_date'] ?? $now->copy()->startOfWeek()->toDateString();
-            $endDate = $params['end_date'] ?? $now->copy()->startOfWeek()->addDays(4)->toDateString();
+            $startDate = $params['start_date'] ?? $params['period_date'] ?? $now->copy()->startOfWeek()->toDateString();
+            $endDate = $params['end_date'] ?? $params['period_end_date'] ?? Carbon::parse($startDate)->copy()->addDays(6)->toDateString();
             $period = 'Periode: ' . Carbon::parse($startDate)->translatedFormat('d M Y')
                 . ' s/d ' . Carbon::parse($endDate)->translatedFormat('d M Y');
+        } elseif ($type === 'semester') {
+            $semester = ($params['period_semester'] ?? $params['semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
+            $ay = AcademicYear::find($params['period_academic_year'] ?? $params['academic_year_id'] ?? null) ?: AcademicYear::getActive();
+            $period = 'Semester ' . ucfirst($semester) . ($ay ? ' | Tahun Ajaran ' . $ay->name : '');
+            $activeYear = $ay;
+            return $period . ' | Kelas: ' . $className;
+        } elseif ($type === 'tahunan') {
+            $ay = AcademicYear::find($params['period_academic_year'] ?? $params['academic_year_id'] ?? null) ?: AcademicYear::getActive();
+            $period = $ay ? 'Tahun Ajaran ' . $ay->name : 'Tahun Ajaran';
+            $activeYear = $ay;
+            return $period . ' | Kelas: ' . $className;
         } else {
-            $month = (int) ($params['month'] ?? $now->month);
-            $year = (int) ($params['year'] ?? $now->year);
+            $month = (int) ($params['month'] ?? $params['period_month'] ?? $now->month);
+            $year = (int) ($params['year'] ?? $params['period_year'] ?? $now->year);
+            if ($month < 1 || $month > 12) {
+                $month = (int) $now->month;
+            }
             $period = 'Bulan: ' . Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
         }
 
@@ -281,7 +301,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $displayStatus = (is_string($status) && str_contains($status, 'Belum')) ? '-' : $status;
                 $dataLines[] = array_merge([$row['no'] ?? 0], [
                     $student->nisn ?: '-',
-                    $student->name,
+                    mb_strtoupper($student->name ?? '', 'UTF-8'),
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
                     $row['check_in'],
@@ -289,6 +309,63 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $displayStatus,
                     $row['notes'],
                 ]);
+            }
+        } elseif (in_array($this->type, ['semester', 'tahunan'], true)) {
+            $summaryMonths = $rows[0]['months'] ?? [];
+            if (empty($summaryMonths) && isset($this->params['summary_months'])) {
+                // Fallback from params if needed
+            }
+            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK'];
+            foreach ($summaryMonths as $m) {
+                $headerRow[] = is_array($m) ? ($m[0] ?? '') : (is_object($m) ? ($m->label ?? '') : '');
+            }
+            $headerRow[] = 'H';
+            $headerRow[] = 'T';
+            $headerRow[] = 'S';
+            $headerRow[] = 'I';
+            $headerRow[] = 'A';
+            $headerRow[] = '%';
+
+            foreach ($rows as $row) {
+                $student = $row['student'];
+                $line = array_merge([$row['no'] ?? 0], [
+                    $student->nisn ?: '-',
+                    mb_strtoupper($student->name ?? '', 'UTF-8'),
+                    $student->schoolClass ? $student->schoolClass->name : '-',
+                    $student->gender === 'Laki-laki' ? 'L' : 'P',
+                ]);
+                if (!empty($row['months']) && is_array($row['months'])) {
+                    foreach ($row['months'] as $m) {
+                        if (is_array($m)) {
+                            $line[] = $m[1] ?? ($m['hadir'] ?? 0);
+                            $line[] = $m[2] ?? ($m['terlambat'] ?? 0);
+                            $line[] = $m[3] ?? ($m['sakit'] ?? 0);
+                            $line[] = $m[4] ?? ($m['izin'] ?? 0);
+                            $line[] = $m[5] ?? ($m['alfa'] ?? 0);
+                        } else {
+                            // shouldn't happen
+                            $line[] = '-'; $line[] = '-'; $line[] = '-'; $line[] = '-'; $line[] = '-';
+                        }
+                    }
+                } else {
+                    // Fallback: compute from monthlyPresent if available
+                    $studentId = $student->id ?? 0;
+                    $mp = $row['monthlyPresent'] ?? [];
+                    if (!empty($mp) && isset($mp[$studentId])) {
+                        $hCounts = $mp[$studentId];
+                        foreach (array_slice($summaryMonths, 0, count($hCounts)) as $i => $mInfo) {
+                            $hCounts[$i] ??= 0;
+                            $line[] = $hCounts[$i] ?? 0; // H count
+                        }
+                    }
+                }
+                $line[] = $row['hadir'] ?? 0;
+                $line[] = $row['terlambat'] ?? 0;
+                $line[] = $row['sakit'] ?? 0;
+                $line[] = $row['izin'] ?? 0;
+                $line[] = $row['alfa'] ?? 0;
+                $line[] = ($row['percentage'] ?? 0) . '%';
+                $dataLines[] = $line;
             }
         } elseif ($this->type === 'mingguan') {
             $dates = $this->periodDates();
@@ -312,7 +389,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $student = $row['student'];
                 $line = array_merge([$row['no'] ?? 0], [
                     $student->nisn ?: '-',
-                    $student->name,
+                    mb_strtoupper($student->name ?? '', 'UTF-8'),
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
                 ]);
@@ -358,7 +435,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $student = $row['student'];
                 $line = array_merge([$row['no'] ?? 0], [
                     $student->nisn ?: '-',
-                    $student->name,
+                    mb_strtoupper($student->name ?? '', 'UTF-8'),
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
                 ]);
@@ -398,6 +475,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         foreach ($legend as $line) {
             $output[] = [$line];
         }
+        $output[] = ['Jam masuk: ' . Setting::getCheckInTime() . ', batas keterlambatan: ' . Setting::getLateLimitTime()];
 
         // ---- BLOK TANDA TANGAN 2 KOLOM (per kelas / per sheet) ----
         $output[] = [''];
@@ -500,8 +578,21 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     /** Daftar tanggal pada periode mingguan. */
     protected function periodDates(): array
     {
-        $startDate = $this->params['start_date'] ?? Carbon::now('Asia/Jakarta')->startOfWeek()->toDateString();
-        $endDate = $this->params['end_date'] ?? Carbon::now('Asia/Jakarta')->startOfWeek()->addDays(4)->toDateString();
+        if (!empty($this->params['start_date']) || !empty($this->params['end_date'])) {
+            $startDate = $this->params['start_date'] ?? Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->toDateString();
+            $endDate = $this->params['end_date'] ?? Carbon::parse($startDate)->addDays(6)->toDateString();
+        } elseif (!empty($this->params['period_date'])) {
+            $anchor = Carbon::parse($this->params['period_date']);
+            $startDate = $anchor->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+            $endDate = $anchor->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+        } else {
+            $startDate = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->toDateString();
+            $endDate = Carbon::now('Asia/Jakarta')->startOfWeek(Carbon::MONDAY)->addDays(6)->toDateString();
+        }
+
+        if (Carbon::parse($endDate)->lt(Carbon::parse($startDate))) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
 
         $startObj = Carbon::parse($startDate);
         $endObj = Carbon::parse($endDate);
@@ -530,7 +621,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $rows = [];
 
         if ($this->type === 'harian') {
-            $date = $this->params['date'] ?? $now->toDateString();
+            $date = $this->params['date'] ?? $this->params['period_date'] ?? $now->toDateString();
 
             $attendances = Attendance::where('date', $date)
                 ->whereIn('student_id', $students->pluck('id'))
@@ -655,8 +746,8 @@ $status = Attendance::statusOf(null, $date, $isHoliday, null);
         }
 
         // BULANAN
-        $month = (int) ($this->params['month'] ?? $now->month);
-        $year = (int) ($this->params['year'] ?? $now->year);
+        $month = (int) ($this->params['month'] ?? $this->params['period_month'] ?? $now->month);
+        $year = (int) ($this->params['year'] ?? $this->params['period_year'] ?? $now->year);
         $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
         $startDate = Carbon::createFromDate($year, $month, 1)->toDateString();
@@ -786,7 +877,7 @@ $status = Attendance::statusOf(null, $date, $isHoliday, null);
         // Legenda
         if ($this->legendRow > 0) {
             $sheet->getStyle("A{$this->legendRow}")->getFont()->setBold(true);
-            $sheet->getStyle("A{$this->legendRow}:{$lastCol}" . ($this->legendRow + 2))
+            $sheet->getStyle("A{$this->legendRow}:{$lastCol}" . ($this->legendRow + 3))
                 ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
         }
 

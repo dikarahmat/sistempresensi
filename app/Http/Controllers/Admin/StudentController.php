@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\AcademicYear;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
+use App\Services\DownloadCacheService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class StudentController extends Controller
 {
@@ -34,146 +33,18 @@ class StudentController extends Controller
             $query->where('school_class_id', $request->class_id);
         }
 
-        // 100 baris per halaman (sebelumnya 50). withQueryString() supaya
-        // search & filter kelas tetap melekat di link pagination.
         $students = $query->orderBy('name', 'asc')->paginate(100)->withQueryString();
         $classes = SchoolClass::orderBy('name')->get();
 
-        return view('admin.students.index', compact('students', 'classes'));
-    }
-
-    public function create(): View
-    {
-        $classes = SchoolClass::orderBy('name')->get();
-        return view('admin.students.create', compact('classes'));
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        // Aturan validasi Data Siswa (server) + pesan berbahasa Indonesia.
-        // Data siswa hanya 4 kolom: NISN (wajib, 10 digit angka, unik),
-        // Nama Lengkap, Kelas, dan Jenis Kelamin.
-        $validated = $request->validate($this->studentRules(null), $this->studentMessages(), $this->studentAttributes());
-
-        $validated['qr_token'] = (string) Str::uuid();
-        $validated['status'] = 'Aktif';
-
-        try {
-            $student = Student::create($validated);
-        } catch (\Throwable $e) {
-            report($e);
-            return redirect()->route('admin.students.index')
-                ->with('error', __('Gagal menyimpan data siswa. Coba lagi.'));
-        }
-
-        return redirect()->route('admin.students.index')
-            ->with('success', __('Siswa :name berhasil ditambahkan.', ['name' => $student->name]));
+        return view('guru.students.index', compact('students', 'classes'));
     }
 
     public function show(Student $student): View
     {
         $student->load('schoolClass');
-        return view('admin.students.show', compact('student'));
+        return view('guru.students.show', compact('student'));
     }
 
-    public function edit(Student $student): View
-    {
-        $classes = SchoolClass::orderBy('name')->get();
-        return view('admin.students.edit', compact('student', 'classes'));
-    }
-
-    public function update(Request $request, Student $student): RedirectResponse
-    {
-        $validated = $request->validate($this->studentRules($student), $this->studentMessages(), $this->studentAttributes());
-
-        if (empty($student->qr_token)) {
-            $validated['qr_token'] = (string) Str::uuid();
-        }
-
-        try {
-            $student->update($validated);
-        } catch (\Throwable $e) {
-            report($e);
-            return redirect()->route('admin.students.edit', $student->id)
-                ->with('error', __('Gagal menyimpan data siswa. Coba lagi.'));
-        }
-
-        return redirect()->route('admin.students.show', $student->id)
-            ->with('success', __('Siswa :name berhasil diperbarui.', ['name' => $student->name]));
-    }
-
-    /**
-     * Aturan validasi Data Siswa (dipakai form Tambah & Edit agar identik).
-     *
-     * Data siswa yang dipakai aplikasi hanya 4 kolom:
-     * - NISN : wajib, tepat 10 digit angka, unik (identitas tunggal siswa).
-     * - Nama Lengkap, Kelas, Jenis Kelamin: wajib.
-     *
-     * Catatan: validasi unik NISN memeriksa SEMUA record (termasuk yang di
-     * Tempat Sampah / soft delete) agar tidak bisa membuat siswa baru dengan
-     * NISN yang sudah pernah terdaftar (meski sudah dihapus). Saat Edit,
-     * abaikan id siswa yang sedang diedit.
-     *
-     * @param  Student|null  $student  Diisi saat proses Edit (unique mengabaikan id sendiri).
-     */
-    private function studentRules(?Student $student = null): array
-    {
-        // Cek unik NISN terhadap SEMUA record (termasuk soft deleted)
-        // Menggunakan closure untuk query manual karena unique rule default
-        // hanya cek deleted_at IS NULL.
-        $nisnUnique = function ($attribute, $value, $fail) use ($student) {
-            $query = Student::withTrashed()->where('nisn', $value);
-            if ($student) {
-                $query->where('id', '!=', $student->id);
-            }
-            if ($query->exists()) {
-                $fail('NISN sudah terdaftar.');
-            }
-        };
-
-        return [
-            'school_class_id' => 'required|exists:school_classes,id',
-            'name' => 'required|string|max:255',
-            'nisn' => ['required', 'digits:10', $nisnUnique],
-            'gender' => 'required|in:Laki-laki,Perempuan',
-        ];
-    }
-
-    /**
-     * Semua pesan validasi Data Siswa dalam Bahasa Indonesia
-     * (tanpa membuat file lang baru, ditulis langsung di validator).
-     */
-    private function studentMessages(): array
-    {
-        return [
-            'school_class_id.required' => 'Kelas wajib dipilih.',
-            'school_class_id.exists' => 'Kelas tidak ditemukan.',
-            'name.required' => 'Nama siswa wajib diisi.',
-            'name.max' => 'Nama siswa maksimal 255 karakter.',
-            'nisn.required' => 'NISN wajib diisi.',
-            'nisn.digits' => 'NISN harus 10 digit angka.',
-            'nisn.unique' => 'NISN sudah terdaftar.',
-            'gender.required' => 'Jenis kelamin wajib dipilih.',
-            'gender.in' => 'Jenis kelamin tidak valid.',
-        ];
-    }
-
-    /**
-     * Nama attribute berbahasa Indonesia (dipakai bila pesan default tetap muncul).
-     */
-    private function studentAttributes(): array
-    {
-        return [
-            'school_class_id' => 'kelas',
-            'name' => 'nama siswa',
-            'nisn' => 'NISN',
-            'gender' => 'jenis kelamin',
-        ];
-    }
-
-    /**
-     * Cetak Kartu Presensi / Pelajar Massal (PDF).
-     */
     public function printCards(Request $request)
     {
         ini_set('memory_limit', '512M');
@@ -186,7 +57,6 @@ class StudentController extends Controller
         $query = Student::with('schoolClass')->where('status', 'Aktif');
 
         if ($request->filled('student_ids') && is_array($request->student_ids)) {
-            // Validasi: pastikan semua student_ids adalah integer dan valid
             $validatedIds = array_filter(array_map('intval', $request->student_ids));
             if (!empty($validatedIds)) {
                 $query->whereIn('id', $validatedIds);
@@ -207,7 +77,7 @@ class StudentController extends Controller
             foreach ($chunk as $student) {
                 $token = $student->nisn ?: $student->qr_token;
                 try {
-                    $svg = QrCode::size(140)->margin(0)->generate($token);
+                    $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate($token);
                     $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
                 } catch (\Throwable $e) {
                     $student->qr_base64 = null;
@@ -238,7 +108,7 @@ class StudentController extends Controller
             ));
         }
 
-        return \App\Services\DownloadCacheService::downloadMassCards($request);
+        return DownloadCacheService::downloadMassCards($request);
     }
 
     public function printCard(Request $request, $id = null): View
@@ -264,7 +134,7 @@ class StudentController extends Controller
 
         foreach ($students as $student) {
             $token = $student->nisn ?: $student->qr_token;
-            $svg = QrCode::size(140)->margin(0)->generate($token);
+            $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate($token);
             $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
 
             $student->photo_base64 = null;
@@ -281,11 +151,9 @@ class StudentController extends Controller
 
         if ($id) {
             $student = $students->first();
-            $siswa = $student;
 
-            return view('admin.students.print-card', compact(
+            return view('guru.students.print-card', compact(
                 'student',
-                'siswa',
                 'students',
                 'schoolName',
                 'schoolAddress',
@@ -307,273 +175,5 @@ class StudentController extends Controller
             'pengaturan',
             'setting'
         ));
-    }
-
-    public function import(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
-        ], [
-            'file_excel.required' => 'Pilih file Excel siswa yang akan diunggah.',
-            'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
-            'file_excel.max' => 'Ukuran file maksimal 5 MB.',
-        ]);
-
-        try {
-            $import = new \App\Imports\StudentsImport();
-            Excel::import($import, $request->file('file_excel'));
-
-            $count = $import->getImportedCount();
-            $skipped = $import->getSkippedCount();
-            $errors = $import->getErrors();
-
-            // Notifikasi import dibedakan menjadi 3 status:
-            // 1. Semua baris masuk      -> hijau
-            // 2. Sebagian masuk         -> kuning (peringatan)
-            // 3. Tidak ada yang masuk   -> merah
-            if ($count > 0 && $skipped === 0) {
-                $redirect = redirect()->route('admin.students.index')
-                    ->with('success', __('Import berhasil: :count siswa diimpor.', ['count' => $count]));
-            } elseif ($count > 0) {
-                $msg = "Import sebagian berhasil: {$count} diimpor, {$skipped} dilewati.";
-                if (!empty($errors)) {
-                    $msg .= ' Alasan: ' . Str::limit((string) $errors[0], 140);
-                }
-                $redirect = redirect()->route('admin.students.index')->with('warning', $msg);
-            } else {
-                $redirect = redirect()->route('admin.students.index')
-                    ->with('error', __('Import gagal: tidak ada data yang diimpor. :skipped baris dilewati karena format tidak sesuai. Periksa format file Excel.', ['skipped' => $skipped]));
-            }
-
-            if (!empty($errors)) {
-                $redirect->with('import_errors', $errors);
-            }
-
-            return $redirect;
-        } catch (\Throwable $e) {
-            report($e);
-            return redirect()->route('admin.students.index')
-                ->with('error', __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.'));
-        }
-    }
-
-    public function downloadTemplate()
-    {
-        return \App\Services\DownloadCacheService::downloadTemplate(
-            'students',
-            new \App\Exports\StudentTemplateExport(),
-            'Template_Siswa.xlsx'
-        );
-    }
-
-    public function downloadCard(Student $student)
-    {
-        return \App\Services\DownloadCacheService::downloadSingleCardJpg($student);
-    }
-
-    public function destroy(Student $student): RedirectResponse
-    {
-        $studentName = $student->name;
-
-        // Soft delete: data masih bisa dipulihkan dari halaman Arsip.
-        // Dibungkus try/catch supaya bila ada kegagalan sistem, pengguna
-        // tetap mendapat pesan yang jelas dan errornya tercatat di log
-        // (tidak lagi halaman 500 tanpa penjelasan).
-        try {
-            $student->delete();
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Gagal menghapus data siswa: ' . $e->getMessage(), [
-                'student_id' => $student->id,
-            ]);
-
-            return $this->backToStudentIndex('Gagal menghapus data siswa. Coba lagi.');
-        }
-
-        // Notifikasi hapus memakai flash 'deleted' (alert-danger/merah + ikon
-        // tempat sampah), bukan 'success' (hijau) - hijau untuk tambah/ubah.
-        return $this->backToStudentIndex(
-            __('Data siswa :name berhasil dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.', ['name' => $studentName]),
-            'deleted'
-        );
-    }
-
-    /**
-     * Kembali ke daftar siswa sambil MEMPERTAHANKAN filter & pencarian aktif.
-     *
-     * Parameter yang sedang dipakai ikut disalin ke query string redirect,
-     * sehingga kata kunci pencarian dan filter kelas tidak ikut hilang setelah
-     * menghapus data. `withInput()` saja tidak cukup karena hanya mengisi
-     * session untuk old(), bukanquerystring.
-     */
-    private function backToStudentIndex(string $message, string $type = 'success'): RedirectResponse
-    {
-        $params = [];
-        foreach (['search', 'class_id', 'status', 'sort', 'direction', 'per_page'] as $key) {
-            if (request()->filled($key)) {
-                $params[$key] = request($key);
-            }
-        }
-
-        $url = route('admin.students.index') . ($params ? '?' . http_build_query($params) : '');
-
-        return redirect($url)->with($type, $message);
-    }
-
-    /**
-     * Menghapus permanen SELURUH isi Arsip siswa dengan proteksi transaksi.
-     *
-     * Cakupan (dikonfirmasi pemilik sistem): HANYA siswa yang ada di arsip
-     * (soft delete) beserta riwayat presensi milik siswa tersebut.
-     * Siswa AKTIF tidak disentuh dan tabel users TIDAK disentuh sama sekali.
-     */
-    public function destroyAll(Request $request): RedirectResponse
-    {
-        // Dua pernyataan konfirmasi wajib dicentang; divalidasi juga di server
-        // sehingga request tanpa tanda konfirmasi akan ditolak.
-        $request->validate([
-            'confirm_permanent' => 'accepted',
-            'confirm_all' => 'accepted',
-        ], [
-            'confirm_permanent.accepted' => 'Centang pernyataan "Saya memahami data yang dihapus permanen tidak dapat dikembalikan."',
-            'confirm_all.accepted' => 'Centang pernyataan "Saya yakin ingin menghapus semua data siswa di Tempat Sampah."',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $archivedIds = Student::onlyTrashed()->pluck('id');
-            $total = $archivedIds->count();
-
-            if ($total > 0) {
-                // Riwayat presensi siswa terarsip dihapus lebih dulu (mencegah
-                // pelanggaran foreign key), lalu siswa dihapus permanen.
-                \App\Models\Attendance::whereIn('student_id', $archivedIds)->delete();
-                Student::withTrashed()->whereIn('id', $archivedIds)->forceDelete();
-            }
-
-            DB::commit();
-            // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil
-            // MERAH (alert-danger) + ikon tempat sampah, bukan hijau.
-            return redirect()->route('admin.students.trash')
-                ->with('deleted', __('Berhasil menghapus permanen :total siswa di Tempat Sampah.', ['total' => $total]));
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            report($e);
-            return redirect()->route('admin.students.trash')
-                ->with('error', __('Gagal menghapus semua data siswa di Tempat Sampah. Coba lagi.'));
-        }
-    }
-
-    /**
-     * Hapus SELURUH data siswa yang masih AKTIF (hapus massal dari toolbar
-     * Data Siswa), dengan proteksi transaksi.
-     *
-     * Berbeda dengan destroyAll() di atas yang mengosongkan Tempat Sampah:
-     * method ini memakai SOFT DELETE, jadi seluruh siswa aktif dipindahkan ke
-     * Tempat Sampah dan masih bisa dipulihkan dari Pengaturan.
-     *
-     * Jaminan:
-     *  - tabel `users` TIDAK disentuh sama sekali (akun guru/admin aman);
-     *  - hanya siswa AKTIF yang dikenai, siswa di Tempat Sampah tidak berubah;
-     *  - dua pernyataan konfirmasi wajib dicentang (divalidasi di server).
-     */
-    public function destroyAllActive(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'confirm_active' => 'accepted',
-            'confirm_all' => 'accepted',
-        ], [
-            'confirm_active.accepted' => 'Centang pernyataan "Saya memahami bahwa seluruh data siswa aktif akan dihapus dan dapat dipulihkan dari Tempat Sampah di Pengaturan."',
-            'confirm_all.accepted' => 'Centang pernyataan "Saya yakin ingin menghapus semua data siswa aktif."',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $total = Student::count();
-
-            if ($total > 0) {
-                // Riwayat presensi dibersihkan terlebih dahulu (mencegah
-                // pelanggaran foreign key), lalu siswa di-soft-delete sehingga
-                // masuk ke Tempat Sampah dan bisa dipulihkan.
-                \App\Models\Attendance::whereIn('student_id', Student::query()->select('id'))->delete();
-                Student::query()->delete();
-            }
-
-            DB::commit();
-
-            return $this->backToStudentIndex(
-                "Seluruh data siswa aktif ({$total} data) berhasil dihapus dan dipindahkan ke Tempat Sampah.",
-                'deleted'
-            );
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            report($e);
-
-            return $this->backToStudentIndex('Gagal menghapus seluruh data siswa aktif. Coba lagi.', 'error');
-        }
-    }
-
-    /**
-     * Tampilkan halaman arsip (siswa yang dihapus / soft deleted).
-     */
-    public function trash(): View
-    {
-        $students = Student::onlyTrashed()
-            ->with('schoolClass')
-            ->orderBy('deleted_at', 'desc')
-            ->paginate(50);
-
-        $classes = SchoolClass::orderBy('name')->get();
-
-        // Jumlah data di arsip, dipakai modal konfirmasi "Hapus Semua (Permanen)".
-        $trashedCount = Student::onlyTrashed()->count();
-
-        return view('admin.students.trash', compact('students', 'classes', 'trashedCount'));
-    }
-
-    /**
-     * Pulihkan siswa dari arsip.
-     */
-    public function restore($id): RedirectResponse
-    {
-        // Wajib pakai onlyTrashed(): global scope SoftDeletes otomatis menambahkan
-        // "deleted_at is null" ke setiap query, sehingga whereNotNull('deleted_at')
-        // menghasilkan query mustahil (selalu kosong) -> firstOrFail() melempar
-        // ModelNotFoundException -> halaman 404 saat tombol "Pulihkan" diklik.
-        $student = Student::onlyTrashed()->findOrFail($id);
-        $student->restore();
-
-        return redirect()->route('admin.students.trash')
-            ->with('success', __('Data siswa :name berhasil dipulihkan!', ['name' => $student->name]));
-    }
-
-    /**
-     * Hapus permanen siswa dari arsip.
-     */
-    public function forceDelete($id): RedirectResponse
-    {
-        // onlyTrashed() => hanya siswa yang ada di arsip yang bisa dihapus permanen
-        $student = Student::onlyTrashed()->findOrFail($id);
-
-        DB::beginTransaction();
-        try {
-            $studentName = $student->name;
-
-            // Hapus seluruh riwayat presensi terkait
-            $student->attendances()->delete();
-
-            // Hapus permanen data siswa dari database
-            $student->forceDelete();
-
-            DB::commit();
-            // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil
-            // MERAH (alert-danger) + ikon tempat sampah, bukan hijau.
-            return redirect()->route('admin.students.trash')
-                ->with('deleted', __('Data siswa :name berhasil dihapus permanen!', ['name' => $studentName]));
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            report($e);
-            return redirect()->route('admin.students.trash')
-                ->with('error', __('Gagal menghapus permanen siswa. Silakan coba lagi atau hubungi admin.'));
-        }
     }
 }

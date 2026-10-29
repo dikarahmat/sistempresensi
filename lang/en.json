@@ -109,7 +109,7 @@
     "Metode input presensi": "Attendance Input Method",
     "Tempelkan kartu QR ke kamera": "Hold the QR card to the camera",
     "Fokuskan alat di sini, lalu scan kartu siswa": "Focus the scanner here, then scan the student card",
-    "Siap menerima scan...": "Ready to receive scan...",
+    "Siap menerima scan...": "Type NIS/NIP for Student/Teacher",
     "Nama Siswa": "Student Name",
     "Status Presensi": "Attendance Status",
     "Absensi Gerbang": "Gate Attendance",
@@ -307,7 +307,7 @@
     "Keterangan": "Notes",
     "Buka Kelas": "Open Class",
     "Belum ada data kelas tersedia.": "No class data available yet.",
-    "Lihat histori kehadiran per kelas": "View attendance history per class",
+    "Lihat histori kehadiran per kelas": "View attendance history today",
     "Cari nama atau NISN...": "Search name or NISN...",
     "Cari nama atau NISN": "Search name or NISN",
     "Semua Kelas": "All Classes",
@@ -777,5 +777,7 @@
     "Gagal membuat file export. Silakan coba lagi atau hubungi admin.": "Failed to create export file. Please try again or contact admin.",
     "Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.": "File format not allowed. Use PDF, JPG, or PNG.",
     "Ekstensi file tidak diizinkan.": "File extension not allowed.",
-    "Status presensi siswa berhasil diperbarui!": "Student attendance status updated successfully!"
+    "Status presensi siswa berhasil diperbarui!": "Student attendance status updated successfully!",
+    "Ketik NIS/NIP untuk Siswa/Guru": "Type NIS/NIP for Student/Teacher",
+    "Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter": "Scan the card with the device, or type NIS/NIP then press Enter"
 }

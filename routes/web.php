@@ -220,6 +220,10 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
 
     // KELAS - identik admin, READ-ONLY
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('classes.index');
+
+    // GURU - cetak kartu presensi guru (dilayani oleh controller yang sama)
+    Route::match(['get', 'post'], '/kartu', [TeacherController::class, 'printCards'])->name('guru.print-cards');
+    Route::get('/kartu/download/{teacher}', [TeacherController::class, 'downloadCard'])->name('guru.download-card');
 });
 
 // ============================================================================

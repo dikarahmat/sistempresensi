@@ -1009,7 +1009,7 @@
             <div class="dash-shortcut-grid">
 
                 <!-- 1. Presensi Hari Ini (ikon QR/Scan) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â menuju HALAMAN PRESENSI -->
-                <a href="{{ panel_route('absensi.index') }}"
+                <a href="{{ panel_route('absensi.index') }}?scan=1"
                    class="dash-shortcut-item"
                    title="{{ __('Buka halaman Presensi (Scanner QR & Mode Gerbang)') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #dbeafe;">

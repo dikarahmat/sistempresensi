@@ -6346,61 +6346,21 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
 (function () {
     'use strict';
 
+    // Pencarian HANYA jalan saat Enter (Enter) atau klik tombol submit
+    // di dalam form: <form method="GET"> + <input name="search"> + submit.
+    // Tidak ada auto-submit (debounce/setTimeout/input/keyup) di sini.
     document.querySelectorAll('form[method="GET"] input[name="search"], form[method="get"] input[name="search"]').forEach(function (input) {
         var form = input.form;
         if (!form) return;
-        if (!input.id) {
-            input.id = 'auto-filter-search-' + Math.random().toString(36).slice(2, 7);
-        }
 
-        // 1) Pencarian otomatis saat mengetik (debounce 400ms). Enter tetap
-        //    bisa: event submit pada form ikut membersihkan timer debounce.
-        var timer = null;
-        input.addEventListener('input', function () {
-            clearTimeout(timer);
-            timer = setTimeout(function () { input.form.submit(); }, 400);
-        });
-        form.addEventListener('submit', function () { clearTimeout(timer); });
-
-        // 2) Tombol "x" kecil di dalam input (bukan tombol reset terpisah):
-        //    hanya muncul saat ada teks, mengosongkan & memuat ulang sekali klik.
-        var group = input.closest('.input-group') || input.parentElement;
-        if (group && !group.querySelector('.search-clear-x')) {
-            if (!group.style.position) group.style.position = 'relative';
-            var clearBtn = document.createElement('button');
-            clearBtn.type = 'button';
-            clearBtn.className = 'search-clear-x';
-            clearBtn.setAttribute('aria-label', (window.__i18n && window.__i18n.clear_search) || 'Kosongkan pencarian');
-            clearBtn.innerHTML = '&times;';
-            clearBtn.style.cssText = 'position:absolute; top:50%; transform:translateY(-50%); right:40px; z-index:5; width:18px; height:18px; padding:0; line-height:1; border:none; background:transparent; color:#94a3b8; font-size:16px; display:none; cursor:pointer;';
-            var searchBtn = group.querySelector('button:not(.search-clear-x)');
-            if (searchBtn && searchBtn.offsetWidth) {
-                clearBtn.style.right = (searchBtn.offsetWidth + 10) + 'px';
-            }
-            group.appendChild(clearBtn);
-            input.style.paddingRight = '28px';
-
-            var syncClear = function () {
-                clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
-            };
-            input.addEventListener('input', syncClear);
-            syncClear();
-
-            clearBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
-            clearBtn.addEventListener('click', function () {
-                clearTimeout(timer);
-                input.value = '';
-                syncClear();
-                input.focus();
-                try {
-                    window.sessionStorage.setItem('__filterFocus', JSON.stringify({ id: input.id, path: window.location.pathname }));
-                } catch (e) { /* abaikan */ }
+        // Tombol submit terkandung di form → Enter otomatis submit (bukan JS).
+        // Tombol reset kecil (jika ada) juga submit form kosong.
+        var clearBtn = form.querySelector('button[type="submit"], input[type="submit"], .search-clear-x');
+        if (clearBtn && clearBtn.type !== 'submit') {
+            clearBtn.addEventListener('click', function (e) {
                 form.submit();
             });
         }
-
-        // 3) Jangan tampilkan overlay loading penuh saat filter otomatis mengetik.
-        form.setAttribute('data-no-loader', '');
     });
 
     // Semua form GET yang berisi select/date: beri data-no-loader agar overlay

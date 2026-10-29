@@ -100,6 +100,32 @@
         .jk-l { color: #3B82F6; font-weight: 500; }
         .jk-p { color: #EF4444; font-weight: 500; }
 
+        /* ==== GLOBAL TEXT RESET: semua teks jadi hitam pekat, tebal dibuat normal ==== */
+        td, td * { color: #000 !important; font-weight: 400 !important; }
+        /* Pengecualian: sel angka badge H/T/S/I/A/SEL/UANG + JK + header tabel + judul tetap warna asli */
+        .badge-h, .badge-t, .badge-s, .badge-i, .badge-a, .badge-l,
+        .jk-l, .jk-p,
+        th { color: inherit !important; font-weight: inherit !important; }
+        th { color: #ffffff !important; font-weight: bold !important; }
+        .badge-h { color: #059669 !important; font-weight: bold !important; }
+        .badge-t { color: #d97706 !important; font-weight: bold !important; }
+        .badge-s { color: #2563eb !important; font-weight: bold !important; }
+        .badge-i { color: #0d9488 !important; font-weight: bold !important; }
+        .badge-a { color: #e11d48 !important; font-weight: bold !important; }
+        .badge-l { color: #94a3b8 !important; font-weight: normal !important; }
+        .jk-l { color: #3B82F6 !important; font-weight: 500 !important; }
+        .jk-p { color: #EF4444 !important; font-weight: 500 !important; }
+        /* Judul sekolah: tetap biru (seperti asal) + normal tebal */
+        .school-title { color: #1d4ed8 !important; font-weight: bold !important; }
+        /* Subjudul: hitam pekat, tebal normal */
+        .school-subtitle, .report-subtitle { color: #000 !important; font-weight: 400 !important; }
+        /* Waktu cetak: hitam pekat, normal */
+        .printed-at, .printed-at strong { color: #000 !important; font-weight: 400 !important; }
+        /* Legenda judul: hitam pekat, normal */
+        .legend-title { color: #000 !important; font-weight: 400 !important; }
+        /* Alamat sekolah (td row label) */
+        .header-table td { color: #000 !important; font-weight: 400 !important; }
+
         /* Legenda + tanda tangan per kelas: tidak boleh terpisah halaman. */
         .section-footer {
             page-break-inside: avoid;
@@ -213,7 +239,7 @@
             <tr>
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['student']->nisn ?: '-' }}</td>
-                <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
+                <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 <td>{{ $row['check_in'] }}</td>
@@ -280,7 +306,7 @@
             <tr>
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['student']->nisn ?: '-' }}</td>
-                <td class="text-left"><strong>{{ $row['student']->name }}</strong></td>
+                <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @foreach($dateColumns as $d)
@@ -348,7 +374,7 @@
             <tr>
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['student']->nisn ?: '-' }}</td>
-                <td class="text-left" style="font-size: 7pt;"><strong>{{ $row['student']->name }}</strong></td>
+                <td class="text-left" style="font-size: 7pt;"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{{ $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' }}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)

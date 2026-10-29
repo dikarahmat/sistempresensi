@@ -145,9 +145,16 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole($user);
         }
 
-        // 2. Autentikasi gagal - pesan generik (tidak membocorkan info akun).
-        return back()->withInput($request->only('login', 'remember'))->withErrors([
-            'login' => __('Username atau password salah'),
+        // 2. Autentikasi gagal - bedakan: username tidak ada vs password salah.
+        if (! $user) {
+            return back()->withInput($request->only('username', 'remember'))->withErrors([
+                'username' => __('Username tidak ditemukan'),
+            ]);
+        }
+
+        // 3. Username ada, tapi kredensial salah.
+        return back()->withInput($request->only('username', 'remember'))->withErrors([
+            'password' => __('Password salah'),
         ]);
     }
 

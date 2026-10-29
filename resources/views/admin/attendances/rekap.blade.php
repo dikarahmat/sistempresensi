@@ -1103,11 +1103,13 @@
         // Dipakai sebagai onchange inline pada radio "Jenis Cetak".
         function toggleRekapPrintScope() {
             syncModeUI();
+            toggleRekapPeriodFields();
         }
 
         // Dipakai sebagai onchange inline pada radio "Cakupan Siswa".
         function toggleRekapStudentScope() {
             syncModeUI();
+            toggleRekapPeriodFields();
         }
 
         function toggleRekapPeriodFields() {
@@ -1979,13 +1981,28 @@
             // Format sudah diambil saat klik tombol; relatedTarget hanya cadangan.
             setRekapPrintFormatFromButton(event.relatedTarget);
 
-            // Set periode berdasarkan tab aktif (harian/mingguan/bulanan) — ringan.
-            const currentType = '{{ $type }}';
+            // Set periode berdasarkan tab aktif (harian/mingguan/bulanan).
+            const currentType = {!! json_encode($type) !!};
             const periodMap = { harian: 'harian', mingguan: 'mingguan', bulanan: 'bulanan' };
             const periodSelect = document.getElementById('rekapPeriodType');
             if (periodSelect && periodMap[currentType]) {
                 periodSelect.value = periodMap[currentType];
             }
+
+            // Set blok periode sesuai periode halaman, lalu buat field
+            // default (Bulan/Tahun = bulan/tahun sekarang; Tanggal = hari ini)
+            // supaya teks info dan validasi baca nilai yang benar.
+            toggleRekapPeriodFields();
+            const today = new Date();
+            const bulan = String(today.getMonth() + 1).padStart(2, '0');
+            const tahun = String(today.getFullYear());
+            const bulanan = document.getElementById('periodBulanan');
+            const bulanSel = bulanan ? bulanan.querySelector('select[name="period_month"]') : null;
+            const tahunSel = bulanan ? bulanan.querySelector('select[name="period_year"]') : null;
+            if (bulanSel) bulanSel.value = bulan;
+            if (tahunSel) tahunSel.value = tahun;
+            const tanggal = document.getElementById('periodHarian') ? document.getElementById('periodHarian').querySelector('input[data-role="period-date"]') : null;
+            if (tanggal) tanggal.value = today.getFullYear() + '-' + bulan + '-' + today.getDate();
 
             // Paksa ke mode "Cetak per Kelas" setiap popup dibuka (diekspeksikan test).
             document.getElementById('printModeClass').checked = true;
@@ -1998,8 +2015,6 @@
             rekapZipKosong();
             // rekapResetPencarianSiswa() diekspeksikan test dipanggil saat buka popup.
             rekapResetPencarianSiswa();
-            // updateRekapInfoText() ringan dipanggil agar teks info benar SEBELUM modal terlihat.
-            updateRekapInfoText();
         });
 
         // Reset state saat modal ditutup agar bersih untuk buka berikutnya.
@@ -2013,7 +2028,6 @@
         // Initialize on DOM ready — semua inisialisasi berat dilakukan SEKALI di sini,
         // bukan di show.bs.modal, agar modal muncul instan saat diklik.
         document.addEventListener('DOMContentLoaded', function() {
-            toggleRekapPeriodFields();
             // Keadaan awal popup mengikuti radio default (Per Kelas).
             syncModeUI();
             rekapResetPencarianSiswa();
@@ -2044,7 +2058,21 @@
         });
     </script>
     @endpush
-<!-- MODAL CETAK REKAP PRESENSI -->
+<style>
+    /* ==== Cetak Rekap: modal instan ====
+       Samakan durasi/transisi dengan modal lain yang instan: transition/none.
+       Hapus fade/transisi supaya modal Bootstrap muncul seketika. */
+    .modal#printRekapModal,
+    .modal#printRekapModal.fade,
+    .modal#printRekapModal.show {
+        transition: none !important;
+        animation: none !important;
+    }
+    .modal#printRekapModal .modal-dialog {
+        transition: none !important;
+        animation: none !important;
+    }
+</style>
 <div class="modal fade" id="printRekapModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">

@@ -6,9 +6,11 @@ use App\Exports\TeacherTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Imports\TeachersImport;
 use App\Models\SchoolClass;
+use App\Models\Setting;
 use App\Models\Teacher;
 use App\Services\DownloadCacheService;
 use App\Services\TeacherCardService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,20 +63,45 @@ class TeacherController extends Controller
     }
 
     /**
-     * Cetak kartu presensi guru massal (PDF).
+     * Cetak kartu presensi guru massal (PDF A4 landscape).
      */
     public function printCards(Request $request)
     {
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '180');
+
+        $teachers = TeacherCardService::activeTeachers();
+
+        if ($teachers->isEmpty()) {
+            abort(404, __('Tidak ada data guru aktif yang ditemukan untuk dicetak.'));
+        }
+
         try {
-            if ($request->isMethod('get') && ! $request->boolean('download')) {
-                return TeacherCardService::preview();
+            $logoPath = public_path(Setting::getLogo());
+            $logoBase64 = null;
+
+            if (is_file($logoPath)) {
+                $mime = mime_content_type($logoPath) ?: 'image/png';
+                $logoBase64 = 'data:'.$mime.';base64,'.base64_encode(file_get_contents($logoPath));
             }
 
-            return TeacherCardService::downloadMassCards();
+            $pdf = Pdf::loadView('admin.teachers.partials.mass-card-pdf', [
+                'teachers' => $teachers,
+                'schoolName' => Setting::getSchoolName(),
+                'logoBase64' => $logoBase64,
+                'paper' => 'a4',
+            ]);
+            $pdf->setPaper('a4', 'landscape');
+
+            return $pdf->download('kartu-guru.pdf');
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect()->route('admin.guru.index')
+            $fallback = is_admin()
+                ? route('admin.guru.index')
+                : route('guru.dashboard');
+
+            return redirect($fallback)
                 ->with('error', __('Gagal membuat kartu presensi guru. Silakan coba lagi.'));
         }
     }
@@ -379,7 +406,7 @@ class TeacherController extends Controller
 
     /**
      * Aturan validasi bersama Tambah/Edit guru (Bahasa Indonesia).
-     * NIP opsional: boleh kosong, tapi kalau diisi harus 16 atau 18 digit dan unik.
+     * NIP wajib diisi dan harus 16 atau 18 digit angka serta unik.
      */
     private function teacherRules(?Teacher $teacher = null): array
     {
@@ -388,12 +415,12 @@ class TeacherController extends Controller
             : 'unique:teachers,nip';
 
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'nip' => ['nullable', 'regex:/^([0-9]{16}|[0-9]{18})$/', $nipUnique],
+            'name' => ['required', 'string', 'max:255', 'not_regex:/\p{Nd}/u'],
+            'nip' => ['required', 'regex:/^(\d{16}|\d{18})$/', $nipUnique],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
-            'birth_place' => ['nullable', 'string', 'max:100'],
-            'birth_date' => ['nullable', 'date'],
-            'phone_number' => ['required', 'regex:/^(\+62|0)[0-9]{9,14}$/'],
+            'birth_place' => ['required', 'string', 'max:255', 'not_regex:/\p{Nd}/u'],
+            'birth_date' => ['required', 'date', 'before_or_equal:today'],
+            'phone_number' => ['required', 'regex:/^\d{10,15}$/'],
             'school_class_id' => ['nullable', 'exists:school_classes,id'],
         ];
     }
@@ -401,18 +428,22 @@ class TeacherController extends Controller
     private function teacherMessages(): array
     {
         return [
-            'name.required' => 'Nama lengkap wajib diisi.',
+            'name.required' => 'Nama wajib diisi.',
             'name.string' => 'Nama lengkap tidak valid.',
             'name.max' => 'Nama lengkap maksimal 255 karakter.',
-            'nip.regex' => 'NIP harus 16 atau 18 digit angka (atau dikosongkan).',
+            'name.not_regex' => 'Nama tidak boleh mengandung angka.',
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.regex' => 'NIP harus 16 atau 18 digit angka.',
             'nip.unique' => 'NIP sudah terdaftar.',
-            'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'gender.required' => 'Pilih jenis kelamin.',
             'gender.in' => 'Jenis kelamin tidak valid.',
             'birth_place.string' => 'Tempat lahir tidak valid.',
             'birth_place.max' => 'Tempat lahir maksimal 100 karakter.',
+            'birth_place.regex' => 'Tempat lahir hanya boleh berisi huruf, spasi, titik, dan strip.',
             'birth_date.date' => 'Tanggal lahir tidak valid.',
-            'phone_number.required' => 'Nomor telepon wajib diisi.',
-            'phone_number.regex' => 'Nomor telepon harus 10-15 digit angka.',
+            'birth_date.before_or_equal' => 'Tanggal lahir tidak boleh melebihi hari ini.',
+            'phone_number.required' => 'No. telepon wajib diisi.',
+            'phone_number.regex' => 'No. telepon harus 10-15 digit angka.',
             'school_class_id.exists' => 'Penugasan kelas tidak valid.',
         ];
     }

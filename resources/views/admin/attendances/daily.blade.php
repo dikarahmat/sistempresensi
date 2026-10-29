@@ -243,28 +243,51 @@
        ========================================================================== */
     @media (min-width: 641px) {
         .stats-bar {
-            display: inline-flex;
-            align-items: stretch;
-            width: auto;
-            max-width: 100%;
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 28px;
+            padding: 0;
+            background: none;
+            border: 0;
+            box-shadow: none;
         }
         .stats-bar__item {
+            border: 0;
+            background: none;
+            padding: 0;
+            box-shadow: none;
+        }
+        .stat-chip {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            padding: 0.32rem 0.65rem;
-            font-size: 0.78rem;
-            font-weight: 600;
-            line-height: 1.2;
-            color: #1e293b;
-            white-space: nowrap;
+            gap: 8px;
+            font-size: 15px;
+            line-height: 1;
         }
-        .stats-bar__item + .stats-bar__item {
-            border-left: 1px solid #e2e8f0;   /* sekat vertikal tipis */
+        .stat-chip strong {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-ico {
+            width: 22px;
+            height: 22px;
+            flex: none;
+            background: none;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
+            display: block;
+        }
+        .stat-ico--ok {
+            color: #16a34a;
+        }
+        .stat-ico--no {
+            color: #dc2626;
+        }
+        .stat-ico--all {
+            color: #2563eb;
         }
     }
 
@@ -747,9 +770,9 @@
     <!-- ========================================================================= -->
     <div class="badges-scroll-container mb-3 no-scrollbar d-none d-md-block" style="scrollbar-width: none; -ms-overflow-style: none;">
         <div class="stats-bar">
-            <div class="stats-bar__item"><span><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {{ __('sudah presensi') }}</span></div>
-            <div class="stats-bar__item"><span><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {{ __('belum presensi') }}</span></div>
-            <div class="stats-bar__item"><span><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {{ __('total siswa') }}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {{ __('sudah presensi') }}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5"/></svg><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {{ __('belum presensi') }}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--all" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.6"/><path d="M5.5 21v-2.2a6.5 6.5 0 0 1 13 0V21z"/><circle cx="4.6" cy="9.2" r="2.4" opacity=".75"/><path d="M0 19.5v-1.3a4.6 4.6 0 0 1 4.6-4.6c.7 0 1.3.1 1.9.4A8 8 0 0 0 4.4 19.5z" opacity=".75"/><circle cx="19.4" cy="9.2" r="2.4" opacity=".75"/><path d="M24 19.5v-1.3a4.6 4.6 0 0 0-4.6-4.6c-.7 0-1.3.1-1.9.4a8 8 0 0 1 2.1 5.5z" opacity=".75"/></svg><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {{ __('total siswa') }}</span></div>
         </div>
     </div>
 
@@ -797,10 +820,9 @@
                          Class .d-none tetap dipakai JS untuk
                          menyembunyikan/menampilkan panel ini. -->
                     <div id="hardwareView" class="d-none w-100 py-3 hardware-view-panel">
-                        <i class='bx bx-scan text-primary hardware-scan-icon'></i>
-                        <p class="hardware-hint fw-semibold small mb-0 px-2">{{ __('Arahkan fokus tetap di sini, lalu scan kartu dengan alat') }}</p>
-                        <div class="hardware-input-wrap">
-                            <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Siap menerima scan...') }}" autofocus autocomplete="off">
+                        <i class='bx bx-scan text-primary hardware-scan-icon'></i><p class="hardware-hint fw-semibold small mb-0 px-2">{{ __('Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter') }}</p>
+                            <div class="hardware-input-wrap">
+                                <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Ketik NIS/NIP untuk Siswa/Guru') }}" autofocus autocomplete="off">
                         </div>
                     </div>
 
@@ -1350,5 +1372,29 @@
             toggleInlineScanner();
         }
     });
+</script>
+
+<script>
+(function () {
+  try {
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('scan') !== '1' && p.get('tab') !== 'scanner') return;
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries++;
+      var btn = document.getElementById('btnToggleScannerDesktop');
+      if (!btn || btn.offsetParent === null) {
+        btn = document.getElementById('btnToggleScannerMobile');
+      }
+      if (btn && btn.offsetParent !== null) {
+        clearInterval(timer);
+        btn.click();
+        history.replaceState({}, '', window.location.pathname);
+      } else if (tries > 40) {
+        clearInterval(timer);
+      }
+    }, 150);
+  } catch (e) { console.error(e); }
+})();
 </script>
 @endpush

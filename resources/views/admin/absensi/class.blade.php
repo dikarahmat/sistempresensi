@@ -542,10 +542,9 @@
 
                     <!-- Mode Alat Scanner -->
                     <div id="hardwareView" class="d-none w-100 py-3">
-                        <i class='bx bx-scan text-primary' style="font-size: 3rem;"></i>
-                        <p class="text-dark fw-semibold small mt-2 mb-3">{{ __('Arahkan fokus tetap di sini, lalu scan kartu dengan alat') }}</p>
-                        <div class="px-3">
-                            <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Siap menerima scan...') }}" autofocus autocomplete="off">
+                        <i class='bx bx-scan text-primary' style="font-size: 3rem;"></i><p class="text-dark fw-semibold small mt-2 mb-3">{{ __('Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter') }}</p>
+                            <div class="px-3">
+                                <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Ketik NIS/NIP untuk Siswa/Guru') }}" autofocus autocomplete="off">
                         </div>
                     </div>
 

@@ -167,6 +167,12 @@ class Setting extends Model
      * TIDAK ditampilkan di form pengaturan, TIDAK disimpan via form.
      * Dipakai oleh ScannerController::processScan() untuk logika check-out.
      */
+    public static function getSchoolNpsn(): string
+    {
+        $value = static::get('school_npsn', '');
+        return filled($value) ? (string) $value : '-';
+    }
+
     public static function getCheckOutTime(): string
     {
         return (string) self::get('check_out_time', '14:00');

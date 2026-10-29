@@ -13,11 +13,11 @@
         .header-table td { vertical-align: middle; padding-bottom: 8px; }
         .school-title { font-size: 15pt; font-weight: bold; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px; }
         .school-subtitle { font-size: 8pt; color: #475569; margin-top: 2px; }
-        .printed-at { text-align: right; font-size: 7.5pt; color: #64748b; }
-        .printed-at strong { color: #0f172a; }
+        .printed-at { text-align: right; font-size: 7.5pt; color: #000; }
+        .printed-at strong { color: #000; }
 
         .report-title { font-size: 11.5pt; font-weight: bold; text-align: center; text-transform: uppercase; color: #0f172a; margin: 4px 0 2px; }
-        .report-subtitle { font-size: 8.5pt; text-align: center; color: #64748b; margin-bottom: 10px; }
+        .report-subtitle { font-size: 8.5pt; text-align: center; color: #000; margin-bottom: 10px; }
 
         /* ===== IDENTITAS SISWA =====
            Dulu blok ini melebar 100% halaman, sehingga kelompok kiri
@@ -42,10 +42,10 @@
             table-layout: fixed;
         }
         .identity td { border: none; padding: 1.5px 0; font-size: 9.5pt; vertical-align: top; }
-        .identity .lbl, .identity .lbl2, .identity .sep { white-space: nowrap; color: #475569; }
+        .identity .lbl, .identity .lbl2, .identity .sep { white-space: nowrap; color: #000; font-weight: normal; }
         /* Label digeser sedikit ke kanan supaya "Nama" tidak menempel batas kiri */
         .identity .lbl { padding-left: 4px; }
-        .identity .val { font-weight: normal; color: #0f172a; overflow-wrap: break-word; }
+        .identity .val { font-weight: normal; color: #000; overflow-wrap: break-word; }
 
         /* ===== TABEL RIWAYAT (header biru, border tipis) ===== */
         .tbl { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 6px; }
@@ -58,6 +58,28 @@
 
         /* simbol status berwarna */
         .st { font-weight: bold; font-size: 9pt; }
+
+        /* ==== GLOBAL TEXT RESET: semua teks jadi hitam pekat, tebal dibuat normal ==== */
+        td, td * { color: #000 !important; font-weight: 400 !important; }
+        /* Pengecualian: badge H/T/S/I/A/L + header tabel + judul tetap warna asli */
+        .st-H, .st-T, .st-S, .st-I, .st-A, .st-L,
+        .tbl th { color: inherit !important; font-weight: inherit !important; }
+        .tbl th { color: #ffffff !important; font-weight: bold !important; }
+        .st-H { color: #059669 !important; font-weight: bold !important; }
+        .st-T { color: #d97706 !important; font-weight: bold !important; }
+        .st-S { color: #2563eb !important; font-weight: bold !important; }
+        .st-I { color: #7e22ce !important; font-weight: bold !important; }
+        .st-A { color: #e11d48 !important; font-weight: bold !important; }
+        .st-L { color: #94a3b8 !important; font-weight: normal !important; }
+        /* Judul sekolah: tetap biru + bold */
+        .school-title { color: #1d4ed8 !important; font-weight: bold !important; }
+        /* Subjudul, alamat, waktu cetak, legenda, judul laporan: hitam pekat, normal */
+        .school-subtitle, .report-subtitle,
+        .identity .lbl, .identity .lbl2, .identity .sep,
+        .identity .val, .printed-at, .printed-at strong,
+        .legend-text, .legend-note, .report-title { color: #000 !important; font-weight: 400 !important; }
+        /* Judul laporan tetap tebal (seperti asal) */
+        .report-title { font-weight: bold !important; }
         .st-H { color: #059669; }
         .st-T { color: #d97706; }
         .st-S { color: #2563eb; }
@@ -69,8 +91,8 @@
         .closing { page-break-inside: avoid; margin-top: 8px; }
         .legend-box { border: 1px solid #e2e8f0; background: #f8fafc; padding: 7px 10px; }
         .legend-title { font-size: 9pt; font-weight: bold; margin-bottom: 3px; }
-        .legend-text { font-size: 8.5pt; color: #334155; }
-        .legend-note { font-size: 7.5pt; color: #2563eb; margin-top: 3px; }
+        .legend-text { font-size: 8.5pt; color: #000; }
+        .legend-note { font-size: 7.5pt; color: #000; margin-top: 3px; }
 
         /* Tanda tangan: 2 KOLOM PENUH (tanpa border). Kolom kiri (Kepala
            Sekolah) rata kiri. Kolom kanan diposisikan ke tepi kanan oleh
@@ -159,7 +181,7 @@
         <tr>
             <td class="lbl" style="width: 19%">{{ __('Nama') }}</td>
             <td class="sep" style="width: 4%">:</td>
-            <td class="val" style="width: 31%">{{ $student->name }}</td>
+            <td class="val" style="width: 31%">{{ mb_strtoupper($student->name ?? '', 'UTF-8') }}</td>
             <td style="width: 7%"></td>
             <td class="lbl2" style="width: 21%">{{ __('Kelas ') }}</td>
             <td class="sep" style="width: 4%">:</td>
@@ -229,6 +251,7 @@
                 <span style="color: #647489;">-</span> = {{ __('Belum ada data') }}
             </div>
             <div class="legend-note">{{ __('Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".') }}</div>
+            <div class="legend-note">{{ __('Jam masuk:') }} {{ $checkInTime ?? \App\Models\Setting::getCheckInTime() }}, {{ __('batas keterlambatan:') }} {{ $lateLimitTime ?? \App\Models\Setting::getLateLimitTime() }}</div>
         </div>
 
         <table class="signature-table">

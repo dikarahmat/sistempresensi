@@ -108,8 +108,8 @@
     "Layar Penuh": "Layar Penuh",
     "Metode input presensi": "Metode input presensi",
     "Tempelkan kartu QR ke kamera": "Tempelkan kartu QR ke kamera",
-    "Fokuskan alat di sini, lalu scan kartu siswa": "Fokuskan alat di sini, lalu scan kartu siswa",
-    "Siap menerima scan...": "Siap menerima scan...",
+    "Fokuskan alat di sini, lalu scan kartu siswa": "Focus the scanner here, then scan the student card",
+    "Siap menerima scan...": "Ketik NIS/NIP untuk Siswa/Guru",
     "Nama Siswa": "Nama Siswa",
     "Status Presensi": "Status Presensi",
     "Absensi Gerbang": "Absensi Gerbang",
@@ -307,7 +307,7 @@
     "Keterangan": "Keterangan",
     "Buka Kelas": "Buka Kelas",
     "Belum ada data kelas tersedia.": "Belum ada data kelas tersedia.",
-    "Lihat histori kehadiran per kelas": "Lihat histori kehadiran per kelas",
+    "Lihat histori kehadiran per kelas": "Lihat histori kehadiran hari ini",
     "Cari nama atau NISN...": "Cari nama atau NISN...",
     "Cari nama atau NISN": "Cari nama atau NISN",
     "Semua Kelas": "Semua Kelas",
@@ -777,5 +777,7 @@
     "Gagal membuat file export. Silakan coba lagi atau hubungi admin.": "Gagal membuat file export. Silakan coba lagi atau hubungi admin.",
     "Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.": "Format file tidak diizinkan. Gunakan PDF, JPG, atau PNG.",
     "Ekstensi file tidak diizinkan.": "Ekstensi file tidak diizinkan.",
-    "Status presensi siswa berhasil diperbarui!": "Status presensi siswa berhasil diperbarui!"
+    "Status presensi siswa berhasil diperbarui!": "Status presensi siswa berhasil diperbarui!",
+    "Ketik NIS/NIP untuk Siswa/Guru": "Ketik NIS/NIP untuk Siswa/Guru",
+    "Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter": "Scan the card with the device, or type NIS/NIP then press Enter"
 }

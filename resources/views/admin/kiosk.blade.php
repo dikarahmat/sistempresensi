@@ -621,9 +621,9 @@
                 <!-- Mode Alat Scanner USB -->
                 <div id="hardwareView" class="d-none">
                     <i class='bx bx-scan' style="font-size: 2.2rem; color: #2563eb;"></i>
-                    <p class="kiosk-placeholder-text">Fokuskan alat di sini, lalu scan kartu siswa</p>
+                    <p class="kiosk-placeholder-text">{{ __('Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter') }}</p>
                     <div class="w-100 mt-2 px-1">
-                        <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="Siap menerima scan..." autocomplete="off">
+                        <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Ketik NIS/NIP untuk Siswa/Guru') }}" autocomplete="off">
                     </div>
                 </div>
 

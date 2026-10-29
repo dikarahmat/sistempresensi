@@ -412,28 +412,35 @@
                 <div class="col-12 col-md-8 identitas-main">
                         <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('Nama Sekolah Resmi') }}</label>
-                            <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name']) }}" required placeholder="{{ __('Contoh: SMP Presensi PGRI') }}">
+                            <input type="text" name="school_name" id="school_name" class="form-control rounded-3 @error('school_name') is-invalid @enderror" value="{{ old('school_name', $settings['school_name'] ?? '') }}" required placeholder="{{ __('Contoh: SMP Presensi PGRI') }}">
                             @error('school_name')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('Judul Aplikasi / Tab Browser') }}</label>
-                            <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title']) }}" placeholder="{{ __('Contoh: Sistem Presensi Sekolah') }}">
+                            <input type="text" name="app_title" id="app_title" class="form-control rounded-3 @error('app_title') is-invalid @enderror" value="{{ old('app_title', $settings['app_title'] ?? '') }}" placeholder="{{ __('Contoh: Sistem Presensi Sekolah') }}">
                             @error('app_title')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('Alamat Sekolah') }}</label>
-                            <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address']) }}" placeholder="{{ __('Jl. Raya Pendidikan...') }}">
+                            <input type="text" name="school_address" id="school_address" class="form-control rounded-3 @error('school_address') is-invalid @enderror" value="{{ old('school_address', $settings['school_address'] ?? '') }}" placeholder="{{ __('Jl. Raya Pendidikan...') }}">
                             @error('school_address')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
+                            <label class="form-label small fw-semibold">{{ __('NPSN Sekolah') }}</label>
+                            <input type="text" name="school_npsn" id="school_npsn" inputmode="numeric" pattern="[0-9]*" maxlength="30" class="form-control rounded-3 @error('school_npsn') is-invalid @enderror" value="{{ old('school_npsn', $settings['school_npsn'] ?? '') }}" placeholder="{{ __('Contoh: 20102030') }}">
+                            @error('school_npsn')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('No. Telepon / Kontak') }}</label>
-                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone']) }}" placeholder="{{ __('10-15 digit angka, tanpa spasi') }}">
+                            <input type="text" name="school_phone" id="school_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" class="form-control rounded-3 @error('school_phone') is-invalid @enderror" value="{{ old('school_phone', $settings['school_phone'] ?? '') }}" placeholder="{{ __('10-15 digit angka, tanpa spasi') }}">
                             @error('school_phone')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -441,14 +448,14 @@
                         </div>
                         <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('Nama Kepala Sekolah') }}</label>
-                            <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name']) }}" placeholder="{{ __('Contoh: Drs. H. Ahmad Sudrajat, M.Pd') }}">
+                            <input type="text" name="headmaster_name" id="headmaster_name" class="form-control rounded-3 @error('headmaster_name') is-invalid @enderror" value="{{ old('headmaster_name', $settings['headmaster_name'] ?? '') }}" placeholder="{{ __('Contoh: Drs. H. Ahmad Sudrajat, M.Pd') }}">
                             @error('headmaster_name')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 identitas-field">
                             <label class="form-label small fw-semibold">{{ __('NIP Kepala Sekolah') }}</label>
-                            <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip']) }}" placeholder="{{ __('18 digit angka tanpa spasi') }}">
+                            <input type="text" name="headmaster_nip" id="headmaster_nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="form-control rounded-3 @error('headmaster_nip') is-invalid @enderror" value="{{ old('headmaster_nip', $settings['headmaster_nip'] ?? '') }}" placeholder="{{ __('18 digit angka tanpa spasi') }}">
                             @error('headmaster_nip')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -502,7 +509,7 @@
                     <label class="form-label small fw-semibold">{{ __('Jam Buka Masuk (Check-In)') }}</label>
                     <div class="position-relative">
                         <i class='bx bx-log-in text-primary position-absolute top-50 start-0 translate-middle-y ms-3' style="font-size: 1.1rem; z-index: 10; pointer-events: none;" aria-hidden="true"></i>
-                        <input type="time" name="check_in_time" id="check_in_time" x-model="checkIn" class="form-control rounded-3 ps-5" value="{{ old('check_in_time', $settings['check_in_time']) }}" required style="padding-left: 2.75rem;">
+                        <input type="time" name="check_in_time" id="check_in_time" x-model="checkIn" class="form-control rounded-3 ps-5" value="{{ old('check_in_time', $settings['check_in_time'] ?? '') }}" required style="padding-left: 2.75rem;">
                     </div>
                 </div>
 
@@ -510,7 +517,7 @@
                     <label class="form-label small fw-semibold">{{ __('Batas Toleransi Keterlambatan') }}</label>
                     <div class="position-relative">
                         <i class='bx bx-alarm-exclamation text-danger position-absolute top-50 start-0 translate-middle-y ms-3' style="font-size: 1.1rem; z-index: 10; pointer-events: none;" aria-hidden="true"></i>
-                        <input type="time" name="late_limit_time" id="late_limit_time" x-model="lateLimit" class="form-control rounded-3 ps-5" value="{{ old('late_limit_time', $settings['late_limit_time']) }}" required style="padding-left: 2.75rem;">
+                        <input type="time" name="late_limit_time" id="late_limit_time" x-model="lateLimit" class="form-control rounded-3 ps-5" value="{{ old('late_limit_time', $settings['late_limit_time'] ?? '') }}" required style="padding-left: 2.75rem;">
                     </div>
                 </div>
             </div>
@@ -518,13 +525,13 @@
             <div class="mt-3 small" style="line-height: 1.6; color: #1e293b;">
                 <i class='bx bx-info-circle text-primary me-1' style="font-size: 14px; vertical-align: -0.125em;"></i>
                 <span>{{ __('Siswa yang melakukan scan antara') }}</span>
-                <strong style="color: #166534; font-weight: 700;" x-text="checkIn">{{ $settings['check_in_time'] }}</strong>
+                <strong style="color: #166534; font-weight: 700;" x-text="checkIn">{{ $settings['check_in_time'] ?? '' }}</strong>
                 <span>{{ __('hingga') }}</span>
-                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong>
+                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
                 <span>{{ __('tercatat') }}</span>
                 <strong style="color: #166534; font-weight: 700;">{{ __('Tepat Waktu') }}</strong>.
                 <span>{{ __('Scan di atas') }}</span>
-                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] }}</strong>
+                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
                 <span>{{ __('otomatis tercatat') }}</span>
                 <strong style="color: #c2410c; font-weight: 700;">{{ __('Terlambat') }}</strong>
                 <span>{{ __('lengkap dengan selisih menit keterlambatannya.') }}</span>

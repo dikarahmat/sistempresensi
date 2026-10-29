@@ -24,7 +24,7 @@
 
     if (!$qrSrc && $teacherItem) {
         try {
-            $__token = \App\Services\TeacherCardService::qrTokenFor($teacherItem->nip ?? null, $teacherItem->qr_token ?? null);
+            $__token = \App\Services\TeacherCardService::qrTokenFor($teacherItem->nip ?? null, (string) ($teacherItem->id ?? ''));
             $__svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->margin(0)->generate($__token);
             $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($__svg);
         } catch (\Throwable $e) {
