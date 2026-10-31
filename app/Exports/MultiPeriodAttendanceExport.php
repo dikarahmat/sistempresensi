@@ -119,7 +119,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $row['no'] = $no++;
             }
             unset($row);
-            $section['heading'] = self::buildHeading($type);
+            $section['heading'] = self::buildHeading($type, $params);
             $section['subtitle'] = self::buildSubtitle($type, $params, $section['className']);
         }
         unset($section);
@@ -165,16 +165,23 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     }
 
     /** Judul laporan - sama persis di PDF dan Excel. */
-    public static function buildHeading(string $type): string
+    public static function buildHeading(string $type, array $params = []): string
     {
         Carbon::setLocale('id');
         $schoolName = Setting::getSchoolName();
 
-        $label = match ($type) {
-            'semester' => 'SEMESTER',
-            'tahunan' => 'TAHUNAN',
-            default => strtoupper($type),
-        };
+        // Semester & tahunan memakai tabel kolom BULAN: judul tanpa nama
+        // sekolah (nama sekolah sudah ada di kop surat).
+        if ($type === 'semester') {
+            $semester = ($params['period_semester'] ?? $params['semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
+
+            return 'LAPORAN REKAPITULASI PRESENSI SEMESTER ' . strtoupper($semester);
+        }
+        if ($type === 'tahunan') {
+            return 'LAPORAN REKAPITULASI PRESENSI TAHUNAN';
+        }
+
+        $label = strtoupper($type);
 
         return 'LAPORAN REKAPITULASI PRESENSI ' . $label . ' - ' . ($schoolName ?: '-');
     }
@@ -193,17 +200,15 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
             $endDate = $params['end_date'] ?? $params['period_end_date'] ?? Carbon::parse($startDate)->copy()->addDays(6)->toDateString();
             $period = 'Periode: ' . Carbon::parse($startDate)->translatedFormat('d M Y')
                 . ' s/d ' . Carbon::parse($endDate)->translatedFormat('d M Y');
-        } elseif ($type === 'semester') {
-            $semester = ($params['period_semester'] ?? $params['semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
+        } elseif ($type === 'semester' || $type === 'tahunan') {
+            // Baris bawah: rentang bulan sebenarnya | kelas | tahun ajaran.
+            $range = self::academicBounds($type, $params);
             $ay = AcademicYear::find($params['period_academic_year'] ?? $params['academic_year_id'] ?? null) ?: AcademicYear::getActive();
-            $period = 'Semester ' . ucfirst($semester) . ($ay ? ' | Tahun Ajaran ' . $ay->name : '');
-            $activeYear = $ay;
-            return $period . ' | Kelas: ' . $className;
-        } elseif ($type === 'tahunan') {
-            $ay = AcademicYear::find($params['period_academic_year'] ?? $params['academic_year_id'] ?? null) ?: AcademicYear::getActive();
-            $period = $ay ? 'Tahun Ajaran ' . $ay->name : 'Tahun Ajaran';
-            $activeYear = $ay;
-            return $period . ' | Kelas: ' . $className;
+
+            return 'Periode: ' . Carbon::parse($range['start'])->translatedFormat('F Y')
+                . ' s/d ' . Carbon::parse($range['end'])->translatedFormat('F Y')
+                . ' | Kelas: ' . $className
+                . ' | Tahun Ajaran: ' . ($ay?->name ?? '-');
         } else {
             $month = (int) ($params['month'] ?? $params['period_month'] ?? $now->month);
             $year = (int) ($params['year'] ?? $params['period_year'] ?? $now->year);
@@ -218,6 +223,189 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         return $period
             . ' | Kelas: ' . $className
             . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
+    }
+
+    /**
+     * Rentang tanggal periode semester / tahunan (null untuk tipe lain).
+     *
+     * Semester Ganjil = Juli-Desember (tahun awal tahun ajaran),
+     * Semester Genap  = Januari-Juni (tahun akhir tahun ajaran),
+     * Setahun         = Juli-Juni (satu tahun ajaran penuh).
+     * Satu-satunya definisi rentang ini; RekapController::resolveDateRange()
+     * dan ekspor Excel sama-sama memakainya supaya tidak pernah berbeda.
+     */
+    public static function academicBounds(string $type, array $params, ?AcademicYear $activeYear = null): ?array
+    {
+        if (!in_array($type, ['semester', 'tahunan'], true)) {
+            return null;
+        }
+
+        Carbon::setLocale('id');
+        $now = Carbon::now('Asia/Jakarta');
+        $ay = AcademicYear::find($params['period_academic_year'] ?? $params['academic_year_id'] ?? null)
+            ?: ($activeYear ?: AcademicYear::getActive());
+
+        if ($type === 'tahunan') {
+            if ($ay && $ay->start_date) {
+                $start = Carbon::parse($ay->start_date)->toDateString();
+                $end = $ay->end_date
+                    ? Carbon::parse($ay->end_date)->toDateString()
+                    : Carbon::parse($ay->start_date)->addMonths(11)->endOfMonth()->toDateString();
+            } else {
+                $start = Carbon::createFromDate($now->year, 7, 1)->toDateString();
+                $end = Carbon::createFromDate($now->year + 1, 6, 30)->toDateString();
+            }
+
+            return ['start' => $start, 'end' => $end];
+        }
+
+        $semester = ($params['period_semester'] ?? $params['semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
+
+        if ($ay && $ay->start_date) {
+            $ayStart = Carbon::parse($ay->start_date);
+            if ($semester === 'ganjil') {
+                $start = $ayStart->copy()->startOfMonth()->toDateString();
+                $end = $ayStart->copy()->addMonths(5)->endOfMonth()->toDateString();
+            } else {
+                $start = $ayStart->copy()->addMonths(6)->startOfMonth()->toDateString();
+                $end = $ay->end_date
+                    ? Carbon::parse($ay->end_date)->toDateString()
+                    : $ayStart->copy()->addMonths(11)->endOfMonth()->toDateString();
+            }
+        } else {
+            $refYear = $now->year;
+            if ($semester === 'ganjil') {
+                $start = Carbon::createFromDate($refYear, 7, 1)->toDateString();
+                $end = Carbon::createFromDate($refYear, 12, 31)->toDateString();
+            } else {
+                $start = Carbon::createFromDate($refYear, 1, 1)->toDateString();
+                $end = Carbon::createFromDate($refYear, 6, 30)->toDateString();
+            }
+        }
+
+        return ['start' => $start, 'end' => $end];
+    }
+
+    /**
+     * Kolom bulan (label 3 huruf + tahun) dari bulan awal sampai bulan akhir.
+     *
+     * @return array<int, array{key: string, label: string, year: int, month: int}>
+     */
+    public static function monthColumnsBetween(string $startDate, string $endDate): array
+    {
+        Carbon::setLocale('id');
+
+        $columns = [];
+        $cursor = Carbon::parse($startDate)->startOfMonth();
+        $last = Carbon::parse($endDate)->startOfMonth();
+
+        while ($cursor->lte($last)) {
+            $columns[] = [
+                'key' => $cursor->format('Y-m'),
+                'label' => $cursor->translatedFormat('M'),
+                'year' => (int) $cursor->format('Y'),
+                'month' => (int) $cursor->format('m'),
+            ];
+            $cursor->addMonthNoOverflow();
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Jumlah hari efektif (bukan akhir pekan & bukan hari libur) pada rentang.
+     * Rumus yang sama dengan kolom % Mingguan/Bulanan.
+     */
+    public static function effectiveDays(string $startDate, string $endDate): int
+    {
+        $holidayDates = [];
+        foreach (Holiday::all() as $holiday) {
+            if ($holiday->date) {
+                $holidayDates[$holiday->date->toDateString()] = true;
+            }
+            if ($holiday->start_date && $holiday->end_date) {
+                $cursor = $holiday->start_date->copy();
+                $until = $holiday->end_date->copy();
+                while ($cursor->lte($until)) {
+                    $holidayDates[$cursor->toDateString()] = true;
+                    $cursor->addDay();
+                }
+            }
+        }
+
+        $count = 0;
+        $cursor = Carbon::parse($startDate)->startOfDay();
+        $end = Carbon::parse($endDate)->startOfDay();
+
+        while ($cursor->lte($end)) {
+            if (!$cursor->isWeekend() && !isset($holidayDates[$cursor->toDateString()])) {
+                $count++;
+            }
+            $cursor->addDay();
+        }
+
+        return $count;
+    }
+
+    /**
+     * Agregasi status presensi per siswa per bulan dalam SATU query terkelompok
+     * (GROUP BY siswa, bulan, status) - bukan loop per hari.
+     *
+     * @return array<int, array<string, array{hadir:int,terlambat:int,sakit:int,izin:int,alfa:int,total:int}>>
+     */
+    public static function monthlyStatusCounts(string $startDate, string $endDate, $studentIds): array
+    {
+        $ids = $studentIds instanceof \Illuminate\Support\Collection
+            ? $studentIds->all()
+            : (array) $studentIds;
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = Attendance::query()
+            ->whereBetween('date', [$startDate, $endDate])
+            ->whereIn('student_id', $ids)
+            ->selectRaw('student_id, SUBSTR(date, 1, 7) as ym, status, time_remark, is_late, COUNT(*) as total')
+            ->groupBy('student_id', \Illuminate\Support\Facades\DB::raw('SUBSTR(date, 1, 7)'), 'status', 'time_remark', 'is_late')
+            ->get();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $status = $row->status ?: Attendance::STATUS_HADIR;
+            $isLate = $status === Attendance::STATUS_HADIR
+                && ($row->time_remark === Attendance::REMARK_TERLAMBAT || !empty($row->is_late));
+            $effective = $isLate ? Attendance::STATUS_TERLAMBAT : $status;
+
+            $studentId = (int) $row->student_id;
+            $ym = (string) $row->ym;
+            $total = (int) $row->total;
+
+            $bucket = $counts[$studentId][$ym] ?? ['hadir' => 0, 'terlambat' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0, 'total' => 0];
+            $bucket['total'] += $total;
+
+            switch ($effective) {
+                case Attendance::STATUS_HADIR:
+                    $bucket['hadir'] += $total;
+                    break;
+                case Attendance::STATUS_TERLAMBAT:
+                    $bucket['terlambat'] += $total;
+                    break;
+                case Attendance::STATUS_SAKIT:
+                    $bucket['sakit'] += $total;
+                    break;
+                case Attendance::STATUS_IZIN:
+                    $bucket['izin'] += $total;
+                    break;
+                case Attendance::STATUS_ALFA:
+                    $bucket['alfa'] += $total;
+                    break;
+            }
+
+            $counts[$studentId][$ym] = $bucket;
+        }
+
+        return $counts;
     }
 
     /** Baris legenda - sama persis di PDF dan Excel. */
@@ -254,7 +442,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         if ($sections === []) {
             // Tidak ada siswa sama sekali: tetap buat satu sheet agar file valid.
             $sections = [self::makeSection(null, [])];
-            $sections[0]['heading'] = self::buildHeading($this->type);
+            $sections[0]['heading'] = self::buildHeading($this->type, $this->params);
             $sections[0]['subtitle'] = self::buildSubtitle($this->type, $this->params, $sections[0]['className']);
         }
 
@@ -282,7 +470,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $rows = $section['rows'] ?? [];
         $output = [];
 
-        $output[] = [$section['heading'] ?? self::buildHeading($this->type)];
+        $output[] = [$section['heading'] ?? self::buildHeading($this->type, $this->params)];
         $output[] = [$section['subtitle'] ?? self::buildSubtitle($this->type, $this->params, $section['className'] ?? '-')];
         // Baris kosong HARUS berisi minimal satu sel kosong (''), bukan [].
         // Maatwebsite Excel memakai flatMap(): baris [] dibuang sehingga semua
@@ -311,13 +499,12 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 ]);
             }
         } elseif (in_array($this->type, ['semester', 'tahunan'], true)) {
-            $summaryMonths = $rows[0]['months'] ?? [];
-            if (empty($summaryMonths) && isset($this->params['summary_months'])) {
-                // Fallback from params if needed
-            }
+            $range = self::academicBounds($this->type, $this->params);
+            $monthList = self::monthColumnsBetween($range['start'], $range['end']);
+
             $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK'];
-            foreach ($summaryMonths as $m) {
-                $headerRow[] = is_array($m) ? ($m[0] ?? '') : (is_object($m) ? ($m->label ?? '') : '');
+            foreach ($monthList as $monthInfo) {
+                $headerRow[] = $monthInfo['label'] . ' ' . $monthInfo['year'];
             }
             $headerRow[] = 'H';
             $headerRow[] = 'T';
@@ -334,31 +521,12 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
                 ]);
-                if (!empty($row['months']) && is_array($row['months'])) {
-                    foreach ($row['months'] as $m) {
-                        if (is_array($m)) {
-                            $line[] = $m[1] ?? ($m['hadir'] ?? 0);
-                            $line[] = $m[2] ?? ($m['terlambat'] ?? 0);
-                            $line[] = $m[3] ?? ($m['sakit'] ?? 0);
-                            $line[] = $m[4] ?? ($m['izin'] ?? 0);
-                            $line[] = $m[5] ?? ($m['alfa'] ?? 0);
-                        } else {
-                            // shouldn't happen
-                            $line[] = '-'; $line[] = '-'; $line[] = '-'; $line[] = '-'; $line[] = '-';
-                        }
-                    }
-                } else {
-                    // Fallback: compute from monthlyPresent if available
-                    $studentId = $student->id ?? 0;
-                    $mp = $row['monthlyPresent'] ?? [];
-                    if (!empty($mp) && isset($mp[$studentId])) {
-                        $hCounts = $mp[$studentId];
-                        foreach (array_slice($summaryMonths, 0, count($hCounts)) as $i => $mInfo) {
-                            $hCounts[$i] ??= 0;
-                            $line[] = $hCounts[$i] ?? 0; // H count
-                        }
-                    }
+
+                foreach ($monthList as $monthInfo) {
+                    $cell = $row['months'][$monthInfo['key']] ?? null;
+                    $line[] = $cell === null ? '-' : $cell;
                 }
+
                 $line[] = $row['hadir'] ?? 0;
                 $line[] = $row['terlambat'] ?? 0;
                 $line[] = $row['sakit'] ?? 0;
@@ -633,35 +801,12 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
 
             foreach ($students as $student) {
                 $att = $attendances->get($student->id);
-                $status = 'Belum Hadir';
-                $checkIn = '-';
-                $lateText = '-';
-                $notes = '-';
-
-                if ($att) {
-                    $status = $att->effective_status;
-                    $notes = $att->notes ?? '-';
-                    if ($status === 'Hadir') {
-                        $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
-                        if ($att->time_remark === 'Terlambat') {
-                            // Cara menghitung selisih menit TIDAK diubah.
-                            $diff = Carbon::parse($att->check_in)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                            $lateMinutes = $diff < 0 ? (int) round(abs($diff)) : 0;
-                            $lateText = rekap_format_late_minutes($lateMinutes);
-                            $status = 'Terlambat';
-                        } else {
-                            $lateText = 'Tepat Waktu';
-                        }
-                    }
-                } else {
-/*
- * Tanpa catatan presensi:
- * - hari libur / akhir pekan -> LIBUR (bukan Alfa).
- * - selainnya -> status "-" (kosong, tidak ada catatan).
- * Sama dengan halaman Rekap & halaman Presensi.
- */
-$status = Attendance::statusOf(null, $date, $isHoliday, null);
-                }
+                $dayStatus = Attendance::statusOf($att, $date, $isHoliday, null);
+                $dayData = Attendance::makeDailyRow($att, $date, $lateLimitTime, $dayStatus, $student->school_class_id);
+                $status = $dayData['status'];
+                $checkIn = $dayData['check_in'];
+                $lateText = $dayData['late_text'];
+                $notes = $dayData['notes'];
 
                 $rows[] = [
                     'student' => $student,
@@ -739,6 +884,51 @@ $status = Attendance::statusOf(null, $date, $isHoliday, null);
                     'sakit' => $s,
                     'izin' => $i,
                     'alfa' => $a,
+                ];
+            }
+
+            return $rows;
+        }
+
+        // SEMESTER & TAHUNAN: tabel kolom bulan, agregat per siswa per bulan.
+        if (in_array($this->type, ['semester', 'tahunan'], true)) {
+            $range = self::academicBounds($this->type, $this->params);
+            $months = self::monthColumnsBetween($range['start'], $range['end']);
+            $counts = self::monthlyStatusCounts($range['start'], $range['end'], $students->pluck('id'));
+            $totalEffective = self::effectiveDays($range['start'], $range['end']);
+
+            foreach ($students as $student) {
+                $perMonth = $counts[$student->id] ?? [];
+                $h = 0; $t = 0; $s = 0; $i = 0; $a = 0;
+                $cells = [];
+
+                foreach ($months as $monthInfo) {
+                    $data = $perMonth[$monthInfo['key']] ?? null;
+                    if ($data === null) {
+                        // Bulan tanpa data presensi -> "-" di sel.
+                        $cells[$monthInfo['key']] = null;
+                        continue;
+                    }
+
+                    $h += $data['hadir'] + $data['terlambat'];
+                    $t += $data['terlambat'];
+                    $s += $data['sakit'];
+                    $i += $data['izin'];
+                    $a += $data['alfa'];
+                    // Sel bulan = jumlah hari Hadir (H + T) pada bulan itu.
+                    $cells[$monthInfo['key']] = $data['hadir'] + $data['terlambat'];
+                }
+
+                $rows[] = [
+                    'student' => $student,
+                    'class_id' => $student->school_class_id,
+                    'months' => $cells,
+                    'hadir' => $h,
+                    'terlambat' => $t,
+                    'sakit' => $s,
+                    'izin' => $i,
+                    'alfa' => $a,
+                    'percentage' => $totalEffective > 0 ? (int) round(($h / $totalEffective) * 100) : 0,
                 ];
             }
 
@@ -834,7 +1024,7 @@ $status = Attendance::statusOf(null, $date, $isHoliday, null);
                 'rows' => [],
                 'waliName' => null,
                 'waliNip' => null,
-                'heading' => self::buildHeading($this->type),
+                'heading' => self::buildHeading($this->type, $this->params),
                 'subtitle' => self::buildSubtitle($this->type, $this->params, '-'),
             ];
         }

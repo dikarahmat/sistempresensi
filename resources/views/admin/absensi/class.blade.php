@@ -58,14 +58,29 @@
     .table-enterprise {
         min-width: 720px;
     }
-    .table-enterprise thead th {
-        background-color: #f8fafc;
-        color: #000000 !important;
+    .table-enterprise thead tr > th {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+        background-color: #2563eb !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 0.75rem;
+        font-size: 0.8rem !important;
         padding: 0.8rem 1rem;
-        border-bottom: 1.5px solid #edf2f7;
+        border-bottom: 1.5px solid #1d4ed8;
+        border-top-left-radius: 8px !important;
+        border-top-right-radius: 8px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
         white-space: nowrap !important;
+        vertical-align: middle !important;
+        text-align: center !important;
+    }
+    .table-enterprise thead th:first-child {
+        border-top-left-radius: 8px !important;
+    }
+    .table-enterprise thead th:last-child {
+        border-top-right-radius: 8px !important;
     }
     /* Zebra Striping Khusus (Sesuai Benchmark Data Siswa) */
     .table-enterprise tbody tr:nth-child(even) > td,
@@ -90,51 +105,178 @@
     }
     .table-enterprise tbody td {
         padding: 0.7rem 1rem;
-        font-size: 0.86rem;
+        font-family: inherit !important;
+        font-size: 0.8rem !important;
+        letter-spacing: 0.03em !important;
         color: #000000 !important;
         font-weight: 400 !important;
         vertical-align: middle;
         border-bottom: 1px solid #f1f5f9;
     }
 
-    /* Dropdown & Tombol Aksi (Pure Icon) */
-    .select-quick-status {
-        font-size: 0.8rem;
-        font-weight: 600;
-        border-radius: var(--clean-radius);
-        padding: 0.3rem 0.5rem;
+    /* ---- Aksi cepat siswa, per anak (sangat compact) ---- */
+    .aksi-quick {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex-shrink: 0;
+    }
+    .aksi-quick .select-quick-status {
+        font-size: 0.8rem !important;
+        font-weight: 400 !important;
+        border-radius: 6px;
+        padding: 0.12rem 0.45rem;
         border: 1px solid #cbd5e1;
         background-color: #ffffff;
-        min-width: 95px;
-        height: 34px;
-        min-height: 34px;
+        min-width: 0;
+        width: 86px;
+        height: 28px;
+        min-height: 28px;
+        line-height: 1.1;
     }
-    .btn-save-quick {
+    .aksi-quick .select-quick-status option {
+        font-size: 0.8rem !important;
+        font-weight: 400 !important;
+        padding: 0.12rem 0.2rem;
+    }
+    .aksi-quick .btn-save-quick {
         background-color: #2563eb;
         color: #ffffff;
         border: none;
-        border-radius: var(--clean-radius);
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-        min-height: 34px;
+        border-radius: 6px;
+        width: 27px;
+        height: 28px;
+        min-width: 27px;
+        min-height: 28px;
         aspect-ratio: 1 / 1;
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.15s ease;
+        transition: background-color 0.12s ease;
     }
-    .btn-save-quick:hover {
+    .aksi-quick .btn-save-quick:hover {
         background-color: #1d4ed8;
     }
-    .btn-save-quick i {
-        font-size: 18px !important;      /* w-5 h-5 = 20px, setara ~18px proporsional */
-        width: 18px !important;
-        height: 18px !important;
-        min-width: 18px !important;
-        min-height: 18px !important;
+    .aksi-quick .btn-save-quick i {
+        font-size: 13px !important;
+        width: 13px !important;
+        height: 13px !important;
+        min-width: 13px !important;
+        min-height: 13px !important;
+        color: #ffffff !important;
     }
+    .aksi-quick .btn-save-quick:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+    }
+    /* ---- Kolom Aksi (per siswa): kompak, rapat, rata kiri ---- */
+    .aksi-cell {
+        width: 200px;
+        text-align: left;
+    }
+    /* ---- Kolom Keterlambatan: rapat, rata tengah ---- */
+    .late-cell {
+        width: 18%;
+        text-align: center;
+    }
+    .aksi-quick {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        flex-wrap: nowrap;
+        width: 100%;
+    }
+    .aksi-form {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    .aksi-form select.select-quick-status {
+        height: 28px;
+        font-size: 11px;
+        padding: 0 8px;
+        padding-right: 24px;
+        min-width: 120px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background-color: #ffffff;
+        color: #000000;
+        flex: 0 0 auto;
+        cursor: pointer;
+        appearance: none;
+        text-transform: uppercase;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='rgba(115,115,115,0.8)'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 10px;
+    }
+    .late-duration {
+        display: block;
+        font-family: inherit !important;
+        font-size: 0.8rem !important;
+        font-weight: 400 !important;
+        letter-spacing: 0.03em !important;
+        line-height: 1.4;
+        color: #d97706 !important;
+        text-transform: uppercase;
+        margin: 0;
+        padding: 0;
+    }
+    .aksi-form select.select-quick-status option {
+        font-size: 11px;
+        padding: 4px 8px;
+        text-transform: uppercase;
+    }
+    .btn-save-quick {
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+        aspect-ratio: 1 / 1;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.12s ease;
+    }
+    .btn-save-quick:disabled, .btn-save-quick[disabled] {
+        background: #2563eb !important;
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        color: #ffffff !important;
+    }
+    .btn-save-quick:not(:disabled):hover {
+        background: #1d4ed8;
+    }
+    .btn-save-quick i {
+        font-size: 11px !important;
+        width: 11px !important;
+        height: 11px !important;
+        min-width: 11px !important;
+        min-height: 11px !important;
+        color: #ffffff !important;
+    }
+    .aksi-form .btn-save-quick.btn-save-disabled, .aksi-form .btn-save-quick.disabled {
+        background: #2563eb !important;
+        opacity: 0.45 !important;
+        cursor: not-allowed !important;
+        color: #ffffff !important;
+    }
+    .aksi-form .btn-save-quick.btn-save-disabled i, .aksi-form .btn-save-quick.disabled i {
+        color: #ffffff !important;
+    }
+
     .btn-edit-modal {
         background-color: #f59e0b;
         color: #ffffff;
@@ -363,6 +505,20 @@
        GELAP supaya kontrasnya tetap terbaca di proyektor / layar terang.
        ========================================================================== */
 
+    /* Ringkasan Status: angka & teks label kontras per kategori */
+    .status-summary-grid .dim-hadir strong,
+    .status-summary-grid .dim-hadir span:not(strong) { color: #059669 !important; } /* hijau */
+    .status-summary-grid .dim-terlambat strong,
+    .status-summary-grid .dim-terlambat span:not(strong) { color: #d97706 !important; } /* oranye */
+    .status-summary-grid .dim-sakit strong,
+    .status-summary-grid .dim-sakit span:not(strong) { color: #2563eb !important; } /* biru */
+    .status-summary-grid .dim-izin strong,
+    .status-summary-grid .dim-izin span:not(strong) { color: #7e22ce !important; } /* ungu */
+    .status-summary-grid .dim-alfa strong,
+    .status-summary-grid .dim-alfa span:not(strong) { color: #dc2626 !important; } /* merah */
+    .status-summary-grid .dim-belum strong,
+    .status-summary-grid .dim-belum span:not(strong) { color: #475569 !important; } /* abu-abu gelap/slate */
+
     /* --- 1. KOLOM NAMA SISWA --------------------------------------------- */
     /* Nama tidak bold, satu baris, uppercase. Label kelas ("7A") dihapus dari
        markup (tidak lagi dirender di bawah nama). */
@@ -370,17 +526,38 @@
         gap: 0;
     }
 
+    .presensi-student-cell {
+        gap: 0;
+    }
     .presensi-student-cell .student-name {
         font-weight: 400 !important;
+        color: #111827 !important;
         text-transform: uppercase;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        overflow: visible;
+        max-width: none;
+        display: block;
+        margin: 0;
+        padding: 0;
+        text-indent: 0;
     }
 
-    /* --- 2. KOLOM STATUS: TEKS MURNI, TANPA CONTAINER -------------------- */
+    /* --- 2. KOLOM KETERLAMBATAN ----------------------------------------- */
+    .late-cell {
+        text-align: center;
+    }
+    .late-cell .late-duration {
+        text-transform: uppercase;
+        color: #111827 !important;
+        display: block;
+        font-weight: 400 !important;
+    }
+
+    /* --- 2. KOLOM STATUS: TEKS MURNI์, TANPA CONTAINER -------------------- */
     /* Hanya teks berwarna: tanpa background, border, padding kotak, shadow. */
     .presensi-badge {
+        font-weight: 400 !important;
+        text-transform: uppercase;
         background: none !important;
         background-color: transparent !important;
         border: none !important;
@@ -388,18 +565,15 @@
         padding: 0 !important;
         border-radius: 0 !important;
         min-width: 0 !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
     }
 
-    .presensi-badge.hadir     { color: #065f46 !important; } /* hijau tua  */
-    .presensi-badge.terlambat { color: #92400e !important; } /* oranye    */
-    .presensi-badge.sakit     { color: #1d4ed8 !important; } /* biru tua  */
-    .presensi-badge.izin      { color: #5b21b6 !important; } /* ungu      */
-    .presensi-badge.alfa      { color: #991b1b !important; } /* merah     */
-    .presensi-badge.belum     { color: #475569 !important; } /* abu-abu   */
-    .presensi-badge.libur     { color: #475569 !important; } /* abu-abu   */
+    .presensi-badge.hadir     { color: #059669 !important; } /* hijau */
+    .presensi-badge.terlambat { color: #d97706 !important; } /* oranye */
+    .presensi-badge.sakit     { color: #2563eb !important; } /* biru */
+    .presensi-badge.izin      { color: #7e22ce !important; } /* ungu */
+    .presensi-badge.alfa      { color: #dc2626 !important; } /* merah */
+    .presensi-badge.belum     { color: #475569 !important; } /* abu-abu */
+    .presensi-badge.libur     { color: #475569 !important; } /* abu-abu */
 
     /* --- 3. UPPERCASE UNTUK SEMUA DATA TABEL ------------------------------ */
     /* Hanya <tbody>: header kolom (thead) dibiarkan persis seperti sekarang. */
@@ -411,6 +585,7 @@
     .select-quick-status,
     .select-quick-status option {
         text-transform: uppercase;
+        font-weight: 400 !important;
     }
 
     /* --- 4. TABEL MENGIKUTI ISI, SCROLL DI AREA KONTEN HALAMAN ------------- */
@@ -484,23 +659,23 @@
 
     <!-- RINGKASAN STATUS -->
     <div class="status-summary-grid mb-3">
-        <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countHadir ?? 0 }}</strong> {{ __('Hadir') }}</span>
+        <div class="status-badge-pill shadow-2xs dim-hadir">
+            <span style="text-transform: uppercase !important;">{{ $countHadir ?? 0 }} {{ __('Hadir') }}</span>
         </div>
-        <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countTerlambat ?? 0 }}</strong> {{ __('Terlambat') }}</span>
+        <div class="status-badge-pill shadow-2xs dim-terlambat">
+            <span style="text-transform: uppercase !important;">{{ $countTerlambat ?? 0 }} {{ __('Terlambat') }}</span>
         </div>
-        <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countSakit ?? 0 }}</strong> {{ __('Sakit') }}</span>
+        <div class="status-badge-pill shadow-2xs dim-sakit">
+            <span style="text-transform: uppercase !important;">{{ $countSakit ?? 0 }} {{ __('Sakit') }}</span>
         </div>
-        <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countIzin ?? 0 }}</strong> {{ __('Izin') }}</span>
+        <div class="status-badge-pill shadow-2xs dim-izin">
+            <span style="text-transform: uppercase !important;">{{ $countIzin ?? 0 }} {{ __('Izin') }}</span>
         </div>
-        <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countAlfa ?? 0 }}</strong> {{ __('Alfa') }}</span>
+        <div class="status-badge-pill shadow-2xs dim-alfa">
+            <span style="text-transform: uppercase !important;">{{ $countAlfa ?? 0 }} {{ __('Alfa') }}</span>
         </div>
-        <div class="status-badge-pill shadow-2xs">
-            <span><strong>{{ $countBelumAbsen ?? 0 }}</strong> {{ __('Belum') }}</span>
+        <div class="status-badge-pill shadow-2xs dim-belum">
+            <span style="text-transform: uppercase !important;">{{ $countBelumAbsen ?? 0 }} {{ __('Belum') }}</span>
         </div>
     </div>
 
@@ -588,28 +763,40 @@
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
-                        <thead class="bg-light">
-                            <tr class="text-dark small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
-                                <th class="text-center py-3" style="width: 8%; white-space: nowrap;">{{ __('No') }}</th>
-                                <th class="py-3" style="width: 30%; white-space: nowrap;">{{ __('Nama Siswa') }}</th>
-                                <th class="text-center py-3" style="width: 15%; white-space: nowrap;">{{ __('Jam Masuk') }}</th>
-                                <th class="text-center py-3" style="width: 20%; white-space: nowrap;">{{ __('Status') }}</th>
+                        <thead>
+                            <tr class="table-enterprise">
+                                <th class="text-center py-3" style="white-space: nowrap;">{{ __('No') }}</th>
+                                <th class="py-3" style="white-space: nowrap; text-align: left !important; padding-left: 0.75rem;">{{ __('Nama Siswa') }}</th>
+                                <th class="text-center py-3" style="white-space: nowrap;">{{ __('Jam Masuk') }}</th>
+                                <th class="text-center py-3" style="white-space: nowrap;">{{ __('Keterlambatan') }}</th>
+                                <th class="text-center py-3" style="white-space: nowrap;">{{ __('Status') }}</th>
                                 @if(is_admin())
-                                <th class="text-center py-3" style="width: 27%; white-space: nowrap;">{{ __('Aksi') }}</th>
+                                <th class="text-center py-3" style="white-space: nowrap;">{{ __('Aksi') }}</th>
                                 @endif
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($studentsList ?? [] as $index => $student)
                             <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                                <td class="text-center text-secondary fw-semibold">{{ $index + 1 }}</td>
-                                <td>
-                                    <div class="presensi-student-cell">
-                                        <div class="student-name">{{ $student->name ?? '-' }}</div>
-                                    </div>
+                                <td class="text-center" style="font-weight: 400 !important; color: #111827 !important;">{{ $index + 1 }}</td>
+                                <td style="text-align: left !important; padding-left: 0.75rem;">
+                                    <span class="presensi-student-cell" style="display: block; margin: 0; padding: 0; text-indent: 0;">
+                                        <span class="student-name">{{ $student->name ?? '-' }}</span>
+                                    </span>
                                 </td>
-                                <td class="text-center text-secondary font-monospace">
+                                <td class="text-center" style="font-weight: 400 !important; color: #111827 !important;">
                                     {{ $student->jam_masuk ?? '—' }}
+                                </td>
+                                <td class="late-cell">
+                                    @php
+                                        // Satu sumber: aksesOR model Attendance.
+                                        $rawLate = $student->late_label ?? '–';
+                                        $cleanLate = trim(preg_replace('/^terlambat\s*/i', '', (string) $rawLate));
+                                        $lateText = '' === $cleanLate || '–' === $cleanLate || 'Tepat Waktu' === $cleanLate
+                                            ? '-'
+                                            : $cleanLate;
+                                    @endphp
+                                    <div class="late-duration">{{ $lateText }}</div>
                                 </td>
                                 <td class="text-center">
                                     @php
@@ -629,34 +816,28 @@
                                     </span>
                                 </td>
                                 @if(is_admin())
-                                <td class="text-center">
-                                    <form action="{{ panel_route('absensi.override') }}" method="POST" class="d-inline-flex align-items-center justify-content-center gap-1 m-0">
-                                        @csrf
-                                        <input type="hidden" name="student_id" value="{{ $student->id }}">
-                                        <input type="hidden" name="class_id" value="{{ $selectedClass->id ?? '' }}">
-                                        <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
+                                <td class="aksi-cell text-start">
+                                    <div class="aksi-quick">
+                                        <form action="{{ panel_route('absensi.override') }}" method="POST" class="aksi-form" data-student-id="{{ $student->id }}">
+                                            @csrf
+                                            <input type="hidden" name="student_id" value="{{ $student->id }}">
+                                            <input type="hidden" name="class_id" value="{{ $selectedClass->id ?? '' }}">
+                                            <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
 
-                                        <!-- Dropdown Status Cepat.
-                                             Placeholder "Pilih status" dipilih kalau
-                                             siswa BELUM punya catatan presensi (atau
-                                             statusnya Libur). Siswa ALFA hasil
-                                             hitungan tampil "Alfa" di dropdown, tapi
-                                             belum tersimpan sampai tombol centang
-                                             diklik. -->
-                                        <select name="status" class="select-quick-status" aria-label="{{ __('Pilih status presensi') }} {{ $student->name ?? '' }}">
-                                            <option value="" {{ in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa'], true) ? '' : 'selected' }}>{{ __('Pilih status') }}</option>
-                                            <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
-                                            <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
-                                            <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
-                                            <option value="Izin" {{ $st === 'Izin' ? 'selected' : '' }}>{{ __('Izin') }}</option>
-                                            <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>{{ __('Alfa') }}</option>
-                                        </select>
+                                            <select name="status" class="select-quick-status" data-status-select aria-label="{{ __('Pilih status presensi') }} {{ $student->name ?? '' }}">
+                                                <option value="" selected>{{ __('Pilih Status') }}</option>
+                                                <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
+                                                <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
+                                                <option value="Sakit" {{ $st === 'Sakit' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
+                                                <option value="Izin" {{ $st === 'Izin' ? 'selected' : '' }}>{{ __('Izin') }}</option>
+                                                <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>{{ __('Alfa') }}</option>
+                                            </select>
 
-                                        <!-- Tombol Simpan Cepat (Checklist) -->
-                                        <button type="submit" class="btn-save-quick" title="{{ __('Simpan Status') }}" aria-label="{{ __('Simpan status presensi') }} {{ $student->name ?? '' }}">
-                                            <i class='bx bx-check' style="font-size: 18px !important; width: 18px !important; height: 18px !important; color: #ffffff !important;"></i>
-                                        </button>
-                                    </form>
+                                            <button type="submit" class="btn-save-quick" data-save-btn title="{{ __('Simpan Status') }}" aria-label="{{ __('Simpan status presensi') }} {{ $student->name ?? '' }}" {{ in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa']) ? '' : 'disabled' }}>
+                                                <i class='bx bx-check'></i>
+                                            </button>
+                                        </form>
+                                    </div>
 
                                     <!-- MODAL DETAIL OVERRIDE UNTUK SISWA INI -->
                                     <div class="modal fade text-start" id="modalOverrideSiswa{{ $student->id }}" tabindex="-1" aria-hidden="true">
@@ -1004,6 +1185,39 @@
         // Buka kembali secara otomatis jika scanner aktif sebelum reload halaman
         if (sessionStorage.getItem('class_scanner_open') === '1') {
             toggleInlineScanner();
+        }
+    });
+
+    // ---- TOMBOL NONAKTIF SEBELUM PILIH STATUS ----
+    // Status default: tombol nonaktif (disabled) sampai select punya value.
+    function sync(sel) {
+        var f = sel.closest('form');
+        var b = f ? f.querySelector('[data-save-btn]') : null;
+        if (b) {
+            b.disabled = (sel.value === '');
+        }
+    }
+
+    document.querySelectorAll('select[data-status-select]').forEach(sync);
+
+    document.addEventListener('change', function (e) {
+        var s = e.target.closest('select[data-status-select]');
+        if (s) sync(s);
+    });
+
+    // Antisipasi restore form dari back/forward browser.
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted || document.visibilityState === 'visible') {
+            document.querySelectorAll('select[data-status-select]').forEach(sync);
+        }
+    });
+
+    // Cegah submit kalau select masih kosong.
+    document.addEventListener('submit', function (e) {
+        var sel = e.target.closest('select[data-status-select]');
+        if (sel && sel.value === '') {
+            e.preventDefault();
+            sel.focus();
         }
     });
 </script>

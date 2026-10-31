@@ -436,6 +436,17 @@
     .btn-solid-blue { background-color: #2563eb !important; color: #ffffff !important; }
     .btn-solid-red { background-color: #dc2626 !important; color: #ffffff !important; }
     #btnImportSubmit:disabled { background-color:#059669 !important; color:#ffffff !important; opacity:.5 !important; cursor:not-allowed !important; box-shadow:none !important; border:none !important; }
+
+    /* Alert import: teks tidak bertumpuk dengan ikon, baris pendek dan rapi */
+    .import-summary {
+        display: block;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+    .import-summary + *,
+    .alert .flash-notice-body .d-flex > div {
+        min-width: 0;
+    }
 </style>
 @endpush
 
@@ -454,11 +465,13 @@
     @endif
 
     @if(session('danger'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" style="background-color: #fee2e2 !important; color: #991b1b !important;" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" style="background-color: #fee2e2 !important; color: #991b1b !important; max-height: none; overflow: visible;" role="alert">
         <div class="flash-notice-body">
-            <div class="d-flex align-items-center">
-                <i class='bx bx-error-circle fs-5 me-2' style="color: #991b1b !important;"></i>
-                <span>{{ session('danger') }}</span>
+            <div class="d-flex align-items-start">
+                <i class='bx bx-error-circle fs-5 me-2 mt-1' style="color: #991b1b !important;"></i>
+                <div>
+                    <div class="import-summary">{{ session('danger') }}</div>
+                </div>
             </div>
         </div>
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
@@ -490,11 +503,13 @@
     @endif
 
     @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" style="max-height: none; overflow: visible;">
         <div class="flash-notice-body">
-            <div class="d-flex align-items-center">
-                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
-                <span>{{ session('warning') }}</span>
+            <div class="d-flex align-items-start">
+                <i class='bx bx-error-circle fs-5 me-2 mt-1 text-warning'></i>
+                <div>
+                    <div class="import-summary">{{ session('warning') }}</div>
+                </div>
             </div>
         </div>
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
@@ -949,18 +964,23 @@ console.log('[import-handler] aktif');
   alertEl.setAttribute('role', 'alert');
   alertEl.style.backgroundColor = color.bg;
   alertEl.style.color = color.fg;
+  alertEl.style.maxHeight = 'none';
+  alertEl.style.overflow = 'visible';
   var head = document.createElement('div');
-  head.className = 'd-flex align-items-center';
+  head.className = 'd-flex align-items-start';
   var icon = document.createElement('i');
-  icon.className = 'bx ' + color.icon + ' fs-5 me-2';
-  var text = document.createElement('span');
-  text.textContent = msg;
+  icon.className = 'bx ' + color.icon + ' fs-5 me-2 mt-1';
+  var textDiv = document.createElement('div');
+  var summary = document.createElement('div');
+  summary.className = 'import-summary';
+  summary.textContent = msg;
+  textDiv.appendChild(summary);
   head.appendChild(icon);
-  head.appendChild(text);
+  head.appendChild(textDiv);
   alertEl.appendChild(head);
   if (details.length) {
     var list = document.createElement('ul');
-    list.className = 'mb-0 mt-2 ps-3';
+    list.className = 'mb-0 mt-2 ps-3 small';
     details.forEach(function (item) {
       var li = document.createElement('li');
       li.textContent = String(item);

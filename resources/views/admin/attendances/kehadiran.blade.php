@@ -554,11 +554,11 @@
                         <th class="text-center py-3" style="width: 10%;">{{ __('NISN') }}</th>
                         <th class="text-start py-3" style="width: 25%;">{{ __('Nama Siswa') }}</th>
                         <th class="text-center py-3" style="width: 10%;">{{ __('Kelas') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Hadir') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Terlambat') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Sakit') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Izin') }}</th>
-                        <th class="text-center py-3" style="width: 8%;">{{ __('Alfa') }}</th>
+                        <th class="text-center py-3" style="width: 8%;"><span style="color:#059669 !important">{{ __('Hadir') }}</span></th>
+                        <th class="text-center py-3" style="width: 8%;"><span style="color:#d97706 !important">{{ __('Terlambat') }}</span></th>
+                        <th class="text-center py-3" style="width: 8%;"><span style="color:#2563eb !important">{{ __('Sakit') }}</span></th>
+                        <th class="text-center py-3" style="width: 8%;"><span style="color:#7e22ce !important">{{ __('Izin') }}</span></th>
+                        <th class="text-center py-3" style="width: 8%;"><span style="color:#dc2626 !important">{{ __('Alfa') }}</span></th>
                         <th class="text-center py-3" style="width: 10%;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
@@ -574,11 +574,11 @@
                         <td class="text-center text-nowrap fw-normal">{{ $item->nisn ?: '-' }}</td>
                         <td class="text-start text-nowrap fw-normal">{{ $item->name }}</td>
                         <td class="text-center text-nowrap fw-normal">{{ $item->class_name }}</td>
-                        <td class="text-center fw-normal" style="color: #16a34a;">{{ $item->hadir }}</td>
-                        <td class="text-center fw-normal" style="color: #d97706;">{{ $item->terlambat }}</td>
-                        <td class="text-center fw-normal" style="color: #2563eb;">{{ $item->sakit }}</td>
-                        <td class="text-center fw-normal" style="color: #7e22ce;">{{ $item->izin }}</td>
-                        <td class="text-center fw-normal" style="color: #ef4444;">{{ $item->alfa }}</td>
+                        <td class="text-center fw-normal" style="color:#059669 !important"><span style="color:#059669 !important">{{ $item->hadir }}</span></td>
+                        <td class="text-center fw-normal" style="color:#d97706 !important"><span style="color:#d97706 !important">{{ $item->terlambat }}</span></td>
+                        <td class="text-center fw-normal" style="color:#2563eb !important"><span style="color:#2563eb !important">{{ $item->sakit }}</span></td>
+                        <td class="text-center fw-normal" style="color:#7e22ce !important"><span style="color:#7e22ce !important">{{ $item->izin }}</span></td>
+                        <td class="text-center fw-normal" style="color:#dc2626 !important"><span style="color:#dc2626 !important">{{ $item->alfa }}</span></td>
                         <td class="text-center text-nowrap">
                             <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>

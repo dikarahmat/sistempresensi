@@ -460,39 +460,97 @@ class StudentController extends Controller
                 return array_search($a, array_keys($errorGroups)) <=> array_search($b, array_keys($errorGroups));
             });
 
-            $details = [];
+            // Pisahkan error duplikat NISN (sudah terdaftar di DB) dari error lain
+            $duplicateRows = [];
+            $nonDuplicateGroups = [];
             foreach ($errorGroups as $reason => $rows) {
+                if (str_contains($reason, 'sudah terdaftar')) {
+                    $duplicateRows = array_merge($duplicateRows, $rows);
+                } else {
+                    $nonDuplicateGroups[$reason] = $rows;
+                }
+            }
+            $totalDuplicates = count($duplicateRows);
+
+            // Kasus: semua baris duplikat, tidak ada yang berhasil
+            if ($imported === 0 && $totalDuplicates > 0 && count($nonDuplicateGroups) === 0) {
+                $message = 'Semua data sudah terdaftar. Tidak ada data baru yang diimpor.';
+                $status = 'error';
+                $payload = ['status' => $status, 'message' => $message];
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json($payload, 200);
+                }
+                return redirect()->route('admin.students.index')->with('danger', $message);
+            }
+
+            // Kasus: sebagian berhasil, sisanya semua duplikat
+            if ($imported > 0 && $totalDuplicates > 0 && count($nonDuplicateGroups) === 0) {
+                $message = "{$imported} berhasil diimpor. {$totalDuplicates} data dilewati karena NISN sudah terdaftar.";
+                $status = 'partial';
+                $payload = ['status' => $status, 'message' => $message];
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json($payload, 200);
+                }
+                return redirect()->route('admin.students.index')->with('warning', $message);
+            }
+
+            // Kasus: ada error non-duplikat (batasi nomor baris maksimal 10 per alasan)
+            $details = [];
+            foreach ($nonDuplicateGroups as $reason => $rows) {
                 sort($rows);
-                $rowsList = implode(', ', $rows);
-                $details[] = "{$reason} (baris {$rowsList})";
+                $shownRows = array_slice($rows, 0, 10);
+                $rowsList = implode(', ', $shownRows);
+                $extra = count($rows) - 10;
+                if ($extra > 0) {
+                    $details[] = "{$reason}. Baris dilewati (baris {$rowsList}, ... dan {$extra} lainnya)";
+                } else {
+                    $details[] = "{$reason}. Baris dilewati (baris {$rowsList})";
+                }
             }
 
-            $maxDetails = 5;
-            $shownDetails = array_slice($details, 0, $maxDetails);
-            $extraCount = count($details) - $maxDetails;
-            if ($extraCount > 0) {
-                $shownDetails[] = "Dan {$extraCount} alasan lainnya.";
+            // Gabungkan duplikat NISN sebagai ringkasan count saja (tanpa daftar baris)
+            if ($totalDuplicates > 0) {
+                $details[] = "{$totalDuplicates} data dilewati karena NISN sudah terdaftar.";
             }
 
-            $summary = "{$imported} berhasil, {$totalErrors} gagal.";
+            // Bangun pesan ringkasan
+            $summaryParts = [];
+            if ($imported > 0) {
+                $summaryParts[] = "{$imported} berhasil diimpor.";
+            }
+            if (!empty($details)) {
+                $summaryParts[] = implode(' ', $details);
+            }
+
+            $message = implode(' ', $summaryParts);
+            if (trim($message) === '') {
+                $message = 'Tidak ada data yang diimpor.';
+                $status = 'error';
+            } elseif ($imported > 0 && $totalDuplicates === 0 && count($nonDuplicateGroups) === 0) {
+                $message = "{$imported} data berhasil diimpor.";
+                $status = 'success';
+            } else {
+                $status = 'warning';
+            }
 
             $payload = [
-                'status' => 'partial',
-                'message' => $summary,
+                'status' => $status,
+                'message' => $message,
             ];
-            if (!empty($shownDetails)) {
-                $payload['details'] = $shownDetails;
+            if (!empty($details)) {
+                $payload['details'] = $details;
             }
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json($payload, 200);
             }
-            $flashMessage = $summary;
-            if (!empty($shownDetails)) {
-                $flashMessage .= ' ' . implode('; ', $shownDetails);
+            $flashMessage = $message;
+            if (!empty($details)) {
+                $flashMessage .= ' ' . implode('; ', $details);
             }
+            $flashType = $status === 'error' ? 'danger' : 'warning';
             return redirect()->route('admin.students.index')
-                ->with('warning', $flashMessage);
+                ->with($flashType, $flashMessage);
         } catch (\Throwable $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

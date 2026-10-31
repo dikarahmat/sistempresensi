@@ -2,108 +2,168 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>{{ __('Profil Presensi Siswa') }}</title>
+    <title>{{ $title }}</title>
     <style>
-        @page { size: A4 portrait; margin: 12mm 14mm; }
-        * { font-family: Helvetica, Arial, sans-serif; }
-        body { margin: 0; color: #1e293b; font-size: 9pt; line-height: 1.35; }
-
-        /* ===== KOP (sama dengan Per Kelas) ===== */
-        .header-table { width: 100%; border-collapse: collapse; border-bottom: 2px solid #0f172a; margin-bottom: 10px; }
-        .header-table td { vertical-align: middle; padding-bottom: 8px; }
-        .school-title { font-size: 15pt; font-weight: bold; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .school-subtitle { font-size: 8pt; color: #475569; margin-top: 2px; }
-        .printed-at { text-align: right; font-size: 7.5pt; color: #000; }
-        .printed-at strong { color: #000; }
-
-        .report-title { font-size: 11.5pt; font-weight: bold; text-align: center; text-transform: uppercase; color: #0f172a; margin: 4px 0 2px; }
-        .report-subtitle { font-size: 8.5pt; text-align: center; color: #000; margin-bottom: 10px; }
-
-        /* ===== IDENTITAS SISWA =====
-           Dulu blok ini melebar 100% halaman, sehingga kelompok kiri
-           (Nama & NISN) terdorong ke ujung kiri dan kelompok kanan
-           (Kelas & Jenis Kelamin) terdorong ke ujung kanan, menyisakan
-           lubang kosong besar di tengah.
-
-           CATATAN Teknis: DomPDF TIDAK mendukung "margin: 0 auto" untuk
-           memusatkan tabel (hasilnya tetap mepet kiri). Karena itu posisi
-           tengah dipaksa dengan margin kiri/kanan eksplisit yang sama besar:
-               74% (tabel) + 13% + 13% = 100% lebar area halaman.
-           Ukuran 74% tetap dalam rentang 70%-75% yang diminta, dan blok
-           jadi simetris terhadap tabel utama di bawahnya.
-
-           Proporsi kolom (sama di kedua baris supaya lurus):
-             19% label | 4% ":" | 31% nilai | 7% gutter | 21% label | 4% ":" | 14% nilai = 100% */
-        .identity {
-            width: 74%;
-            margin-left: 13%;
-            margin-right: 13%;
-            border-collapse: collapse;
-            table-layout: fixed;
+        @page {
+            size: A4 landscape;
+            margin: 10mm 12mm;
         }
-        .identity td { border: none; padding: 1.5px 0; font-size: 9.5pt; vertical-align: top; }
-        .identity .lbl, .identity .lbl2, .identity .sep { white-space: nowrap; color: #000; font-weight: normal; }
-        /* Label digeser sedikit ke kanan supaya "Nama" tidak menempel batas kiri */
-        .identity .lbl { padding-left: 4px; }
-        .identity .val { font-weight: normal; color: #000; overflow-wrap: break-word; }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            font-size: 9pt;
+            line-height: 1.3;
+        }
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .header-table td {
+            vertical-align: middle;
+        }
+        .school-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1d4ed8;
+            letter-spacing: 0.5px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .school-subtitle {
+            font-size: 8.5pt;
+            color: #475569;
+            margin-top: 2px;
+        }
+        .report-title {
+            font-size: 11pt;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            color: #0f172a;
+        }
+        .report-subtitle {
+            font-size: 8.5pt;
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
 
-        /* ===== TABEL RIWAYAT (header biru, border tipis) ===== */
-        .tbl { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 6px; }
-        .tbl th { background: #2563eb; color: #ffffff; font-weight: bold; text-transform: uppercase; font-size: 7pt; padding: 5px 3px; border: 1px solid #2563eb; text-align: center; }
-        .tbl td { border: 1px solid #cbd5e1; padding: 3px 4px; font-size: 8pt; text-align: center; word-wrap: break-word; }
-        .tbl tbody tr:nth-child(even) td { background: #f8fafc; }
-        .tbl thead { display: table-header-group; }
-        .tbl tr { page-break-inside: avoid; }
+
+        /* Data Table — width 100% + table-layout: fixed supaya lebar tabel
+           PERSIS SAMA dengan lebar garis bawah kop surat (.header-table),
+           tidak melar ke kanan bahkan untuk tabel bulanan (kolom tanggal 1-31). */
+        .data-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #cbd5e1;
+            padding: 4px 5px;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #2563eb;
+            color: #ffffff;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 7.5pt;
+        }
+        /* Judul kolom DIULANG di setiap halaman saat tabel terpecah. */
+        .data-table thead {
+            display: table-header-group;
+        }
+        .data-table tr {
+            page-break-inside: avoid;
+        }
+        .data-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
         .text-left { text-align: left !important; }
+        .text-center { text-align: center !important; }
 
-        /* simbol status berwarna */
-        .st { font-weight: bold; font-size: 9pt; }
+        .badge-h { color: #059669; font-weight: bold; }
+        .badge-t { color: #d97706; font-weight: bold; }
+        .badge-s { color: #2563eb; font-weight: bold; }
+        .badge-i { color: #7e22ce; font-weight: bold; }
+        .badge-a { color: #e11d48; font-weight: bold; }
+        .badge-l { color: #94a3b8; }
+
+        /* Kolom JK: L biru cerah, P merah cerah — sama dengan tampilan web Rekap
+           (.rekap-jk). Huruf medium, TIDAK bold, dan ukuran font tidak
+           diubah supaya tinggi baris & paginasi PDF tetap sama. */
+        .jk-l { color: #3B82F6; font-weight: 500; }
+        .jk-p { color: #EF4444; font-weight: 500; }
 
         /* ==== GLOBAL TEXT RESET: semua teks jadi hitam pekat, tebal dibuat normal ==== */
         td, td * { color: #000 !important; font-weight: 400 !important; }
-        /* Pengecualian: badge H/T/S/I/A/L + header tabel + judul tetap warna asli */
-        .st-H, .st-T, .st-S, .st-I, .st-A, .st-L,
-        .tbl th { color: inherit !important; font-weight: inherit !important; }
-        .tbl th { color: #ffffff !important; font-weight: bold !important; }
-        .st-H { color: #059669 !important; font-weight: bold !important; }
-        .st-T { color: #d97706 !important; font-weight: bold !important; }
-        .st-S { color: #2563eb !important; font-weight: bold !important; }
-        .st-I { color: #7e22ce !important; font-weight: bold !important; }
-        .st-A { color: #e11d48 !important; font-weight: bold !important; }
-        .st-L { color: #94a3b8 !important; font-weight: normal !important; }
-        /* Judul sekolah: tetap biru + bold */
+        /* Pengecualian: sel angka badge H/T/S/I/A/SEL/UANG + JK + header tabel + judul tetap warna asli */
+        .badge-h, .badge-t, .badge-s, .badge-i, .badge-a, .badge-l,
+        .jk-l, .jk-p,
+        th { color: inherit !important; font-weight: inherit !important; }
+        th { color: #ffffff !important; font-weight: bold !important; }
+        .badge-h { color: #059669 !important; font-weight: bold !important; }
+        .badge-t { color: #d97706 !important; font-weight: bold !important; }
+        .badge-s { color: #2563eb !important; font-weight: bold !important; }
+        .badge-i { color: #7e22ce !important; font-weight: bold !important; }
+        .badge-a { color: #e11d48 !important; font-weight: bold !important; }
+        .badge-l { color: #94a3b8 !important; font-weight: normal !important; }
+        .jk-l { color: #3B82F6 !important; font-weight: 500 !important; }
+        .jk-p { color: #EF4444 !important; font-weight: 500 !important; }
+        /* Judul sekolah: tetap biru (seperti asal) + normal tebal */
         .school-title { color: #1d4ed8 !important; font-weight: bold !important; }
-        /* Subjudul, alamat, waktu cetak, legenda, judul laporan: hitam pekat, normal */
-        .school-subtitle, .report-subtitle,
-        .identity .lbl, .identity .lbl2, .identity .sep,
-        .identity .val, .printed-at, .printed-at strong,
-        .legend-text, .legend-note, .report-title { color: #000 !important; font-weight: 400 !important; }
-        /* Judul laporan tetap tebal (seperti asal) */
-        .report-title { font-weight: bold !important; }
-        .st-H { color: #059669; }
-        .st-T { color: #d97706; }
-        .st-S { color: #2563eb; }
-        .st-I { color: #7e22ce; }
-        .st-A { color: #e11d48; }
-        .st-L { color: #94a3b8; }
+        /* Subjudul: hitam pekat, tebal normal */
+        .school-subtitle, .report-subtitle { color: #000 !important; font-weight: 400 !important; }
+        /* Waktu cetak: hitam pekat, normal */
+        .printed-at, .printed-at strong { color: #000 !important; font-weight: 400 !important; }
+        /* Legenda judul: hitam pekat, normal */
+        .legend-title { color: #000 !important; font-weight: 400 !important; }
+        /* Alamat sekolah (td row label) */
+        .header-table td { color: #000 !important; font-weight: 400 !important; }
 
-        /* ===== KETERANGAN + TANDA TANGAN (satu blok, tidak terpisah halaman) ===== */
-        .closing { page-break-inside: avoid; margin-top: 8px; }
-        .legend-box { border: 1px solid #e2e8f0; background: #f8fafc; padding: 7px 10px; }
-        .legend-title { font-size: 9pt; font-weight: bold; margin-bottom: 3px; }
-        .legend-text { font-size: 8.5pt; color: #000; }
-        .legend-note { font-size: 7.5pt; color: #000; margin-top: 3px; }
-
-        /* Tanda tangan: 2 KOLOM PENUH (tanpa border). Kolom kiri (Kepala
-           Sekolah) rata kiri. Kolom kanan diposisikan ke tepi kanan oleh
-           text-align:right pada td, tetapi ISI teksnya sendiri rata kiri
-           lewat wrapper inline-block supaya "Wali Kelas" dan NIP sejajar tepat
-           di bawah huruf pertama "Parung Panjang". */
-        .signature-table { width: 100%; margin-top: 16px; border-collapse: collapse; }
-        .signature-table td { width: 50%; font-size: 9pt; vertical-align: top; text-align: left; }
-        .signature-table td.sig-right { text-align: right; }
-        .signature-table td.sig-right .sig-inline { display: inline-block; text-align: left; }
-        .signature-line { height: 46px; }
+        /* Legenda + tanda tangan per kelas: tidak boleh terpisah halaman. */
+        .section-footer {
+            page-break-inside: avoid;
+            page-break-before: avoid;
+        }
+        .pdf-legend {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background-color: #f8fafc;
+        }
+        /* Tanda tangan: 2 KOLOM PENUH (tanpa border) sesuai standar resmi nasional —
+           Kepala Sekolah rata KIRI, Wali Kelas rata KANAN. Kolom kanan tidak memakai
+           padding-left 30% (tidak ada jarak mengambang di tengah). */
+        .signature-table {
+            width: 100%;
+            margin-top: 24px;
+            page-break-inside: avoid;
+        }
+        .signature-table td {
+            text-align: left;
+            font-size: 8.5pt;
+            width: 50%;
+            vertical-align: top;
+        }
+        .signature-table td.sig-right {
+            text-align: right;
+        }
+        /* Isi kolom kanan rata KIRI, tapi bloknya tetap di kanan halaman:
+           text-align:right pada td memposisikan blok inline-block, lalu di
+           dalam blok semua baris rata kiri sehingga "Wali Kelas" dan NIP
+           sejajar tepat di bawah huruf pertama "Parung Panjang". */
+        .signature-table td.sig-right .sig-inline {
+            display: inline-block;
+            text-align: left;
+        }
+        .signature-space { height: 50px; }
     </style>
 </head>
 <body>
@@ -111,174 +171,346 @@
 @php
     $logoSrc = $logoBase64 ?? null;
     if (!$logoSrc) {
-        $logoRel = \App\Models\Setting::getLogo();
-        $lPath = $logoRel ? public_path($logoRel) : null;
-        if ($lPath && is_file($lPath)) {
-            $mime = @mime_content_type($lPath) ?: 'image/png';
+        $lPath = public_path(\App\Models\Setting::getLogo());
+        if (file_exists($lPath)) {
+            $mime = mime_content_type($lPath) ?: 'image/png';
             $logoSrc = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($lPath));
         }
     }
     $npsn = \App\Models\Setting::get('school_npsn', '20102030');
     $resolvedActiveYear = $activeYear ?? \App\Models\AcademicYear::getActive();
-    $yearName = $resolvedActiveYear?->name ?? '-';
     $signPlaceholder = \App\Exports\MultiPeriodAttendanceExport::NAME_PLACEHOLDER;
-    $printedAt = $printedAt ?? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB';
+    $legendLines = \App\Exports\MultiPeriodAttendanceExport::legendLines();
+    $printedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i');
     $signedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y');
-    $schoolName = $schoolName ?? '';
-    $schoolAddress = $schoolAddress ?? '';
-    $periodLabel = $periodLabel ?? '-';
-    // Jenis periode untuk judul: HARIAN / MINGGUAN / BULANAN / SEMESTER / TAHUNAN
-    $periodTitle = !empty($periodType ?? null) ? strtoupper($periodType) : '';
-    $headmasterName = $headmasterName ?? \App\Models\Setting::getHeadmasterName();
-    $headmasterNip = $headmasterNip ?? \App\Models\Setting::getHeadmasterNip();
-
-    // Status -> simbol
-    $statusSymbol = [
-        'Hadir' => 'H', 'Terlambat' => 'T', 'Sakit' => 'S',
-        'Izin' => 'I', 'Alfa' => 'A', 'Libur' => 'L',
-    ];
+    // Satu blok = satu kelas. Blok pertama langsung menyusul blok sebelumnya,
+    // blok berikutnya DIMULAI DI HALAMAN BARU (kop + judul ikut diulang).
+    $sections = $sections ?: [];
 @endphp
 
-@foreach($studentsData as $data)
+@foreach($sections as $section)
     @if(!$loop->first)
-        <div style="page-break-after: always;"></div>
+        <div class="page-break" style="page-break-after: always;"></div>
     @endif
-
-    @php
-        $student = $data['student'];
-        $rows = $data['rows'];
-        $className = $student->schoolClass?->name ?? '-';
-        // Wali kelas: utamakan data dari controller (guru yang menjabat wali kelas)
-        $waliName = $data['wali_name'] ?? $student->schoolClass?->teacher?->name;
-        $waliNip = $data['wali_nip'] ?? $student->schoolClass?->teacher?->nip;
-    @endphp
 
     <!-- KOP SEKOLAH -->
     <table class="header-table">
         <tr>
             <td style="width: 60px;">
                 @if(!empty($logoSrc))
-                    <img src="{{ $logoSrc }}" style="width: 52px; height: 52px;">
+                    <img src="{{ $logoSrc }}" style="width: 54px; height: 54px; object-fit: contain;">
                 @endif
             </td>
-            <td style="padding-left: 8px;">
-                <div class="school-title">{{ $schoolName }}</div>
-                <div class="school-subtitle">{{ $schoolAddress }} &bull; NPSN: {{ $npsn }} &bull; {!! __('Tahun Ajaran') !!} : {{ $yearName }}</div>
+            <td style="padding-left: 10px;">
+                <div class="school-title">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</div>
+                <div class="school-subtitle">
+                    {{ $schoolAddress ?? \App\Models\Setting::getSchoolAddress() }} &bull; NPSN: {{ $npsn }} &bull; {!! __('Tahun Ajaran') !!} : {{ $resolvedActiveYear?->name ?? '2025/2026' }}
+                </div>
             </td>
-            <td class="printed-at" style="width: 150px;">
-                {!! __('Dicetak pada:') !!}<br>
-                <strong>{!! $printedAt !!}</strong>
+            <td style="text-align: right; font-size: 8pt; color: #64748b;">
+                {{ __('Dicetak pada:') }}<br>
+                <strong>{{ $printedAt }} WIB</strong>
             </td>
         </tr>
     </table>
 
-    <div class="report-title">{!! __('Laporan Riwayat Presensi Siswa') !!}{!! $periodTitle ? ' - ' . $periodTitle : '' !!}</div>
-    <div class="report-subtitle">{!! __('Periode:') !!} {{ $periodLabel }} | {!! __('Kelas:') !!} {{ $className }} | {!! __('Tahun Ajaran') !!} : {{ $yearName }}</div>
+    <div class="report-title">{{ $section['heading'] }}</div>
+    <div class="report-subtitle">{{ $section['subtitle'] }}</div>
 
-    <!-- IDENTITAS SISWA: blok rapat 74% lebar, dipusatkan pakai margin
-         kiri/kanan 13% (DomPDF tidak mendukung margin: 0 auto). -->
-    <table class="identity">
-        <tr>
-            <td class="lbl" style="width: 19%">{!! __('Nama') !!}</td>
-            <td class="sep" style="width: 4%">:</td>
-            <td class="val" style="width: 31%">{{ mb_strtoupper($student->name ?? '', 'UTF-8') }}</td>
-            <td style="width: 7%"></td>
-            <td class="lbl2" style="width: 21%">{!! __('Kelas ') !!}</td>
-            <td class="sep" style="width: 4%">:</td>
-            <td class="val" style="width: 14%">{{ $className }}</td>
-        </tr>
-        <tr>
-            <td class="lbl" style="width: 19%">{!! __('NISN') !!}</td>
-            <td class="sep" style="width: 4%">:</td>
-            <td class="val" style="width: 31%">{{ $student->nisn ?: '-' }}</td>
-            <td style="width: 7%"></td>
-            <td class="lbl2" style="width: 21%">{!! __('Jenis Kelamin') !!}</td>
-            <td class="sep" style="width: 4%">:</td>
-            <td class="val" style="width: 14%">{{ $student->gender ?? '-' }}</td>
-        </tr>
-    </table>
-
-    <!-- RIWAYAT PRESENSI -->
-    <table class="tbl">
+    <!-- TABEL DATA LAPORAN -->
+    @if($type === 'harian')
+    <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 5%;">{!! __('No') !!}</th>
-                <th style="width: 12%;">{!! __('Hari') !!}</th>
-                <th style="width: 14%;">{!! __('Tanggal') !!}</th>
-                <th style="width: 14%;">{!! __('Jam Masuk') !!}</th>
-                <th style="width: 10%;">{!! __('Status') !!}</th>
-                <th style="width: 17%;">{!! __('Keterlambatan') !!}</th>
-                <th style="width: 28%;">{!! __('Keterangan') !!}</th>
+                <th style="width: 4%;">{!! __('No') !!}</th>
+                <th style="width: 9%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: 20%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: 8%;">{!! __('Kelas') !!}</th>
+                <th style="width: 3%;">{!! __('JK') !!}</th>
+                <th style="width: 10%;">{!! __('Jam Masuk') !!}</th>
+                <th style="width: 12%;">{!! __('Keterlambatan') !!}</th>
+                <th style="width: 8%;">{!! __('Status') !!}</th>
+                <th style="text-align: left; width: 26%;">{!! __('Catatan') !!}</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($rows as $index => $row)
-                @php $sym = $statusSymbol[$row['status']] ?? null; @endphp
-                <tr>
-                    <td>{!! $index + 1 !!}</td>
-                    <td>{!! \Carbon\Carbon::parse($row['tanggal_raw'])->translatedFormat('l') !!}</td>
-                    <td>{!! \Carbon\Carbon::parse($row['tanggal_raw'])->translatedFormat('d/m/Y') !!}</td>
-                    <td>{!! $row['jam_masuk'] !!}</td>
-                    <td>
-                        @if($sym)
-                            <span class="st st-{{ $sym }}">{{ $sym }}</span>
-                        @else
-                            {{ $row['status'] ?: '-' }}
-                        @endif
-                    </td>
-                    <td>{!! $row['keterlambatan'] !!}</td>
-                    <td class="text-left">{!! $row['keterangan'] !!}</td>
-                </tr>
+            @forelse($section['rows'] as $row)
+            <tr>
+                <td>{{ $row['no'] }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
+                <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
+                <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td>{!! $row['check_in'] !!}</td>
+                <td>{!! $row['late_text'] !!}</td>
+                <td>
+                    @if($row['status'] === 'Hadir')
+                        <span class="badge-h">{!! __('Hadir') !!}</span>
+                    @elseif($row['status'] === 'Terlambat')
+                        <span class="badge-t">{!! __('Terlambat') !!}</span>
+                    @elseif($row['status'] === 'Sakit')
+                        <span class="badge-s">{!! __('Sakit') !!}</span>
+                    @elseif($row['status'] === 'Izin')
+                        <span class="badge-i">{!! __('Izin') !!}</span>
+                    @elseif($row['status'] === 'Alfa')
+                        <span class="badge-a">{!! __('Alfa') !!}</span>
+                    @elseif($row['status'] === 'Libur')
+                        <span class="badge-l">{!! __('Libur') !!}</span>
+                    @elseif(str_contains($row['status'], 'Belum'))
+                        <span class="badge-l">-</span>
+                    @else
+                        <span class="badge-l">{{ $row['status'] }}</span>
+                    @endif
+                </td>
+                <td class="text-left" style="font-size: 7.5pt;">{{ $row['notes'] }}</td>
+            </tr>
             @empty
-                <tr>
-                    <td colspan="7" style="padding: 14px; color: #64748b;">{!! __('Tidak ada data presensi untuk periode ini.') !!}</td>
-                </tr>
+            <tr>
+                <td colspan="9" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            </tr>
             @endforelse
         </tbody>
     </table>
 
-    <!-- KETERANGAN + TANDA TANGAN (satu blok) -->
-    <div class="closing">
-        <div class="legend-box">
-            <div class="legend-title">{!! __('KETERANGAN:') !!}</div>
-            <div class="legend-text">
-                <span class="st st-H">H</span> = {!! __('Hadir') !!}
-                <span class="st st-T">T</span> = {!! __('Terlambat') !!}
-                <span class="st st-S">S</span> = {!! __('Sakit') !!}
-                <span class="st st-I">I</span> = {!! __('Izin') !!}
-                <span class="st st-A">A</span> = {!! __('Alfa') !!}
-                <span class="st st-L">L</span> = {!! __('Libur') !!}
-                <span style="color: #647489;">-</span> = {!! __('Belum ada data') !!}
+    @elseif($type === 'mingguan')
+    {{-- Lebar kolom tanggal dihitung dari sisa lebar agar total tabel = 100%
+         (sama persis dengan garis bawah kop surat) pada berapa pun jumlah kolom. --}}
+    @php
+        $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
+        $wMingguanTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
+        $wRingkasan = (2.6 * 5) + 4;             // H, T, S, I, A + %
+        $wKolomTanggalMingguan = (100 - $wMingguanTetap - $wRingkasan) / max(1, count($dateColumns));
+    @endphp
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: {{ $wNo }}%;">{!! __('No') !!}</th>
+                <th style="width: {{ $wNisn }}%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
+                <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
+                @foreach($dateColumns as $d)
+                    <th style="width: {{ $wKolomTanggalMingguan }}%;">{{ $d['label'] }}</th>
+                @endforeach
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #d97706;">T</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4%;">%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($section['rows'] as $row)
+            <tr>
+                <td>{{ $row['no'] }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
+                <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
+                <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                @foreach($dateColumns as $d)
+                    @php
+                        $code = $row['days'][$d['date']] ?? '-';
+                        $cls = match($code) {
+                            'H' => 'badge-h',
+                            'T' => 'badge-t',
+                            'S' => 'badge-s',
+                            'I' => 'badge-i',
+                            'A' => 'badge-a',
+                            'L' => 'badge-l',
+                            default => 'badge-l'
+                        };
+                        $val = in_array($code, ['H','T','S','I','A','L']) ? $code : '-';
+                    @endphp
+                    <td class="{{ $cls }}">{{ $val }}</td>
+                @endforeach
+                <td class="badge-h">{!! $row['hadir'] !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] !!}</td>
+                <td class="badge-s">{!! $row['sakit'] !!}</td>
+                <td class="badge-i">{!! $row['izin'] !!}</td>
+                <td class="badge-a">{!! $row['alfa'] !!}</td>
+                <td><strong>{!! $row['percentage'] !!}%</strong></td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="{{ count($dateColumns) + 11 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    @elseif(in_array($type, ['semester', 'tahunan'], true))
+    {{-- SEMESTER & TAHUNAN: kolom BULAN (bukan tanggal 1-31). Lebar kolom
+         bulan dihitung dari sisa lebar agar total tabel tetap 100%.
+         Isi sel = jumlah hari Hadir (H + T) pada bulan itu; "-" bila bulan
+         tersebut tidak punya data presensi. Kolom H/T/S/I/A/% adalah TOTAL
+         seluruh periode. --}}
+    @php
+        $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
+        $wBulanTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
+        $wRingkasanBulan = (2.6 * 5) + 4;
+        $wKolomBulan = (100 - $wBulanTetap - $wRingkasanBulan) / max(1, count($months));
+    @endphp
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: {{ $wNo }}%;">{!! __('No') !!}</th>
+                <th style="width: {{ $wNisn }}%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
+                <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
+                @foreach($months as $mInfo)
+                    <th style="padding: 2px 1px; width: {{ $wKolomBulan }}%;">
+                        {{ $mInfo['label'] }}
+                        <div style="font-size: 6pt; font-weight: normal; text-transform: none;">{{ $mInfo['year'] }}</div>
+                    </th>
+                @endforeach
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #d97706;">T</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4%;">%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($section['rows'] as $row)
+            <tr>
+                <td>{{ $row['no'] }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
+                <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
+                <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                @foreach($months as $mInfo)
+                    @php $cell = $row['monthly'][$mInfo['key']] ?? null; @endphp
+                    <td>{{ $cell === null ? '-' : $cell }}</td>
+                @endforeach
+                <td class="badge-h">{!! $row['hadir'] !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] !!}</td>
+                <td class="badge-s">{!! $row['sakit'] !!}</td>
+                <td class="badge-i">{!! $row['izin'] !!}</td>
+                <td class="badge-a">{!! $row['alfa'] !!}</td>
+                <td><strong>{!! $row['percentage'] !!}%</strong></td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="{{ count($months) + 11 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    @else
+    {{-- BULANAN: lebar kolom tanggal 1..31 dihitung dari sisa lebar agar
+         total tabel = 100% (sama persis dengan garis bawah kop surat) dan
+         TIDAK melar keluar kertas pada bulan 31 hari. --}}
+    @php
+        $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
+        $wBulananTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
+        $wRingkasanBulanan = (2.6 * 5) + 4.4;    // H, T, S, I, A + %
+        $wKolomTanggalBulanan = (100 - $wBulananTetap - $wRingkasanBulanan) / max(1, (int) $daysInMonth);
+    @endphp
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: {{ $wNo }}%;">{!! __('No') !!}</th>
+                <th style="width: {{ $wNisn }}%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
+                <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
+                @for($d = 1; $d <= $daysInMonth; $d++)
+                    <th style="padding: 2px 1px; width: {{ $wKolomTanggalBulanan }}%;">{{ $d }}</th>
+                @endfor
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #d97706;">T</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4.4%;">%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($section['rows'] as $row)
+            <tr>
+                <td>{{ $row['no'] }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
+                <td class="text-left" style="font-size: 7pt;"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
+                <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
+                <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                @for($d = 1; $d <= $daysInMonth; $d++)
+                    @php
+                        $code = $row['days'][$d] ?? '-';
+                        $cls = match($code) {
+                            'H' => 'badge-h',
+                            'T' => 'badge-t',
+                            'S' => 'badge-s',
+                            'I' => 'badge-i',
+                            'A' => 'badge-a',
+                            'L' => 'badge-l',
+                            default => 'badge-l'
+                        };
+                    @endphp
+                    <td class="{{ $cls }}" style="padding: 2px 1px; font-size: 7pt;">{{ $code }}</td>
+                @endfor
+                <td class="badge-h">{!! $row['hadir'] !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] !!}</td>
+                <td class="badge-s">{!! $row['sakit'] !!}</td>
+                <td class="badge-i">{!! $row['izin'] !!}</td>
+                <td class="badge-a">{!! $row['alfa'] !!}</td>
+                <td><strong>{!! $row['percentage'] !!}%</strong></td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="{{ $daysInMonth + 11 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+    @endif
+
+    <!-- LEGENDA + TANDA TANGAN KELAS INI
+         Dibungkus satu blok supaya legenda dan tanda tangan tidak terpisah
+         halaman. Isi, urutan baris, dan teksnya SAMA dengan ekspor Excel. -->
+    <div class="section-footer">
+        <div class="pdf-legend">
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] }}</div>
+            <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
+                {{ $legendLines[1] }}
             </div>
-            <div class="legend-note">{!! __('Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".') !!}</div>
-            <div class="legend-note">{!! __('Jam masuk:') !!} {{ $checkInTime ?? \App\Models\Setting::getCheckInTime() }}, {!! __('batas keterlambatan:') !!} {{ $lateLimitTime ?? \App\Models\Setting::getLateLimitTime() }}</div>
+            <div style="font-size: 8pt; color: #64748b; line-height: 1.5; margin-top: 2px;">
+                {{ $legendLines[2] }}
+            </div>
         </div>
 
+        <!-- TANDA TANGAN: 2 KOLOM SAJA (Kiri: Kepala Sekolah, Kanan: Wali Kelas).
+             NIP Wali Kelas diambil dinamis dari relasi kelas/guru penanggung jawab
+             section ini. -->
         <table class="signature-table">
             <tr>
                 <td>
                     {!! __('Mengetahui,') !!}<br>
                     {!! __('Kepala Sekolah') !!}
-                    <div class="signature-line"></div>
+                    <div class="signature-space"></div>
                     <strong><u>{{ $headmasterName ?: $signPlaceholder }}</u></strong><br>
                     NIP. {{ $headmasterNip ?: '-' }}
                 </td>
                 <td class="sig-right">
-                    {{-- td tetap text-align:right supaya bloknya menempel kanan halaman,
-                         wrapper inline-block membuat isinya rata KIRI sehingga
-                         "Wali Kelas" sejajar di bawah huruf pertama "Parung Panjang". --}}
+                    {{-- Blok kanan diposisikan ke kanan oleh text-align:right pada td,
+                         sedangkan isi teksnya sendiri rata KIRI lewat wrapper
+                         inline-block: supaya "Wali Kelas" lurus di bawah huruf pertama
+                         "Parung Panjang" dan NIP-nya juga sejajar. --}}
                     <div class="sig-inline">
                         Parung Panjang, {{ $signedAt }}<br>
                         {!! __('Wali Kelas') !!}
-                        <div class="signature-line"></div>
-                        <strong><u>{{ $waliName ?: $signPlaceholder }}</u></strong><br>
-                        NIP. {{ $waliNip ?: '-' }}
+                        <div class="signature-space"></div>
+                        <strong><u>{{ $section['waliName'] ?: $signPlaceholder }}</u></strong><br>
+                        NIP. {{ $section['waliNip'] ?: '-' }}
                     </div>
                 </td>
             </tr>
         </table>
     </div>
 @endforeach
-
+ 
 </body>
 </html>

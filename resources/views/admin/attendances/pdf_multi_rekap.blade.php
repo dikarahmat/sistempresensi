@@ -90,7 +90,7 @@
         .badge-h { color: #059669; font-weight: bold; }
         .badge-t { color: #d97706; font-weight: bold; }
         .badge-s { color: #2563eb; font-weight: bold; }
-        .badge-i { color: #0d9488; font-weight: bold; }
+        .badge-i { color: #7e22ce; font-weight: bold; }
         .badge-a { color: #e11d48; font-weight: bold; }
         .badge-l { color: #94a3b8; }
 
@@ -110,7 +110,7 @@
         .badge-h { color: #059669 !important; font-weight: bold !important; }
         .badge-t { color: #d97706 !important; font-weight: bold !important; }
         .badge-s { color: #2563eb !important; font-weight: bold !important; }
-        .badge-i { color: #0d9488 !important; font-weight: bold !important; }
+        .badge-i { color: #7e22ce !important; font-weight: bold !important; }
         .badge-a { color: #e11d48 !important; font-weight: bold !important; }
         .badge-l { color: #94a3b8 !important; font-weight: normal !important; }
         .jk-l { color: #3B82F6 !important; font-weight: 500 !important; }
@@ -296,7 +296,7 @@
                 <th style="width: 2.6%; background-color: #059669;">H</th>
                 <th style="width: 2.6%; background-color: #d97706;">T</th>
                 <th style="width: 2.6%; background-color: #2563eb;">S</th>
-                <th style="width: 2.6%; background-color: #0d9488;">I</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
                 <th style="width: 2.6%; background-color: #e11d48;">A</th>
                 <th style="width: 4%;">%</th>
             </tr>
@@ -340,6 +340,66 @@
         </tbody>
     </table>
 
+    @elseif(in_array($type, ['semester', 'tahunan'], true))
+    {{-- SEMESTER & TAHUNAN: kolom BULAN (bukan tanggal 1-31). Lebar kolom
+         bulan dihitung dari sisa lebar agar total tabel tetap 100%.
+         Isi sel = jumlah hari Hadir (H + T) pada bulan itu; "-" bila bulan
+         tersebut tidak punya data presensi. Kolom H/T/S/I/A/% adalah TOTAL
+         seluruh periode. --}}
+    @php
+        $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
+        $wBulanTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
+        $wRingkasanBulan = (2.6 * 5) + 4;
+        $wKolomBulan = (100 - $wBulanTetap - $wRingkasanBulan) / max(1, count($months));
+    @endphp
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: {{ $wNo }}%;">{!! __('No') !!}</th>
+                <th style="width: {{ $wNisn }}%;">{!! __('NISN') !!}</th>
+                <th style="text-align: left; width: {{ $wNama }}%;">{!! __('Nama Siswa') !!}</th>
+                <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
+                <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
+                @foreach($months as $mInfo)
+                    <th style="padding: 2px 1px; width: {{ $wKolomBulan }}%;">
+                        {{ $mInfo['label'] }}
+                        <div style="font-size: 6pt; font-weight: normal; text-transform: none;">{{ $mInfo['year'] }}</div>
+                    </th>
+                @endforeach
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #d97706;">T</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4%;">%</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($section['rows'] as $row)
+            <tr>
+                <td>{{ $row['no'] }}</td>
+                <td>{{ $row['student']->nisn ?: '-' }}</td>
+                <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
+                <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>                    <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
+                @foreach($months as $mInfo)
+                    @php $cell = $row['monthly'][$mInfo['key']] ?? null; @endphp
+                    <td>{{ $cell === null ? '-' : $cell }}</td>
+                @endforeach
+                <td class="badge-h">{!! $row['hadir'] ?? 0 !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] ?? 0 !!}</td>
+                <td class="badge-s">{!! $row['sakit'] ?? 0 !!}</td>
+                <td class="badge-i">{!! $row['izin'] ?? 0 !!}</td>
+                <td class="badge-a">{!! $row['alfa'] ?? 0 !!}</td>
+                <td><strong>{!! $row['percentage'] ?? 0 !!}%</strong></td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="{{ count($months) + 11 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+
     @else
     {{-- BULANAN: lebar kolom tanggal 1..31 dihitung dari sisa lebar agar
          total tabel = 100% (sama persis dengan garis bawah kop surat) dan
@@ -364,7 +424,7 @@
                 <th style="width: 2.6%; background-color: #059669;">H</th>
                 <th style="width: 2.6%; background-color: #d97706;">T</th>
                 <th style="width: 2.6%; background-color: #2563eb;">S</th>
-                <th style="width: 2.6%; background-color: #0d9488;">I</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
                 <th style="width: 2.6%; background-color: #e11d48;">A</th>
                 <th style="width: 4.4%;">%</th>
             </tr>
@@ -392,12 +452,12 @@
                     @endphp
                     <td class="{{ $cls }}" style="padding: 2px 1px; font-size: 7pt;">{{ $code }}</td>
                 @endfor
-                <td class="badge-h">{!! $row['hadir'] !!}</td>
-                <td class="badge-t">{!! $row['terlambat'] !!}</td>
-                <td class="badge-s">{!! $row['sakit'] !!}</td>
-                <td class="badge-i">{!! $row['izin'] !!}</td>
-                <td class="badge-a">{!! $row['alfa'] !!}</td>
-                <td><strong>{!! $row['percentage'] !!}%</strong></td>
+                <td class="badge-h">{!! $row['hadir'] ?? 0 !!}</td>
+                <td class="badge-t">{!! $row['terlambat'] ?? 0 !!}</td>
+                <td class="badge-s">{!! $row['sakit'] ?? 0 !!}</td>
+                <td class="badge-i">{!! $row['izin'] ?? 0 !!}</td>
+                <td class="badge-a">{!! $row['alfa'] ?? 0 !!}</td>
+                <td><strong>{!! $row['percentage'] ?? 0 !!}%</strong></td>
             </tr>
             @empty
             <tr>

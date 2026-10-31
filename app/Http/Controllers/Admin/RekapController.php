@@ -74,40 +74,20 @@ class RekapController extends Controller
 
             foreach ($students as $student) {
                 $att = $attendances->get($student->id);
-                $status = Attendance::STATUS_BELUM;
-                $checkIn = '-';
-                $lateMinutes = 0;
-                $lateText = '-';
-                $notes = '-';
-                $proofDoc = null;
+                $row = Attendance::dataRowForRekap($att, $lateLimitTime);
 
                 if ($att) {
-                    $status = $att->effective_status;
-                    $notes = $att->notes ?? '-';
-                    $proofDoc = $att->proof_document;
-
-                    if ($att->status === 'Hadir') {
-                        $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
-                        if ($att->time_remark === 'Terlambat') {
-                            // Cara menghitung selisih menit TIDAK diubah.
-                            // $diff dibulatkan ke integer karena diffInMinutes()
-                            // bisa menghasilkan float (mis. 892.0166666666667).
-                            $diff = Carbon::parse($att->check_in)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                            $lateMinutes = $diff < 0 ? (int) round(abs($diff)) : 0;
-                            // Format tampilan ramah: "15 MNT" / "1 JAM 5 MNT".
-                            $lateText = rekap_format_late_minutes($lateMinutes);
-                            $status = 'Terlambat';
-                            $totalTerlambat++;
-                            $totalHadir++;
-                        } else {
-                            $lateText = 'Tepat Waktu';
-                            $totalHadir++;
-                        }
-                    } elseif ($status === 'Sakit') {
+                    $status = $row['status'];
+                    if ($status === self::STATUS_TERLAMBAT) {
+                        $totalTerlambat++;
+                        $totalHadir++;
+                    } elseif ($status === self::STATUS_HADIR) {
+                        $totalHadir++;
+                    } elseif ($status === self::STATUS_SAKIT) {
                         $totalSakit++;
-                    } elseif ($status === 'Izin') {
+                    } elseif ($status === self::STATUS_IZIN) {
                         $totalIzin++;
-                    } elseif ($status === 'Alfa') {
+                    } elseif ($status === self::STATUS_ALFA) {
                         $totalAlfa++;
                     }
                 } else {
@@ -124,12 +104,12 @@ class RekapController extends Controller
 
                 $dataRows[] = [
                     'student' => $student,
-                    'check_in' => $checkIn,
-                    'late_text' => $lateText,
-                    'late_minutes' => $lateMinutes,
+                    'check_in' => $row['check_in'],
+                    'late_text' => $row['late_text'],
+                    'late_minutes' => $row['late_minutes'],
                     'status' => $status,
-                    'notes' => $notes,
-                    'proof_document' => $proofDoc,
+                    'notes' => $row['notes'],
+                    'proof_document' => $row['proof_document'],
                 ];
             }
 
@@ -155,6 +135,87 @@ class RekapController extends Controller
                 'is_holiday' => $isWeekend || $isHol,
             ];
             $cur->addDay();
+        }
+
+        $totalEffective = count(array_filter($dateColumns, fn($c) => !$c['is_holiday']));
+        $isMonthTable = in_array($type, ['semester', 'tahunan'], true);
+
+        if ($isMonthTable) {
+            // Semester & tahunan memakai kolom BULAN, bukan kolom tanggal 1-31.
+            // Agregat per siswa per bulan diambil dari SATU query terkelompok
+            // (GROUP BY siswa, bulan, status) - bukan loop per hari.
+            $monthlyCounts = MultiPeriodAttendanceExport::monthlyStatusCounts(
+                $startDate,
+                $endDate,
+                $students->pluck('id')
+            );
+            $months = MultiPeriodAttendanceExport::monthColumnsBetween($startDate, $endDate);
+
+            foreach ($students as $student) {
+                $perMonth = $monthlyCounts[$student->id] ?? [];
+                $h = 0; $t = 0; $s = 0; $i = 0; $a = 0;
+                $monthly = [];
+
+                foreach ($months as $monthInfo) {
+                    $data = $perMonth[$monthInfo['key']] ?? null;
+                    if ($data === null) {
+                        // Bulan tanpa data presensi ditulis "-" di sel.
+                        $monthly[$monthInfo['key']] = null;
+                        continue;
+                    }
+
+                    $h += $data['hadir'] + $data['terlambat'];
+                    $t += $data['terlambat'];
+                    $s += $data['sakit'];
+                    $i += $data['izin'];
+                    $a += $data['alfa'];
+                    // Sel bulan = jumlah hari Hadir (H + T) pada bulan itu.
+                    $monthly[$monthInfo['key']] = $data['hadir'] + $data['terlambat'];
+                }
+
+                $percentage = $totalEffective > 0 ? round(($h / $totalEffective) * 100) : 0;
+
+                $totalHadir += $h;
+                $totalTerlambat += $t;
+                $totalSakit += $s;
+                $totalIzin += $i;
+                $totalAlfa += $a;
+
+                $dataRows[] = [
+                    'student' => $student,
+                    'days' => [],
+                    'monthly' => $monthly,
+                    'hadir' => $h,
+                    'terlambat' => $t,
+                    'sakit' => $s,
+                    'izin' => $i,
+                    'alfa' => $a,
+                    'percentage' => $percentage,
+                ];
+            }
+
+            $monthExtra = [
+                'type' => $type,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'periodLabel' => $periodLabel,
+                'dateColumns' => $dateColumns,
+                'students' => $students,
+                'dataRows' => $dataRows,
+                'totalHadir' => $totalHadir,
+                'totalTerlambat' => $totalTerlambat,
+                'totalSakit' => $totalSakit,
+                'totalIzin' => $totalIzin,
+                'totalAlfa' => $totalAlfa,
+                'studentPaginator' => $studentPaginator,
+                'months' => $months,
+                'period_academic_year' => $inputs['period_academic_year'] ?? ($activeYear?->id ?? null),
+            ];
+            if ($type === 'semester') {
+                $monthExtra['period_semester'] = $inputs['period_semester'] ?? 'ganjil';
+            }
+
+            return $monthExtra;
         }
 
         $attendances = Attendance::whereBetween('date', [$startDate, $endDate])
@@ -243,128 +304,6 @@ class RekapController extends Controller
             'studentPaginator' => $studentPaginator,
         ];
 
-        // Compute month labels and per-student monthly H counts for semester/tahunann
-        if ($type === 'semester') {
-            $semester = $inputs['period_semester'] ?? 'ganjil';
-            $academicYearId = $inputs['period_academic_year'] ?? ($activeYear?->id ?? null);
-            $ay = AcademicYear::find($academicYearId) ?: $activeYear;
-            $semesterLabel = ucfirst($semester); // Ganjil or Genap
-
-            if ($ay) {
-                $ayStart = Carbon::parse($ay->start_date ?? '07-01');
-                $ayEnd = Carbon::parse($ay->end_date ?? '06-30');
-            } else {
-                $ayStart = Carbon::parse('07-01');
-                $ayEnd = Carbon::parse('06-30');
-            }
-
-            // Build date range covering the semester
-            $semStart = Carbon::parse($startDate);
-            $semEnd = Carbon::parse($endDate);
-
-            // Determine semester months: ganjil = Jul-Dec, genap = Jan-Jun
-            $allSemMonths = [];
-            if ($semester === 'ganjil') {
-                // Ganjil: July to December
-                $m = clone $semStart;
-                while ($m->lte($semEnd)) {
-                    $monthLabel = $m->translatedFormat('M Y');
-                    $allSemMonths[] = ['label' => $monthLabel, 'month' => (int) $m->format('m'), 'year' => (int) $m->format('Y')];
-                    $m->addMonth(1);
-                }
-            } else {
-                // Genap: January to June
-                $m = clone $semStart;
-                while ($m->lte($semEnd)) {
-                    $monthLabel = $m->translatedFormat('M Y');
-                    $allSemMonths[] = ['label' => $monthLabel, 'month' => (int) $m->format('m'), 'year' => (int) $m->format('Y')];
-                    $m->addMonth(1);
-                }
-            }
-
-            // Short labels as required: Ganil=Jul,Agu,Sep,Okt,Nov,Des; Genap=Jan,Feb,Mar,Apr,Mei,Jun
-            $shortLabels = $semester === 'ganjil'
-                ? ['Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-                : ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-            $months = [];
-            foreach ($allSemMonths as $i => $mInfo) {
-                $months[] = $shortLabels[$i] ?? $mInfo['label'];
-            }
-
-            // Compute per-student monthly H counts
-            $monthlyPresent = [];
-            foreach ($students as $student) {
-                $stAtts = $attendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
-                $monthHCounts = [];
-                foreach ($allSemMonths as $mInfo) {
-                    $monthH = 0;
-                    $cur = $mInfo['carbon'] = Carbon::createFromDate($mInfo['year'], $mInfo['month'], 1);
-                    $daysInMonth = $cur->daysInMonth;
-                    for ($d = 1; $d <= $daysInMonth; $d++) {
-                        $cDate = sprintf('%04d-%02d-%02d', $mInfo['year'], $mInfo['month'], $d);
-                        $att = $stAtts->get($cDate);
-                        if ($att && $att->effective_status === 'Hadir') {
-                            $monthH++;
-                        }
-                    }
-                    $monthHCounts[] = $monthH;
-                }
-                $monthlyPresent[$student->id] = $monthHCounts;
-            }
-
-            $extra['months'] = $months;
-            $extra['monthlyPresent'] = $monthlyPresent;
-            $extra['period_semester'] = $semester;
-            $extra['period_academic_year'] = $academicYearId;
-        }
-
-        if ($type === 'tahunan') {
-            $academicYearId = $inputs['period_academic_year'] ?? ($activeYear?->id ?? null);
-            $ay = AcademicYear::find($academicYearId) ?: $activeYear;
-
-            // Build 12 months: July to June (tahun ajaran Indonesia)
-            $allTahunMonths = [];
-            $ayStartYear = $ay ? Carbon::parse($ay->start_date ?? '07-01')->year : $now->year;
-            $m = Carbon::parse("$ayStartYear-07-01");
-            for ($i = 0; $i < 12; $i++) {
-                $monthLabel = $m->translatedFormat('M Y');
-                $allTahunMonths[] = ['label' => $monthLabel, 'month' => (int) $m->format('m'), 'year' => (int) $m->format('Y')];
-                $m->addMonth(1);
-            }
-
-            // Short labels: Jul, Agu, Sep, Okt, Nov, Des, Jan, Feb, Mar, Apr, Mei, Jun
-            $shortLabels = ['Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-            $months = [];
-            foreach ($allTahunMonths as $i => $mInfo) {
-                $months[] = $shortLabels[$i] ?? $mInfo['label'];
-            }
-
-            // Compute per-student monthly H counts
-            $monthlyPresent = [];
-            foreach ($students as $student) {
-                $stAtts = $attendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
-                $monthHCounts = [];
-                foreach ($allTahunMonths as $mInfo) {
-                    $monthH = 0;
-                    $cur = Carbon::createFromDate($mInfo['year'], $mInfo['month'], 1);
-                    $daysInMonth = $cur->daysInMonth;
-                    for ($d = 1; $d <= $daysInMonth; $d++) {
-                        $cDate = sprintf('%04d-%02d-%02d', $mInfo['year'], $mInfo['month'], $d);
-                        $att = $stAtts->get($cDate);
-                        if ($att && $att->effective_status === 'Hadir') {
-                            $monthH++;
-                        }
-                    }
-                    $monthHCounts[] = $monthH;
-                }
-                $monthlyPresent[$student->id] = $monthHCounts;
-            }
-
-            $extra['months'] = $months;
-            $extra['monthlyPresent'] = $monthlyPresent;
-            $extra['period_academic_year'] = $academicYearId;
-        }
-
         // Add monthly-specific data for bulanan
         if ($type === 'bulanan') {
             $month = (int) ($inputs['month'] ?? $now->month);
@@ -383,17 +322,6 @@ class RekapController extends Controller
             $extra['year'] = $year;
             $extra['daysInMonth'] = $daysInMonth;
             $extra['holidayMap'] = $holidayMap;
-        }
-
-        // Add semester-specific data
-        if ($type === 'semester') {
-            $extra['period_semester'] = $inputs['period_semester'] ?? 'ganjil';
-            $extra['period_academic_year'] = $inputs['period_academic_year'] ?? $activeYear?->id;
-        }
-
-        // Add tahunan-specific data
-        if ($type === 'tahunan') {
-            $extra['period_academic_year'] = $inputs['period_academic_year'] ?? $activeYear?->id;
         }
 
         return $extra;
@@ -455,30 +383,15 @@ class RekapController extends Controller
                 ];
 
             case 'semester':
-                // Semester: pakai tanggal tahun ajaran bila tersedia.
-                // Fallback kalender: Ganjil 1 Jul - 31 Des, Genap 1 Jan - 30 Jun.
+                // Semester Ganjil = Juli-Desember, Genap = Januari-Juni.
+                // Definisi rentang ada di satu tempat (MultiPeriodAttendanceExport)
+                // agar PDF, halaman rekap, dan Excel tidak pernah berbeda.
                 $semester = ($inputs['period_semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
                 $ay = AcademicYear::find($inputs['period_academic_year'] ?? ($activeYear?->id ?? 0)) ?: $activeYear;
+                $range = MultiPeriodAttendanceExport::academicBounds('semester', $inputs, $activeYear);
+                $startDate = $range['start'];
+                $endDate = $range['end'];
 
-                if ($ay && $ay->start_date) {
-                    $ayStart = Carbon::parse($ay->start_date);
-                    if ($semester === 'ganjil') {
-                        $startDate = $ayStart->copy()->startOfMonth()->toDateString();
-                        $endDate = $ayStart->copy()->addMonths(5)->endOfMonth()->toDateString();
-                    } else {
-                        $startDate = $ayStart->copy()->addMonths(6)->startOfMonth()->toDateString();
-                        $endDate = $ay->end_date ? Carbon::parse($ay->end_date)->toDateString() : $ayStart->copy()->addMonths(11)->endOfMonth()->toDateString();
-                    }
-                } else {
-                    $refYear = $now->year;
-                    if ($semester === 'ganjil') {
-                        $startDate = Carbon::createFromDate($refYear, 7, 1)->toDateString();
-                        $endDate = Carbon::createFromDate($refYear, 12, 31)->toDateString();
-                    } else {
-                        $startDate = Carbon::createFromDate($refYear, 1, 1)->toDateString();
-                        $endDate = Carbon::createFromDate($refYear, 6, 30)->toDateString();
-                    }
-                }
                 return [
                     'start' => $startDate,
                     'end' => $endDate,
@@ -486,17 +399,12 @@ class RekapController extends Controller
                 ];
 
             case 'tahunan':
-                // Tahunan: satu tahun ajaran penuh.
+                // Tahunan: satu tahun ajaran penuh (Juli-Juni).
                 $ay = AcademicYear::find($inputs['period_academic_year'] ?? ($activeYear?->id ?? 0)) ?: $activeYear;
-                if ($ay && $ay->start_date) {
-                    $startDate = Carbon::parse($ay->start_date)->toDateString();
-                    $endDate = $ay->end_date
-                        ? Carbon::parse($ay->end_date)->toDateString()
-                        : Carbon::parse($ay->start_date)->addMonths(11)->endOfMonth()->toDateString();
-                } else {
-                    $startDate = Carbon::createFromDate($now->year, 7, 1)->toDateString();
-                    $endDate = Carbon::createFromDate($now->year + 1, 6, 30)->toDateString();
-                }
+                $range = MultiPeriodAttendanceExport::academicBounds('tahunan', $inputs, $activeYear);
+                $startDate = $range['start'];
+                $endDate = $range['end'];
+
                 return [
                     'start' => $startDate,
                     'end' => $endDate,
@@ -658,13 +566,51 @@ class RekapController extends Controller
                     $classId
                 );
 
-                // Ambil logo sekolah jika ada
-                $logoPath = Setting::getLogo();
-            $logoBase64 = null;
-                if (file_exists(public_path($logoPath))) {
-                $logoData = file_get_contents(public_path($logoPath));
-                $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
-                }
+                $logoBase64 = optional(Setting::getLogo())->when(function ($relative) {
+                    $path = public_path($relative);
+                    $raw = file_exists($path) ? @file_get_contents($path) : null;
+                    if (!$raw) {
+                        return null;
+                    }
+                    if (function_exists('imagecreatefromstring')) {
+                        try {
+                            $src = @imagecreatefromstring($raw);
+                        } catch (\Throwable $e) {
+                            $src = false;
+                        }
+                        if ($src) {
+                            try {
+                                $w = imagesx($src);
+                                $h = imagesy($src);
+                                $max = 120;
+                                $scale = min($max / max($w, 1), $max / max($h, 1), 1.0);
+                                $nw = max(1, (int) round($w * $scale));
+                                $nh = max(1, (int) round($h * $scale));
+
+                                $dst = imagecreatetruecolor($nw, $nh);
+                                imagealphablending($dst, false);
+                                imagesavealpha($dst, true);
+                                $transparent = imagecolorallocatealpha($dst, 127, 127, 127, 127);
+                                imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
+                                imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+                                imagedestroy($src);
+
+                                ob_start();
+                                imagepng($dst, null, 6);
+                                $png = ob_get_clean();
+                                imagedestroy($dst);
+
+                                if ($png) {
+                                    return 'data:image/png;base64,' . base64_encode($png);
+                                }
+                            } catch (\Throwable $e) {
+                                // logo tidak wajib; cetak tetap jalan
+                            }
+                        }
+                    }
+
+                    return 'data:' . ($mime = @mime_content_type($path) ?: 'image/png') . ';base64,' . base64_encode($raw);
+                });
 
             $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
                     'title' => "Laporan Presensi {$type} - {$className}",
@@ -842,112 +788,61 @@ class RekapController extends Controller
                 $endDate = $dateRange['end'];
                 $periodLabel = $dateRange['label'];
 
-                // 3. Ambil data rekap dari getRecapData (sumber kebenaran yang sama dengan tabel)
+                // 3. Ambil data rekap dari getRecapData (sumber kebenaran yang sama dengan tabel).
+                //    Karena $students hanya berisi 1 (atau beberapa siswa dalam 1 kelas),
+                //    getRecapData akan menghasilkan dataRows yang sesuai.
                 $recap = $this->getRecapData($periodType, null, $inputs, false);
 
-                // 4. Build studentsData dari dataRows getRecapData + jam masuk/pulang dari presensi
-                $lateLimitTime = Setting::getLateLimitTime();
-                Carbon::setLocale('id');
-
+                // 4. Filter dataRows dari getRecapData hanya untuk siswa yang dipilih.
                 $studentIds = $students->pluck('id');
-                $allAttendances = Attendance::whereIn('student_id', $studentIds)
-                    ->whereBetween('date', [$startDate, $endDate])
-                    ->get()
-                    ->groupBy('student_id');
+                $filteredDataRows = collect($recap['dataRows'])->filter(function ($row) use ($studentIds) {
+                    return $row['student'] && $studentIds->contains($row['student']->id);
+                })->values();
 
-                // Build date columns (same as getRecapData for mingguan/bulanan)
-                $dateColumns = [];
-                $cur = Carbon::parse($startDate)->copy();
-                $endObj = Carbon::parse($endDate);
-                while ($cur->lte($endObj)) {
-                    $curDateStr = $cur->toDateString();
-                    $dateColumns[] = [
-                        'date' => $curDateStr,
-                        'carbon' => $cur->copy(),
-                        'is_holiday' => $cur->isWeekend() || Holiday::isHoliday($curDateStr),
-                    ];
-                    $cur->addDay();
+                // 5. Build studentsData dalam format yang sama dengan pdf_multi_rekap:
+                //    sections berisi rows dengan no, student, days/monthly, hadir, terlambat, sakit, izin, alfa, percentage.
+                $studentsData = [];
+                $no = 1;
+                foreach ($filteredDataRows as $row) {
+                    $row['no'] = $no++;
+                    $studentsData[] = $row;
                 }
 
-                $studentsData = [];
-                foreach ($students as $student) {
-                    $stAtts = $allAttendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
-
-                    $stats = ['hadir' => 0, 'terlambat' => 0, 'sakit' => 0, 'izin' => 0, 'alfa' => 0, 'libur' => 0];
-                    $rows = [];
-
-                    foreach ($dateColumns as $col) {
-                        $dStr = $col['date'];
-                        $att = $stAtts->get($dStr);
-
-                        $status = '-';
-                        $jamMasuk = '-';
-                        $jamPulang = '-';
-                        $keterlambatan = '-';
-                        $keterangan = '-';
-
-                        if ($att) {
-                            $status = $att->effective_status;
-                            $jamMasuk = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
-                            $jamPulang = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
-                            $keterangan = $att->notes ?? '-';
-
-                            if ($att->status === 'Hadir' && $att->time_remark === 'Terlambat') {
-                                $diff = Carbon::parse($att->check_in)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                                $lateMinutes = $diff < 0 ? (int) round(abs($diff)) : 0;
-                                $keterlambatan = rekap_format_late_minutes($lateMinutes);
-                            }
+                // Jika tidak ada dataRows (mis. periode tanpa data sama sekali), tetap
+                // buat entry kosong supaya PDF tetap ter-render.
+                if (empty($studentsData)) {
+                    foreach ($students as $student) {
+                        if ($periodType === 'harian') {
+                            // Harian butuh field check_in, late_text, status, notes
+                            $studentsData[] = [
+                                'no' => 1,
+                                'student' => $student,
+                                'check_in' => '-',
+                                'late_text' => '-',
+                                'status' => 'Belum',
+                                'notes' => '-',
+                            ];
                         } else {
-                            if ($col['is_holiday']) {
-                                $status = 'Libur';
-                            } elseif ($dStr < $now->toDateString()) {
-                                // Hari yang sudah lewat tanpa catatan -> ALFA.
-                                $status = Attendance::STATUS_ALFA;
-                            } else {
-                                // Hari ini / masa depan -> belum presensi.
-                                $status = Attendance::STATUS_BELUM;
-                            }
+                            $studentsData[] = [
+                                'no' => 1,
+                                'student' => $student,
+                                'days' => [],
+                                'hadir' => 0,
+                                'terlambat' => 0,
+                                'sakit' => 0,
+                                'izin' => 0,
+                                'alfa' => 0,
+                                'percentage' => 0,
+                            ];
                         }
-
-                        switch ($status) {
-                            case 'Hadir': $stats['hadir']++; break;
-                            case 'Terlambat': $stats['terlambat']++; break;
-                            case 'Sakit': $stats['sakit']++; break;
-                            case 'Izin': $stats['izin']++; break;
-                            case 'Alfa': $stats['alfa']++; break;
-                            case 'Libur': $stats['libur']++; break;
-                        }
-
-                        $rows[] = [
-                            'tanggal' => $col['carbon']->translatedFormat('l, d F Y'),
-                            'tanggal_raw' => $dStr,
-                            'jam_masuk' => $jamMasuk,
-                            'jam_pulang' => $jamPulang,
-                            'status' => $status,
-                            'keterlambatan' => $keterlambatan,
-                            'keterangan' => $keterangan,
-                        ];
                     }
-
-                    $totalEffective = count(array_filter($dateColumns, fn($c) => !$c['is_holiday']));
-                    $totalHadir = $stats['hadir'] + $stats['terlambat'];
-                    $percentage = $totalEffective > 0 ? round(($totalHadir / $totalEffective) * 100, 1) : 0;
-
-                    $studentsData[] = [
-                        'student' => $student,
-                        'rows' => $rows,
-                        'stats' => $stats,
-                        'totalEffective' => $totalEffective,
-                        'totalHadir' => $totalHadir,
-                        'percentage' => $percentage,
-                    ];
                 }
 
                 // 5. Generate PDF atau Excel
                 if ($format === 'pdf') {
-                    return $this->generatePdfStudentProfile($request, $studentsData, $periodType, $periodLabel, $studentScope);
+                    return $this->generatePdfStudentProfile($request, $studentsData, $periodType, $periodLabel, $studentScope, $recap);
                 } else {
-                    return $this->generateExcelStudentProfile($request, $studentsData, $periodType, $periodLabel, $studentScope);
+                    return $this->generateExcelStudentProfile($request, $studentsData, $periodType, $periodLabel, $studentScope, $recap);
                 }
             }
         } catch (\Throwable $e) {
@@ -960,128 +855,6 @@ class RekapController extends Controller
         }
     }
 
-    /**
-     * Build detailed attendance data per student for a period (Rekap calculation rules).
-     * Returns array of student data with: student, rows (detail per date), stats, totals.
-     */
-    protected function buildStudentAttendanceDetail($students, string $periodType, string $startDate, string $endDate, $allAttendances, Carbon $now): array
-    {
-        Carbon::setLocale('id');
-        $lateLimitTime = Setting::getLateLimitTime();
-
-        // Build date columns for the period
-        $dateColumns = [];
-        $cur = Carbon::parse($startDate)->copy();
-        $endObj = Carbon::parse($endDate);
-        while ($cur->lte($endObj)) {
-            $curDateStr = $cur->toDateString();
-            $isWeekend = $cur->isWeekend();
-            $isHol = Holiday::isHoliday($curDateStr);
-            $dateColumns[] = [
-                'date' => $curDateStr,
-                'carbon' => $cur->copy(),
-                'label' => $cur->translatedFormat('D, d/m'),
-                'is_holiday' => $isWeekend || $isHol,
-            ];
-            $cur->addDay();
-        }
-
-        // Build a flat collection of all attendance records for condition (d) checking
-        // This allows statusOf() to check if there's at least one attendance on a given date
-        $allAttendanceRecords = collect();
-        foreach ($allAttendances as $studentId => $studentAttendances) {
-            $allAttendanceRecords = $allAttendanceRecords->merge($studentAttendances);
-        }
-
-        $studentsData = [];
-        foreach ($students as $student) {
-            // keyBy date only (YYYY-MM-DD), not datetime string
-            $stAtts = $allAttendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
-            
-            $stats = [
-                'hadir' => 0,
-                'terlambat' => 0,
-                'sakit' => 0,
-                'izin' => 0,
-                'alfa' => 0,
-                'libur' => 0,
-            ];
-
-            $rows = [];
-            foreach ($dateColumns as $col) {
-                $dStr = $col['date'];
-                $att = $stAtts->get($dStr);
-                
-                $status = '-';
-                $jamMasuk = '-';
-                $jamPulang = '-';
-                $keterlambatan = '-';
-                $keterangan = '-';
-
-                if ($att) {
-                    $status = $att->effective_status;
-                    $jamMasuk = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
-                    $jamPulang = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
-                    $keterangan = $att->notes ?? '-';
-
-                    if ($att->status === 'Hadir' && $att->time_remark === 'Terlambat') {
-                        $diff = Carbon::parse($att->check_in)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                        $lateMinutes = $diff < 0 ? (int) round(abs($diff)) : 0;
-                        $keterlambatan = rekap_format_late_minutes($lateMinutes);
-                    }
-                } else {
-                    $status = Attendance::statusOf($att, $dStr, $col['is_holiday']);
-                }
-
-                // Count stats (Rekap rules)
-                switch ($status) {
-                    case 'Hadir':
-                        $stats['hadir']++;
-                        break;
-                    case 'Terlambat':
-                        $stats['terlambat']++;
-                        break;
-                    case 'Sakit':
-                        $stats['sakit']++;
-                        break;
-                    case 'Izin':
-                        $stats['izin']++;
-                        break;
-                    case 'Alfa':
-                        $stats['alfa']++;
-                        break;
-                    case 'Libur':
-                        $stats['libur']++;
-                        break;
-                }
-
-                $rows[] = [
-                    'tanggal' => $col['carbon']->translatedFormat('l, d F Y'),
-                    'tanggal_raw' => $dStr,
-                    'jam_masuk' => $jamMasuk,
-                    'jam_pulang' => $jamPulang,
-                    'status' => $status,
-                    'keterlambatan' => $keterlambatan,
-                    'keterangan' => $keterangan,
-                ];
-            }
-
-            $totalEffective = count(array_filter($dateColumns, fn($c) => !$c['is_holiday']));
-            $totalHadir = $stats['hadir'] + $stats['terlambat'];
-            $percentage = $totalEffective > 0 ? round(($totalHadir / $totalEffective) * 100, 1) : 0;
-
-            $studentsData[] = [
-                'student' => $student,
-                'rows' => $rows,
-                'stats' => $stats,
-                'totalEffective' => $totalEffective,
-                'totalHadir' => $totalHadir,
-                'percentage' => $percentage,
-            ];
-        }
-
-        return $studentsData;
-    }
 
     /**
      * Generate PDF Rekap (per Kelas - tabel rekap).
@@ -1110,14 +883,53 @@ class RekapController extends Controller
             $classId
         );
 
-        $logoPath = public_path(Setting::getLogo());
-        $logoBase64 = null;
-        if (file_exists($logoPath)) {
-            $logoData = file_get_contents(public_path(Setting::getLogo()));
-            $logoBase64 = 'data:image/webp;base64,' . base64_encode($logoData);
-        }
+        $logoBase64 = optional(Setting::getLogo())->when(function ($relative) {
+            $path = public_path($relative);
+            $raw = file_exists($path) ? @file_get_contents($path) : null;
+            if (!$raw) {
+                return null;
+            }
+            if (function_exists('imagecreatefromstring')) {
+                try {
+                    $src = @imagecreatefromstring($raw);
+                } catch (\Throwable $e) {
+                    $src = false;
+                }
+                if ($src) {
+                    try {
+                        $w = imagesx($src);
+                        $h = imagesy($src);
+                        $max = 120;
+                        $scale = min($max / max($w, 1), $max / max($h, 1), 1.0);
+                        $nw = max(1, (int) round($w * $scale));
+                        $nh = max(1, (int) round($h * $scale));
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
+                        $dst = imagecreatetruecolor($nw, $nh);
+                        imagealphablending($dst, false);
+                        imagesavealpha($dst, true);
+                        $transparent = imagecolorallocatealpha($dst, 127, 127, 127, 127);
+                        imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
+                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+                        imagedestroy($src);
+
+                        ob_start();
+                        imagepng($dst, null, 6);
+                        $png = ob_get_clean();
+                        imagedestroy($dst);
+
+                        if ($png) {
+                            return 'data:image/png;base64,' . base64_encode($png);
+                        }
+                    } catch (\Throwable $e) {
+                        // logo tidak wajib; cetak tetap jalan
+                    }
+                }
+            }
+
+            return 'data:' . ($mime = @mime_content_type($path) ?: 'image/png') . ';base64,' . base64_encode($raw);
+        });
+
+        $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
             'title' => "Laporan Presensi {$recap['type']} - {$className}",
             'schoolName' => Setting::getSchoolName(),
             'schoolAddress' => Setting::getSchoolAddress(),
@@ -1160,12 +972,12 @@ class RekapController extends Controller
             $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             return $response;
         }, "Rekap_Presensi_{$type}_" . Str::slug($className) . ".xlsx");
-    }
-
-    /**
+    }    /**
      * Generate PDF Student Profile (per Siswa - profil lengkap).
+     * Sekarang menggunakan view yang sama dengan pdf_multi_rekap.blade.php
+     * sehingga layout, gaya, kop, keterangan, dan tanda tangan identik.
      */
-    protected function generatePdfStudentProfile(Request $request, array $studentsData, string $periodType, string $periodLabel, ?string $studentScope)
+    protected function generatePdfStudentProfile(Request $request, array $studentsData, string $periodType, string $periodLabel, ?string $studentScope, array $recap = [])
     {
         // Request cetak Per Siswa boleh berat: satu kelas x ~40 siswa x 180 hari
         // (semester) = ribuan baris tabel yang di-render dompdf sekali jalan.
@@ -1177,31 +989,67 @@ class RekapController extends Controller
         Carbon::setLocale('id');
 
         $activeYear = AcademicYear::getActive();
-        $schoolName = Setting::getSchoolName();
-        $schoolAddress = Setting::getSchoolAddress();
+        $schoolName = Setting::getSchoolName();$schoolAddress = Setting::getSchoolAddress();
+
+        $photoshopBaseUrl = config('services.photoshop.base_url', null);
         $headmasterName = Setting::getHeadmasterName();
         $headmasterNip = Setting::getHeadmasterNip();
 
-        $logoBase64 = $this->studentProfileLogoBase64();
+        $logoBase64 = $this->studentProfileLogoBase64($photoshopBaseUrl);
 
         // Satu request = satu file (ZIP sudah dihapus). Tiap siswa mulai di
         // halaman baru dan header tabel diulang tiap halaman oleh view
         // (page-break-after + thead display:table-header-group).
         $fileName = $this->studentProfileFileName($studentsData, $periodType, $studentScope, 'pdf');
 
-        // PERBAIKAN (2026-10-10): jalur cetak PER SISWA TIDAK boleh memakai
-        // DownloadCacheService. Kunci cache lama hanya 'rekap_{type}_all_pdf_' .
-        // md5([]) . '{attendanceStamp}_{settingStamp}' karena $allInputs = [] dan
-        // $classId = null. Kunci itu:
-        //   1) tidak pernah berubah => view/design baru tidak pernah meng-invalidasi,
-        //   2) tidak membedakan siswa mana yang dicetak => unduhan siswa kedua
-        //     -serving ulang PDF siswa pertama,
-        //   3) membuat "Dicetak pada" (Carbon::now) terkunci di waktu render pertama
-        //      sehingga jam CETAK selalu sama di semua unduhan berikutnya.
-        // Karena itu PDF per siswa sekarang SELALU render baru per request dan
-        // ditulis ke file sementara unik (tidak pernah dipakai ulang), lalu
-        // dihapus otomatis setelah terkirim. Per Kelas TIDAK tersentuh.
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.attendances.pdf_student_profile', [
+        // Build sections array untuk view pdf_multi_rekap (1 section = 1 siswa).
+        $sections = [];
+        foreach ($studentsData as $data) {
+            $student = $data['student'] ?? null;
+            if (!$student) {
+                continue;
+            }
+            $className = $student->schoolClass?->name ?? '-';
+            $wali = $student->schoolClass?->teacher;
+
+            // Reuse the exact same row shape produced by getRecapData() so the
+            // horizontal table in pdf_multi_rekap.blade.php receives the same
+            // keys the class rekap already expects (no new counting logic).
+            $rowData = $data;
+            unset($rowData['student']); // view membaca $section['rows'][0]['student'] sebagai model
+            $rowData['student'] = $student;
+
+            $sections[] = [
+                'class' => $student->schoolClass,
+                'className' => $className,
+                'rows' => [$rowData],
+                'waliName' => $wali?->name,
+                'waliNip' => $wali?->nip,
+                // Build heading/subtitle sama seperti buildSections di MultiPeriodAttendanceExport
+                'heading' => $this->buildStudentProfileHeading($periodType, $recap),
+                'subtitle' => $this->buildStudentProfileSubtitle($periodType, $recap, $className, $data),
+            ];
+        }
+
+        // Untuk semester/tahunan, kita perlu $months dan untuk mingguan/bulanan $dateColumns
+        $months = $recap['months'] ?? null;
+        $dateColumns = $recap['dateColumns'] ?? [];
+        $daysInMonth = $recap['daysInMonth'] ?? null;
+
+        // Build dateLabels untuk mingguan dari dateColumns
+        $dateLabels = [];
+        if ($periodType === 'mingguan' && !empty($dateColumns)) {
+            foreach ($dateColumns as $col) {
+                $dateLabels[] = [
+                    'date' => $col['date'],
+                    'label' => $col['label'] ?? $col['carbon']->translatedFormat('D, d/m'),
+                ];
+            }
+        }
+
+        $firstStudentName = $studentsData[0]['student']['name'] ?? '-';
+        $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', [
+            'title' => "Profil Presensi {$periodType} - {$firstStudentName}",
             'studentsData' => $studentsData,
             'periodType' => $periodType,
             'periodLabel' => $periodLabel,
@@ -1213,7 +1061,14 @@ class RekapController extends Controller
             'headmasterNip' => $headmasterNip,
             // Dibuat saat request, bukan nilai tersimpan.
             'printedAt' => Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB',
-        ])->setPaper('a4', 'portrait');
+            // Data untuk view (sama seperti pdf_multi_rekap)
+            'sections' => $sections,
+            'months' => $months,
+            'dateColumns' => $dateColumns,
+            'dateLabels' => $dateLabels,
+            'daysInMonth' => $daysInMonth,
+            'type' => $periodType,
+        ])->setPaper('a4', 'landscape');
 
         $tempDir = storage_path('app/temp/profile_siswa_pdf');
         File::ensureDirectoryExists($tempDir);
@@ -1231,9 +1086,69 @@ class RekapController extends Controller
     }
 
     /**
-     * Generate Excel Student Profile (per Siswa - profil lengkap).
+     * Build heading untuk student profile PDF (sama seperti MultiPeriodAttendanceExport::buildHeading).
      */
-    protected function generateExcelStudentProfile(Request $request, array $studentsData, string $periodType, string $periodLabel, ?string $studentScope)
+    protected function buildStudentProfileHeading(string $periodType, array $recap): string
+    {
+        Carbon::setLocale('id');
+        $schoolName = Setting::getSchoolName();
+
+        if ($periodType === 'semester') {
+            $semester = ($recap['period_semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
+            return 'LAPORAN REKAPITULASI PRESENSI SEMESTER ' . strtoupper($semester);
+        }
+        if ($periodType === 'tahunan') {
+            return 'LAPORAN REKAPITULASI PRESENSI TAHUNAN';
+        }
+
+        $label = strtoupper($periodType);
+        return 'LAPORAN REKAPITULASI PRESENSI ' . $label . ' - ' . ($schoolName ?: '-');
+    }
+
+    /**
+     * Build subtitle untuk student profile PDF (sama seperti MultiPeriodAttendanceExport::buildSubtitle).
+     */
+    protected function buildStudentProfileSubtitle(string $periodType, array $recap, string $className, array $data): string
+    {
+        Carbon::setLocale('id');
+        $now = Carbon::now('Asia/Jakarta');
+
+        if ($periodType === 'harian') {
+            $date = $recap['date'] ?? $now->toDateString();
+            $period = 'Tanggal: ' . Carbon::parse($date)->translatedFormat('l, d F Y');
+        } elseif ($periodType === 'mingguan') {
+            $dateColumns = $recap['dateColumns'] ?? [];
+            if (!empty($dateColumns)) {
+                $start = Carbon::parse($dateColumns[0]['date']);
+                $end = Carbon::parse(end($dateColumns)['date']);
+                $period = 'Periode: ' . $start->translatedFormat('d M Y') . ' s/d ' . $end->translatedFormat('d M Y');
+            } else {
+                $period = 'Periode: -';
+            }
+        } elseif ($periodType === 'semester' || $periodType === 'tahunan') {
+            $startDate = $recap['startDate'] ?? '';
+            $endDate = $recap['endDate'] ?? '';
+            $period = 'Periode: ' . Carbon::parse($startDate)->translatedFormat('F Y')
+                . ' s/d ' . Carbon::parse($endDate)->translatedFormat('F Y');
+        } else {
+            // Bulanan
+            $month = (int) ($recap['month'] ?? $now->month);
+            $year = (int) ($recap['year'] ?? $now->year);
+            $period = 'Bulan: ' . Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
+        }
+
+        $activeYear = AcademicYear::getActive();
+
+        return $period
+            . ' | Kelas: ' . $className
+            . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
+    }
+
+    /**
+     * Generate Excel Student Profile (per Siswa - profil lengkap).
+     * Transform data ke format yang diharapkan StudentProfileExport.
+     */
+    protected function generateExcelStudentProfile(Request $request, array $studentsData, string $periodType, string $periodLabel, ?string $studentScope, array $recap = [])
     {
         ini_set('memory_limit', '1024M');
         ini_set('max_execution_time', '300');
@@ -1245,17 +1160,125 @@ class RekapController extends Controller
         $schoolName = Setting::getSchoolName();
         $schoolAddress = Setting::getSchoolAddress();
 
+        // Transform studentsData ke format yang diharapkan StudentProfileExport
+        $excelData = $this->transformForExcelExport($studentsData, $periodType, $recap);
+
         // Satu request = satu file: satu sheet per siswa di dalam 1 workbook.
         $fileName = $this->studentProfileFileName($studentsData, $periodType, $studentScope, 'xlsx');
 
         $response = Excel::download(
-            new \App\Exports\StudentProfileExport($studentsData, $periodType, $periodLabel, $activeYear, $schoolName, $schoolAddress),
+            new \App\Exports\StudentProfileExport($excelData, $periodType, $periodLabel, $activeYear, $schoolName, $schoolAddress),
             $fileName
         );
         // Maatwebsite tidak selalu mengisi Content-Type untuk multi-sheet.
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
         return $response;
+    }
+
+    /**
+     * Transform studentsData ke format yang diharapkan StudentProfileExport.
+     * StudentProfileExport expects:
+     * - rows: array of daily rows with tanggal_raw, jam_masuk, jam_pulang, status, keterlambatan, keterangan
+     * - stats: array with hadir, terlambat, sakit, izin, alfa, libur
+     * - totalEffective, totalHadir, percentage
+     */
+    protected function transformForExcelExport(array $studentsData, string $periodType, array $recap): array
+    {
+        $transformed = [];
+        foreach ($studentsData as $data) {
+            $student = $data['student'] ?? null;
+            if (!$student) {
+                continue;
+            }
+
+            // Build rows untuk Excel export
+            $rows = [];
+            if ($periodType === 'harian') {
+                // Harian: satu baris untuk tanggal tersebut
+                $rows[] = [
+                    'tanggal_raw' => $recap['date'] ?? Carbon::now()->toDateString(),
+                    'jam_masuk' => $data['check_in'] ?? '-',
+                    'jam_pulang' => '-',  // Excel export expects jam_pulang
+                    'status' => $data['status'] ?? '-',
+                    'keterlambatan' => $data['late_text'] ?? '-',
+                    'keterangan' => $data['notes'] ?? '-',
+                ];
+            } elseif (in_array($periodType, ['mingguan', 'bulanan'], true)) {
+                // Mingguan/Bulanan: build dari days array
+                $dateColumns = $recap['dateColumns'] ?? [];
+                foreach ($dateColumns as $col) {
+                    $code = $data['days'][$col['date']] ?? '-';
+                    $rows[] = [
+                        'tanggal_raw' => $col['date'],
+                        'jam_masuk' => '-',  // Tidak tersedia di format horizontal
+                        'jam_pulang' => '-',
+                        'status' => $this->codeToStatus($code),
+                        'keterlambatan' => $code === 'T' ? 'Terlambat' : '-',
+                        'keterangan' => '-',  // Tidak tersedia di format horizontal
+                    ];
+                }
+            } elseif (in_array($periodType, ['semester', 'tahunan'], true)) {
+                // Semester/Tahunan: build dari monthly data (per bulan)
+                $months = $recap['months'] ?? [];
+                $monthly = $data['monthly'] ?? [];
+                foreach ($months as $monthInfo) {
+                    $hadirCount = $monthly[$monthInfo['key']] ?? 0;
+                    // Untuk Excel, kita hanya mencatat total hadir per bulan
+                    // karena detail harian tidak tersedia di format horizontal
+                    $rows[] = [
+                        'tanggal_raw' => $monthInfo['key'] . '-01',  // First day of month
+                        'jam_masuk' => '-',
+                        'jam_pulang' => '-',
+                        'status' => $hadirCount > 0 ? 'Hadir' : '-',  // Simplified
+                        'keterlambatan' => '-',  // Tidak tersedia
+                        'keterangan' => $hadirCount > 0 ? "{$hadirCount} hari hadir" : '-',  // Info di keterangan
+                    ];
+                }
+            }
+
+            // Build stats
+            $stats = [
+                'hadir' => $data['hadir'] ?? 0,
+                'terlambat' => $data['terlambat'] ?? 0,
+                'sakit' => $data['sakit'] ?? 0,
+                'izin' => $data['izin'] ?? 0,
+                'alfa' => $data['alfa'] ?? 0,
+                'libur' => 0,  // Tidak dihitung di format horizontal
+            ];
+
+            // Total hari efektif (ini estimasi based on period type)
+            $totalEffective = ($data['hadir'] ?? 0) + ($data['terlambat'] ?? 0) + ($data['sakit'] ?? 0) + ($data['izin'] ?? 0) + ($data['alfa'] ?? 0);
+            $totalHadir = ($data['hadir'] ?? 0) + ($data['terlambat'] ?? 0);
+            $percentage = $data['percentage'] ?? 0;
+
+            $transformed[] = [
+                'student' => $student,
+                'rows' => $rows,
+                'stats' => $stats,
+                'totalEffective' => $totalEffective,
+                'totalHadir' => $totalHadir,
+                'percentage' => $percentage,
+            ];
+        }
+
+        return $transformed;
+    }
+
+    /**
+     * Konversi kode status (H, T, S, I, A, L, -) ke status teks.
+     */
+    protected function codeToStatus(string $code): string
+    {
+        return match ($code) {
+            'H' => 'Hadir',
+            'T' => 'Terlambat',
+            'S' => 'Sakit',
+            'I' => 'Izin',
+            'A' => 'Alfa',
+            'L' => 'Libur',
+            default => '-',
+        };
     }
 
     /**
@@ -1268,7 +1291,7 @@ class RekapController extends Controller
      * string base64 yang sama dipakai untuk semua siswa. Tetap tajam karena di
      * PDF logo hanya dicetak ~13 mm (52 px pada 96 dpi).
      */
-    protected function studentProfileLogoBase64(): ?string
+    protected function studentProfileLogoBase64(?string $photoshopBaseUrl = null): ?string
     {
         static $cache = null;
         static $resolved = false;
@@ -1277,6 +1300,14 @@ class RekapController extends Controller
             return $cache;
         }
         $resolved = true;
+
+        // Mode Photoshop: kembalikan data kosong supaya template CONDONG
+        // menggambar kwadran gelap, ikon bintang, dan nama kelas kotak biru.
+        // Jalur ini hanya diaktifkan bila pengaturan sudah memenuhi syarat
+        // (lihat "`config/services.php` → `photoshop.*`" pada README).
+        if (is_string($photoshopBaseUrl) && preg_match('#^https?://#', $photoshopBaseUrl)) {
+            return $cache = '';
+        }
 
         $relative = Setting::getLogo();
         if (!$relative) {

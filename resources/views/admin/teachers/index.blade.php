@@ -531,7 +531,7 @@
 
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
-                            <input type="text" name="nip" id="teacherNip" class="form-control rounded-3" placeholder="{{ __('18 digit angka') }}" inputmode="numeric" maxlength="18" autocomplete="off">
+                            <input type="text" name="nip" id="teacherNip" class="form-control rounded-3" placeholder="{{ __('16 atau 18 digit angka') }}" inputmode="numeric" maxlength="18" autocomplete="off">
                             <div class="field-error"></div>
                         </div>
 
@@ -574,7 +574,7 @@
                     <div class="modal-body">
                         <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                             <div class="mb-2">
-                                {{ __('Format kolom file Excel:') }} <strong>{{ __('NIP, Nama Lengkap, Jenis Kelamin, No. Telepon') }}</strong> {{ __('(.xlsx atau .csv)') }}
+                                {{ __('Format kolom file Excel:') }} <strong>{{ __('NIP, Nama Lengkap, Jenis Kelamin, No. Telepon') }}</strong> {{ __('NIP/NUPTK 16 atau 18 digit angka.') }} {{ __('(.xlsx atau .csv)') }}
                             </div>
                             <a href="{{ panel_route('guru.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                         </div>
@@ -800,8 +800,8 @@ console.log('[import-handler] aktif');
         }
 
         const nipVal = (nip ? nip.value : '').trim();
-        if (!/^\d{18}$/.test(nipVal)) {
-            apply(nip, 'NIP harus 18 digit angka.');
+        if (!/^(\d{16}|\d{18})$/.test(nipVal)) {
+            apply(nip, 'NIP/NUPTK harus 16 atau 18 digit angka.');
             ok = false;
         } else {
             apply(nip, '');

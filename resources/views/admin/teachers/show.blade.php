@@ -352,7 +352,7 @@
     function nipCheck() {
         var v = editNip ? editNip.value.trim() : '';
         if (!v) return { ok: false, msg: 'NIP wajib diisi.' };
-        if (!/^[0-9]{18}$/.test(v)) return { ok: false, msg: 'NIP harus 18 digit angka.' };
+        if (!/^(\d{16}|\d{18})$/.test(v)) return { ok: false, msg: 'NIP/NUPTK harus 16 atau 18 digit angka.' };
         return { ok: true };
     }
 

@@ -102,6 +102,161 @@
         color: #ffffff;
         cursor: default;
     }
+
+    /* Kontainer tabel sampah dengan jarak bawah agar tidak tertutup tombol scroll melayang */
+    .trash-table-container {
+        padding-bottom: 96px;
+    }
+
+    /* ===== Kartu Zona Berbahaya (Varian A - Merah Muda) ===== */
+    .danger-zone-card {
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-top: 24px;
+    }
+    .danger-zone-title {
+        color: #7f1d1d;
+        font-weight: 700;
+        font-size: 14.5px;
+        line-height: 1.35;
+    }
+    .danger-zone-desc {
+        color: #b91c1c;
+        opacity: 1;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+    .danger-zone-btn {
+        background-color: #dc2626;
+        color: #ffffff;
+        border: 1px solid #dc2626;
+        font-weight: 500;
+        padding: 9px 18px;
+        border-radius: 10px;
+        white-space: nowrap;
+        font-size: 14px;
+        line-height: 1.4;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .danger-zone-btn:hover {
+        background-color: #b91c1c;
+        border-color: #b91c1c;
+        color: #ffffff;
+    }
+    @media (max-width: 639.98px) {
+        .danger-zone-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+        }
+        .danger-zone-btn {
+            width: 100%;
+        }
+    }
+
+    /* Dark mode support */
+    [data-bs-theme="dark"] .danger-zone-card,
+    [data-theme="dark"] .danger-zone-card,
+    .dark .danger-zone-card {
+        background-color: rgba(220, 38, 38, 0.12) !important;
+        border-color: rgba(220, 38, 38, 0.35) !important;
+    }
+    [data-bs-theme="dark"] .danger-zone-title,
+    [data-theme="dark"] .danger-zone-title,
+    .dark .danger-zone-title {
+        color: #fecaca !important;
+    }
+    [data-bs-theme="dark"] .danger-zone-desc,
+    [data-theme="dark"] .danger-zone-desc,
+    .dark .danger-zone-desc {
+        color: #fca5a5 !important;
+    }
+
+    /* ===== Tombol Melayang Scroll Dinamis (Ke Bawah / Ke Atas) =====
+       Bulat 44px, biru tema (#2563eb), ikon putih, shadow lembut.
+       Melayang di kanan bawah area konten tanpa menutupi tombol Aksi di tabel. */
+    .btn-floating-scroll-down {
+        position: fixed;
+        bottom: 24px;
+        right: 28px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background-color: #2563eb;
+        color: #ffffff !important;
+        border: none;
+        outline: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        z-index: 1040;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(12px) scale(0.92);
+        transition: opacity 0.2s ease, transform 150ms ease, visibility 0.2s ease, background-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .btn-floating-scroll-down.is-visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+    }
+
+    .btn-floating-scroll-down:hover {
+        background-color: #1d4ed8;
+        color: #ffffff !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-floating-scroll-down:active {
+        transform: translateY(0) scale(0.96);
+    }
+
+    .btn-floating-scroll-down:focus-visible {
+        outline: 2px solid #93c5fd;
+        outline-offset: 2px;
+    }
+
+    .btn-floating-scroll-down i {
+        font-size: 26px;
+        line-height: 1;
+        color: #ffffff;
+        display: inline-block;
+        transition: transform 200ms ease;
+        transform: rotate(0deg);
+    }
+
+    .btn-floating-scroll-down.is-at-bottom i {
+        transform: rotate(180deg);
+    }
+
+    @media (max-width: 767.98px) {
+        .btn-floating-scroll-down {
+            bottom: calc(var(--bottom-nav-h, 56px) + 16px);
+            right: 16px;
+            width: 42px;
+            height: 42px;
+        }
+        .btn-floating-scroll-down i {
+            font-size: 24px;
+        }
+    }
 </style>
 @endpush
 
@@ -187,77 +342,130 @@
         </p>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
-        <div class="table-responsive">
-            <table class="table table-zebra-custom align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th class="text-center py-3 px-3">{{ __('No') }}</th>
-                        <th class="text-center py-3 px-3">{{ __('NIP') }}</th>
-                        <th class="text-center py-3 px-3">{{ __('Nama Guru') }}</th>
-                        <th class="text-center py-3 px-3">{{ __('Kelas') }}</th>
-                        <th class="text-center py-3 px-3">{{ __('Tanggal Dihapus') }}</th>
-                        <th class="text-center py-3 px-3">{{ __('Aksi') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($teachers as $index => $teacher)
-                    <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle">
-                        <td data-label="{{ __('No') }}" class="text-center px-3">{{ $teachers->firstItem() + $index }}</td>
-                        <td data-label="{{ __('NIP') }}" class="text-center px-3">{{ $teacher->nip }}</td>
-                        <td data-label="{{ __('Nama Guru') }}" class="text-center px-3 fw-semibold">{{ $teacher->name }}</td>
-                        <td data-label="{{ __('Kelas') }}" class="text-center px-3">{{ $teacher->schoolClass->name ?? '-' }}</td>
-                        <td data-label="{{ __('Tanggal Dihapus') }}" class="text-center px-3">{{ $teacher->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
-                        <td data-label="{{ __('Aksi') }}" class="text-center px-3">
-                            <div class="d-flex justify-content-center gap-2">
-                                <form action="{{ panel_route('teachers.restore', $teacher->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn-restore" title="{{ __('Pulihkan') }}">{{ __('Pulihkan') }}</button>
-                                </form>
-                                <button type="button" class="btn-force-delete" title="{{ __('Hapus Permanen') }}" onclick="confirmForceDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
-                                    {{ __('Hapus Permanen') }}
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted empty-state">
-                            <i class='bx bx-error' aria-hidden='true'></i>
-                            {{ __('Tidak ada data guru di Tempat Sampah') }}
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <div class="trash-table-container">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+            <div class="table-responsive">
+                <table class="table table-zebra-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center py-3 px-3">{{ __('No') }}</th>
+                            <th class="text-center py-3 px-3">{{ __('NIP') }}</th>
+                            <th class="text-center py-3 px-3">{{ __('Nama Guru') }}</th>
+                            <th class="text-center py-3 px-3">{{ __('Kelas') }}</th>
+                            <th class="text-center py-3 px-3">{{ __('Tanggal Dihapus') }}</th>
+                            <th class="text-center py-3 px-3">{{ __('Aksi') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($teachers as $index => $teacher)
+                        <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }} align-middle">
+                            <td data-label="{{ __('No') }}" class="text-center px-3">{{ $teachers->firstItem() + $index }}</td>
+                            <td data-label="{{ __('NIP') }}" class="text-center px-3">{{ $teacher->nip }}</td>
+                            <td data-label="{{ __('Nama Guru') }}" class="text-center px-3 fw-semibold">{{ $teacher->name }}</td>
+                            <td data-label="{{ __('Kelas') }}" class="text-center px-3">{{ $teacher->schoolClass->name ?? '-' }}</td>
+                            <td data-label="{{ __('Tanggal Dihapus') }}" class="text-center px-3">{{ $teacher->deleted_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
+                            <td data-label="{{ __('Aksi') }}" class="text-center px-3">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <form action="{{ panel_route('teachers.restore', $teacher->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn-restore" title="{{ __('Pulihkan') }}">{{ __('Pulihkan') }}</button>
+                                    </form>
+                                    <button type="button" class="btn-force-delete" title="{{ __('Hapus Permanen') }}" onclick="confirmForceDeleteTeacher('{{ $teacher->id }}', '{{ addslashes($teacher->name) }}')">
+                                        {{ __('Hapus Permanen') }}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted empty-state">
+                                <i class='bx bx-error' aria-hidden='true'></i>
+                                {{ __('Tidak ada data guru di Tempat Sampah') }}
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {!! render_compact_pagination($teachers, 'daftar-arsip-guru') !!}
         </div>
 
-        {!! render_compact_pagination($teachers, 'daftar-arsip-guru') !!}
+        <!-- Zona Berbahaya (Gaya GitHub) -->
+        @if(Auth::check() && Auth::user()->role === 'admin' && $trashedCount > 0)
+        <div id="danger-zone" class="danger-zone-card">
+            <div class="d-flex align-items-center" style="gap: 12px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0" aria-hidden="true">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div>
+                    <div class="danger-zone-title">{{ __('Hapus semua data guru') }}</div>
+                    <div class="danger-zone-desc">{{ __('Menghapus permanen :total data. Tidak bisa dikembalikan.', ['total' => $trashedCount]) }}</div>
+                </div>
+            </div>
+
+            <button type="button"
+                    id="btnDeleteAllTeacherArchive"
+                    class="danger-zone-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteAllConfirmModal"
+                    title="{{ __('Hapus semua data guru') }}">
+                {{ __('Hapus semua') }}
+            </button>
+        </div>
+        @endif
     </div>
 
-    <!-- Zona Berbahaya: HAPUS SEMUA isi Tempat Sampah Guru (permanen).
-         Dialog-nya memakai confirmUniversalDelete() dari layout bersama,
-         jadi sama persis dengan dialog di halaman Sampah Siswa: ikon bulat
-         merah muda, judul rata tengah, dua checkbox polos, tombol Batal +
-         "Hapus Permanen" 50/50, dan tombol NONAKTIF (pudar, not-allowed)
-         sampai kedua checkbox dicentang. -->
-    @if(Auth::check() && Auth::user()->role === 'admin')
-    <div class="card border border-danger rounded-4 p-4 bg-white">
-        <h6 class="fw-bold text-danger mb-2">{{ __('Zona Berbahaya') }}</h6>
-        <p class="text-secondary small mb-3">
-            {{ __('Tindakan ini menghapus permanen seluruh isi Tempat Sampah') }} ({{ $trashedCount }} {{ __('data guru') }}).
-            {{ __('Guru yang masih aktif tidak ikut terhapus. Data yang dihapus permanen tidak dapat dikembalikan.') }}
-        </p>
-
-        <button type="button"
-                id="btnDeleteAllTeacherArchive"
-                class="btn btn-danger rounded-3 px-4 fw-semibold"
-                onclick="confirmDeleteAllTeacherArchive()"
-                title="{{ __('Hapus permanen seluruh isi Tempat Sampah Guru') }}"
-                {{ $trashedCount === 0 ? 'disabled' : '' }}>
-            {{ __('Hapus Semua Guru (Permanen)') }}
-        </button>
+    <!-- Modal Konfirmasi Ketik HAPUS (Guru) -->
+    @if(Auth::check() && Auth::user()->role === 'admin' && $trashedCount > 0)
+    <div class="modal fade" id="deleteAllConfirmModal" tabindex="-1" aria-labelledby="deleteAllConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="fw-bold mb-0 text-dark" id="deleteAllConfirmModalLabel">
+                        {{ __('Hapus semua data secara permanen?') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Tutup') }}"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p class="text-secondary small mb-3">
+                        {{ __('Menghapus permanen seluruh :total data guru di Tempat Sampah. Data yang dihapus tidak bisa dikembalikan.', ['total' => $trashedCount]) }}
+                    </p>
+                    <div class="mb-2">
+                        <label for="confirmDeleteInput" class="form-label small fw-semibold text-secondary">
+                            {{ __('Ketik HAPUS untuk melanjutkan') }}
+                        </label>
+                        <input type="text"
+                               id="confirmDeleteInput"
+                               class="form-control rounded-3"
+                               placeholder="{{ __('HAPUS') }}"
+                               autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">
+                        {{ __('Batal') }}
+                    </button>
+                    <button type="button" id="btnConfirmDeleteAllModal" class="btn btn-danger rounded-3 px-3 fw-semibold" disabled>
+                        {{ __('Ya, hapus semua') }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+    @endif
+
+    {{-- Tombol Melayang (Floating Button) Scroll Dinamis (Ke Bawah / Ke Atas) --}}
+    @if(Auth::check() && Auth::user()->role === 'admin' && $trashedCount > 0)
+    <button type="button"
+            id="btnScrollToDangerZone"
+            class="btn-floating-scroll-down"
+            title="{{ __('Ke bawah') }}"
+            aria-label="{{ __('Ke bawah') }}">
+        <i class='bx bx-chevron-down' aria-hidden="true"></i>
+    </button>
     @endif
 
 <!-- Form tersembunyi untuk konfirmasi hapus permanen. Dialog-nya sendiri
@@ -319,41 +527,198 @@
     }
 
     /**
-     * Konfirmasi HAPUS SELURUH isi Tempat Sampah Guru (permanen).
-     *
-     * Memakai confirmUniversalDelete() dari layout bersama supaya tema, ukuran,
-     * animasi, dan tombol nonaktif-hingga-checkbox-nya SAMA PERSIS dengan
-     * dialog "Hapus Semua dari Tempat Sampah?" di halaman Sampah Siswa.
-     *
-     * Kalau Tempat Sampah kosong, dialog tidak muncul sama sekali karena
-     * tombolnya sudah disabled di sisi tampilan (blade).
+     * Modal Konfirmasi HAPUS SEMUA isi Tempat Sampah Guru.
+     * Menggunakan modal gaya aplikasi dengan validasi ketik "HAPUS".
      */
-    function confirmDeleteAllTeacherArchive() {
-        const total = {{ (int) $trashedCount }};
-        const btn = document.getElementById('btnDeleteAllTeacherArchive');
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('deleteAllConfirmModal');
+        if (!modalEl) return;
 
-        // Tidak ada yang bisa dihapus -> jangan tampilkan dialog sama sekali.
-        if (total <= 0 || (btn && btn.disabled)) return;
+        const input = document.getElementById('confirmDeleteInput');
+        const confirmBtn = document.getElementById('btnConfirmDeleteAllModal');
+        const form = document.getElementById('deleteAllTeacherArchiveForm');
 
-        confirmUniversalDelete({
-            title: {!! json_encode(__('Hapus Semua dari Tempat Sampah?')) !!},
-            icon: 'bx-error-circle',
-            html: '<strong>' + total + ' ' + {!! json_encode(__('guru')) !!} + '</strong> ' + {!! json_encode(__('di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.')) !!},
-            confirmText: {!! json_encode(__('Hapus Permanen')) !!},
-            cancelText: {!! json_encode(__('Batal')) !!},
-            checks: [
-                {!! json_encode(__('Saya memahami data yang dihapus permanen tidak dapat dikembalikan.')) !!},
-                {!! json_encode(__('Saya yakin ingin menghapus semua data di Tempat Sampah.')) !!}
-            ],
-            onConfirm: function () {
-                const form = document.getElementById('deleteAllTeacherArchiveForm');
-                if (!form) {
-                    console.error('HAPUS SEMUA TEMPAT SAMPAH GURU: form deleteAllTeacherArchiveForm tidak ditemukan. Muat ulang halaman.');
-                    return;
-                }
-                form.submit();
+        modalEl.addEventListener('show.bs.modal', function () {
+            if (input) {
+                input.value = '';
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
             }
         });
+
+        modalEl.addEventListener('shown.bs.modal', function () {
+            if (input) {
+                input.focus();
+            }
+        });
+
+        if (input && confirmBtn) {
+            input.addEventListener('input', function () {
+                const val = this.value.trim().toUpperCase();
+                confirmBtn.disabled = (val !== 'HAPUS');
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!confirmBtn.disabled) {
+                        confirmBtn.click();
+                    }
+                }
+            });
+        }
+
+        if (confirmBtn && form) {
+            confirmBtn.addEventListener('click', function () {
+                if (confirmBtn.disabled) return;
+                confirmBtn.disabled = true;
+                form.submit();
+            });
+        }
+    });
+
+    function confirmDeleteAllTeacherArchive() {
+        const modalEl = document.getElementById('deleteAllConfirmModal');
+        if (!modalEl) return;
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    /**
+     * Tombol Floating Tunggal Dinamis (Scroll ke Bawah / Kembali ke Atas).
+     *
+     * Perilaku:
+     * - Tampil hanya bila konten memiliki overflow vertikal (bisa di-scroll).
+     * - Belum sampai bawah: ikon panah bawah, title/aria "Ke bawah".
+     *   Klik = smooth scroll ke paling bawah (Zona Berbahaya).
+     * - Sudah sampai bawah (jarak ke dasar container < 40px):
+     *   Ikon berputar 180° jadi panah atas (animasi 200ms), title/aria "Ke atas".
+     *   Klik = smooth scroll kembali ke paling atas.
+     * - Deteksi scroll menggunakan listener pada container scrollbar (.flex-1)
+     *   dengan passive: true dan window.requestAnimationFrame.
+     * - Cek ulang otomatis saat load, resize window, perubahan baris (MutationObserver),
+     *   maupun navigasi tab.
+     */
+    function initDynamicScrollButton() {
+        const btn = document.getElementById('btnScrollToDangerZone');
+        if (!btn) return;
+
+        function getScrollContainer() {
+            const el = document.querySelector('.content-scroll-wrapper > main > .flex-1') ||
+                       document.querySelector('main > .flex-1');
+            if (el) return el;
+
+            let parent = btn.parentElement;
+            while (parent && parent !== document.body && parent !== document.documentElement) {
+                const style = window.getComputedStyle(parent);
+                if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+                    return parent;
+                }
+                parent = parent.parentElement;
+            }
+            return document.documentElement;
+        }
+
+        const container = getScrollContainer();
+        if (!container) return;
+
+        let ticking = false;
+
+        function checkPosition() {
+            if (!btn || !container) return;
+
+            const isScrollable = (container.scrollHeight - container.clientHeight) > 40;
+            if (!isScrollable) {
+                btn.classList.remove('is-visible');
+                return;
+            }
+
+            btn.classList.add('is-visible');
+
+            // Hitung sudah di bawah dengan: scrollTop + clientHeight >= scrollHeight - 40
+            const isAtBottom = (container.scrollTop + container.clientHeight) >= (container.scrollHeight - 40);
+
+            if (isAtBottom) {
+                btn.classList.add('is-at-bottom');
+                btn.setAttribute('title', {!! json_encode(__('Ke atas')) !!});
+                btn.setAttribute('aria-label', {!! json_encode(__('Ke atas')) !!});
+            } else {
+                btn.classList.remove('is-at-bottom');
+                btn.setAttribute('title', {!! json_encode(__('Ke bawah')) !!});
+                btn.setAttribute('aria-label', {!! json_encode(__('Ke bawah')) !!});
+            }
+        }
+
+        function requestCheck() {
+            if (!ticking) {
+                window.requestAnimationFrame(function () {
+                    checkPosition();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const isAtBottom = (container.scrollTop + container.clientHeight) >= (container.scrollHeight - 40);
+
+            if (isAtBottom) {
+                // Smooth scroll kembali ke paling atas
+                try {
+                    container.scrollTo({ top: 0, behavior: 'smooth' });
+                } catch (err) {
+                    container.scrollTop = 0;
+                }
+            } else {
+                // Smooth scroll ke paling bawah (Zona Berbahaya / tombol Hapus semua)
+                try {
+                    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+                } catch (err) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+
+            setTimeout(requestCheck, 150);
+            setTimeout(requestCheck, 400);
+            setTimeout(requestCheck, 800);
+        });
+
+        // Pasang listener scroll pada container yang benar, bukan window
+        container.addEventListener('scroll', requestCheck, { passive: true });
+        window.addEventListener('resize', requestCheck, { passive: true });
+        window.addEventListener('pageshow', requestCheck, { passive: true });
+        window.addEventListener('load', requestCheck, { passive: true });
+
+        // Cek ulang saat jumlah baris berubah (setelah pulihkan atau hapus data)
+        if ('MutationObserver' in window) {
+            const mutObserver = new MutationObserver(function () {
+                requestCheck();
+            });
+            mutObserver.observe(container, { childList: true, subtree: true });
+        }
+
+        // Cek ulang saat ukuran kontainer berubah
+        if ('ResizeObserver' in window) {
+            const resObserver = new ResizeObserver(function () {
+                requestCheck();
+            });
+            resObserver.observe(container);
+        }
+
+        // Cek posisi saat halaman dimuat
+        requestCheck();
+        setTimeout(requestCheck, 100);
+        setTimeout(requestCheck, 350);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDynamicScrollButton);
+    } else {
+        initDynamicScrollButton();
     }
 </script>
 @endpush

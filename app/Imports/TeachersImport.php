@@ -13,11 +13,14 @@ class TeachersImport implements ToCollection, WithHeadingRow
     protected int $importedCount = 0;
     protected int $skippedCount = 0;
 
-    /** @var array<string, int> */
+    /** @var array<string, true> */
     private array $seenNipInFile = [];
-
     /** @var array<string, true> */
     private array $existingNip = [];
+    /** @var array<string, true> */
+    private array $seenNamePhoneInFile = [];
+    /** @var array<string, true> */
+    private array $existingNamePhone = [];
 
     /** @var array<int, array{0: int, 1: string}> */
     private array $orderedErrors = [];
@@ -72,6 +75,13 @@ class TeachersImport implements ToCollection, WithHeadingRow
         return preg_replace('/[^0-9]/', '', $value);
     }
 
+    private static function normalizeNamePhoneKey(string $name, string $phone): string
+    {
+        $name = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $name)), 'UTF-8');
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        return $name . '|' . $phone;
+    }
+
     private function registerError(int $rowIndex, string $reason): void
     {
         $this->orderedErrors[] = [$rowIndex, $reason];
@@ -85,6 +95,17 @@ class TeachersImport implements ToCollection, WithHeadingRow
             ->map(fn ($t) => trim((string) $t->nip))
             ->reduce(function (array $carry, string $nip) {
                 $carry[$nip] = true;
+                return $carry;
+            }, []);
+
+        $this->existingNamePhone = Teacher::withTrashed()
+            ->get(['name', 'phone'])
+            ->filter(fn ($t) => trim((string) $t->name) !== '')
+            ->reduce(function (array $carry, $t) {
+                $key = self::normalizeNamePhoneKey((string) $t->name, (string) $t->phone);
+                if ($key !== '') {
+                    $carry[$key] = true;
+                }
                 return $carry;
             }, []);
 
@@ -103,11 +124,12 @@ class TeachersImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Validasi NIP (opsional di Excel, tapi jika diisi harus 18 digit dan unik)
+            // Validasi NIP (opsional di Excel, tapi jika diisi harus 16 atau 18 digit dan unik)
+            $namePhoneKey = self::normalizeNamePhoneKey($name, $phone);
             if ($nip !== '') {
-                if (!preg_match('/^[0-9]{18}$/', $nip)) {
+                if (!preg_match('/^(\d{16}|\d{18})$/', $nip)) {
                     $this->skippedCount++;
-                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP harus 18 digit angka. Baris dilewati.");
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP/NUPTK harus 16 atau 18 digit angka. Baris dilewati.");
                     continue;
                 }
 
@@ -125,6 +147,31 @@ class TeachersImport implements ToCollection, WithHeadingRow
 
                 $this->seenNipInFile[$nip] = $rowIndex;
                 $this->existingNip[$nip] = true;
+
+                // Juga catat nama+telepon agar baris kosong-NIP berikutnya
+                // dengan nama+telepon sama tetap terdeteksi sebagai duplikat.
+                if ($namePhoneKey !== '|') {
+                    $this->seenNamePhoneInFile[$namePhoneKey] = true;
+                    $this->existingNamePhone[$namePhoneKey] = true;
+                }
+            }
+
+            // Jika NIP kosong: deteksi duplikat berdasarkan nama (dinormalisasi) + no. telepon.
+            if ($nip === '' && $namePhoneKey !== '|') {
+                if (isset($this->seenNamePhoneInFile[$namePhoneKey])) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: Nama sudah terdaftar. Baris dilewati.");
+                    continue;
+                }
+
+                if (isset($this->existingNamePhone[$namePhoneKey])) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: Nama sudah terdaftar. Baris dilewati.");
+                    continue;
+                }
+
+                $this->seenNamePhoneInFile[$namePhoneKey] = true;
+                $this->existingNamePhone[$namePhoneKey] = true;
             }
 
             // Validasi Nama Lengkap

@@ -52,20 +52,36 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s.,\'\-]+$/u'],
-            'nip' => ['required', 'digits:18', 'unique:teachers,nip'],
+            'nip' => ['required', 'regex:/^(\d{16}|\d{18})$/', 'unique:teachers,nip'],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
             'phone_number' => ['required', 'regex:/^\d{10,15}$/'],
         ], [
             'name.required' => __('Nama lengkap wajib diisi.'),
             'name.regex' => __('Format nama hanya boleh huruf dan tanda baca.'),
-            'nip.required' => __('NIP harus 18 digit angka.'),
-            'nip.digits' => __('NIP harus 18 digit angka.'),
+            'nip.required' => __('NIP/NUPTK harus 16 atau 18 digit angka.'),
+            'nip.regex' => __('NIP/NUPTK harus 16 atau 18 digit angka.'),
             'nip.unique' => __('NIP sudah terdaftar.'),
             'gender.required' => __('Pilih jenis kelamin.'),
             'gender.in' => __('Pilih jenis kelamin.'),
             'phone_number.required' => __('Nomor telepon harus 10-15 digit angka.'),
             'phone_number.regex' => __('Nomor telepon harus 10-15 digit angka.'),
         ]);
+
+        // Deteksi duplikat nama secara manual (form Tambah Guru Baru).
+        $namaDuplikat = Teacher::where('name', $validated['name'])
+            ->whereNull('deleted_at')
+            ->exists();
+        if ($namaDuplikat) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Nama guru sudah terdaftar.',
+                    'errors' => ['name' => ['Nama guru sudah terdaftar.']],
+                ], 422);
+            }
+            return back()->withErrors(['name' => 'Nama guru sudah terdaftar.'])
+                ->withInput();
+        }
 
         $validated['phone'] = $validated['phone_number'];
         $validated['qr_token'] = (string) Str::uuid();
@@ -88,14 +104,14 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s.,\'\-]+$/u'],
-            'nip' => ['required', 'digits:18', 'unique:teachers,nip,' . $teacher->id],
+            'nip' => ['required', 'regex:/^(\d{16}|\d{18})$/', 'unique:teachers,nip,' . $teacher->id],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
             'phone_number' => ['required', 'regex:/^\d{10,15}$/'],
         ], [
             'name.required' => __('Nama lengkap wajib diisi.'),
             'name.regex' => __('Format nama hanya boleh huruf dan tanda baca.'),
-            'nip.required' => __('NIP harus 18 digit angka.'),
-            'nip.digits' => __('NIP harus 18 digit angka.'),
+            'nip.required' => __('NIP/NUPTK harus 16 atau 18 digit angka.'),
+            'nip.regex' => __('NIP/NUPTK harus 16 atau 18 digit angka.'),
             'nip.unique' => __('NIP sudah terdaftar.'),
             'gender.required' => __('Pilih jenis kelamin.'),
             'gender.in' => __('Pilih jenis kelamin.'),
@@ -221,7 +237,9 @@ class TeacherController extends Controller
             }
 
             $import = new TeachersImport();
-            Excel::import($import, $request->file('file_excel'));
+            DB::transaction(function () use ($request, $import) {
+                Excel::import($import, $request->file('file_excel'));
+            });
 
             $imported = $import->getImportedCount();
             $orderedErrors = $import->getOrderedErrors();

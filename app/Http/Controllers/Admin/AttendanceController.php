@@ -282,67 +282,9 @@ class AttendanceController extends Controller
             $tanggal, $isHoliday, $batasTerlambat
         ) {
             $att = $student->attendances->first();
-            $timeRemark = null;
-            $lateMinutes = 0;
-            $checkIn = null;
-            $checkOut = null;
-            $notes = null;
-            $proofDocument = null;
-
-            if ($att) {
-                $timeRemark = $att->time_remark;
-                $checkIn = $att->check_in;
-                $checkOut = $att->check_out;
-                $notes = $att->notes;
-                $proofDocument = $att->proof_document;
-
-                /*
-                 * STATUS TAMPILAN: 'Terlambat' disimpan di DB sebagai status
-                 * 'Hadir' + time_remark (atau is_late), jadi angka ringkasan
-                 * selalu benar. TETAPI tabel harus menampilkan "Terlambat",
-                 * bukan "Hadir" -> pakai accessor effective_status yang sudah
-                 * ada di model Attendance (satu sumber kebenaran).
-                 */
-                $isTerlambat = ($att->effective_status === 'Terlambat');
-
-                if ($isTerlambat) {
-                    // late_minutes: pakai yang tersimpan, atau hitung ulang dari
-                    // jam masuk bila kolomnya kosong (data lama).
-                    $lateMinutes = (int) ($att->late_minutes ?? 0);
-                    if ($lateMinutes === 0 && $checkIn) {
-                        $lateMinutes = (int) abs(Carbon::parse($checkIn)
-                            ->diffInMinutes(Carbon::parse($batasTerlambat), false));
-                    }
-                }
-            }
-
-            /*
-             * Tanpa catatan presensi:
-             * - tanggal lampau (bukan hari libur/akhir pekan) -> ALFA
-             *   (hitungan tampilan, tidak ditulis ke database);
-             * - hari ini / masa depan                     -> BELUM;
-             * - hari libur / akhir pekan                    -> LIBUR.
-             * Semua halaman memakai aturan yang sama (Attendance::statusOf).
-             */
-            $status = Attendance::statusOf($att, $tanggal, $isHoliday);
-
-            return (object) [
-                'id' => $student->id,
-                'name' => $student->name,
-                'nisn' => $student->nisn ?: '-',
-                'gender' => $student->gender ?? 'L',
-                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
-                'jam_masuk' => $checkIn ? (substr($checkIn, 0, 5) . ' WIB') : '—',
-                'jam_pulang' => $checkOut ? (substr($checkOut, 0, 5) . ' WIB') : '—',
-                'raw_check_in' => $checkIn,
-                'raw_check_out' => $checkOut,
-                'current_status' => $status,
-                'current_time_remark' => $timeRemark,
-                'late_minutes' => $lateMinutes,
-                'notes' => $notes,
-                'proof_document' => $proofDocument,
-                'attendance_id' => $att?->id,
-            ];
+            $row = \App\Models\Attendance::mapStudentAttendanceToRow($att, $tanggal, $isHoliday, $batasTerlambat, $student);
+            $row->photo = $student->photo ? asset('storage/' . $student->photo) : null;
+            return $row;
         });
 
         $totalSiswa = (int) ($ringkasan['total_siswa'] ?? $studentsList->count());
@@ -426,25 +368,12 @@ class AttendanceController extends Controller
 
         // Hitung histori kumulatif & presensi hari ini per rombel
         // SEMUA absensi diambil dalam 1 query, lalu dikelompokkan di memori (anti N+1)
-        // OPTIMASI: Batasi query dengan filter tahun ajaran + chunk untuk memory efficiency
         $allStudentIds = $activeStudentsByClass->flatten()->pluck('id')->toArray();
-        $attendancesByStudent = collect();
+        $attendancesByStudent = Attendance::whereIn('student_id', $allStudentIds)
+            ->when($selectedYearId, fn($q) => $q->where('academic_year_id', $selectedYearId));
         
-        // Chunk query untuk menghindari memory overflow pada dataset besar
-        $query = Attendance::whereIn('student_id', $allStudentIds);
-        if ($selectedYearId) {
-            $query->where(function ($q) use ($selectedYearId) {
-                $q->where('academic_year_id', $selectedYearId)->orWhereNull('academic_year_id');
-            });
-        }
-        
-        $query->chunk(1000, function ($attendances) use (&$attendancesByStudent) {
-            foreach ($attendances as $att) {
-                $attendancesByStudent->push($att);
-            }
-        });
-        
-        $attendancesByStudent = $attendancesByStudent->groupBy('student_id');
+        $attendancesByStudent = $attendancesByStudent->get()
+            ->groupBy('student_id');
 
         $classHistories = $classes->map(function ($cls) use ($selectedYearId, $activeYear, $todayAttendances, $activeStudentsByClass, $attendancesByStudent) {
             $classStudents = $activeStudentsByClass->get($cls->id, collect());
@@ -620,23 +549,32 @@ class AttendanceController extends Controller
 
     /**
      * Riwayat presensi spesifik per siswa (dari menu Kehadiran).
+     * Tabel ditampilkan secara horizontal (sama seperti rekap per kelas):
+     * - Harian: No|NISN|NAMA|KELAS|JK|JAM MASUK|KETERLAMBATAN|STATUS|CATATAN
+     * - Mingguan: No|NISN|NAMA|KELAS|JK|SEN..MIN|H|T|S|I|A|%
+     * - Bulanan: No|NISN|NAMA|KELAS|JK|1..31|H|T|S|I|A|%
+     * - Semester/Tahunan: No|NISN|NAMA|KELAS|JK|BULAN|H|T|S|I|A|%
      */
     public function studentHistory(Request $request, Student $student): View
     {
         Carbon::setLocale('id');
         $student->load('schoolClass');
 
-        // PERBAIKAN (2026-10-03): $period SEBELUMNYA dibaca tapi TIDAK PERNAH
-        // dipakai membatas query, sehingga tab Harian / Mingguan / Bulanan
-        // menampilkan data yang sama persis. Sekarang satu tanggal acuan
-        // (`tanggal`, default hari ini) menentukan rentang data sesuai mode.
-        $period = (string) $request->input('period', 'semua');
+        $period = (string) $request->input('period', 'harian');
         if (! in_array($period, ['harian', 'mingguan', 'bulanan', 'semua'], true)) {
             $period = 'semua';
         }
 
+        // Untuk tab "Per Semester/Tahun", kullan dropdown:
+        // Semester Ganjil, Semester Genap, Setahun.
+        $periodSubType = (string) $request->input('period_subtype', 'semua');
+        if (! in_array($periodSubType, ['ganjil', 'genap', 'semua', 'tahunan'], true)) {
+            $periodSubType = 'semua';
+        }
+
         $anchor = Carbon::parse($request->input('tanggal', Carbon::now('Asia/Jakarta')->toDateString()));
 
+        // Determine date range based on period type and subtype
         if ($period === 'harian') {
             $startDate = $anchor->copy()->startOfDay();
             $endDate = $anchor->copy()->endOfDay();
@@ -645,16 +583,37 @@ class AttendanceController extends Controller
             $startDate = $anchor->copy()->startOfMonth();
             $endDate = $anchor->copy()->endOfMonth();
             $periodLabel = $anchor->translatedFormat('F Y');
-        } elseif ($period === 'semua') {
-            // Mode "Semua": periode yang sama dengan daftar Catatan Kehadiran
-            // (tahun berjalan) supaya angkanya bisa langsung dibandingkan.
-            [$startDate, $endDate, $periodLabel] = Attendance::activeYearPeriod();
-        } else {
-            // Mingguan: Senin - Minggu dari tanggal acuan.
+        } elseif ($period === 'mingguan') {
             $startDate = $anchor->copy()->startOfWeek(Carbon::MONDAY);
             $endDate = $anchor->copy()->endOfWeek(Carbon::SUNDAY);
             $periodLabel = $startDate->translatedFormat('d M')
                 . ' - ' . $endDate->translatedFormat('d M Y');
+        } else {
+            // Semester/Tahunan: gunakan dropdown period_subtype
+            $activeYear = AcademicYear::getActive();
+            if ($periodSubType === 'ganjil') {
+                // Semester Ganjil = Jul-Des (tahun awal TA)
+                $taStart = $activeYear && $activeYear->start_date ? Carbon::parse($activeYear->start_date) : $anchor->copy()->addMonths(6);
+                $startDate = $taStart->copy()->startOfMonth();
+                $endDate = $taStart->copy()->addMonths(5)->endOfMonth();
+                $periodLabel = 'Semester Ganjil ' . ($activeYear?->name ?? $startDate->format('Y'));
+            } elseif ($periodSubType === 'genap') {
+                // Semester Genap = Jan-Jun (tahun akhir TA)
+                $taStart = $activeYear && $activeYear->start_date ? Carbon::parse($activeYear->start_date) : $anchor->copy()->addMonths(6);
+                $startDate = $taStart->copy()->addMonths(6)->startOfMonth();
+                $endDate = $activeYear && $activeYear->end_date ? Carbon::parse($activeYear->end_date) : $taStart->copy()->addMonths(11)->endOfMonth();
+                $periodLabel = 'Semester Genap ' . ($activeYear?->name ?? $startDate->format('Y'));
+            } elseif ($periodSubType === 'tahunan') {
+                // Setahun = Jul-Jun
+                $taStart = $activeYear && $activeYear->start_date ? Carbon::parse($activeYear->start_date) : $anchor->copy()->addMonths(6);
+                $startDate = $taStart->copy()->startOfMonth();
+                $endDate = $activeYear && $activeYear->end_date ? Carbon::parse($activeYear->end_date) : $taStart->copy()->addMonths(11)->endOfMonth();
+                $periodLabel = 'Tahun Ajaran ' . ($activeYear?->name ?? $startDate->format('Y'));
+            } else {
+                // Mode "Semua": periode yang sama dengan daftar Catatan Kehadiran
+                // (tahun berjalan) supaya angkanya bisa langsung dibandingkan.
+                [$startDate, $endDate, $periodLabel] = Attendance::activeYearPeriod();
+            }
         }
 
         // Keamanan: pastikan rentang tidak terbalik.
@@ -662,57 +621,243 @@ class AttendanceController extends Controller
             [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
         }
 
+        $startDateStr = $startDate->toDateString();
+        $endDateStr = $endDate->toDateString();
+
         // Data HANYA dari periode terpilih (bukan seluruh riwayat).
         $attendances = \App\Models\Attendance::where('student_id', $student->id)
-            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->whereBetween('date', [$startDateStr, $endDateStr])
             ->orderBy('date', 'desc')
             ->get();
 
-        // SATU sumber hitung (Attendance::summarizeStudent) - sama dengan
-        // daftar Catatan Kehadiran.
+        $isHoliday = $period === 'harian'
+            ? ($anchor->isWeekend() || \App\Models\Holiday::isHoliday($anchor->toDateString()))
+            : false;
+
+        // Build data horizontal seperti getRecapData
+        $lateLimitTime = Setting::getLateLimitTime();
+
+        // Untuk semester/tahunan, build kolom bulan
+        $months = [];
+        $dateColumns = [];
+        $daysInMonth = null;
+        $type = $period;
+
+        if ($period === 'mingguan') {
+            // Build date columns untuk mingguan
+            $cur = Carbon::parse($startDateStr)->copy();
+            $endObj = Carbon::parse($endDateStr);
+            while ($cur->lte($endObj)) {
+                $dateColumns[] = [
+                    'date' => $cur->toDateString(),
+                    'carbon' => $cur->copy(),
+                    'label' => $cur->translatedFormat('D, d/m'),
+                    'is_holiday' => $cur->isWeekend() || Holiday::isHoliday($cur->toDateString()),
+                ];
+                $cur->addDay();
+            }
+        } elseif ($period === 'bulanan') {
+            $daysInMonth = (int) $anchor->daysInMonth;
+            // Build date columns untuk bulanan
+            $cur = Carbon::parse($startDateStr)->copy();
+            $endObj = Carbon::parse($endDateStr);
+            while ($cur->lte($endObj)) {
+                $dateColumns[] = [
+                    'date' => $cur->toDateString(),
+                    'carbon' => $cur->copy(),
+                    'label' => $cur->format('d'),
+                    'is_holiday' => $cur->isWeekend() || Holiday::isHoliday($cur->toDateString()),
+                ];
+                $cur->addDay();
+            }
+            $type = 'bulanan';
+        } elseif ($periodSubType !== 'semua') {
+            // Semester/Tahunan: gunakan kolom bulan
+            $months = $this->buildMonthColumns($startDateStr, $endDateStr);
+            $type = $periodSubType === 'tahunan' ? 'tahunan' : 'semester';
+        } else {
+            // Mode "Semua" - gunakan periode tahun berjalan
+            // Tidak ada kolom khusus, tampilkan sebagai bulanan sederhana
+            $type = 'semua';
+        }
+
+        // Hitung stats menggunakan summarizeStudent, lalu ubah satuan baris
+        // menggunakan satu helper Attendance (satu sumber ke Presensi & PDF).
         $hariSekolahLalu = Attendance::schoolDaysCount($startDate, $endDate, true);
         $hariSekolahDepan = max(0, Attendance::schoolDaysCount($startDate, $endDate, false) - $hariSekolahLalu);
+        $totalHariBelajar = $hariSekolahLalu + $hariSekolahDepan;
         $stats = Attendance::summarizeStudent($attendances, $hariSekolahLalu, $hariSekolahDepan);
 
-        // Baris tabel: SETIAP hari pada periode ini beserta statusnya
-        // (Hadir/Terlambat/Sakit/Izin/Alfa, Alfa & Belum hasil hitungan, Libur).
-        $lateLimitTime = Setting::getLateLimitTime();
-        $rows = Attendance::periodRows($startDate->toDateString(), $endDate->toDateString(), $attendances);
+        $h = $stats['hadir'] + $stats['terlambat'];
+        $t = $stats['terlambat'];
+        $i = $stats['izin'];
+        $a = $stats['alfa'];
+        $percentage = $totalHariBelajar > 0 ? round(($h / $totalHariBelajar) * 100) : 0;
 
-        // Tabel menampilkan hari terbaru lebih dulu (sama seperti sebelumnya).
-        $rows = array_reverse($rows);
+        // Build days array untuk mingguan/bulanan
+        $days = [];
+        if ($period === 'mingguan' || $period === 'bulanan') {
+            $attendancesByDate = $attendances->keyBy(fn($att) => $att->date->toDateString());
+            foreach ($dateColumns as $col) {
+                $dStr = $col['date'];
+                $att = $attendancesByDate->get($dStr);
+                $code = '-';
 
-        foreach ($rows as &$row) {
-            $lateMinutes = 0;
-            $att = $row['attendance'];
+                if ($att) {
+                    $status = $att->effective_status;
+                    if ($status === 'Hadir') {
+                        $code = 'H';
+                    } elseif ($status === 'Terlambat') {
+                        $code = 'T';
+                    } elseif ($status === 'Sakit') {
+                        $code = 'S';
+                    } elseif ($status === 'Izin') {
+                        $code = 'I';
+                    } elseif ($status === 'Alfa') {
+                        $code = 'A';
+                    }
+                } else {
+                    if ($col['is_holiday']) {
+                        $code = 'L';
+                    }
+                }
 
-            if ($att && $att->check_in && $row['status'] === Attendance::STATUS_TERLAMBAT) {
-                $lateMinutes = (int) ($att->late_minutes ?? 0);
+                $days[$dStr] = $code;
+            }
+        } else {
+            $days = [];
+        }
 
-                if ($lateMinutes === 0) {
-                    // Selisih dihitung dari BATAS TERLAMBAT (sama dengan pesan
-                    // scanner, halaman Rekap, dan halaman Presensi per kelas).
-                    $diff = Carbon::parse($att->check_in)->diffInMinutes(Carbon::parse($lateLimitTime), false);
-                    $lateMinutes = $diff > 0 ? (int) round(abs($diff)) : 0;
+        // Build monthly array untuk semester/tahunan
+        $monthly = [];
+        if (in_array($type, ['semester', 'tahunan'], true)) {
+            $monthly = $this->buildMonthlyData($startDateStr, $endDateStr, $student->id, $months);
+        } else {
+            $monthly = [];
+        }
+
+        // Baris harian: satu nilai dari helper Attendance, tidak ada duplikasi
+        // logika di view.
+        if ($period === 'harian') {
+            // Ambil record siswa pada tanggal itu (terbaru). Record yang ada
+            // menang: weekend/libur/fallback tidak boleh menimpanya.
+            $harianAttendance = \App\Models\Attendance::where('student_id', $student->id)
+                ->whereDate('date', $anchor->toDateString())
+                ->latest('date')
+                ->first();
+        } else {
+            $harianAttendance = $attendances->first();
+        }
+        $harianRow = 
+            \App\Models\Attendance::mapStudentAttendanceToRow($harianAttendance, $anchor->toDateString(), $isHoliday, $lateLimitTime, $student);
+
+        $isHoliday = false;
+
+        $rows = [[
+            'no' => 1,
+            'student' => $student,
+            'days' => $days,
+            'monthly' => $monthly,
+            'hadir' => $stats['hadir'],
+            'terlambat' => $t,
+            'sakit' => $stats['sakit'],
+            'izin' => $i,
+            'alfa' => $a,
+            'percentage' => $percentage,
+            'harian' => $harianRow,
+        ]];
+
+        // Persentase untuk tampilan
+        $attendanceRate = $percentage;
+
+        if (!isset($dateColumns) || !is_array($dateColumns)) {
+            $dateColumns = [];
+        }
+        if (!isset($daysInMonth) || $daysInMonth === null) {
+            if ($period === 'bulanan') {
+                $daysInMonth = (int) $anchor->daysInMonth;
+            } else {
+                $daysInMonth = null;
+            }
+        }
+        if (!isset($months) || !is_array($months)) {
+            $months = [];
+        }
+        if (!isset($totalHariBelajar)) {
+            $totalHariBelajar = $hariSekolahLalu + $hariSekolahDepan;
+        }
+
+        $activeYearResolved = $activeYear ?? AcademicYear::getActive();
+
+        return view('admin.kehadiran.student-history', [
+            'student' => $student,
+            'attendances' => $attendances,
+            'rows' => $rows,
+            'stats' => $stats,
+            'attendanceRate' => $attendanceRate,
+            'period' => $period,
+            'periodLabel' => $periodLabel,
+            'anchor' => $anchor,
+            'totalHariBelajar' => $totalHariBelajar,
+            'type' => $type,
+            'months' => $months,
+            'dateColumns' => $dateColumns,
+            'daysInMonth' => $daysInMonth,
+            'periodSubType' => $periodSubType,
+            'activeYear' => $activeYearResolved,
+            'days' => $days,
+            'monthly' => $monthly,
+            'summary' => $stats,
+        ]);
+    }
+
+    /**
+     * Build kolom bulan untuk semester/tahunan.
+     */
+    protected function buildMonthColumns(string $startDate, string $endDate): array
+    {
+        $columns = [];
+        $cursor = Carbon::parse($startDate)->startOfMonth();
+        $last = Carbon::parse($endDate)->startOfMonth();
+
+        while ($cursor->lte($last)) {
+            $columns[] = [
+                'key' => $cursor->format('Y-m'),
+                'label' => $cursor->translatedFormat('M'),
+                'year' => (int) $cursor->format('Y'),
+                'month' => (int) $cursor->format('m'),
+            ];
+            $cursor->addMonthNoOverflow();
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Build data bulanan untuk semester/tahunan.
+     */
+    protected function buildMonthlyData(string $startDate, string $endDate, int $studentId, array $months): array
+    {
+        $monthly = [];
+        $attendances = \App\Models\Attendance::where('student_id', $studentId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get();
+
+        foreach ($months as $monthInfo) {
+            $ym = $monthInfo['key'];
+            $monthAttendances = $attendances->filter(fn($att) => substr($att->date->toDateString(), 0, 7) === $ym);
+
+            $hadir = 0;
+            foreach ($monthAttendances as $att) {
+                if (in_array($att->effective_status, ['Hadir', 'Terlambat'], true)) {
+                    $hadir++;
                 }
             }
 
-            $row['late_minutes'] = $lateMinutes;
-            $row['late_text'] = $lateMinutes > 0 ? rekap_format_late_minutes($lateMinutes) : '-';
-            $row['notes'] = ($att && $att->notes && $att->notes !== '-') ? $att->notes : '-';
+            $monthly[$ym] = $hadir;
         }
-        unset($row);
 
-        // Persentase = (hadir + terlambat) / jumlah hari belajar (hari libur &
-        // akhir pekan TIDAK masuk penyebut) - rumus sama dengan Rekap & Dashboard.
-        $totalHariBelajar = $hariSekolahLalu + $hariSekolahDepan;
-        $hadirDanTerlambat = $stats['hadir'] + $stats['terlambat'];
-        $attendanceRate = $totalHariBelajar > 0 ? round(($hadirDanTerlambat / $totalHariBelajar) * 100, 1) : 0;
-
-        return view('admin.kehadiran.student-history', compact(
-            'student', 'attendances', 'rows', 'stats', 'attendanceRate',
-            'period', 'periodLabel', 'anchor', 'totalHariBelajar'
-        ));
+        return $monthly;
     }
 
     /**
