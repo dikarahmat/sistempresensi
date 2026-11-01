@@ -41,7 +41,7 @@ class StudentController extends Controller
         $classes = SchoolClass::orderBy('name')->get();
         $totalStudents = Student::count();
 
-        $view = request()->routeIs('guru.*') ? 'guru.students.index' : 'admin.students.index';
+        $view = 'admin.students.index';
         return view($view, compact('students', 'classes', 'totalStudents'));
     }
 

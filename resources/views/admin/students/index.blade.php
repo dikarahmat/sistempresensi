@@ -517,30 +517,28 @@
                             @endforeach
                         </select>
                     </div>
-                </form>
+                </form>                    <div class="action-buttons-wrap">
+                        <button type="button" class="btn-solid-pill btn-solid-blue btn-cetak-kartu {{ $totalStudents == 0 ? 'is-disabled' : '' }}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#printCardsModal"
+                                {{ $totalStudents == 0 ? 'disabled aria-disabled="true" tabindex="-1" title="Belum ada data untuk dicetak"' : '' }}>
+                            <span>{{ __('Cetak Kartu') }}</span>
+                        </button>
 
-                <div class="action-buttons-wrap">
-                    <button type="button" class="btn-solid-pill btn-solid-blue btn-cetak-kartu {{ $totalStudents == 0 ? 'is-disabled' : '' }}"
-                            data-bs-toggle="modal"
-                            data-bs-target="#printCardsModal"
-                            {{ $totalStudents == 0 ? 'disabled aria-disabled="true" tabindex="-1" title="Belum ada data untuk dicetak"' : '' }}>
-                        <span>{{ __('Cetak Kartu') }}</span>
-                    </button>
+                        @if(Auth::check() && Auth::user()->role === 'admin')
+                        <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <span>{{ __('Import Excel') }}</span>
+                        </button>
 
-                    @if(Auth::check() && Auth::user()->role === 'admin')
-                    <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <span>{{ __('Import Excel') }}</span>
-                    </button>
+                        <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                            <span>{{ __('Tambah Siswa') }}</span>
+                        </button>
 
-                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <span>{{ __('Tambah Siswa') }}</span>
-                    </button>
-
-                    <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Siswa') }}" onclick="confirmDeleteAllStudents()">
-                        <span>{{ __('Hapus') }}</span>
-                    </button>
-                    @endif
-                </div>
+                        <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Siswa') }}" onclick="confirmDeleteAllStudents()">
+                            <span>{{ __('Hapus') }}</span>
+                        </button>
+                        @endif
+                    </div>
             </div>
         </div>
 

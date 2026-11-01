@@ -1,16 +1,16 @@
 @php
     // ========================================================================
     // SIDEBAR BERSAMA ADMIN, GURU & GURU PIKET (single source of truth).
-    // Item menu ditentukan oleh role: admin melihat menu penuh, guru melihat
-    // DASHBOARD, PRESENSI, KEHADIRAN, REKAP, SISWA, KELAS, sedangkan GURU
-    // PIKET hanya melihat PRESENSI dan KEHADIRAN (plus tombol Logout).
+    //   admin : Dashboard, Presensi, Kehadiran, Rekap, Siswa, Guru, Kelas, Pengaturan
+    //   guru  : Dashboard, Presensi, Kehadiran, Rekap, Siswa, Kelas
+    //   piket : Dashboard, Presensi, Kehadiran, Rekap
     // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
     $isAdminPanel = ($userRole === 'admin');
     $isPiketPanel = ($userRole === 'piket');
 
     $dashboardRoute = panel_route('dashboard');
-    $isDashboardActive = request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard');
+    $isDashboardActive = request()->routeIs('admin.dashboard', 'guru.dashboard', 'piket.dashboard');
 
     $absensiRoute = panel_route('absensi.index');
     $isAbsensiActive = panel_is('absensi*') || panel_is('presensi*');
@@ -23,11 +23,8 @@
 
     $siswaRoute = panel_route('students.index');
 
-    // Halaman TEMPAT SAMPAH (admin.students.trash, admin.teachers.trash, dan
-    // admin.classes.trash) kini menjadi modul di bawah PENGATURAN, bukan di bawah
-    // SISWA/GURU/KELAS. Ketiga route itu dikeluarkan dari syarat aktif modulnya
-    // masing-masing supaya item PENGATURAN saja yang menyala, tidak dua-duanya.
-    //(admin.classes.trash sempat terlewat karena route-nya dibuat belakangan.)
+    // Halaman TEMPAT SAMPAH kini modul di bawah PENGATURAN, bukan di bawah
+    // SISWA/GURU/KELAS, jadi dikeluarkan dari syarat aktif modul masing-masing.
     $isTrashPage = request()->routeIs(
         'admin.students.trash',
         'admin.teachers.trash',
@@ -37,31 +34,32 @@
 
     $kelasRoute = panel_route('classes.index');
     $isKelasActive = (panel_is('classes*') || panel_is('kelas*')) && ! $isTrashPage;
+
+    $isGuruActive = (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage;
+
+    $isPengaturanActive = request()->routeIs(
+        'admin.settings.*',
+        'admin.academic-years.*',
+        'admin.holidays.*',
+        'admin.accounts.*',
+        'admin.students.trash',
+        'admin.teachers.trash',
+        'admin.classes.trash'
+    );
+
+    $navStyle = 'margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;';
+    $activeCls = 'active bg-white text-primary shadow-sm fw-medium';
 @endphp
 
-<!-- Sidebar Bootstrap 5: Pixel-Perfect Alignment, Pure Logo, Anti-Lemot
-     Layout dikendalikan CSS (app-sidebar-drawer), bukan inline style, agar
-     aturan !important di layout selalu menang di mobile & desktop. -->
-<!-- CATATAN DESKTOP: utility pembulatan sudut sisi kanan SENGAJA dihapus dari
-     <aside> ini. Wrapper <aside> di app.blade.php memakai `border-radius: 0`
-     pada breakpoint >= 1024px supaya sidebar desktop benar-benar PERSGI dan
-     menempel penuh dari atas sampai bawah. Sudut melengkung hanya untuk
-     drawer mobile (diatur di dalam @media max-width: 1023.98px). -->
+{{-- Sidebar Bootstrap 5. Layout dikendalikan CSS (app-sidebar-drawer), bukan inline style.
+     Radius sisi kanan <aside> sengaja tidak dipasang di desktop (diatur di app.blade.php). --}}
 <aside class="d-flex flex-column flex-shrink-0 text-white app-sidebar-panel main-sidebar sidebar-container">
-    
-<!-- ATAS: Header Logo & Nama Sekolah (Ukuran Pas & Proporsional)
-         .sidebar-brand-row ditambahkan sebagai hook CSS di layout supaya
-         jarak logo & nama sekolah bisa dirapikan HANYA di desktop tanpa
-         mengubah tampilan mobile (utility class tetap sama). -->
+
+    {{-- ATAS: Header logo & nama sekolah --}}
     <div class="sidebar-brand flex-shrink-0">
         <div class="sidebar-brand-row d-flex align-items-center gap-2.5 pb-3 border-bottom border-light border-opacity-25">
-            <!-- Logo sekolah: dikecilkan jadi 36px supaya tingginya sama
-                 dengan DUA baris teks nama sekolah di sampingnya
-                 (0.9rem x line-height 1.2 x 2 baris ~ 35px). object-fit
-                 dipakai supaya logo tidak gepeng. Garis pemisah di bawah
-                 baris ini tetap. -->
-            <img src="{{ \App\Models\Setting::getLogoUrl() }}" 
-                 alt="{{ __('Logo Sekolah') }}" 
+            <img src="{{ \App\Models\Setting::getLogoUrl() }}"
+                 alt="{{ __('Logo Sekolah') }}"
                  class="sidebar-brand-logo" style="width: 36px; height: 36px; object-fit: contain;"
                  loading="lazy"
                  onerror="this.style.display='none'">
@@ -80,9 +78,6 @@
                     $brandLine2 = '';
                 }
             @endphp
-            <!-- Font-size dinaikkan halus ke 0.9rem.
-                 .sidebar-brand-text disembunyikan saat sidebar collapsed (desktop),
-                 menyisakan logo saja di bagian atas sidebar. -->
             <div class="sidebar-brand-text d-flex flex-column text-uppercase fw-bold text-nowrap" style="font-size: 0.9rem; letter-spacing: 0px; line-height: 1.2;">
                 <span id="sidebar-brand-line1" style="display: inline-block;">{{ $brandLine1 }}</span>
                 @if(!empty($brandLine2))
@@ -92,113 +87,99 @@
         </div>
     </div>
 
-    <!-- Scrollable sidebar menu -->
+    {{-- Menu sidebar (scrollable) --}}
     <div class="flex-grow-1 py-2 sidebar-menu-scroll sidebar-menu-wrapper menu-container">
         <ul class="nav nav-pills flex-column mb-auto" style="gap: 0;">
-            @if(!$isPiketPanel)
+
+            {{-- DASHBOARD: semua role --}}
             <li class="nav-item">
-                <a href="{{ $dashboardRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isDashboardActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Dashboard') }}"
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bxs-dashboard fs-5 {{ $isDashboardActive ? 'text-primary' : 'text-white' }}'></i> 
+                <a href="{{ $dashboardRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isDashboardActive ? $activeCls : '' }}"
+                   data-label="{{ __('Dashboard') }}" style="{{ $navStyle }}">
+                    <i class='bx bxs-dashboard fs-5 {{ $isDashboardActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Dashboard') }}</span>
                 </a>
             </li>
-            @endif
 
-            @if($absensiRoute || $kehadiranRoute || $rekapRoute)
+            {{-- PRESENSI: semua role --}}
+            @if($absensiRoute)
             <li class="nav-item">
-                
-                @if($absensiRoute)
-                <a href="{{ $absensiRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isAbsensiActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Presensi') }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-qr-scan fs-5 {{ $isAbsensiActive ? 'text-primary' : 'text-white' }}'></i> 
+                <a href="{{ $absensiRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isAbsensiActive ? $activeCls : '' }}"
+                   data-label="{{ __('Presensi') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-qr-scan fs-5 {{ $isAbsensiActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Presensi') }}</span>
                 </a>
-                @endif
-
-                @if($kehadiranRoute)
-                <a href="{{ $kehadiranRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKehadiranActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Kehadiran') }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-calendar-check fs-5 {{ $isKehadiranActive ? 'text-primary' : 'text-white' }}'></i> 
-                    <span class="sidebar-nav-label">{{ __('Kehadiran') }}</span>
-                </a>
-                @endif
-
-                @if(!$isPiketPanel)
-                <a href="{{ $rekapRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isRekapActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Rekap') }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-folder-open fs-5 {{ $isRekapActive ? 'text-primary' : 'text-white' }}'></i> 
-                    <span class="sidebar-nav-label">{{ __('Rekap') }}</span>
-                </a>
-                @endif
             </li>
             @endif
 
-            @if($userRole === 'admin')
-            <!-- CATATAN FASE 1: item TAHUN AJARAN & HARI LIBUR sengaja dihapus dari
-                 sidebar. Modul tersebut kini diakses dari halaman PENGATURAN
-                 (bagian "Pengelolaan Sistem"). Item Pengaturan di bawah tetap
-                 menyala di kedua halaman tersebut (lihat kondisi active). -->
+            {{-- KEHADIRAN: semua role --}}
+            @if($kehadiranRoute)
+            <li class="nav-item">
+                <a href="{{ $kehadiranRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKehadiranActive ? $activeCls : '' }}"
+                   data-label="{{ __('Kehadiran') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-calendar-check fs-5 {{ $isKehadiranActive ? 'text-primary' : 'text-white' }}'></i>
+                    <span class="sidebar-nav-label">{{ __('Kehadiran') }}</span>
+                </a>
+            </li>
             @endif
 
-            @if(!$isPiketPanel)
+            {{-- REKAP: semua role --}}
+            @if($rekapRoute)
             <li class="nav-item">
-                
-                <a href="{{ $siswaRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isSiswaActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Siswa') }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-user fs-5 {{ $isSiswaActive ? 'text-primary' : 'text-white' }}'></i> 
+                <a href="{{ $rekapRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isRekapActive ? $activeCls : '' }}"
+                   data-label="{{ __('Rekap') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-folder-open fs-5 {{ $isRekapActive ? 'text-primary' : 'text-white' }}'></i>
+                    <span class="sidebar-nav-label">{{ __('Rekap') }}</span>
+                </a>
+            </li>
+            @endif
+
+            {{-- SISWA: admin & guru (bukan piket) --}}
+            @if(! $isPiketPanel && $siswaRoute)
+            <li class="nav-item">
+                <a href="{{ $siswaRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isSiswaActive ? $activeCls : '' }}"
+                   data-label="{{ __('Siswa') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-user fs-5 {{ $isSiswaActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Siswa') }}</span>
                 </a>
+            </li>
+            @endif
 
-                @if($isAdminPanel)
-                <a href="{{ route('admin.guru.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Guru') }}"
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-group fs-5 {{ (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage ? 'text-primary' : 'text-white' }}'></i> 
+            {{-- GURU: admin saja --}}
+            @if($isAdminPanel)
+            <li class="nav-item">
+                <a href="{{ route('admin.guru.index') }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isGuruActive ? $activeCls : '' }}"
+                   data-label="{{ __('Guru') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-group fs-5 {{ $isGuruActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Guru') }}</span>
                 </a>
-                @endif
+            </li>
+            @endif
 
-                <a href="{{ $kelasRoute }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKelasActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Kelas') }}" 
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-buildings fs-5 {{ $isKelasActive ? 'text-primary' : 'text-white' }}'></i> 
+            {{-- KELAS: admin & guru (bukan piket) --}}
+            @if(! $isPiketPanel && $kelasRoute)
+            <li class="nav-item">
+                <a href="{{ $kelasRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKelasActive ? $activeCls : '' }}"
+                   data-label="{{ __('Kelas') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-buildings fs-5 {{ $isKelasActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Kelas') }}</span>
                 </a>
             </li>
             @endif
 
+            {{-- PENGATURAN: admin saja. Juga menyala di Tahun Ajaran, Hari Libur, Kelola Akun, dan Tempat Sampah. --}}
             @if($isAdminPanel)
-            <!-- PENGATURAN juga menyala di halaman Tahun Ajaran, Hari Libur, dan
-                     Tempat Sampah (Siswa / Guru / Kelas), karena semua modul itu kini
-                     hidup di bawah Pengaturan. -->
-            @php $isPengaturanActive = request()->routeIs(
-                'admin.settings.*',
-                'admin.academic-years.*',
-                'admin.holidays.*',
-                'admin.accounts.*',
-                'admin.students.trash',
-                'admin.teachers.trash',
-                'admin.classes.trash'
-            ); @endphp
             <li class="nav-item">
-                <a href="{{ route('admin.settings.index') }}" 
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isPengaturanActive ? 'active bg-white text-primary shadow-sm fw-medium' : '' }}"
-                   data-label="{{ __('Pengaturan') }}"
-                   style="margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;">
-                    <i class='bx bx-cog fs-5 {{ $isPengaturanActive ? 'text-primary' : 'text-white' }}'></i> 
+                <a href="{{ route('admin.settings.index') }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isPengaturanActive ? $activeCls : '' }}"
+                   data-label="{{ __('Pengaturan') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-cog fs-5 {{ $isPengaturanActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Pengaturan') }}</span>
                 </a>
             </li>
@@ -207,18 +188,8 @@
         </ul>
     </div>
 
-    <!-- KARTU AKUN + POP-UP LOGOUT (pengganti tombol "LOG OUT" lama).
-         Item "LOG OUT" beserta garis pemisah di atasnya sudah dihapus dari
-         daftar menu; form POST logout TIDAK dihapus - ia tetap dipakai ulang:
-         klik item "Logout" pada pop-up memanggil tombol submit milik form
-         yang sama (#logoutConfirmBtn di #logoutConfirmModal), sehingga method,
-         route, dan @csrf tidak berubah sama sekali.
-
-         Peran di bawah diambil DINAMIS dari user yang sedang login.
-         Nama & username TIDAK lagi ditampilkan di sini: identitas akun
-         adalah username (lihat halaman Kelola Akun).
-         Peran memakai User::roleLabel() (daftar role terpusat di model), dan
-         "Administrator" hanya dipakai sebagai fallback bila role kosong. -->
+    {{-- KARTU AKUN + POP-UP LOGOUT.
+         Klik "Logout" membuka modal konfirmasi #logoutConfirmModal (form POST + @csrf di layout). --}}
     @php
         $accountUser   = Auth::user();
         $accountRole   = method_exists($accountUser, 'roleLabel')
@@ -251,24 +222,8 @@
                aria-hidden="true"></i>
         </button>
 
-        <!-- Pop-up akun: MUNCUL DI ATAS kartu lewat `bottom-full`
-             (= bottom:100%) + `mb-2`, jadi tidak pernah menimpa kartu dan
-             seluruh isi kartu (avatar, nama, peran, chevron) tetap terlihat.
-             Lebarnya persis selebar kartu karena memakai `left-0 right-0`
-             di dalam container `relative` yang sama dengan kartunya.
-
-             Isi dari atas ke bawah (21 Okt 2026):
-               1. Kelola Akun   - hanya admin (route admin.accounts.index,
-                                  sama persis dengan tombol yang dihapus dari
-                                  halaman Pengaturan).
-                2. Bahasa        - ID | EN, tidak berubah.
-                3. garis tipis + Logout.
-
-
-             Klik item "Logout" TIDAK langsung keluar: ia membuka modal
-             konfirmasi yang sudah ada (#logoutConfirmModal, gaya lama) berisi
-             form POST logout + @csrf, dan sekaligus menutup pop-up ini
-             (accountOpen = false). Logika logout di layout tidak berubah. -->
+        {{-- Pop-up akun: muncul di atas kartu (bottom-full + mb-2).
+             Isi: 1) Kelola Akun (admin saja), 2) Bahasa ID|EN, 3) garis + Logout. --}}
         <div class="sidebar-account-popup absolute bottom-full left-0 right-0 mb-2 z-50"
              id="sidebarAccountMenu"
              role="menu"
@@ -280,19 +235,7 @@
              x-transition:leave="sidebar-account-popup-leave"
              x-transition:leave-start="sidebar-account-popup-leave-start"
              x-transition:leave-end="sidebar-account-popup-leave-end">
-             <!-- 1. KELOLA AKUN (21 Okt 2026): dipindahkan dari baris tombol
-                  "Pengelolaan Sistem" di halaman Pengaturan ke sini. Route
-                  yang dipakai PERSIS sama dengan tombol yang dihapus itu
-                  (admin.accounts.index -> /admin/kelola-akun), tidak ada
-                  route/controller baru. Tombol ini hanya tampil untuk ADMIN,
-                 restriction yang sama dengan halaman Kelola Akun (middleware
-                  role:admin) sehingga guru & piket tidak pernah melihat
-                  tautan yang akan mereka tolak dengan 403.
-                  Baris ini hanya link biasa - tidak ada switch. Klik menutup
-                  pop-up lebih dulu (@click) lalu halaman berpindah, sama
-                  seperti klik menu sidebar lainnya. Ikon bx-cog dipakai
-                  karena sudah dipakai project ini (Pintasan Cepat
-                  "Pengaturan") - tidak ada pustaka ikon baru. -->
+
             @if($isAdminPanel)
             <a href="{{ route('admin.accounts.index') }}"
                class="sidebar-account-item sidebar-account-link"
@@ -303,10 +246,6 @@
             </a>
             @endif
 
-            <!-- PILIH BAHASA (ID / EN): di ATAS item Logout. Tiap pilihan
-                  memakai form POST kecil (CSRF dari layout) ke route locale.set,
-                  lalu halaman dimuat ulang dengan bahasa pilihan aktif. Tidak
-                  ada controller baru. -->
             <div class="sidebar-account-item sidebar-locale-row" role="group" aria-label="{{ __('Bahasa') }}">
                 <i class='bx bx-globe' aria-hidden="true"></i>
                 <span class="sidebar-account-item-text">{{ __('Bahasa') }}</span>

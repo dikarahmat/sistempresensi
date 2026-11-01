@@ -176,7 +176,7 @@ class AuthController extends Controller
             'guru' => redirect()->intended(route('guru.dashboard')),
             // Guru Piket langsung masuk ke halaman Presensi (scan QR) -
             // tidak punya Dashboard dan aksesnya dibatasi Kehadiran+Presensi.
-            'piket' => redirect()->intended(route('piket.absensi.index')),
+            'piket' => redirect()->intended(route('piket.dashboard')),
             default => redirect()->route('login')->withErrors([
                 'login' => __('Role pengguna tidak dikenali atau tidak memiliki hak akses.'),
             ]),

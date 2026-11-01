@@ -1,5 +1,14 @@
 @extends('layouts.app')
 
+@php
+    // Admin dan guru memakai view ini dengan tampilan yang sama.
+    // Hanya ADMIN yang boleh mengelola (Import Excel, Tambah Kelas, Hapus, kolom Aksi).
+    // Guru read-only: tombol dan kolom Aksi tidak dirender sama sekali.
+    $canManage = Auth::check() && Auth::user()->role === 'admin';
+    $importRoute = panel_route('classes.import');
+    $templateRoute = panel_route('classes.template');
+@endphp
+
 @section('title', __('Data Kelas'))
 @section('page_title', __('Data Kelas'))
 @section('page_subtitle', __('Kelola rombongan belajar dan penetapan wali kelas.'))
@@ -101,8 +110,7 @@
     }
 
     /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
-       semibold + SATU garis tipis (sebelumnya latar abu #f8fafc). Desktop
-       >= 1024px sengaja TIDAK disentuh, sesuai batas yang diminta. */
+       semibold + SATU garis tipis. Desktop >= 1024px tidak disentuh. */
     @media (max-width: 1023.98px) {
         .table-zebra-custom thead th {
             background-color: #ffffff !important;
@@ -113,8 +121,7 @@
 
     /* ===== Action Bar: SATU BARIS RATA (pola sama persis dengan Data Siswa & Data Guru) =====
        [input cari][ikon search][dropdown tingkat] ..... [IMPORT EXCEL][TAMBAH KELAS][HAPUS].
-       Semua elemen tinggi 38px dan sejajar vertikal; ikon search MENEMPEL di samping input
-       (flex-wrap: nowrap pada .search-box-wrap), bukan turun ke baris kedua. */
+       Semua elemen tinggi 38px dan sejajar vertikal; ikon search MENEMPEL di samping input. */
     .action-bar-section {
         display: flex;
         flex-wrap: wrap;
@@ -193,7 +200,7 @@
 
     /* CATATAN: aturan susunan mobile untuk action bar sudah dipindah ke
        layout bersama (layouts/app.blade.php) dan standar mobile
-       (public/css/presensi-tokens.css) — tidak ada duplikasi di sini. */
+       (public/css/presensi-tokens.css) - tidak ada duplikasi di sini. */
 
     /* --------------------------------------------------------------------------
        NOTIFIKASI HALAMAN DATA KELAS
@@ -243,12 +250,8 @@
         padding: 0 1rem;
         transition: filter 0.15s ease, transform 0.1s ease;
         box-shadow: none !important;
-        /* === UKURAN 3 TOMBOL ACTION BAR DISAMAkan (SAMA NILAI DENGAN DATA SISWA) ===
-           min-width 150px — nilai yang PERSIS sama dengan acuan Data Siswa,
-           cukup untuk "IMPORT EXCEL" dan "TAMBAH KELAS" (12 karakter), sehingga
-           ketiga tombol sama lebar, teks rata tengah.
-           Di bawah 1024px, aturan layout bersama memaksa tiap tombol full
-           width satu per satu, jadi tampilan mobile tidak berubah. */
+        /* UKURAN 3 TOMBOL ACTION BAR DISAMAKAN (SAMA DENGAN DATA SISWA): min-width 150px.
+           Di bawah 1024px, aturan layout bersama memaksa tiap tombol full width. */
         min-width: 150px;
         text-align: center;
     }
@@ -420,12 +423,12 @@
             </div>
             @if(session('import_errors') && count(session('import_errors')) > 0)
             <ul class="mb-0 ps-4 small mt-1">
-                <li class="fw-semibold">Alasan:</li>
+                <li class="fw-semibold">{{ __('Alasan:') }}</li>
                 @foreach(array_slice(session('import_errors'), 0, 3) as $err)
                     <li>{{ $err }}</li>
                 @endforeach
                 @if(count(session('import_errors')) > 3)
-                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                    <li class="text-muted">{{ __('...dan :count alasan lainnya.', ['count' => count(session('import_errors')) - 3]) }}</li>
                 @endif
             </ul>
             @endif
@@ -443,12 +446,12 @@
             </div>
             @if(session('import_errors') && count(session('import_errors')) > 0)
             <ul class="mb-0 ps-4 small mt-1">
-                <li class="fw-semibold">Alasan:</li>
+                <li class="fw-semibold">{{ __('Alasan:') }}</li>
                 @foreach(array_slice(session('import_errors'), 0, 3) as $err)
                     <li>{{ $err }}</li>
                 @endforeach
                 @if(count(session('import_errors')) > 3)
-                    <li class="text-muted">...dan {{ count(session('import_errors')) - 3 }} alasan lainnya.</li>
+                    <li class="text-muted">{{ __('...dan :count alasan lainnya.', ['count' => count(session('import_errors')) - 3]) }}</li>
                 @endif
             </ul>
             @endif
@@ -476,7 +479,7 @@
         <div class="flash-notice-body">
             <div class="d-flex align-items-center mb-1">
                 <i class='bx bx-error-circle fs-5 me-2 text-warning flex-shrink-0'></i>
-                <strong>Baris yang dilewati:</strong>
+                <strong>{{ __('Baris yang dilewati:') }}</strong>
             </div>
             <ul class="mb-0 ps-3 small">
                 @foreach(session('import_errors') as $err)
@@ -489,11 +492,10 @@
     @endif
 
     @if($errors->any())
-    {{-- Error validasi form: TETAP tampil (tidak hilang otomatis) sampai user
-         memperbaikinya atau menekan tombol X. --}}
+    {{-- Error validasi form: TETAP tampil sampai user memperbaikinya atau menekan tombol X. --}}
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
         <div class="flash-notice-body">
-            <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Terjadi kesalahan input:</div>
+            <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> {{ __('Terjadi kesalahan input:') }}</div>
             <ul class="mb-0 ps-3 small">
                 @foreach($errors->all() as $err)
                     <li>{{ $err }}</li>
@@ -504,7 +506,7 @@
     </div>
     @endif
 
-    @if(Auth::check() && Auth::user()->role === 'admin')
+    @if($canManage)
     {{-- Form Hapus Semua Kelas (Hidden, dipanggil via confirmDeleteAllClasses()) --}}
     <form id="deleteAllClassesForm" action="{{ panel_route('classes.destroy-all') }}" method="POST" class="d-none">
         @csrf
@@ -518,19 +520,19 @@
     <!-- ========================================================================= -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kelas">
 
-        <!-- Action Bar & Filter (Search+Dropdown Stretch Memanjang, Tombol Radius Konsisten) -->
+        <!-- Action Bar & Filter -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
-                
+
                 <!-- Sisi Kiri: Form Pencarian & Dropdown Tingkat Kelas (satu baris sejajar) -->
                 <form method="GET" action="{{ url()->current() }}" class="action-search-form">
                     <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
                     <div class="input-group search-box-wrap">
-                        <input type="text" 
-                               name="search" 
+                        <input type="text"
+                               name="search"
                                id="classSearchInput"
-                               class="form-control shadow-none" 
-                               placeholder="{{ __('Cari nama kelas...') }}" 
+                               class="form-control shadow-none"
+                               placeholder="{{ __('Cari nama kelas...') }}"
                                value="{{ request('search') }}"
                                aria-label="{{ __('Cari nama kelas') }}"
                                autocomplete="off"
@@ -540,7 +542,7 @@
                         </button>
                     </div>
 
-                    <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang (pola Catatan Kehadiran) -->
+                    <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang -->
                     <div class="filter-box-wrap">
                         <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal" aria-label="{{ __('Pilih tingkat kelas') }}">
                             <option value="">{{ __('Semua Tingkat') }}</option>
@@ -552,10 +554,10 @@
 
                 </form>
 
-                <!-- Sisi Kanan: Deretan Tombol Aksi (Hanya Admin) -->
+                <!-- Sisi Kanan: Deretan Tombol Aksi (Admin & Guru) -->
                 <div class="action-buttons-wrap">
-                    @if(Auth::check() && Auth::user()->role === 'admin')
-                    @if(Route::has('admin.classes.import'))
+                    @if($canManage)
+                    @if($importRoute)
                     <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importClassModal">
                         <span>{{ __('Import Excel') }}</span>
@@ -584,19 +586,20 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom">
                 <colgroup>
-                    <col style="width: 6%; min-width: 50px;">     {{-- NO --}}
-                    <col style="width: 12%; min-width: 80px;">   {{-- KELAS --}}
-                    <col style="width: 14%; min-width: 100px;">  {{-- NAMA KELAS --}}
-                    <col style="width: 30%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
-                    <col style="width: 20%; min-width: 140px;">  {{-- JUMLAH SISWA --}}
-                    @if(Auth::check() && Auth::user()->role === 'admin')
-                    <col style="width: 18%; min-width: 120px;">  {{-- AKSI --}}
-                    @else
+                    @if($canManage)
                     <col style="width: 6%; min-width: 50px;">    {{-- NO --}}
                     <col style="width: 12%; min-width: 80px;">   {{-- KELAS --}}
                     <col style="width: 14%; min-width: 100px;">  {{-- NAMA KELAS --}}
                     <col style="width: 30%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
-                    <col style="width: 26%; min-width: 160px;">  {{-- JUMLAH SISWA --}}
+                    <col style="width: 20%; min-width: 140px;">  {{-- JUMLAH SISWA --}}
+                    <col style="width: 18%; min-width: 120px;">  {{-- AKSI --}}
+                    @else
+                    {{-- Guru: tanpa kolom AKSI, proporsi sama dengan admin dan total 100% (full-width) --}}
+                    <col style="width: 7%; min-width: 50px;">    {{-- NO --}}
+                    <col style="width: 15%; min-width: 80px;">   {{-- KELAS --}}
+                    <col style="width: 17%; min-width: 100px;">  {{-- NAMA KELAS --}}
+                    <col style="width: 37%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
+                    <col style="width: 24%; min-width: 140px;">  {{-- JUMLAH SISWA --}}
                     @endif
                 </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
@@ -606,7 +609,7 @@
                         <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Nama Kelas') }}</th>
                         <th class="text-center py-3 px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 30%;">{{ __('Status Wali Kelas') }}</th>
                         <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 20%;">{{ __('Jumlah Siswa') }}</th>
-                        @if(Auth::check() && Auth::user()->role === 'admin')
+                        @if($canManage)
                         <th class="text-center py-3 px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 18%;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
@@ -631,7 +634,7 @@
                         <td data-label="{{ __('Jumlah Siswa') }}" class="jumlah-siswa-col px-3">
                             {{ $class->students_count }} {{ __('SISWA') }}
                         </td>
-                        @if(Auth::check() && Auth::user()->role === 'admin')
+                        @if($canManage)
                         <td data-label="{{ __('Aksi') }}" class="aksi-col px-3">
                             <div class="crud-center-wrapper">
                                 <!-- Tombol Edit Modal -->
@@ -653,7 +656,7 @@
                     </tr>
                     @empty
                     <tr class="align-middle">
-                        <td colspan="{{ Auth::check() && Auth::user()->role === 'admin' ? 6 : 5 }}" class="text-center py-5 text-muted empty-state">
+                        <td colspan="{{ $canManage ? 6 : 5 }}" class="text-center py-5 text-muted empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('grade'))
                                 {{ __('Tidak ada kelas yang cocok dengan pencarian/filter.') }}
@@ -670,7 +673,7 @@
         {!! render_compact_pagination($classes, 'daftar-kelas') !!}
     </div>
 
-@if(Auth::check() && Auth::user()->role === 'admin')
+@if($canManage)
 <!-- ================= MODAL EDIT KELAS (DIPINDAHKAN KE LUAR TABEL) ================= -->
 @foreach($classes as $class)
 <div class="modal fade" id="editClassModal{{ $class->id }}" tabindex="-1" aria-hidden="true">
@@ -809,7 +812,7 @@
     </div>
 </div>
 
-@if(Route::has('admin.classes.import'))
+@if($importRoute)
 <!-- MODAL IMPORT EXCEL KELAS -->
 <div class="modal fade" id="importClassModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -818,15 +821,15 @@
                 <h5 class="fw-bold mb-0">{{ __('Import Data Kelas Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ panel_route('classes.import') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ $importRoute }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="p-3 bg-white border rounded-3 small text-secondary mb-3">
                         <div class="mb-2">
                             {{ __('Format kolom file Excel:') }} <strong>{{ __('Nama Kelas') }}, {{ __('Tingkat (7/8/9)') }}</strong> (.xlsx {{ __('atau') }} .csv)
                         </div>
-                        @if(Route::has('admin.classes.template'))
-                        <a href="{{ panel_route('classes.template') }}" class="btn-download-green w-100" data-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
+                        @if($templateRoute)
+                        <a href="{{ $templateRoute }}" class="btn-download-green w-100" data-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                         @endif
                     </div>
                     <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
@@ -845,7 +848,7 @@
 
 @endsection
 
-{{-- Notifikasi sukses hilang otomatis 3 detik (untuk semua role, bukan hanya admin) --}}
+{{-- Notifikasi sukses hilang otomatis 3 detik (untuk semua role) --}}
 @push('scripts')
 <script>
 (function () {
@@ -881,7 +884,7 @@
         close.type = 'button';
         close.className = 'btn-close btn-close-sm';
         close.setAttribute('data-bs-dismiss', 'alert');
-        close.setAttribute('aria-label', 'Tutup');
+        close.setAttribute('aria-label', @json(__('Tutup')));
         close.addEventListener('click', function () { el.remove(); });
         el.appendChild(close);
         box.appendChild(el);
@@ -914,7 +917,7 @@
 </script>
 @endpush
 
-@if(Auth::check() && Auth::user()->role === 'admin')
+@if($canManage)
 @push('scripts')
 <script>
     function confirmDeleteClass(id, name) {
@@ -1137,7 +1140,7 @@
                         if (k) msg = String([].concat(json.errors[k])[0]);
                     }
                     if (!msg && json && json.message) msg = String(json.message);
-                    showErr(msg || 'Data kelas gagal disimpan. Periksa isian lalu coba lagi.');
+                    showErr(msg || {!! json_encode(__('Data kelas gagal disimpan. Periksa isian lalu coba lagi.')) !!});
                     resetSaving();
                     return;
                 }
@@ -1145,13 +1148,13 @@
                 try {
                     sessionStorage.setItem('classAlert', JSON.stringify({
                         status: 'success',
-                        msg: 'Data kelas berhasil ditambahkan!'
+                        msg: {!! json_encode(__('Data kelas berhasil ditambahkan!')) !!}
                     }));
                 } catch (e) {}
                 done = true;
             };
             xhr.onerror = function () {
-                showErr('Koneksi bermasalah. Coba lagi.');
+                showErr({!! json_encode(__('Koneksi bermasalah. Coba lagi.')) !!});
                 resetSaving();
             };
             xhr.send(new FormData(form));

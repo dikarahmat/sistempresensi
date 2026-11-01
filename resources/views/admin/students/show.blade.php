@@ -214,9 +214,11 @@
             <div class="card card-modern p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Informasi Siswa') }}</h5>
+                    @if(is_admin())
                     <button type="button" id="btnEditSiswa" class="btn btn-sm border-0 bg-transparent p-0" title="{{ __('Edit') }}" aria-label="{{ __('Edit') }}" style="color: #0f172a; cursor: pointer; line-height: 1;">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:block; color: #0f172a;"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                     </button>
+                    @endif
                 </div>
 
                 @csrf
@@ -256,10 +258,12 @@
                     <div id="errJk" class="invalid-feedback error-msg d-none"></div>
                 </div>
 
+                @if(is_admin())
                 <div id="actionsEdit" class="d-none mt-3 d-flex align-items-center gap-2">
                     <button type="button" id="btnSimpanInline" class="btn-submit-blue">{{ __('Simpan Perubahan') }}</button>
                     <button type="button" id="btnBatalInline" class="btn-cancel-gray">{{ __('Batal') }}</button>
                 </div>
+                @endif
             </div>
         </div>
 
