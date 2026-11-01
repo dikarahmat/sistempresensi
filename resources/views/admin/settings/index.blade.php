@@ -269,6 +269,53 @@
         width: 100%;
     }
 
+    /* Preview logo sekolah: dua kotak sejajar + panah kanan (desktop), vertikal (mobile) */
+    .logo-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+    }
+
+    .logo-box-col {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .logo-field-label {
+        font-size: 10px !important;
+        color: #0f172a !important;
+        font-weight: 600 !important;
+    }
+
+    .logo-arrow {
+        color: #0f172a !important;
+        font-size: 1.15rem !important;
+        flex-shrink: 0 !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    /* Layar < 1024px: logo menumpuk vertikal, panah menghadap ke bawah */
+    @media (max-width: 1023.98px) {
+        .logo-row {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        .logo-box-col {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .logo-arrow {
+            transform: rotate(90deg) !important;
+            align-self: center !important;
+        }
+        .logo-field-label {
+            font-size: 11px !important;
+        }
+    }
+
     .logo-preview-box {
         width: 130px !important;
         height: 130px !important;
@@ -304,6 +351,17 @@
         font-size: 0.8125rem !important;
         color: #0f172a !important;
         font-weight: 400 !important;
+    }
+
+    /* Error state: border merah 1px saja, hilangkan glow/ring/outline */
+    #school_logo.is-invalid {
+        border: 1px solid #dc2626 !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    #school_logo.is-invalid:focus {
+        box-shadow: none !important;
+        outline: none !important;
     }
 
     /* Catatan tepat di bawah input file, menjorok sedikit tanpa menambah tinggi baris */
@@ -703,27 +761,33 @@
                     <div class="identitas-logo-col">
                         <div class="logo-top-group">
                             <label class="form-label small fw-semibold" for="school_logo">{{ __('Logo Sekolah (.webp, .png, .jpg, .jpeg)') }}</label>
-                            <div class="logo-preview-box">
-                                <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="{{ __('Logo') }}">
+                            <div class="logo-row">
+                                <div class="logo-box-col">
+                                    <span class="logo-field-label d-none" id="logoCurrentLabel">{{ __('Logo saat ini') }}</span>
+                                    <div class="logo-preview-box">
+                                        <img id="logoPreview" src="{{ \App\Models\Setting::getLogoUrl() }}" onerror="this.outerHTML='<i class=\'bx bx-image text-muted fs-1\'></i>'" alt="{{ __('Logo') }}">
+                                    </div>
+                                </div>
+                                <i class="bx bx-right-arrow-alt logo-arrow d-none" id="logoArrow" aria-hidden="true"></i>
+                                <div class="logo-box-col">
+                                    <span class="logo-field-label d-none" id="logoNewLabel">{{ __('Logo baru') }}</span>
+                                    <div id="logoNewPreviewWrap" style="display:none;">
+                                        <div class="logo-preview-box mt-1">
+                                            <img id="logoNewPreview" alt="{{ __('Pratinjau logo baru') }}">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="logo-bottom-group">
                             <input type="file" name="school_logo" id="school_logo" class="form-control rounded-3 w-100 @error('school_logo') is-invalid @enderror" accept=".webp,.png,.jpg,.jpeg">
                             <div class="logo-sub-text">
-                                <span class="logo-note d-block mt-1" style="font-size: 11px;">{{ __('Ukuran rasio 1:1 disarankan. Maksimal 2MB.') }}</span>
+                                <span class="logo-note d-block mt-1" style="font-size: 11px;">{{ __('Ukuran rasio 1:1 disarankan. Maksimal 1 MB.') }}</span>
                                 @error('school_logo')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                                 <div id="logoClientError" class="text-danger small mt-1" style="display:none;"></div>
-                                <div id="logoFileInfo" class="small mt-1" style="display:none;">
-                                    <i class='bx bx-image me-1'></i><span id="logoFileName"></span>
-                                </div>
-                                <div id="logoNewPreviewWrap" class="mt-2" style="display:none;">
-                                    <div style="font-size: 11px; color: #0f172a;">{{ __('Pratinjau logo baru:') }}</div>
-                                    <div class="logo-preview-box mt-1">
-                                        <img id="logoNewPreview" alt="{{ __('Pratinjau logo baru') }}">
-                                    </div>
-                                </div>
+                                
                             </div>
                         </div>
                     </div>
@@ -824,10 +888,11 @@
         //    klien (format & 2MB, Bahasa Indonesia). Server tetap memvalidasi
         //    ulang; ini hanya agar gagal cepat dengan pesan di dalam form.
         var logoInput = document.getElementById('school_logo');
-        var fileInfo = document.getElementById('logoFileInfo');
-        var fileName = document.getElementById('logoFileName');
         var previewWrap = document.getElementById('logoNewPreviewWrap');
         var previewImg = document.getElementById('logoNewPreview');
+        var logoCurrentLabel = document.getElementById('logoCurrentLabel');
+        var logoNewLabel = document.getElementById('logoNewLabel');
+        var logoArrow = document.getElementById('logoArrow');
         var logoErr = document.getElementById('logoClientError');
         if (logoInput) {
             logoInput.addEventListener('change', function () {
@@ -835,8 +900,10 @@
                 if (logoErr) { logoErr.style.display = 'none'; logoErr.textContent = ''; }
                 logoInput.classList.remove('is-invalid');
                 if (!file) {
-                    fileInfo.style.display = 'none';
                     previewWrap.style.display = 'none';
+                    logoCurrentLabel.classList.add('d-none');
+                    logoNewLabel.classList.add('d-none');
+                    logoArrow.classList.add('d-none');
                     return;
                 }
                 var allowed = ['image/webp', 'image/png', 'image/jpeg'];
@@ -845,24 +912,29 @@
                     if (logoErr) { logoErr.textContent = {!! json_encode(__('Format logo harus .webp, .png, .jpg, atau .jpeg.')) !!}; logoErr.style.display = ''; }
                     logoInput.classList.add('is-invalid');
                     logoInput.value = '';
-                    fileInfo.style.display = 'none';
                     previewWrap.style.display = 'none';
+                    logoCurrentLabel.classList.add('d-none');
+                    logoNewLabel.classList.add('d-none');
+                    logoArrow.classList.add('d-none');
                     return;
                 }
-                if (file.size > 2 * 1024 * 1024) {
-                    if (logoErr) { logoErr.textContent = {!! json_encode(__('Ukuran logo maksimal 2 MB.')) !!}; logoErr.style.display = ''; }
+                if (file.size > 1 * 1024 * 1024) {
+                    if (logoErr) { logoErr.textContent = {!! json_encode(__('Ukuran logo maksimal 1 MB.')) !!}; logoErr.style.display = ''; }
                     logoInput.classList.add('is-invalid');
                     logoInput.value = '';
-                    fileInfo.style.display = 'none';
                     previewWrap.style.display = 'none';
+                    logoCurrentLabel.classList.add('d-none');
+                    logoNewLabel.classList.add('d-none');
+                    logoArrow.classList.add('d-none');
                     return;
                 }
-                fileName.textContent = file.name;
-                fileInfo.style.display = '';
                 var reader = new FileReader();
                 reader.onload = function (e) {
                     previewImg.src = e.target.result;
                     previewWrap.style.display = '';
+                    logoCurrentLabel.classList.remove('d-none');
+                    logoNewLabel.classList.remove('d-none');
+                    logoArrow.classList.remove('d-none');
                 };
                 reader.readAsDataURL(file);
             });

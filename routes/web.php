@@ -73,7 +73,11 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
         // ->names('holidays') dipakai AGAR nama route tetap admin.holidays.*
         // Hanya URL (path) yang berubah, nama route tidak.
         Route::get('hari-libur/template', [HolidayController::class, 'template'])->name('holidays.template');
+        Route::get('hari-libur/import', function () {
+            return redirect()->route('admin.holidays.index');
+        });
         Route::post('hari-libur/import', [HolidayController::class, 'import'])->name('holidays.import')->middleware('throttle:10,1');
+        Route::delete('hari-libur/destroy-all', [HolidayController::class, 'destroyAll'])->name('holidays.destroy-all');
         Route::resource('hari-libur', HolidayController::class)->names('holidays')->except(['show', 'create', 'edit']);
     });
 
@@ -81,6 +85,9 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
     Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAllActive'])->name('classes.destroy-all');
     Route::get('classes/template', [SchoolClassController::class, 'template'])->name('classes.template');
+    Route::get('classes/import', function () {
+        return redirect()->route('admin.classes.index');
+    });
     Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import')->middleware('throttle:10,1');
 
     // Soft Delete Routes untuk Kelas (Tempat Sampah).

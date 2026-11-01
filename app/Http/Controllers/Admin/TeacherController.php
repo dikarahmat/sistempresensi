@@ -48,9 +48,9 @@ class TeacherController extends Controller
         return view('admin.teachers.show', compact('teacher'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s.,\'\-]+$/u'],
             'nip' => ['required', 'regex:/^(\d{16}|\d{18})$/', 'unique:teachers,nip'],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
@@ -67,34 +67,29 @@ class TeacherController extends Controller
             'phone_number.regex' => __('Nomor telepon harus 10-15 digit angka.'),
         ]);
 
+        if ($validator->fails()) {
+            return back()->withInput()
+                ->withErrors($validator)
+                ->with('open_modal', 'add');
+        }
+
         // Deteksi duplikat nama secara manual (form Tambah Guru Baru).
-        $namaDuplikat = Teacher::where('name', $validated['name'])
+        $validatedData = $validator->validated();
+        $namaDuplikat = Teacher::where('name', $validatedData['name'])
             ->whereNull('deleted_at')
             ->exists();
         if ($namaDuplikat) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Nama guru sudah terdaftar.',
-                    'errors' => ['name' => ['Nama guru sudah terdaftar.']],
-                ], 422);
-            }
-            return back()->withErrors(['name' => 'Nama guru sudah terdaftar.'])
-                ->withInput();
+            return back()->withInput()
+                ->withErrors(['name' => 'Nama guru sudah terdaftar.'])
+                ->with('open_modal', 'add');
         }
 
+        $validated = $validatedData;
         $validated['phone'] = $validated['phone_number'];
         $validated['qr_token'] = (string) Str::uuid();
         $validated['status'] = 'Aktif';
 
         Teacher::create($validated);
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => __('Data guru berhasil ditambahkan!'),
-            ]);
-        }
 
         return redirect()->route('admin.guru.index')
             ->with('success', __('Data guru berhasil ditambahkan!'));
@@ -242,11 +237,12 @@ class TeacherController extends Controller
             });
 
             $imported = $import->getImportedCount();
+            $skipped = $import->getSkippedCount();
             $orderedErrors = $import->getOrderedErrors();
-            $totalErrors = count($orderedErrors);
+            $totalErrors = $skipped > 0 ? $skipped : count($orderedErrors);
 
             if ($imported > 0 && $totalErrors === 0) {
-                $message = "{$imported} data berhasil diimpor.";
+                $message = "Import berhasil: {$imported} guru ditambahkan.";
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json([
                         'status' => 'success',
@@ -261,63 +257,46 @@ class TeacherController extends Controller
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Tidak ada data yang diimpor.',
+                        'message' => 'Import gagal: tidak ada data yang diimpor.',
                     ], 422);
                 }
                 return redirect()->route('admin.guru.index')
-                    ->with('warning', 'Tidak ada data yang diimpor.');
+                    ->with('warning', 'Import gagal: tidak ada data yang diimpor.');
             }
 
-            // Sebagian berhasil, sebagian gagal (atau semua gagal)
-            $errorGroups = [];
-            foreach ($orderedErrors as [$row, $reason]) {
-                $reason = trim((string) $reason);
-                $reason = preg_replace('/^[Bb]aris\s+\d+\s*[:,.]?\s*/u', '', $reason);
-                $reason = rtrim($reason, '.: ');
-                $reason = preg_replace('/[\.\?\!]+$/', '', $reason);
-                if ($reason === '') {
-                    $reason = 'Data tidak valid.';
+            if ($imported > 0 && $totalErrors > 0) {
+                $message = "Import selesai: {$imported} guru ditambahkan, {$totalErrors} dilewati karena sudah terdaftar.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => $message,
+                    ], 200);
                 }
-                $errorGroups[$reason][] = $row;
+                return redirect()->route('admin.guru.index')
+                    ->with('success', $message);
             }
 
-            uksort($errorGroups, function ($a, $b) use ($errorGroups) {
-                return array_search($a, array_keys($errorGroups)) <=> array_search($b, array_keys($errorGroups));
-            });
-
-            $details = [];
-            foreach ($errorGroups as $reason => $rows) {
-                sort($rows);
-                $rowsList = implode(', ', $rows);
-                $details[] = "{$reason} (baris {$rowsList})";
+            if ($imported === 0 && $totalErrors > 0) {
+                $message = "Import gagal: semua data guru dalam file sudah terdaftar ({$totalErrors} dilewati).";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $message,
+                    ], 200);
+                }
+                return redirect()->route('admin.guru.index')
+                    ->with('error', $message);
             }
 
-            $maxDetails = 5;
-            $shownDetails = array_slice($details, 0, $maxDetails);
-            $extraCount = count($details) - $maxDetails;
-            if ($extraCount > 0) {
-                $shownDetails[] = "Dan {$extraCount} alasan lainnya.";
-            }
-
-            $summary = "{$imported} berhasil, {$totalErrors} gagal.";
-
-            $payload = [
-                'status' => $imported > 0 ? 'partial' : 'error',
-                'message' => $summary,
-            ];
-            if (!empty($shownDetails)) {
-                $payload['details'] = $shownDetails;
-            }
-
+            $message = 'Import gagal: tidak ada data yang diimpor.';
             if ($request->expectsJson() || $request->ajax()) {
-                return response()->json($payload, 200);
-            }
-            $flashMessage = $summary;
-            if (!empty($shownDetails)) {
-                $flashMessage .= ' ' . implode('; ', $shownDetails);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $message,
+                ], 422);
             }
             return redirect()->route('admin.guru.index')
-                ->with('warning', $flashMessage);
+                ->with('error', $message);
         } catch (\Throwable $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

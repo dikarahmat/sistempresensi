@@ -8,7 +8,9 @@ use App\Imports\HolidaysImport;
 use App\Models\Holiday;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 
 class HolidayController extends Controller
@@ -34,14 +36,31 @@ class HolidayController extends Controller
     /**
      * Import hari libur dari file Excel/CSV.
      */
-    public function import(Request $request): RedirectResponse
+    public function import(Request $request): RedirectResponse|JsonResponse
     {
-        $request->validate([
+        $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+        $validator = Validator::make($request->all(), [
             'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
         ], [
             'file_excel.required' => 'Pilih file Excel hari libur yang akan diunggah.',
             'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
         ]);
+
+        if ($validator->fails()) {
+            $message = $validator->errors()->first();
+            if ($isAjax) {
+                session()->flash('error', $message);
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'imported' => 0,
+                    'skipped' => 0,
+                    'message' => $message,
+                ], 200);
+            }
+            return redirect()->route('admin.holidays.index')->with('error', $message);
+        }
 
         try {
             $import = new HolidaysImport();
@@ -53,29 +72,83 @@ class HolidayController extends Controller
 
             // 1) Semua baris berhasil -> notifikasi hijau (sukses)
             if ($imported > 0 && $skipped === 0) {
+                $message = __('Import berhasil: :imported data hari libur ditambahkan.', ['imported' => $imported]);
+                if ($isAjax) {
+                    session()->flash('success', $message);
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'success',
+                        'imported' => $imported,
+                        'skipped' => $skipped,
+                        'message' => $message,
+                    ]);
+                }
                 return redirect()->route('admin.holidays.index')
-                    ->with('success', __('Import berhasil: :imported hari libur diimpor.', ['imported' => $imported]));
+                    ->with('success', $message);
             }
 
             // 2) Sebagian berhasil -> notifikasi kuning (peringatan)
             if ($imported > 0) {
+                $message = __('Import sebagian berhasil: :imported ditambahkan, :skipped dilewati karena sudah ada.', ['imported' => $imported, 'skipped' => $skipped]);
+                if ($isAjax) {
+                    session()->flash('warning', $message);
+                    if (!empty($errors)) {
+                        session()->flash('import_errors', $errors);
+                    }
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'warning',
+                        'imported' => $imported,
+                        'skipped' => $skipped,
+                        'message' => $message,
+                        'errors' => $errors,
+                    ]);
+                }
                 return redirect()->route('admin.holidays.index')
-                    ->with('warning', __('Import sebagian berhasil: :imported diimpor, :skipped dilewati.', ['imported' => $imported, 'skipped' => $skipped]))
+                    ->with('warning', $message)
                     ->with('import_errors', $errors);
             }
 
             // 3) Tidak ada baris yang masuk -> notifikasi merah (gagal)
-            $reason = $skipped > 0
-                ? "{$skipped} baris dilewati karena format tidak sesuai."
-                : 'File tidak memiliki baris data.';
+            if ($skipped > 0) {
+                $message = __('Import gagal: tidak ada data baru, semua data sudah ada.');
+            } else {
+                $message = __('Import gagal: tidak ada data yang diimpor. File tidak memiliki baris data atau format kolom salah. Periksa format file Excel.');
+            }
+
+            if ($isAjax) {
+                session()->flash('error', $message);
+                if (!empty($errors)) {
+                    session()->flash('import_errors', $errors);
+                }
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'imported' => $imported,
+                    'skipped' => $skipped,
+                    'message' => $message,
+                    'errors' => $errors,
+                ]);
+            }
 
             return redirect()->route('admin.holidays.index')
-                ->with('error', __('Import gagal: tidak ada data yang diimpor. :reason Periksa format file Excel.', ['reason' => $reason]))
+                ->with('error', $message)
                 ->with('import_errors', $errors);
         } catch (\Throwable $e) {
             report($e);
+            $message = __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
+            if ($isAjax) {
+                session()->flash('error', $message);
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'imported' => 0,
+                    'skipped' => 0,
+                    'message' => $message,
+                ], 200);
+            }
             return redirect()->route('admin.holidays.index')
-                ->with('error', __('Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.'));
+                ->with('error', $message);
         }
     }
 
@@ -173,11 +246,25 @@ class HolidayController extends Controller
         return redirect()->route('admin.holidays.index')->with('success', __('Hari libur berhasil diperbarui!'));
     }
 
-    public function destroy(Holiday $holiday): RedirectResponse
+    public function destroy($hari_libur): RedirectResponse
     {
+        $holiday = Holiday::find($hari_libur) ?? Holiday::findOrFail($hari_libur);
         $holiday->delete();
         // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
         // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
         return redirect()->route('admin.holidays.index')->with('deleted', __('Hari libur berhasil dihapus!'));
+    }
+
+    public function destroyAll(): RedirectResponse
+    {
+        $count = Holiday::count();
+
+        if ($count === 0) {
+            return redirect()->route('admin.holidays.index')->with('error', __('Tidak ada data hari libur yang bisa dihapus.'));
+        }
+
+        Holiday::query()->delete();
+
+        return redirect()->route('admin.holidays.index')->with('deleted', __(':count data hari libur berhasil dihapus.', ['count' => $count]));
     }
 }

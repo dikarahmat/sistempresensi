@@ -60,23 +60,52 @@ class StudentController extends Controller
         return view('admin.students.create', compact('classes'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'nisn' => ['required', 'digits:10', 'unique:students,nisn'],
+            'name' => ['required', 'string', 'max:255', 'regex:/^[\p{L}\s.,\'\-]+$/u'],
+            'nisn' => ['required', 'digits:10', 'regex:/^\d{10}$/', 'unique:students,nisn'],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
         ], [
-            'nisn.required' => __('NISN harus 10 digit angka.'),
-            'nisn.digits' => __('NISN harus 10 digit angka.'),
+            'school_class_id.required' => __('Kelas wajib dipilih.'),
+            'school_class_id.exists' => __('Kelas tidak valid.'),
+            'name.required' => __('Nama siswa wajib diisi.'),
+            'name.regex' => __('Nama siswa hanya boleh berisi huruf, spasi, titik, koma, apostrof, dan tanda hubung.'),
+            'nisn.required' => __('NISN wajib diisi.'),
+            'nisn.digits' => __('NISN harus berupa 10 digit angka.'),
+            'nisn.regex' => __('NISN harus berupa 10 digit angka.'),
             'nisn.unique' => __('NISN sudah terdaftar.'),
+            'gender.required' => __('Jenis kelamin wajib dipilih.'),
+            'gender.in' => __('Jenis kelamin wajib dipilih.'),
         ]);
 
+        if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return back()->withInput()
+                ->withErrors($validator)
+                ->with('open_modal', 'add');
+        }
+
+        $validated = $validator->validated();
         $validated['qr_token'] = (string) Str::uuid();
         $validated['status'] = 'Aktif';
 
         Student::create($validated);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            session()->flash('success', __('Data siswa berhasil ditambahkan!'));
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Data siswa berhasil ditambahkan!')
+            ]);
+        }
 
         return redirect()->route('admin.students.index')
             ->with('success', __('Data siswa berhasil ditambahkan!'));
@@ -86,13 +115,20 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'nisn' => ['required', 'digits:10', 'unique:students,nisn,' . $student->id],
+            'name' => ['required', 'string', 'max:255', 'regex:/^[\p{L}\s.,\'\-]+$/u'],
+            'nisn' => ['required', 'regex:/^\d{10}$/', 'unique:students,nisn,' . $student->id],
             'gender' => ['required', 'in:Laki-laki,Perempuan'],
         ], [
-            'nisn.required' => __('NISN harus 10 digit angka.'),
-            'nisn.digits' => __('NISN harus 10 digit angka.'),
+            'school_class_id.required' => __('Kelas wajib dipilih.'),
+            'school_class_id.exists' => __('Kelas tidak valid.'),
+            'name.required' => __('Nama siswa wajib diisi.'),
+            'name.regex' => __('Nama siswa hanya boleh berisi huruf, spasi, titik, koma, apostrof, dan tanda hubung.'),
+            'nisn.required' => __('NISN wajib diisi.'),
+            'nisn.regex' => __('NISN harus berupa 10 digit angka.'),
+            'nisn.digits' => __('NISN harus berupa 10 digit angka.'),
             'nisn.unique' => __('NISN sudah terdaftar.'),
+            'gender.required' => __('Jenis kelamin wajib dipilih.'),
+            'gender.in' => __('Jenis kelamin wajib dipilih.'),
         ]);
 
         $student->update($validated);
@@ -132,7 +168,7 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('admin.students.index')
-            ->with('danger', __('Data siswa :name berhasil dipindahkan ke Tempat Sampah.', ['name' => $studentName]));
+            ->with('deleted', __('Data siswa :name berhasil dipindahkan ke Tempat Sampah.', ['name' => $studentName]));
     }
 
     public function downloadCard(Student $student)
@@ -294,7 +330,7 @@ class StudentController extends Controller
             });
 
             return redirect()->route('admin.students.index')
-                ->with('danger', "$deleted data siswa dipindahkan ke Tempat Sampah.");
+                ->with('deleted', "$deleted data siswa dipindahkan ke Tempat Sampah.");
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.students.index')
@@ -421,7 +457,7 @@ class StudentController extends Controller
             $totalErrors = count($orderedErrors);
 
             if ($imported > 0 && $totalErrors === 0) {
-                $message = "{$imported} data berhasil diimpor.";
+                $message = "Import berhasil: {$imported} siswa ditambahkan.";
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json([
                         'status' => 'success',
@@ -436,14 +472,14 @@ class StudentController extends Controller
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Tidak ada data yang diimpor.',
+                        'message' => 'Import gagal: tidak ada data yang diimpor.',
                     ], 422);
                 }
                 return redirect()->route('admin.students.index')
-                    ->with('warning', 'Tidak ada data yang diimpor.');
+                    ->with('warning', 'Import gagal: tidak ada data yang diimpor.');
             }
 
-            // Sebagian berhasil, sebagian gagal
+            // Pisahkan error duplikat dari error lain
             $errorGroups = [];
             foreach ($orderedErrors as [$row, $reason]) {
                 $reason = trim((string) $reason);
@@ -456,15 +492,10 @@ class StudentController extends Controller
                 $errorGroups[$reason][] = $row;
             }
 
-            uksort($errorGroups, function ($a, $b) use ($errorGroups) {
-                return array_search($a, array_keys($errorGroups)) <=> array_search($b, array_keys($errorGroups));
-            });
-
-            // Pisahkan error duplikat NISN (sudah terdaftar di DB) dari error lain
             $duplicateRows = [];
             $nonDuplicateGroups = [];
             foreach ($errorGroups as $reason => $rows) {
-                if (str_contains($reason, 'sudah terdaftar')) {
+                if (stripos($reason, 'sudah terdaftar') !== false || stripos($reason, 'duplikat') !== false) {
                     $duplicateRows = array_merge($duplicateRows, $rows);
                 } else {
                     $nonDuplicateGroups[$reason] = $rows;
@@ -474,24 +505,20 @@ class StudentController extends Controller
 
             // Kasus: semua baris duplikat, tidak ada yang berhasil
             if ($imported === 0 && $totalDuplicates > 0 && count($nonDuplicateGroups) === 0) {
-                $message = 'Semua data sudah terdaftar. Tidak ada data baru yang diimpor.';
-                $status = 'error';
-                $payload = ['status' => $status, 'message' => $message];
+                $message = "Import gagal: semua data siswa dalam file sudah terdaftar ({$totalDuplicates} dilewati).";
                 if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json($payload, 200);
+                    return response()->json(['status' => 'error', 'message' => $message], 200);
                 }
                 return redirect()->route('admin.students.index')->with('danger', $message);
             }
 
             // Kasus: sebagian berhasil, sisanya semua duplikat
             if ($imported > 0 && $totalDuplicates > 0 && count($nonDuplicateGroups) === 0) {
-                $message = "{$imported} berhasil diimpor. {$totalDuplicates} data dilewati karena NISN sudah terdaftar.";
-                $status = 'partial';
-                $payload = ['status' => $status, 'message' => $message];
+                $message = "Import selesai: {$imported} siswa ditambahkan, {$totalDuplicates} dilewati karena sudah terdaftar.";
                 if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json($payload, 200);
+                    return response()->json(['status' => 'success', 'message' => $message], 200);
                 }
-                return redirect()->route('admin.students.index')->with('warning', $message);
+                return redirect()->route('admin.students.index')->with('success', $message);
             }
 
             // Kasus: ada error non-duplikat (batasi nomor baris maksimal 10 per alasan)

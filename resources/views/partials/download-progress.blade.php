@@ -100,11 +100,12 @@
     .btn-progress.is-running { pointer-events: none; }
     .btn-progress.is-running .btn-progress__label { font-weight: 700; }
 
-    /* Selesai: tombol hijau, teks "Selesai" (tanpa ikon). */
+    /* Selesai: tetap biru seperti tombol normal (tanpa hijau). */
     .btn-progress.is-done {
-        background-color: #16a34a !important;
-        border-color: #16a34a !important;
+        background-color: var(--btn-progress-base, #2563eb) !important;
+        border-color: var(--btn-progress-base, #2563eb) !important;
         color: #fff !important;
+        opacity: 1 !important;
     }
     .btn-progress.is-done .btn-progress__fill { display: none; }
 
@@ -808,7 +809,19 @@
                     // Baca diam-diam: flash message & hasil import tetap tampil
                     // lewat reload/lokasi di bawah, sama seperti sebelumnya.
                     s.setelahSelesai = function () {
-                        window.location.href = xhr.responseURL || (url + '#import-selesai');
+                        // Hindari GET ke URL import (POST); selalu reload halaman saat ini atau index
+                        var target = xhr.responseURL;
+                        if (target && target.indexOf('/import') !== -1 && (target.indexOf('admin') !== -1)) {
+                            target = window.location.pathname.replace(/\/?$/, '') || target;
+                            // fallback: reload halaman sekarang
+                            window.location.reload();
+                            return;
+                        }
+                        if (target && target !== url) {
+                            window.location.href = target;
+                        } else {
+                            window.location.reload();
+                        }
                     };
                     resolve(true);
                 } else {
@@ -825,6 +838,7 @@
 
     async function jalankan(s, opts, url) {
         var percobaan = 0;
+        var isSubmitMode = opts.mode === 'submit' || opts.mode === 'form' || s.button && (s.button.dataset.dlProgressMode === 'submit' || s.button.dataset.formSubmit === '1');
 
         while (percobaan <= MAKS_RETRY) {
             var headers = {};
@@ -836,6 +850,9 @@
             }
             if (opts.csrf) headers['X-CSRF-TOKEN'] = opts.csrf;
             headers['X-Requested-With'] = 'XMLHttpRequest';
+            if (isSubmitMode) {
+                headers['Accept'] = headers['Accept'] || 'application/json';
+            }
 
             // MODE IMPORT: file diunggah, bukan diunduh.
             // Dijalankan SEBELUM fetch supaya tidak ada dua request.
@@ -882,13 +899,347 @@
                 try {
                     var j = await res.json();
                     pesan = j.message || pesan;
-                } catch (e) { /* bukan JSON */ }
+                    var jerrors = j.errors || null;
+                    var jstatus = j.status || null;
+                    // Untuk mode submit, tampilkan pesan error dan kembalikan tombol
+                    if (isSubmitMode) {
+                        stop(s, 'timerEstimasi');
+                        if (s.dibatalkan) throw abortError();
+                        if (s.button && s.button.id === 'btnSaveStudent') {
+                            // Jika sukses, jangan treat sebagai error
+                            if (res.ok && jstatus === 'success') {
+                                try {
+                                    var modalEl = s.button.closest('.modal');
+                                    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                                        var modalInst = window.bootstrap.Modal.getInstance(modalEl);
+                                        if (modalInst) { modalInst.hide(); } else {
+                                            modalEl.classList.remove('show');
+                                            modalEl.style.display = 'none';
+                                            document.body.classList.remove('modal-open');
+                                            var backdrop = document.querySelector('.modal-backdrop');
+                                            if (backdrop) backdrop.remove();
+                                        }
+                                    }
+                                    var formElS = s.button.closest('form');
+                                    if (formElS) {
+                                        try { formElS.reset(); } catch (e) {}
+                                    }
+                                    // clear field errors
+                                    var ferrorsC = document.querySelectorAll('#addStudentModal .field-error');
+                                    for (var fec=0; fec<ferrorsC.length; fec++) { ferrorsC[fec].textContent = ''; }
+                                    var finvalidC = document.querySelectorAll('#addStudentModal .is-invalid');
+                                    for (var fic=0; fic<finvalidC.length; fic++) { finvalidC[fic].classList.remove('is-invalid'); finvalidC[fic].style.borderColor = ''; }
+                                    // show success alert at top
+                                    setTimeout(function(){
+                                        var box = document.getElementById('importAlertBox');
+                                        if (!box) {
+                                            box = document.createElement('div');
+                                            box.id = 'importAlertBox';
+                                            var content = document.querySelector('.card, .content, main, .page-content, body');
+                                            if (content && content.parentNode) {
+                                                content.parentNode.insertBefore(box, content);
+                                            } else {
+                                                document.body.insertBefore(box, document.body.firstChild);
+                                            }
+                                        }
+                                        box.innerHTML = '';
+                                        var alert = document.createElement('div');
+                                        alert.className = 'alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+                                        alert.setAttribute('role', 'alert');
+                                        alert.style.backgroundColor = '#dcfce7';
+                                        alert.style.color = '#166534';
+                                        alert.style.border = '1px solid #86efac';
+                                        alert.innerHTML = '<div class="flash-notice-body"><div class="d-flex align-items-center"><i class="bx bx-check-circle fs-5 me-2 flex-shrink-0" style="color:#16a34a !important;"></i><span>' + ((j.message||'Data siswa berhasil ditambahkan!').replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '</span></div></div><button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>';
+                                        box.appendChild(alert);
+                                    }, 100);
+                                } catch (e) {}
+                                s.setelahSelesai = function(){ window.location.reload(); };
+                                final(s);
+                                return;
+                            }
+                            try {
+                                var formEl = s.button.closest('form');
+                                if (formEl) {
+                                    // clear previous field errors
+                                    var ferrors = formEl.querySelectorAll('.field-error');
+                                    for (var fe=0; fe<ferrors.length; fe++) { ferrors[fe].textContent = ''; }
+                                    var finvalid = formEl.querySelectorAll('.is-invalid');
+                                    for (var fi=0; fi<finvalid.length; fi++) { finvalid[fi].classList.remove('is-invalid'); finvalid[fi].style.borderColor = ''; }
+                                    if (jerrors) {
+                                        if (jerrors.nisn && jerrors.nisn[0]) {
+                                            var nisnInput = formEl.querySelector('#studentNisn, input[name="nisn"]');
+                                            var nisnErr = formEl.querySelector('#studentNisn') ? formEl.querySelector('#studentNisn').parentNode.querySelector('.field-error') : (nisnInput && nisnInput.parentNode ? nisnInput.parentNode.querySelector('.field-error') : null);
+                                            if (nisnErr) { nisnErr.textContent = jerrors.nisn[0]; nisnErr.style.display = 'block'; }
+                                            if (nisnInput) { nisnInput.classList.add('is-invalid'); nisnInput.style.borderColor = '#dc2626'; }
+                                        } else if (jerrors.name && jerrors.name[0]) {
+                                            var nameInput = formEl.querySelector('#studentName, input[name="name"]');
+                                            var nameErr = formEl.querySelector('#studentName') ? formEl.querySelector('#studentName').parentNode.querySelector('.field-error') : (nameInput && nameInput.parentNode ? nameInput.parentNode.querySelector('.field-error') : null);
+                                            if (nameErr) { nameErr.textContent = jerrors.name[0]; nameErr.style.display = 'block'; }
+                                            if (nameInput) { nameInput.classList.add('is-invalid'); nameInput.style.borderColor = '#dc2626'; }
+                                        } else if (jerrors.school_class_id && jerrors.school_class_id[0]) {
+                                            var kelasInput = formEl.querySelector('#studentKelas, select[name="school_class_id"]');
+                                            var kelasErr = formEl.querySelector('#studentKelas') ? formEl.querySelector('#studentKelas').parentNode.querySelector('.field-error') : (kelasInput && kelasInput.parentNode ? kelasInput.parentNode.querySelector('.field-error') : null);
+                                            if (kelasErr) { kelasErr.textContent = jerrors.school_class_id[0]; kelasErr.style.display = 'block'; }
+                                            if (kelasInput) { kelasInput.classList.add('is-invalid'); kelasInput.style.borderColor = '#dc2626'; }
+                                        } else if (jerrors.gender && jerrors.gender[0]) {
+                                            var jkInput = formEl.querySelector('#studentJk, select[name="gender"]');
+                                            var jkErr = formEl.querySelector('#studentJk') ? formEl.querySelector('#studentJk').parentNode.querySelector('.field-error') : (jkInput && jkInput.parentNode ? jkInput.parentNode.querySelector('.field-error') : null);
+                                            if (jkErr) { jkErr.textContent = jerrors.gender[0]; jkErr.style.display = 'block'; }
+                                            if (jkInput) { jkInput.classList.add('is-invalid'); jkInput.style.borderColor = '#dc2626'; }
+                                        } else {
+                                            // fallback to first error
+                                            var firstKey = Object.keys(jerrors)[0];
+                                            var firstMsg = jerrors[firstKey] && jerrors[firstKey][0] ? jerrors[firstKey][0] : pesan;
+                                            var nisnInput2 = formEl.querySelector('#studentNisn, input[name="nisn"]');
+                                            var nisnErr2 = formEl.querySelector('#studentNisn') ? formEl.querySelector('#studentNisn').parentNode.querySelector('.field-error') : (nisnInput2 && nisnInput2.parentNode ? nisnInput2.parentNode.querySelector('.field-error') : null);
+                                            if (nisnErr2) { nisnErr2.textContent = firstMsg; nisnErr2.style.display = 'block'; }
+                                            if (nisnInput2 && (firstKey === 'nisn' || firstKey.indexOf('nisn') !== -1)) { nisnInput2.classList.add('is-invalid'); nisnInput2.style.borderColor = '#dc2626'; }
+                                        }
+                                    } else if (jstatus && jstatus !== 'error') {
+                                        // not an error status
+                                    } else {
+                                        var nisnInput3 = formEl.querySelector('#studentNisn, input[name="nisn"]');
+                                        var nisnErr3 = formEl.querySelector('#studentNisn') ? formEl.querySelector('#studentNisn').parentNode.querySelector('.field-error') : (nisnInput3 && nisnInput3.parentNode ? nisnInput3.parentNode.querySelector('.field-error') : null);
+                                        if (nisnErr3) { nisnErr3.textContent = pesan || 'NISN sudah terdaftar atau data tidak valid.'; nisnErr3.style.display = 'block'; }
+                                        if (nisnInput3) { nisnInput3.classList.add('is-invalid'); nisnInput3.style.borderColor = '#dc2626'; }
+                                    }
+                                }
+                            } catch (e) {}
+                            tutup(s, false);
+                            return;
+                        }
+                        if (s.button && (s.button.id === 'btnSaveTeacher' || s.button.id === 'btnSaveClass')) {
+                            try {
+                                var modalEl = s.button.closest('.modal');
+                                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                                    var modalInst = window.bootstrap.Modal.getInstance(modalEl);
+                                    if (modalInst) { modalInst.hide(); } else {
+                                        modalEl.classList.remove('show');
+                                        modalEl.style.display = 'none';
+                                        document.body.classList.remove('modal-open');
+                                        var backdrop = document.querySelector('.modal-backdrop');
+                                        if (backdrop) backdrop.remove();
+                                    }
+                                }
+                            } catch (e) {}
+                            var box = document.getElementById('importAlertBox');
+                            if (box) {
+                                var alertEl = document.createElement('div');
+                                alertEl.className = 'alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+                                alertEl.setAttribute('role', 'alert');
+                                var bodyEl = document.createElement('div');
+                                bodyEl.className = 'flash-notice-body';
+                                var flex = document.createElement('div');
+                                flex.className = 'd-flex align-items-center';
+                                var iconEl = document.createElement('i');
+                                iconEl.className = 'bx bx-error-circle fs-5 me-2 text-danger flex-shrink-0';
+                                var spanEl = document.createElement('span');
+                                var errMsg = pesan;
+                                if (!errMsg) {
+                                    if (s.button.id === 'btnSaveTeacher') errMsg = 'Gagal menyimpan data guru.';
+                                    else if (s.button.id === 'btnSaveClass') errMsg = 'Gagal menyimpan data kelas.';
+                                    else errMsg = 'Gagal menyimpan data.';
+                                }
+                                spanEl.textContent = errMsg;
+                                flex.appendChild(iconEl);
+                                flex.appendChild(spanEl);
+                                bodyEl.appendChild(flex);
+                                alertEl.appendChild(bodyEl);
+                                var closeBtn = document.createElement('button');
+                                closeBtn.type = 'button';
+                                closeBtn.className = 'btn-close btn-close-sm';
+                                closeBtn.setAttribute('data-bs-dismiss', 'alert');
+                                closeBtn.setAttribute('aria-label', 'Tutup');
+                                alertEl.appendChild(closeBtn);
+                                box.prepend(alertEl);
+                            } else {
+                                var errMsg2 = pesan;
+                                if (!errMsg2) {
+                                    if (s.button.id === 'btnSaveTeacher') errMsg2 = 'Gagal menyimpan data guru.';
+                                    else if (s.button.id === 'btnSaveClass') errMsg2 = 'Gagal menyimpan data kelas.';
+                                    else errMsg2 = 'Gagal menyimpan data.';
+                                }
+                                alert(errMsg2);
+                            }
+                            tutup(s, false);
+                            return;
+                        }
+                        pesanError(s.button, pesan);
+                        tutup(s, false);
+                        return;
+                    }
+                } catch (e) {
+                    if (isSubmitMode) {
+                        stop(s, 'timerEstimasi');
+                        if (s.dibatalkan) throw abortError();
+                        if (s.button && s.button.id === 'btnSaveStudent') {
+                            try {
+                                var formEl2 = s.button.closest('form');
+                                if (formEl2) {
+                                    var ferrors2 = formEl2.querySelectorAll('.field-error');
+                                    for (var fe2=0; fe2<ferrors2.length; fe2++) { ferrors2[fe2].textContent = ''; }
+                                    var finvalid2 = formEl2.querySelectorAll('.is-invalid');
+                                    for (var fi2=0; fi2<finvalid2.length; fi2++) { finvalid2[fi2].classList.remove('is-invalid'); finvalid2[fi2].style.borderColor = ''; }
+                                    var nisnInput3 = formEl2.querySelector('#studentNisn, input[name="nisn"]');
+                                    var nisnErr3 = formEl2.querySelector('#studentNisn') ? formEl2.querySelector('#studentNisn').parentNode.querySelector('.field-error') : (nisnInput3 && nisnInput3.parentNode ? nisnInput3.parentNode.querySelector('.field-error') : null);
+                                    if (nisnErr3) { nisnErr3.textContent = (window.__i18n && window.__i18n.dl_gagal) || 'NISN sudah terdaftar atau data tidak valid.'; nisnErr3.style.display = 'block'; }
+                                    if (nisnInput3) { nisnInput3.classList.add('is-invalid'); nisnInput3.style.borderColor = '#dc2626'; }
+                                }
+                            } catch (e2x) {}
+                            tutup(s, false);
+                            return;
+                        }
+                        if (s.button && (s.button.id === 'btnSaveTeacher' || s.button.id === 'btnSaveClass')) {
+                            try {
+                                var modalEl = s.button.closest('.modal');
+                                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                                    var modalInst = window.bootstrap.Modal.getInstance(modalEl);
+                                    if (modalInst) { modalInst.hide(); } else {
+                                        modalEl.classList.remove('show');
+                                        modalEl.style.display = 'none';
+                                        document.body.classList.remove('modal-open');
+                                        var backdrop = document.querySelector('.modal-backdrop');
+                                        if (backdrop) backdrop.remove();
+                                    }
+                                }
+                            } catch (e2) {}
+                            var box2 = document.getElementById('importAlertBox');
+                            var msgErr = (window.__i18n && window.__i18n.dl_gagal);
+                            if (!msgErr) {
+                                if (s.button.id === 'btnSaveTeacher') msgErr = 'Gagal menyimpan data guru.';
+                                else if (s.button.id === 'btnSaveClass') msgErr = 'Gagal menyimpan data kelas.';
+                                else msgErr = 'Gagal menyimpan data.';
+                            }
+                            if (box2) {
+                                var alertEl = document.createElement('div');
+                                alertEl.className = 'alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+                                alertEl.setAttribute('role', 'alert');
+                                var bodyEl = document.createElement('div');
+                                bodyEl.className = 'flash-notice-body';
+                                var flex = document.createElement('div');
+                                flex.className = 'd-flex align-items-center';
+                                var iconEl = document.createElement('i');
+                                iconEl.className = 'bx bx-error-circle fs-5 me-2 text-danger flex-shrink-0';
+                                var spanEl = document.createElement('span');
+                                spanEl.textContent = msgErr;
+                                flex.appendChild(iconEl);
+                                flex.appendChild(spanEl);
+                                bodyEl.appendChild(flex);
+                                alertEl.appendChild(bodyEl);
+                                var closeBtn = document.createElement('button');
+                                closeBtn.type = 'button';
+                                closeBtn.className = 'btn-close btn-close-sm';
+                                closeBtn.setAttribute('data-bs-dismiss', 'alert');
+                                closeBtn.setAttribute('aria-label', 'Tutup');
+                                alertEl.appendChild(closeBtn);
+                                box2.prepend(alertEl);
+                            } else {
+                                var container = document.querySelector('#daftar-guru, #daftar-kelas, .page-title, h1, .content');
+                                if (container && container.parentNode) {
+                                    var alertEl2 = document.createElement('div');
+                                    alertEl2.className = 'alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+                                    alertEl2.setAttribute('role', 'alert');
+                                    alertEl2.innerHTML = '<div class="flash-notice-body"><div class="d-flex align-items-center"><i class="bx bx-error-circle fs-5 me-2 text-danger flex-shrink-0"></i><span>'+ (msgErr.replace(/</g,'&lt;').replace(/>/g,'&gt;')) +'</span></div></div><button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>';
+                                    container.parentNode.insertBefore(alertEl2, container);
+                                } else {
+                                    alert(msgErr);
+                                }
+                            }
+
+                            tutup(s, false);
+                            return;
+                        }
+                        pesanError(s.button, (window.__i18n && window.__i18n.dl_gagal) || 'Gagal');
+                        tutup(s, false);
+                        return;
+                    }
+                    /* bukan JSON */
+                }
                 throw new Error(pesan);
             }
 
             var total        = parseInt(res.headers.get('Content-Length') || '', 10);
             var punyaPanjang = !isNaN(total) && total > 0;
             var blob;
+
+            // MODE SUBMIT/FORM: tidak mengunduh file, hanya handle response
+            if (isSubmitMode) {
+                if (res.body && typeof res.body.getReader === 'function') {
+                    var rdrs = res.body.getReader();
+                    for (;;) {
+                        var pcs = await rdrs.read();
+                        if (pcs.done) break;
+                    }
+                } else {
+                    await res.text();
+                }
+                stop(s, 'timerEstimasi');
+                if (s.dibatalkan) throw abortError();                if (!s.dibatalkan && !s.sudahTutup) {
+                    if (s.button && (s.button.id === 'btnSaveTeacher' || s.button.id === 'btnSaveClass')) {
+                        s.setelahSelesai = function () {
+                            try {
+                                var modalEl = s.button.closest('.modal');
+                                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                                    var modalInst = window.bootstrap.Modal.getInstance(modalEl);
+                                    if (modalInst) { modalInst.hide(); } else {
+                                        modalEl.classList.remove('show');
+                                        modalEl.style.display = 'none';
+                                        document.body.classList.remove('modal-open');
+                                        var backdrop = document.querySelector('.modal-backdrop');
+                                        if (backdrop) backdrop.remove();
+                                    }
+                                }
+                                var formEl = s.button.closest('form');
+                                if (formEl) {
+                                    try { formEl.reset(); } catch (e) {}
+                                }
+                            } catch (e) {}
+                            setTimeout(function(){
+                                var box = document.getElementById('importAlertBox');
+                                var msg = '';
+                                if (s.button.id === 'btnSaveTeacher') msg = 'Data guru berhasil ditambahkan!';
+                                else if (s.button.id === 'btnSaveClass') msg = 'Data kelas berhasil ditambahkan!';
+                                else msg = 'Data berhasil disimpan!';
+                                if (box) {
+                                    box.innerHTML = '';
+                                    var alert = document.createElement('div');
+                                    alert.className = 'alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+                                    alert.setAttribute('role', 'alert');
+                                    alert.style.backgroundColor = '#dcfce7';
+                                    alert.style.color = '#166534';
+                                    alert.style.border = '1px solid #86efac';
+                                    alert.innerHTML = '<div class="flash-notice-body"><div class="d-flex align-items-center"><i class="bx bx-check-circle fs-5 me-2 text-success flex-shrink-0" style="color:#16a34a !important;"></i><span>'+ msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') +'</span></div></div><button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>';
+                                    box.appendChild(alert);
+                                } else {
+                                    var container = document.querySelector('#daftar-guru, #daftar-kelas, .page-title, h1, .content');
+                                    if (container && container.parentNode) {
+                                        var alert2 = document.createElement('div');
+                                        alert2.className = 'alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+                                        alert2.setAttribute('role', 'alert');
+                                        alert2.style.backgroundColor = '#dcfce7';
+                                        alert2.style.color = '#166534';
+                                        alert2.style.border = '1px solid #86efac';
+                                        alert2.innerHTML = '<div class="flash-notice-body"><div class="d-flex align-items-center"><i class="bx bx-check-circle fs-5 me-2 text-success flex-shrink-0" style="color:#16a34a !important;"></i><span>'+ msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') +'</span></div></div><button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>';
+                                        container.parentNode.insertBefore(alert2, container);
+                                    }
+                                }
+                                setTimeout(function(){ window.location.reload(); }, 600);
+                            }, 350);
+                        };
+                    } else {
+                        s.setelahSelesai = function () {
+                            var target = res.url;
+                            if (target && target !== url) {
+                                window.location.href = target;
+                            } else {
+                                window.location.reload();
+                            }
+                        };
+                    }
+                    final(s);
+                }
+                return;
+            }
 
             // MODE IMPORT via fetch (fallback, mis. tanpa File di body). Tidak ada blob
             // yang disimpan ke folder Unduhan; respons dipakai seperti biasa
@@ -1101,10 +1452,13 @@
             e.preventDefault();
             var body = new FormData(form);
             body.delete('output_format');   // dipilih di server lewat tombol
+            // Jika tombol diberi tanda data-form-submit atau bukan download, gunakan mode submit
+            var isFormSubmitMode = el.hasAttribute('data-form-submit') || el.dataset.dlProgressMode === 'submit';
             window.downloadWithProgress(el, form.getAttribute('action') || window.location.href, {
                 method: (form.getAttribute('method') || 'POST').toUpperCase(),
                 body: body,
-                csrf: csrf()
+                csrf: csrf(),
+                mode: isFormSubmitMode ? 'submit' : undefined
             });
         });
     }

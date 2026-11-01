@@ -5,9 +5,10 @@
 @section('page_subtitle', __('Kelola informasi siswa'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
-     sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
-     bersama, sama seperti halaman acuan. --}}
-@section('canvas_class', 'page-canvas-fixed')    @push('styles')
+     sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout bersama. --}}
+@section('canvas_class', 'page-canvas-fixed')
+
+@push('styles')
 <style>
     /* Subtitle Data Siswa: full width, tidak terpotong (mobile & desktop) */
     .header-main-subtitle {
@@ -18,17 +19,6 @@
         width: 100% !important;
     }
 
-    #btnSimpanSiswa {
-        transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
-    }
-    #btnSimpanSiswa:disabled {
-        background-color: #cbd5e1 !important;
-        color: #64748b !important;
-        border-color: #cbd5e1 !important;
-        cursor: not-allowed !important;
-        opacity: 1 !important;
-        box-shadow: none !important;
-    }
     .field-error {
         min-height: 0;
         margin-top: 4px;
@@ -55,12 +45,20 @@
     #addStudentModal .form-label {
         margin-bottom: 6px !important;
     }
-</style>
-@endpush
+    #addStudentModal .field-error {
+        display: block;
+        width: 100%;
+        white-space: normal;
+        word-break: break-word;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #dc2626;
+        min-height: 0;
+    }
+    #addStudentModal .field-error:empty {
+        display: none;
+    }
 
-
-@push('styles')
-<style>
     /* Zebra Striping Khusus */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
@@ -139,7 +137,7 @@
         border-radius: 6px !important;
     }
 
-@media (max-width: 767px) {
+    @media (max-width: 767px) {
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -197,7 +195,7 @@
         }
     }
 
-    /* Header tabel Data Siswa: nilai DESKTOP (>= 1024px) tidak berubah. */
+    /* Header tabel Data Siswa: nilai DESKTOP (>= 1024px) */
     .table-zebra-custom thead th {
         color: #475569 !important;
         font-size: 0.72rem !important;
@@ -210,8 +208,7 @@
         text-transform: uppercase;
     }
 
-    /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
-       semibold + SATU garis tipis. Desktop >= 1024px sengaja TIDAK disentuh. */
+    /* TABLET & HP (<= 1023.98px): header latar putih */
     @media (max-width: 1023.98px) {
         .table-zebra-custom thead th {
             background-color: #ffffff !important;
@@ -220,101 +217,7 @@
         }
     }
 
-    /* ===== Action Bar Layout =====
-       Satu baris rata tengah: [input cari][ikon search][dropdown kelas]
-       ..... [CETAK KARTU][IMPORT EXCEL][TAMBAH SISWA]. -->
-    .action-bar-section {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.6rem 1rem;
-    }
-
-    .action-search-form {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.5rem;
-        flex: 1 1 380px;
-        min-width: 0;
-        margin: 0;
-    }
-
-    .action-search-form .search-box-wrap {
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        flex: 1 1 240px;
-        min-width: 170px;
-        width: auto;
-        max-width: none;
-        height: 38px;
-        margin-bottom: 0;
-    }
-    .action-search-form .search-box-wrap input.form-control {
-        height: 38px;
-        min-width: 0;
-    }
-    .action-search-form .search-box-wrap button.btn {
-        height: 38px;
-        flex: 0 0 auto;
-    }
-
-    .action-search-form .filter-box-wrap {
-        flex: 0 1 200px;
-        min-width: 150px;
-        max-width: 200px;
-        width: auto;
-    }
-    .action-search-form .filter-box-wrap select.form-select {
-        height: 38px;
-    }
-
-    .action-buttons-wrap {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        flex: 0 1 auto;
-        margin-left: auto;
-    }
-    .action-buttons-wrap .btn-solid-pill {
-        flex: 0 0 auto;
-    }
-
-    .btn-solid-pill,
-    button.btn-solid-pill,
-    a.btn-solid-pill {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        gap: 0.4rem;
-        height: 38px !important;
-        border-radius: var(--clean-radius) !important;
-        border: none !important;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #ffffff;
-        white-space: nowrap;
-        padding: 0 1rem;
-        transition: filter 0.15s ease, transform 0.1s ease;
-        box-shadow: none !important;
-        letter-spacing: 0.03em;
-        font-family: 'Poppins', 'Roboto', sans-serif;
-        min-width: 150px;
-        text-align: center;
-    }
-    .btn-solid-pill:hover {
-        filter: brightness(0.94);
-        color: #ffffff;
-    }
-    .btn-solid-pill:active {
-        transform: scale(0.98);
-    }
-
-
+    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
@@ -354,9 +257,7 @@
     .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    /* === Matikan Cetak Kartu saat data kosong, biarkan tombol lain normal ===
-       Hanya selector .btn-cetak-kartu ditargetkan, bukan class tombol umum.
-       Saat data ada: tombol Cetak Kartu tetap biru normal (btn-solid-blue). */
+    /* Matikan Cetak Kartu saat data kosong (biru dipudarkan) */
     .btn-cetak-kartu.is-disabled {
         background-color: #2563eb !important;
         color: #ffffff !important;
@@ -367,55 +268,7 @@
         box-shadow: none !important;
     }
 
-    /* ===== Validasi format (client-side) =====
-     - Nama   : blokir ANGKA (blacklist). Valid: huruf, spasi, titik, koma, apostrof, strip.
-     - NISN   : blokir semua selain angka (replace /\D/g, '') dan batasi 10 digit.
-     - Kelas  : wajib pilih (placeholder value="").
-     - Jenis Kelamin: wajib pilih (placeholder value="" + opsi pertama). */
-     /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
-    .btn-row-action {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        background: transparent !important;
-        border-radius: 0 !important;
-        padding: 0.2rem;
-        font-size: 16px;
-        color: inherit;
-        white-space: nowrap;
-        transition: color 0.15s ease, opacity 0.15s ease;
-        box-shadow: none !important;
-        cursor: pointer;
-        font-family: 'Poppins', 'Roboto', sans-serif;
-    }
-    .btn-row-action svg {
-        display: block;
-        width: 20px;
-        height: 20px;
-    }
-    @media (max-width: 767.98px) {
-        .btn-row-action svg {
-            width: 18px;
-            height: 18px;
-        }
-    }
-    .btn-row-action:hover {
-        opacity: 0.8;
-    }
-    .btn-row-action:focus-visible {
-        outline: 2px solid currentColor;
-        outline-offset: 2px;
-    }
-    .btn-row-action.action-edit { color: #f59e0b; }
-    .btn-row-action.action-edit:hover { color: #d97706; }
-    .btn-row-action.action-delete { color: #dc2626; }
-    .btn-row-action.action-delete:hover { color: #b91c1c; }
-
-    /* ===== Data Siswa: kolom Nama Siswa rata kiri di DESKTOP =====
-       Hanya berlaku di lebar >= 768px; mobile (di bawah 768px) tidak terpengaruh.
-       padding-left 120px pada th dan td agar judul & isi nama berawal di garis vertikal
-       yang sama, berada di tengah celah antara NISN dan Jenis Kelamin (~x=850-900 di 1920px). */
+    /* Data Siswa: kolom Nama Siswa rata kiri di DESKTOP (>= 768px) */
     @media (min-width: 768px) {
         .table-zebra-custom thead th:nth-child(4),
         .table-zebra-custom tbody td:nth-child(4) {
@@ -431,13 +284,74 @@
         }
     }
 
-    /* Eksplisit: warna latar + teks putih pakai !important biar tidak ter-override */
+    /* Warna tombol aksi */
     .btn-solid-green { background-color: #059669 !important; color: #ffffff !important; }
     .btn-solid-blue { background-color: #2563eb !important; color: #ffffff !important; }
     .btn-solid-red { background-color: #dc2626 !important; color: #ffffff !important; }
-    #btnImportSubmit:disabled { background-color:#059669 !important; color:#ffffff !important; opacity:.5 !important; cursor:not-allowed !important; box-shadow:none !important; border:none !important; }
 
-    /* Alert import: teks tidak bertumpuk dengan ikon, baris pendek dan rapi */
+    #btnImportSubmit:disabled {
+        background-color: #059669 !important;
+        color: #ffffff !important;
+        opacity: .5 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Saat proses import berjalan: tombol tidak boleh pudar */
+    #btnImportSubmit.is-saving,
+    #btnImportSubmit.is-saving:disabled {
+        opacity: 1 !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        background-color: #059669 !important;
+        color: #ffffff !important;
+    }
+
+    /* Tombol Simpan Siswa: kosong/belum valid = pudar & disabled; valid = biru normal */
+    #btnSaveStudent:disabled,
+    #btnSaveStudent[disabled],
+    #btnSaveStudent.btn-progress:disabled,
+    #btnSaveStudent.btn-progress[disabled] {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+        box-shadow: none !important;
+    }
+    #btnSaveStudent:not(:disabled) {
+        opacity: 1 !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    #btnSaveStudent.btn-progress.is-saving,
+    #btnSaveStudent.btn-progress.is-saving:disabled {
+        opacity: 1 !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+
+    /* Bar progres: warna lebih tua & pekat dari warna tombolnya */
+    #btnSaveStudent .sv-bar {
+        background: #1e3a8a !important;   /* biru tua pekat */
+        opacity: 1 !important;
+    }
+    #btnImportSubmit .imp-bar {
+        background: #064e3b !important;   /* hijau tua pekat */
+        opacity: 1 !important;
+    }
+    #btnSaveStudent .sv-txt,
+    #btnImportSubmit .imp-txt {
+        color: #ffffff !important;
+        font-weight: 700;
+    }
+
+    /* Alert import: teks tidak bertumpuk dengan ikon */
     .import-summary {
         display: block;
         line-height: 1.4;
@@ -447,16 +361,49 @@
     .alert .flash-notice-body .d-flex > div {
         min-width: 0;
     }
+
+    /* Notifikasi: ikon dan teks sejajar vertikal */
+    .flash-notice-body .d-flex {
+        align-items: center !important;
+        line-height: 1;
+    }
+    .flash-notice-body .bx {
+        flex-shrink: 0 !important;
+        line-height: 1;
+    }
+    .flash-notice-body span,
+    .flash-notice-body .import-summary {
+        line-height: 1;
+    }
+    .alert-dismissible .btn-close {
+        align-self: center !important;
+    }
+
+    /* Notifikasi sukses: hijau muda bersih tanpa border (sama dengan hasil Import) */
+    #importAlertBox .alert.alert-success,
+    .alert.alert-success {
+        background-color: #dcfce7 !important;
+        color: #166534 !important;
+        border: 0 !important;
+    }
+    #importAlertBox .alert.alert-success .text-success,
+    .alert.alert-success .text-success {
+        color: #16a34a !important;
+    }
+    #importAlertBox .alert.alert-success .bx-check-circle,
+    .alert.alert-success .bx-check-circle {
+        color: #16a34a !important;
+    }
 </style>
 @endpush
 
 @section('content')
 
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+    <div class="alert alert-success flash-server alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <i class='bx bx-check-circle fs-5 me-2 text-success flex-shrink-0'></i>
                 <span>{{ session('success') }}</span>
             </div>
         </div>
@@ -465,13 +412,11 @@
     @endif
 
     @if(session('danger'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" style="background-color: #fee2e2 !important; color: #991b1b !important; max-height: none; overflow: visible;" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
-            <div class="d-flex align-items-start">
-                <i class='bx bx-error-circle fs-5 me-2 mt-1' style="color: #991b1b !important;"></i>
-                <div>
-                    <div class="import-summary">{{ session('danger') }}</div>
-                </div>
+            <div class="d-flex align-items-center">
+                <i class='bx bx-trash fs-5 me-2 text-danger flex-shrink-0'></i>
+                <span>{{ session('danger') }}</span>
             </div>
         </div>
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
@@ -482,7 +427,7 @@
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <i class='bx bx-x-circle fs-5 me-2 text-danger flex-shrink-0'></i>
                 <span>{{ session('error') }}</span>
             </div>
         </div>
@@ -491,10 +436,10 @@
     @endif
 
     @if(session('deleted'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+    <div class="alert alert-danger alert-deleted alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-trash fs-5 me-2 text-danger'></i>
+                <i class='bx bx-trash fs-5 me-2 text-danger flex-shrink-0'></i>
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
@@ -503,13 +448,11 @@
     @endif
 
     @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" style="max-height: none; overflow: visible;">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
-            <div class="d-flex align-items-start">
-                <i class='bx bx-error-circle fs-5 me-2 mt-1 text-warning'></i>
-                <div>
-                    <div class="import-summary">{{ session('warning') }}</div>
-                </div>
+            <div class="d-flex align-items-center">
+                <i class='bx bx-error-circle fs-5 me-2 text-warning flex-shrink-0'></i>
+                <span>{{ session('warning') }}</span>
             </div>
         </div>
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="{{ __('Tutup') }}"></button>
@@ -520,7 +463,7 @@
     <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center mb-1">
-                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <i class='bx bx-error-circle fs-5 me-2 text-warning flex-shrink-0'></i>
                 <strong>{{ __('Baris yang dilewati:') }}</strong>
             </div>
             <ul class="mb-0 ps-3 small">
@@ -641,7 +584,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </a>
                                 @if(Auth::check() && Auth::user()->role === 'admin')
-                                <button type="button" class="btn-row-action action-delete" title="{{ __('Hapus') }}" aria-label="{{ __('Hapus') }}" onclick="confirmDeleteStudent('{{ $student->id }}', '{{ addslashes($student->nama ?? $student->name) }}')">
+                                <button type="button" class="btn-row-action action-delete" title="{{ __('Hapus') }}" aria-label="{{ __('Hapus') }}" data-student-id="{{ $student->id }}" data-student-name="{{ addslashes($student->nama ?? $student->name) }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
                                 <form id="deleteStudentForm-{{ $student->id }}" action="{{ panel_route('students.destroy', $student->id) }}" method="POST" class="d-none">
@@ -725,7 +668,6 @@
                 </p>
             </nav>
         @endif
-        </div><!-- /.table-responsive : penutup area scroll, pagination ikut di dalam -->
     </div>
 
 <!-- MODAL CETAK KARTU MASSAL -->
@@ -795,13 +737,13 @@
                 <div class="modal-body py-3">
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">{{ __('Nama Siswa') }} <span class="text-danger">*</span></label>
-                        <input id="studentName" type="text" name="name" class="form-control rounded-3 @error('name') is-invalid @enderror" placeholder="{{ __('Masukkan nama lengkap siswa') }}" value="{{ old('name') }}">
+                        <input id="studentName" type="text" name="name" class="form-control rounded-3 @error('name') is-invalid @enderror" placeholder="{{ __('Masukkan nama lengkap siswa') }}" value="{{ old('name') }}" autocomplete="off">
                         <div class="field-error">{{ $errors->first('name') }}</div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-12">
                             <label class="form-label small fw-semibold">{{ __('NISN') }} <span class="text-danger">*</span></label>
-                            <input id="studentNisn" type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="{{ __('Contoh: 0081234567') }}" value="{{ old('nisn') }}" inputmode="numeric" maxlength="10" autocomplete="off">
+                            <input id="studentNisn" type="text" name="nisn" class="form-control rounded-3 @error('nisn') is-invalid @enderror" placeholder="{{ __('10 digit angka') }}" value="{{ old('nisn') }}" inputmode="numeric" maxlength="10" autocomplete="off">
                             <div class="field-error">{{ $errors->first('nisn') }}</div>
                         </div>
                     </div>
@@ -829,7 +771,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button id="btnSaveStudent" type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" disabled>{{ __('Simpan Siswa') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" id="btnSaveStudent" disabled aria-disabled="true">{{ __('Simpan Siswa') }}</button>
                 </div>
             </form>
         </div>
@@ -875,15 +817,20 @@
 @endif
 
 @endsection
+
 @push('scripts')
 <script>
-console.log('[import-handler] aktif');
+/* ===== Import Excel ===== */
 (function () {
   var form = document.getElementById('studentImportForm');
   var btn = document.getElementById('btnImportSubmit');
   if (!form || !btn) return;
   var file = form.querySelector('input[type="file"]');
-  function sync() { btn.disabled = !(file.files && file.files.length); }
+  var importing = false;
+  function sync() {
+    if (importing) return;
+    btn.disabled = !(file.files && file.files.length);
+  }
   file.addEventListener('change', sync);
   document.addEventListener('click', function () { setTimeout(sync, 0); });
   sync();
@@ -891,12 +838,14 @@ console.log('[import-handler] aktif');
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     e.stopImmediatePropagation();
-    if (btn.disabled) return;
+    if (btn.disabled || importing) return;
+    importing = true;
     var original = btn.innerHTML;
+    btn.classList.add('is-saving');
     btn.disabled = true;
     btn.style.position = 'relative';
     btn.style.overflow = 'hidden';
-    btn.innerHTML = '<span class="imp-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(0,0,0,.25);transition:width .15s"></span><span class="imp-txt" style="position:relative">0%</span>';
+    btn.innerHTML = '<span class="imp-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:#064e3b;transition:width .15s"></span><span class="imp-txt" style="position:relative">0%</span>';
     var bar = btn.querySelector('.imp-bar'), txt = btn.querySelector('.imp-txt');
     var shown = 0, real = 0, done = false;
     var timer = setInterval(function () {
@@ -932,6 +881,10 @@ console.log('[import-handler] aktif');
     };
     xhr.onerror = function () {
       clearInterval(timer);
+      importing = false;
+      btn.classList.remove('is-saving');
+      btn.style.removeProperty('position');
+      btn.style.removeProperty('overflow');
       btn.innerHTML = original; sync();
       alert('Import gagal. Periksa koneksi lalu coba lagi.');
     };
@@ -939,24 +892,50 @@ console.log('[import-handler] aktif');
   }, true);
 
   var modal = document.getElementById('importModal');
-  if (modal) modal.addEventListener('hidden.bs.modal', function () { form.reset(); sync(); });
+  if (modal) modal.addEventListener('hidden.bs.modal', function () { if (importing) return; form.reset(); sync(); });
 })();
+
+/* ===== Notifikasi (Import DAN Tambah Siswa): hanya SATU notifikasi, sukses hilang 3 detik ===== */
 (function () {
   var box = document.getElementById('importAlertBox');
-  if (!box) return;
-  var raw = sessionStorage.getItem('importAlert');
-  if (!raw) return;
-  sessionStorage.removeItem('importAlert');
+
+  function fadeOutRemove(el, delay) {
+    setTimeout(function () {
+      el.style.transition = 'opacity .4s';
+      el.style.opacity = '0';
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+    }, delay);
+  }
+
+  var raw = null;
+  try { raw = sessionStorage.getItem('importAlert'); } catch (e) {}
   var data = {};
-  try { data = JSON.parse(raw) || {}; } catch (e) { data = {}; }
+  if (raw) {
+    try { sessionStorage.removeItem('importAlert'); } catch (e) {}
+    try { data = JSON.parse(raw) || {}; } catch (e) { data = {}; }
+  }
   var status = data.status || 'error';
   var msg = data.msg || data.message || '';
   var details = Array.isArray(data.details) ? data.details : [];
-  if (!msg && !details.length) return;
+  var hasClientAlert = !!(raw && box && (msg || details.length));
+
+  /* Notifikasi sukses bawaan server (flash session): buang kalau kembar dengan notifikasi JS,
+     kalau tidak kembar tetap ditampilkan tapi hilang otomatis 3 detik. */
+  var serverAlerts = document.querySelectorAll('.alert.alert-success.flash-server');
+  Array.prototype.forEach.call(serverAlerts, function (el) {
+    if (hasClientAlert && status === 'success') {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    } else {
+      fadeOutRemove(el, 3000);
+    }
+  });
+
+  if (!hasClientAlert) return;
+
   var palette = {
     success: { bg: '#dcfce7', fg: '#166534', icon: 'bx-check-circle' },
     partial: { bg: '#fef3c7', fg: '#854d0e', icon: 'bx-error-circle' },
-    error: { bg: '#fee2e2', fg: '#991b1b', icon: 'bx-x-circle' }
+    error: { bg: '#fee2e2', fg: '#991b1b', icon: 'bx-error-circle' }
   };
   var color = palette[status] || palette.error;
   var alertEl = document.createElement('div');
@@ -966,18 +945,18 @@ console.log('[import-handler] aktif');
   alertEl.style.color = color.fg;
   alertEl.style.maxHeight = 'none';
   alertEl.style.overflow = 'visible';
+  var body = document.createElement('div');
+  body.className = 'flash-notice-body';
   var head = document.createElement('div');
-  head.className = 'd-flex align-items-start';
+  head.className = 'd-flex align-items-center';
   var icon = document.createElement('i');
-  icon.className = 'bx ' + color.icon + ' fs-5 me-2 mt-1';
-  var textDiv = document.createElement('div');
-  var summary = document.createElement('div');
-  summary.className = 'import-summary';
-  summary.textContent = msg;
-  textDiv.appendChild(summary);
+  icon.className = 'bx ' + color.icon + ' fs-5 me-2 text-' + (status === 'success' ? 'success' : 'danger') + ' flex-shrink-0';
+  var span = document.createElement('span');
+  span.textContent = msg;
   head.appendChild(icon);
-  head.appendChild(textDiv);
-  alertEl.appendChild(head);
+  head.appendChild(span);
+  body.appendChild(head);
+  alertEl.appendChild(body);
   if (details.length) {
     var list = document.createElement('ul');
     list.className = 'mb-0 mt-2 ps-3 small';
@@ -990,915 +969,280 @@ console.log('[import-handler] aktif');
   }
   var closeBtn = document.createElement('button');
   closeBtn.type = 'button';
-  closeBtn.className = 'btn-close';
+  closeBtn.className = 'btn-close btn-close-sm';
   closeBtn.setAttribute('data-bs-dismiss', 'alert');
   closeBtn.setAttribute('aria-label', 'Tutup');
   closeBtn.addEventListener('click', function () { alertEl.remove(); });
   alertEl.appendChild(closeBtn);
   box.appendChild(alertEl);
+  if (status === 'success') fadeOutRemove(alertEl, 3000);
 })();
 </script>
+
 <script>
+/* ===== Cetak kartu ===== */
+function togglePrintScope() {
+    var rbClass = document.getElementById('printTypeClass');
+    var classContainer = document.getElementById('classSelectContainer');
+    var classSelect = document.getElementById('modalClassId');
+    if (rbClass && rbClass.checked) {
+        if (classContainer) classContainer.style.display = '';
+        if (classSelect) classSelect.disabled = false;
+    } else {
+        if (classContainer) classContainer.style.display = 'none';
+        if (classSelect) classSelect.disabled = true;
+    }
+}
+
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str == null ? '' : String(str)));
+    return div.innerHTML;
+}
+
+/* ===== Hapus siswa ===== */
+function confirmDeleteStudent(id, name) {
+    confirmUniversalDelete({
+        title: {!! json_encode(__('Hapus Data Siswa?')) !!},
+        html: {!! json_encode(__('Siswa')) !!} + ' <strong>' + escapeHtml(name) + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
+        confirmText: {!! json_encode(__('Hapus')) !!},
+        cancelText: {!! json_encode(__('Tidak')) !!},
+        onConfirm: function () {
+            var form = document.getElementById('deleteStudentForm-' + id);
+            if (!form) return;
+            var qs = window.location.search;
+            if (qs && form.action.indexOf('?') === -1) form.action = form.action + qs;
+            form.submit();
+        }
+    });
+}
+
+document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-student-id]');
+    if (!b) return;
+    var id = b.getAttribute('data-student-id');
+    var name = b.getAttribute('data-student-name');
+    if (id && name !== null) {
+        e.preventDefault();
+        confirmDeleteStudent(id, name);
+    }
+}, true);
+
+function confirmDeleteAllStudents() {
+    if (typeof confirmUniversalDelete === 'function') {
+        confirmUniversalDelete({
+            title: {!! json_encode(__('Hapus seluruh data siswa?')) !!},
+            icon: 'bx-error-circle',
+            html: '',
+            sub: {!! json_encode(__('Data akan dipindahkan ke Tempat Sampah di Pengaturan.')) !!},
+            confirmText: {!! json_encode(__('Hapus Semua')) !!},
+            cancelText: {!! json_encode(__('Tidak')) !!},
+            checks: [
+                '<span style="display:block; white-space:nowrap">Saya memahami data akan dipindahkan ke Tempat</span><span style="display:block; white-space:nowrap">Sampah dan dapat dipulihkan.</span>',
+                {!! json_encode(__('Saya yakin ingin menghapus semua data siswa aktif.')) !!}
+            ],
+            onConfirm: function () { document.getElementById('deleteAllStudentsForm').submit(); }
+        });
+    } else if (confirm({!! json_encode(__('Hapus seluruh data siswa?')) !!})) {
+        document.getElementById('deleteAllStudentsForm').submit();
+    }
+}
+
+window.togglePrintScope = togglePrintScope;
+window.confirmDeleteStudent = confirmDeleteStudent;
+window.confirmDeleteAllStudents = confirmDeleteAllStudents;
+</script>
+
+<script>
+/* ===== Tambah Siswa: filter input + status tombol + simpan DENGAN PROGRESS ===== */
 (function () {
-    console.log('psit: import handler memo dipasang untuk', document.getElementById('importModal') ? 'tampak' : 'tidak');
-})();
-/* ===== Cetak Kartu: toggle pilihan cetak per kelas / semua ===== */
-    function downloadProgressNoteFromSource() {
-        var target = document.getElementById('kartuUnduhBtn');
-        if (!target) return;
-        var bagianChar = target.querySelector('.btn-progress__fill');
-        var labelChar = target.querySelector('.btn-progress__label');
-        console.log('psit: cetak kartu', target, 'fill', bagianChar, 'label', labelChar);
-    }
-    downloadProgressNoteFromSource();
-    function togglePrintScope() {
-        const rbClass = document.getElementById('printTypeClass');
-        const rbAll = document.getElementById('printTypeAll');
-        const classContainer = document.getElementById('classSelectContainer');
-        const classSelect = document.getElementById('modalClassId');
+    var form = document.getElementById('addStudentForm');
+    var btn = document.getElementById('btnSaveStudent');
+    var modalEl = document.getElementById('addStudentModal');
+    if (!form || !btn) return;
 
-        if (rbClass && rbClass.checked) {
-            if (classContainer) classContainer.style.display = '';
-            if (classSelect) classSelect.disabled = false;
-        } else {
-            if (classContainer) classContainer.style.display = 'none';
-            if (classSelect) classSelect.disabled = true;
-        }
+    var nameEl = form.querySelector('[name="name"]');
+    var nisnEl = form.querySelector('[name="nisn"]');
+    var kelasEl = form.querySelector('[name="school_class_id"]');
+    var jkEl = form.querySelector('[name="gender"]');
+    var saving = false;
+    var labelAsli = btn.textContent;
+    var timerRef = null;
+
+    var RE_NAMA_BUANG = /[^\p{L}\s.,'\-]/gu;
+    var RE_NAMA_OK = /^[\p{L}\s.,'\-]+$/u;
+
+    function setErr(el, msg) {
+        if (!el) return;
+        var box = el.parentNode.querySelector('.field-error');
+        if (box) box.textContent = msg || '';
+        if (msg) el.classList.add('is-invalid'); else el.classList.remove('is-invalid');
     }
 
-    /* Pesan error kecil di bawah field (clear + set). */
-    function setFieldError(field, msg) {
-        if (!field) return;
-        const msgEl = field.parentNode.querySelector('.field-error');
-        if (!msgEl) return;
-        if (!msg) {
-            msgEl.textContent = '';
-            field.classList.remove('is-invalid');
-            field.style.borderColor = '';
-            return;
+    function bersihkan(el) {
+        if (!el) return;
+        var before = el.value, after = before;
+        if (el === nameEl) after = before.replace(RE_NAMA_BUANG, '').slice(0, 255);
+        if (el === nisnEl) after = before.replace(/\D/g, '').slice(0, 10);
+        if (after !== before) {
+            var pos = (el.selectionStart != null) ? el.selectionStart : before.length;
+            el.value = after;
+            pos = Math.min(pos, after.length);
+            try { el.setSelectionRange(pos, pos); } catch (e) {}
         }
-        msgEl.textContent = msg;
-        field.classList.add('is-invalid');
-        field.style.borderColor = '#dc2626';
     }
 
-    /* --- Validasi UI tombolTambahSiswa (scope btnSaveStudent) --- */
-    if (false) (function () {
-        var btn = document.getElementById('btnSaveStudent');
-        if (!btn) return;
-        var form = btn.closest('form');
-        if (!form) return;
-        var nameField = form.querySelector('[name="name"]');
-        var nisnField = form.querySelector('[name="nisn"]');
-        var kelasField = form.querySelector('[name="school_class_id"]');
-        var jkField = form.querySelector('[name="gender"]');
-
-        function valid() {
-            var namaVal = (nameField && nameField.value ? nameField.value : '').trim();
-            var nisnVal = (nisnField && nisnField.value ? nisnField.value : '').trim();
-            var kelasVal = (kelasField && kelasField.value ? kelasField.value : '');
-            var jkVal = (jkField && jkField.value ? jkField.value : '');
-            var namaOk = !!namaVal && /^[À-￿a-zA-Z\s.,'\-]+$/u.test(namaVal);
-            var nisnOk = !!nisnVal && /^\d+$/.test(nisnVal);
-            return namaOk && nisnOk && !!kelasVal && !!jkVal;
-        }
-
-        function setButton() {
-            btn.disabled = !valid();
-        }
-
-        function attach(el, evt, fn) {
-            if (!el) return;
-            if (el.addEventListener) {
-                el.addEventListener(evt, fn, false);
-            } else if (el.attachEvent) {
-                el.attachEvent('on' + evt, fn);
-            }
-        }
-
-        attach(nameField, 'input', setButton);
-        attach(nameField, 'change', setButton);
-        attach(nisnField, 'input', setButton);
-        attach(nisnField, 'change', setButton);
-        attach(kelasField, 'input', setButton);
-        attach(kelasField, 'change', setButton);
-        attach(jkField, 'input', setButton);
-        attach(jkField, 'change', setButton);
-
-        form.addEventListener('reset', function () {
-            setTimeout(setButton, 0);
-        });
-
-        form.addEventListener('submit', function (e) {
-            if (!valid()) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-            }
-        });
-
-        document.addEventListener('click', function () {
-            setTimeout(setButton, 0);
-        });
-
-        setButton();
-    })();
-
-    /* ===== Validasi form Tambah Siswa (JS murni, tanpa jQuery). */
-    function cekValiditasSiswa(showErrors) {
-        const name = document.getElementById('studentName');
-        const nisn = document.getElementById('studentNisn');
-        const kelas = document.getElementById('studentKelas');
-        const jk = document.getElementById('studentJk');
-        const btn = document.getElementById('btnSaveStudent');
-        let ok = true;
-
-        function apply(field, message) {
-            if (showErrors || !message) {
-                setFieldError(field, message);
-            }
-        }
-
-        const nama = (name ? name.value : '').trim();
-        if (nama === '') {
-            apply(name, 'Nama wajib diisi.');
-            ok = false;
-        } else if (!/^[\p{L}\s.,'\-]+$/u.test(nama)) {
-            apply(name, 'Nama hanya boleh huruf.');
-            ok = false;
-        } else {
-            apply(name, '');
-        }
-
-        const nisnRaw = (nisn ? nisn.value : '').trim();
-        if (!/^\d{10}$/.test(nisnRaw)) {
-            apply(nisn, 'NISN harus 10 digit angka.');
-            ok = false;
-        } else {
-            apply(nisn, '');
-        }
-
-        const kelasVal = (kelas ? kelas.value : '').trim();
-        if (kelasVal === '') {
-            apply(kelas, 'Pilih kelas.');
-            ok = false;
-        } else {
-            apply(kelas, '');
-        }
-
-        const jkVal = (jk ? jk.value : '').trim();
-        if (jkVal === '') {
-            apply(jk, 'Pilih jenis kelamin.');
-            ok = false;
-        } else {
-            apply(jk, '');
-        }
-
-        return ok;
+    function valid() {
+        var n = (nameEl.value || '').trim();
+        var i = (nisnEl.value || '').trim();
+        return n !== '' && RE_NAMA_OK.test(n)
+            && /^\d{10}$/.test(i)
+            && (kelasEl.value || '') !== ''
+            && (jkEl.value || '') !== '';
     }
 
-    /* Tombol Simpan aktif bila keempat kolom terisi (non-kosong), tanpa cek format. */
-    function updateTombolSimpan() {
-        var btn = document.getElementById('btnSaveStudent');
-        if (!btn || btn.dataset.saving === '1') return;
-        var nama = (document.getElementById('studentName') && document.getElementById('studentName').value) ? document.getElementById('studentName').value.trim() : '';
-        var nisn = (document.getElementById('studentNisn') && document.getElementById('studentNisn').value) ? document.getElementById('studentNisn').value.trim() : '';
-        var kelas = (document.getElementById('studentKelas') && document.getElementById('studentKelas').value) ? document.getElementById('studentKelas').value.trim() : '';
-        var jk = (document.getElementById('studentJk') && document.getElementById('studentJk').value) ? document.getElementById('studentJk').value.trim() : '';
-        var ok = nama !== '' && nisn !== '' && kelas !== '' && jk !== '';
+    function sync() {
+        if (saving) return;
+        var ok = valid();
         btn.disabled = !ok;
         btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
-    }
-
-    /* Hapus angka saat mengetik di NISN; kursor terjaga. */
-    function sanitizeNisnInput(e) {
-        const el = e.target;
-        if (!el || el.id !== 'studentNisn') return;
-        if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop' || e.inputType === 'insertReplacementText') {
-            const cleaned = el.value.replace(/[^0-9]/g, '').slice(0, 10);
-            const start = el.selectionStart;
-            const prevLen = el.value.length;
-            el.value = cleaned;
-            const newLen = el.value.length;
-            const keepStart = Math.min(start, newLen);
-            el.setSelectionRange(keepStart, keepStart);
-            return;
-        }
-        if (e.inputType === 'insertText' || e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward' || !e.inputType) {
-            const before = el.value;
-            let cleaned = before.replace(/[^0-9]/g, '').slice(0, 10);
-            if (cleaned !== before) {
-                const start = el.selectionStart;
-                const prevLen = before.length;
-                el.value = cleaned;
-                const newLen = el.value.length;
-                let newStart = Math.min(start, newLen);
-                if (e.inputType === 'insertText' && e.data) {
-                    const digit = String(e.data).replace(/[^0-9]/g, '');
-                    if (digit && start < prevLen && /[^0-9]/.test(before[start])) {
-                        newStart = start;
-                    }
-                }
-                el.setSelectionRange(newStart, newStart);
-            }
+        if (ok) {
+            btn.style.removeProperty('opacity');
+            btn.style.removeProperty('cursor');
+            btn.style.removeProperty('pointer-events');
+        } else {
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
         }
     }
 
-    /* Hapus angka di nama saat mengetik/paste. Kursor terjaga. */
-    function sanitizeNameInput(e) {
-        const el = e.target;
-        if (!el || el.id !== 'studentName') return;
-        const before = el.value;
-        const cleaned = before.replace(/\p{Nd}/gu, '');
-        if (cleaned !== before) {
-            const start = el.selectionStart;
-            const prevLen = before.length;
-            el.value = cleaned;
-            let newStart = Math.min(start, el.value.length);
-            if (e.inputType === 'insertText' && e.data) {
-                const badRun = String(e.data).match(/\p{Nd}+/u);
-                if (badRun && start <= prevLen) {
-                    newStart = Math.min(start, el.value.length);
-                }
-            }
-            if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop' || e.inputType === 'insertReplacementText') {
-                newStart = Math.min(start, el.value.length);
-            }
-            el.setSelectionRange(newStart, newStart);
-        }
-    }
-
-    function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str == null ? '' : String(str)));
-        return div.innerHTML;
-    }
-
-    /* ===== Konfirmasi hapus SATU siswa ===== */
-    function confirmDeleteStudent(id, name) {
-        confirmUniversalDelete({
-            title: {!! json_encode(__('Hapus Data Siswa?')) !!},
-            html: {!! json_encode(__('Siswa')) !!} + ' <strong>' + escapeHtml(name) + '</strong> ' + {!! json_encode(__('akan dihapus. Data bisa dipulihkan dari Tempat Sampah di Pengaturan.')) !!},
-            confirmText: {!! json_encode(__('Hapus')) !!},
-            cancelText: {!! json_encode(__('Tidak')) !!},
-            onConfirm: function () {
-                var form = document.getElementById('deleteStudentForm-' + id);
-                if (!form) {
-                    console.error('HAPUS: form deleteStudentForm-' + id + ' tidak ditemukan. Muat ulang halaman.');
-                    return;
-                }
-                var qs = window.location.search;
-                if (qs && form.action.indexOf('?') === -1) {
-                    form.action = form.action + qs;
-                }
-                form.submit();
-            }
-        });
-    }
-
-    /* ===== Konfirmasi hapus SEMUA siswa ===== */
-    function confirmDeleteAllStudents() {
-        if (typeof confirmUniversalDelete === 'function') {
-            confirmUniversalDelete({
-                title: {!! json_encode(__('Pindahkan SEMUA siswa aktif ke Tempat Sampah?')) !!},
-                icon: 'bx-error-circle',
-                html: {!! json_encode(__('Seluruh data siswa aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan.')) !!},
-                confirmText: {!! json_encode(__('Hapus Semua')) !!},
-                cancelText: {!! json_encode(__('Tidak')) !!},
-                checks: [
-                    {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
-                    {!! json_encode(__('Saya yakin ingin menghapus semua data siswa aktif.')) !!}
-                ],
-                onConfirm: function () {
-                    document.getElementById('deleteAllStudentsForm').submit();
-                }
-            });
-        } else if (confirm({!! json_encode(__('Pindahkan SEMUA siswa aktif ke Tempat Sampah?')) !!})) {
-            document.getElementById('deleteAllStudentsForm').submit();
-        }
-    }
-
-    /* ===== Handler form Tambah Siswa ===== */
-    (function () {
-        var nameEl = document.getElementById('studentName');
-        var nisnEl = document.getElementById('studentNisn');
-        var kelasEl = document.getElementById('studentKelas');
-        var jkEl = document.getElementById('studentJk');
-        var form = document.getElementById('addStudentForm');
-
-        function attach(el, evt, fn) {
-            if (!el) return;
-            if (el.addEventListener) {
-                el.addEventListener(evt, fn, false);
-            } else if (el.attachEvent) {
-                el.attachEvent('on' + evt, fn);
-            }
-        }
-
-        /* Sinkronisasi status tombol saat modal/dokumen berubah. */
-        var btnUi = document.getElementById('btnSaveStudent');
-        if (false) {
-            function sync() { try { btnUi.disabled = !valid(); } catch (e) {} }
-            var formUi = btnUi.closest('form');
-            if (formUi) {
-                var nameUi = formUi.querySelector('[name="name"]');
-                var nisnUi = formUi.querySelector('[name="nisn"]');
-                var kelasUi = formUi.querySelector('[name="school_class_id"]');
-                var jkUi = formUi.querySelector('[name="gender"]');
-                function valid() {
-                    var nv = (nameUi && nameUi.value ? nameUi.value : '').trim();
-                    var iv = (nisnUi && nisnUi.value ? nisnUi.value : '').trim();
-                    var kv = (kelasUi && kelasUi.value ? kelasUi.value : '');
-                    var gv = (jkUi && jkUi.value ? jkUi.value : '');
-                    var nOk = !!nv && /^[À-￿a-zA-Z\s.,'\-]+$/u.test(nv);
-                    var iOk = !!iv && /^\d+$/.test(iv);
-                    return nOk && iOk && !!kv && !!gv;
-                }
-                attach(nameUi, 'input', sync);
-                attach(nameUi, 'change', sync);
-                attach(nisnUi, 'input', sync);
-                attach(nisnUi, 'change', sync);
-                attach(kelasUi, 'input', sync);
-                attach(kelasUi, 'change', sync);
-                attach(jkUi, 'input', sync);
-                attach(jkUi, 'change', sync);
-                formUi.addEventListener('reset', function () { setTimeout(sync, 0); });
-            }
+    function onChange(e) {
+        var el = e.target;
+        if (el === nameEl || el === nisnEl) bersihkan(el);
+        if (el === nameEl || el === nisnEl || el === kelasEl || el === jkEl) {
+            if (!saving) setErr(el, '');
             sync();
         }
+    }
+    form.addEventListener('input', onChange);
+    form.addEventListener('change', onChange);
+    form.addEventListener('paste', function (e) { setTimeout(function () { onChange(e); }, 0); });
+    form.addEventListener('drop', function (e) { setTimeout(function () { onChange(e); }, 0); });
 
-        attach(nisnEl, 'input', sanitizeNisnInput);
-        attach(nisnEl, 'beforeinput', function (e) {
-            if (e && e.inputType === 'insertFromPaste' || e && e.inputType === 'insertFromDrop' || e && e.inputType === 'insertReplacementText') {
-                sanitizeNisnInput(e);
-            }
-        });
-        attach(nameEl, 'input', sanitizeNameInput);
-        attach(nameEl, 'beforeinput', sanitizeNameInput);
+    function resetSaving() {
+        saving = false;
+        clearInterval(timerRef);
+        delete btn.dataset.saving;
+        btn.classList.remove('is-saving');
+        btn.style.removeProperty('position');
+        btn.style.removeProperty('overflow');
+        btn.textContent = labelAsli;
+        sync();
+    }
 
-        function onSelectionChange() {
-            cekValiditasSiswa();
-        }
-
-        [nameEl, nisnEl, kelasEl, jkEl].forEach(function (el) {
-            if (!el) return;
-            attach(el, 'input', function () {
-                setFieldError(el, '');
-                updateTombolSimpan();
-            });
-            attach(el, 'change', function () {
-                setFieldError(el, '');
-                updateTombolSimpan();
-            });
-            attach(el, 'blur', function () {
-                setFieldError(el, '');
-                updateTombolSimpan();
-            });
-        });
-
-        var btnSubmit = document.getElementById('btnSaveStudent');
-        var originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
-
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            if (!cekValiditasSiswa(true)) {
-                var firstInvalid = form.querySelector('.is-invalid');
-                if (firstInvalid) firstInvalid.focus();
-                return;
-            }
-
-            if (btnSubmit) {
-                btnSubmit.dataset.saving = '1';
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...';
-            }
-
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin',
-                redirect: 'manual'
-            })
-            .then(function (response) {
-                if (response.status === 422) {
-                    return response.json().then(function (data) {
-                        var errors = data.errors || {};
-                        Object.keys(errors).forEach(function (key) {
-                            var field = form.querySelector('[name="' + key + '"]');
-                            if (field) setFieldError(field, errors[key][0]);
-                        });
-                        if (btnSubmit) {
-                            delete btnSubmit.dataset.saving;
-                            btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = originalBtnHtml;
-                        }
-                        var firstInvalid = form.querySelector('.is-invalid');
-                        if (firstInvalid) firstInvalid.focus();
-                    });
-                }
-                if (response.type === 'opaqueredirect' || response.status === 0) {
-                    window.location.reload();
-                    return;
-                }
-                if (!response.ok) {
-                    return response.json().catch(function () { return {}; }).then(function () {
-                        if (btnSubmit) {
-                            delete btnSubmit.dataset.saving;
-                            btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = originalBtnHtml;
-                        }
-                        alert('Gagal menyimpan data. Coba lagi.');
-                    });
-                }
-                window.location.reload();
-            })
-            .catch(function () {
-                if (btnSubmit) {
-                    delete btnSubmit.dataset.saving;
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = originalBtnHtml;
-                }
-                alert('Gagal menyimpan data. Periksa koneksi lalu coba lagi.');
-            });
-        }, true);
-
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            document.addEventListener('show.bs.modal', function (e) {
-                var modal = e.target;
-                if (modal && (modal.id === 'addStudentModal' || (modal.querySelector && modal.querySelector('#addStudentForm')))) {
-                    setFieldError(document.getElementById('studentName'), '');
-                    setFieldError(document.getElementById('studentNisn'), '');
-                    setFieldError(document.getElementById('studentKelas'), '');
-                    setFieldError(document.getElementById('studentJk'), '');
-                    cekValiditasSiswa();
-                    updateTombolSimpan();
-                }
-            });
-
-            document.addEventListener('hidden.bs.modal', function (e) {
-                var modal = e.target;
-                if (modal && (modal.id === 'addStudentModal' || (modal.querySelector && modal.querySelector('#addStudentForm')))) {
-                    var formEl = document.getElementById('addStudentForm');
-                    if (formEl) {
-                        var saved = formEl.saveStudentFormSnapshot;
-                        if (saved) {
-                            formEl.reset();
-                            if (saved.name) document.getElementById('studentName').value = saved.name;
-                            if (saved.nisn) document.getElementById('studentNisn').value = saved.nisn;
-                            if (saved.school_class_id) document.getElementById('studentKelas').value = saved.school_class_id;
-                            if (saved.gender) document.getElementById('studentJk').value = saved.gender;
-                        }
-                        cekValiditasSiswa();
-                    }
+    function gagal(json) {
+        var map = { name: nameEl, nisn: nisnEl, school_class_id: kelasEl, gender: jkEl };
+        var tampil = false;
+        if (json && json.errors) {
+            Object.keys(json.errors).forEach(function (k) {
+                if (map[k]) {
+                    var m = [].concat(json.errors[k])[0];
+                    setErr(map[k], String(m));
+                    tampil = true;
                 }
             });
         }
-
-        var addStudentFormEl = document.getElementById('addStudentForm');
-        if (addStudentFormEl) {
-            var _oldReset = addStudentFormEl.reset;
-            addStudentFormEl.reset = function () {
-                this.saveStudentFormSnapshot = {
-                    name: (document.getElementById('studentName') && document.getElementById('studentName').value) || '',
-                    nisn: (document.getElementById('studentNisn') && document.getElementById('studentNisn').value) || '',
-                    school_class_id: (document.getElementById('studentKelas') && document.getElementById('studentKelas').value) || '',
-                    gender: (document.getElementById('studentJk') && document.getElementById('studentJk').value) || ''
-                };
-                _oldReset.call(this);
-            };
+        if (!tampil) {
+            setErr(nisnEl, (json && json.message) ? String(json.message) : 'Data gagal disimpan. Periksa isian lalu coba lagi.');
         }
+        resetSaving();
+    }
 
-        cekValiditasSiswa();
-    })();
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (saving) return;
+        bersihkan(nameEl);
+        bersihkan(nisnEl);
+        if (!valid()) { sync(); return; }
 
-    /* ===== Import Siswa via AJAX dengan overlay loading ===== */
-    (function () {
-        var form = document.getElementById('importForm');
-        if (!form) return;
+        saving = true;
+        btn.dataset.saving = '1';
+        btn.classList.add('is-saving');
+        btn.disabled = true;
+        btn.style.position = 'relative';
+        btn.style.overflow = 'hidden';
+        /* bar progres: biru tua pekat (#1e3a8a), lebih gelap dari biru tombol (#2563eb) */
+        btn.innerHTML = '<span class="sv-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:#1e3a8a;transition:width .15s"></span><span class="sv-txt" style="position:relative">0%</span>';
+        var bar = btn.querySelector('.sv-bar');
+        var txt = btn.querySelector('.sv-txt');
+        var shown = 0, real = 0, done = false;
 
-        var btn = form.querySelector('button[type="submit"]');
-        var alertBox = document.getElementById('importAlertBox');
-
-        var loadingOverlay = null;
-
-        function escapeHtml(str) {
-            var div = document.createElement('div');
-            var txt = document.createTextNode(str);
-            div.appendChild(txt);
-            return div.innerHTML;
-        }
-
-        function findCsrfToken() {
-            var meta = document.querySelector('meta[name="csrf-token"]');
-            if (meta && meta.getAttribute('content')) return meta.getAttribute('content');
-            var input = document.querySelector('input[name="_token"]');
-            if (input && input.value) return input.value;
-            return '';
-        }
-
-        function showLoadingOverlay() {
-            if (loadingOverlay) return;
-            loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'importLoading';
-            loadingOverlay.innerHTML = '<div class="import-loading-card"><div class="import-loading-spinner"></div><p>Memproses import...</p></div>';
-            if (!loadingOverlay.style.position || loadingOverlay.style.position === '') {
-                loadingOverlay.style.position = 'fixed';
+        timerRef = setInterval(function () {
+            var target = done ? 100 : Math.max(real, Math.min(shown + 1, 92));
+            if (shown < target) {
+                shown++;
+                bar.style.width = shown + '%';
+                txt.textContent = shown + '%';
             }
-            if (!loadingOverlay.style.inset || loadingOverlay.style.inset === '') {
-                loadingOverlay.style.top = '0';
-                loadingOverlay.style.right = '0';
-                loadingOverlay.style.bottom = '0';
-                loadingOverlay.style.left = '0';
+            if (shown >= 100) {
+                clearInterval(timerRef);
+                setTimeout(function () { location.reload(); }, 300);
             }
-            loadingOverlay.style.zIndex = '99999';
-            loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            loadingOverlay.style.display = 'flex';
-            loadingOverlay.style.alignItems = 'center';
-            loadingOverlay.style.justifyContent = 'center';
-            if (loadingOverlay.firstChild) {
-                loadingOverlay.firstChild.style.background = '#ffffff';
-                loadingOverlay.firstChild.style.borderRadius = '0.5rem';
-                loadingOverlay.firstChild.style.padding = '1rem 1.5rem';
-                loadingOverlay.firstChild.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
-                loadingOverlay.firstChild.style.textAlign = 'center';
-                loadingOverlay.firstChild.style.fontSize = '0.9rem';
-            }
-            var spinnerEl = loadingOverlay.querySelector('.import-loading-spinner');
-            if (spinnerEl) {
-                spinnerEl.style.width = '24px';
-                spinnerEl.style.height = '24px';
-                spinnerEl.style.border = '3px solid #e5e7eb';
-                spinnerEl.style.borderTopColor = '#2563eb';
-                spinnerEl.style.borderRadius = '50%';
-                spinnerEl.style.animation = 'spin 0.8s linear infinite';
-                spinnerEl.style.display = 'inline-block';
-                spinnerEl.style.marginBottom = '0.5rem';
-            }
-            document.body.appendChild(loadingOverlay);
-        }
+        }, 30);
 
-        function hideLoadingOverlay() {
-            if (loadingOverlay) {
-                loadingOverlay.remove();
-                loadingOverlay = null;
-            }
-        }
-
-        function showAlert(status, message, details) {
-            if (!alertBox) return;
-            alertBox.innerHTML = '';
-            if (!message) return;
-
-            var colorMap = {
-                success: { bg: '#d3f4fb', text: '#0b5394', icon: 'bs-check-circle', textColor: '#0b5394' },
-                partial: { bg: '#fef3c7', text: '#854d0e', icon: 'bs-x-circle', textColor: '#854d0e' },
-                error: { bg: '#fee2e2', text: '#991b1b', icon: 'bs-x-circle', textColor: '#991b1b' }
-            };
-            var style = colorMap[status] || colorMap.error;
-
-            var alert = document.createElement('div');
-            alert.className = 'alert alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
-            alert.setAttribute('role', 'alert');
-            alert.style.backgroundColor = style.bg;
-            alert.style.color = style.text;
-
-            var body = document.createElement('div');
-            body.className = 'flash-notice-body';
-
-            var top = document.createElement('div');
-            top.className = 'd-flex align-items-center';
-            top.innerHTML = '<i class="bx ' + style.icon + ' fs-5 me-2" style="color:' + style.text + '"></i>' +
-                '<span>' + escapeHtml(message) + '</span>';
-            body.appendChild(top);
-
-            if (details && details.length > 0) {
-                var ul = document.createElement('ul');
-                ul.className = 'mb-0 ps-3 small mt-1';
-                for (var i = 0; i < details.length; i++) {
-                    var li = document.createElement('li');
-                    li.innerHTML = escapeHtml(details[i]);
-                    ul.appendChild(li);
-                }
-                body.appendChild(ul);
-            }
-
-            var closeBtn = document.createElement('button');
-            closeBtn.type = 'button';
-            closeBtn.className = 'btn-close btn-close-sm';
-            closeBtn.setAttribute('data-bs-dismiss', 'alert');
-            closeBtn.setAttribute('aria-label', 'Tutup');
-            closeBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
-            alert.appendChild(body);
-            alert.appendChild(closeBtn);
-            alertBox.appendChild(alert);
-
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', form.getAttribute('action'));
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.upload.onprogress = function (ev) {
+            if (!ev.lengthComputable) return;
+            real = Math.min(90, Math.round(ev.loaded / ev.total * 90));
+        };
+        xhr.onload = function () {
+            var json = null;
+            try { json = JSON.parse(xhr.responseText); } catch (_) {}
+            var ok = xhr.status < 400;
+            if (json && (json.status === 'error' || json.success === false || json.errors)) ok = false;
+            if (!json && xhr.responseText.indexOf('id="addStudentForm"') > -1 && xhr.responseText.indexOf('is-invalid') > -1) ok = false;
+            if (!ok) { gagal(json); return; }
             try {
-                var bsAlert = (typeof bootstrap !== 'undefined' && bootstrap.Alert) ? bootstrap.Alert : null;
-                if (bsAlert) {
-                    new bsAlert(alert);
-                }
+                sessionStorage.setItem('importAlert', JSON.stringify({
+                    status: 'success',
+                    msg: 'Data siswa berhasil ditambahkan!',
+                    details: []
+                }));
             } catch (e) {}
-        }
+            done = true;
+        };
+        xhr.onerror = function () {
+            setErr(nisnEl, 'Koneksi bermasalah. Coba lagi.');
+            resetSaving();
+        };
+        xhr.send(new FormData(form));
+    }, true);
 
-        function readImportAlertFromStorage() {
-            try {
-                var raw = sessionStorage.getItem('importAlert_legacy');
-                if (!raw) return null;
-                var parsed = JSON.parse(raw);
-                sessionStorage.removeItem('importAlert_legacy');
-                return parsed;
-            } catch (e) {
-                return null;
-            }
-        }
+    if (modalEl) {
+        modalEl.addEventListener('show.bs.modal', function () {
+            if (saving) return;
+            try { form.reset(); } catch (e) {}
+            [nameEl, nisnEl, kelasEl, jkEl].forEach(function (el) { setErr(el, ''); });
+            sync();
+        });
+        modalEl.addEventListener('shown.bs.modal', function () { setTimeout(sync, 0); setTimeout(sync, 150); });
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            if (saving) return;
+            try { form.reset(); } catch (e) {}
+            setTimeout(sync, 0); setTimeout(sync, 150);
+        });
+    }
 
-        function renderStoredAlert() {
-            var stored = readImportAlertFromStorage();
-            if (!stored) return;
-            var status = stored.status || 'error';
-            var message = stored.message || '';
-            var details = Array.isArray(stored.details) ? stored.details : [];
-            showAlert(status, message, details);
-        }
-    })();
-
-    (function () {
-        document.addEventListener('submit', async function (e) {
-            return;
-            var form = e.target;
-            if (!form || !form.querySelector || !form.querySelector('input[type="file"]')) return;
-            if (!/import/i.test(form.action || '')) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            var fileInput = form.querySelector('input[type="file"]');
-            if (!fileInput.files || !fileInput.files.length) {
-                alert('Pilih file Excel terlebih dahulu.');
-                return;
-            }
-            var data = new FormData(form);
-
-            // 1) SEMBUNYIKAN MODAL: naik dari form sampai elemen position:fixed (pembungkus modal)
-            var el = form, hidden = [];
-            while (el && el !== document.body) {
-                var cs = getComputedStyle(el);
-                if (cs.position === 'fixed') { el.style.setProperty('display', 'none', 'important'); hidden.push(el); }
-                el = el.parentElement;
-            }
-            document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
-
-            // 2) TAMPILKAN LOADER
-            var ov = document.createElement('div');
-            ov.id = 'importLoading';
-            ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;';
-            ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 36px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)">'
-              + '<div style="width:44px;height:44px;margin:0 auto 14px;border:4px solid #e2e8f0;border-top-color:#059669;border-radius:50%;animation:impspin .8s linear infinite"></div>'
-              + '<div style="font-weight:600;color:#0f172a">Memproses import...</div></div>'
-              + '<style>@keyframes impspin{to{transform:rotate(360deg)}}</style>';
-            document.body.appendChild(ov);
-
-            // 3) KIRIM VIA FETCH
-            try {
-                var res = await fetch(form.action, {
-                    method: 'POST', body: data,
-                    headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
-                });
-                var json = {};
-                try { json = await res.json(); } catch (_) {}
-                sessionStorage.setItem('importAlert_legacy', JSON.stringify({
-                    status: json.status || (res.ok ? 'success' : 'error'),
-                    message: json.message || (res.ok ? 'Import selesai.' : 'Import gagal. Periksa file lalu coba lagi.'),
-                    details: json.details || []
-                }));
-                location.reload();
-            } catch (err) {
-                ov.remove();
-                hidden.forEach(function (h) { h.style.removeProperty('display'); });
-                alert('Import gagal. Periksa koneksi lalu coba lagi.');
-            }
-        }, true);
-
-        /* Baca notifikasi import dari sessionStorage saat halaman dimuat. */
-        (function () {
-            var alertBox = document.getElementById('importAlertBox');
-            if (!alertBox) {
-                alertBox = document.createElement('div');
-                alertBox.id = 'importAlertBox';
-                var antes = document.querySelector('.d-flex.justify-content-between.align-items-center');
-                if (antes && antes.parentNode) antes.parentNode.insertBefore(alertBox, antes);
-                else {
-                    var wrap = document.querySelector('.modal-content > .modal-footer');
-                    if (wrap) wrap.parentNode.insertBefore(alertBox, wrap);
-                }
-            }
-
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.toString().replace(/[&<>"']/, function (ch) {
-                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-                });
-            }
-
-            function showAlert(status, message) {
-                if (!alertBox) return;
-                alertBox.innerHTML = '';
-                var kolor = status === 'success' ? 'bg-success text-success' : status === 'partial' ? 'bg-warning text-warning' : 'bg-danger text-danger';
-                var ikon = status === 'success' ? 'check-circle' : status === 'partial' ? 'alert-circle' : 'x-circle';
-                var label = status === 'success' ? 'Berhasil' : status === 'partial' ? 'Sebagian' : 'Gagal';
-                alertBox.className = 'alert alert-dismissible fade show alert-box ' + kolor;
-                alertBox.setAttribute('role', 'alert');
-                alertBox.innerHTML = '<button type="button" class="close" data-bs-dismiss="alert" aria-label="Tutup">' +
-                    '<span aria-hidden="true">&times;</span></button>' +
-                    '<strong>' + label + '. </strong><span>' + escapeHtml(message) + '</span>';
-            }
-
-            function readImportAlert() {
-                try {
-                    var raw = sessionStorage.getItem('importAlert_legacy');
-                    if (!raw) return null;
-                    var parsed = JSON.parse(raw);
-                    sessionStorage.removeItem('importAlert_legacy');
-                    return parsed;
-                } catch (e) {
-                    return null;
-                }
-            }
-
-            var stored = readImportAlert();
-            if (stored) {
-                var status = stored.status || 'error';
-                var message = stored.message || '';
-                showAlert(status, message);
-            }
-        })();
-    })();
-
-    (function () {
-        var alertBox = document.getElementById('importAlertBox');
-        if (!alertBox) return;
-
-    /* ===== Import Data Siswa Excel: handler global (capture), loader layar penuh ===== */
-    (function () {
-        document.addEventListener('submit', async function (e) {
-            return;
-            var form = e.target;
-            if (!form || !form.querySelector || !form.querySelector('input[type="file"]')) return;
-            if (!/import/i.test(form.action || '')) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            var fileInput = form.querySelector('input[type="file"]');
-            if (!fileInput.files || !fileInput.files.length) {
-                alert('Pilih file Excel terlebih dahulu.');
-                return;
-            }
-            var data = new FormData(form);
-
-            // 1) SEMBUNYIKAN MODAL: naik dari form sampai elemen position:fixed (pembungkus modal)
-            var el = form, hidden = [];
-            while (el && el !== document.body) {
-                var cs = getComputedStyle(el);
-                if (cs.position === 'fixed') { el.style.setProperty('display', 'none', 'important'); hidden.push(el); }
-                el = el.parentElement;
-            }
-            document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
-
-            // 2) TAMPILKAN LOADER
-            var ov = document.createElement('div');
-            ov.id = 'importLoading';
-            ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;';
-            ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 36px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)">'
-              + '<div style="width:44px;height:44px;margin:0 auto 14px;border:4px solid #e2e8f0;border-top-color:#059669;border-radius:50%;animation:impspin .8s linear infinite"></div>'
-              + '<div style="font-weight:600;color:#0f172a">Memproses import...</div></div>'
-              + '<style>@keyframes impspin{to{transform:rotate(360deg)}}</style>';
-            document.body.appendChild(ov);
-
-            // 3) KIRIM VIA FETCH
-            try {
-                var res = await fetch(form.action, {
-                    method: 'POST', body: data,
-                    headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
-                });
-                var json = {};
-                try { json = await res.json(); } catch (_) {}
-                sessionStorage.setItem('importAlert_legacy', JSON.stringify({
-                    status: json.status || (res.ok ? 'success' : 'error'),
-                    message: json.message || (res.ok ? 'Import selesai.' : 'Import gagal. Periksa file lalu coba lagi.'),
-                    details: json.details || []
-                }));
-                location.reload();
-            } catch (err) {
-                ov.remove();
-                hidden.forEach(function (h) { h.style.removeProperty('display'); });
-                alert('Import gagal. Periksa koneksi lalu coba lagi.');
-            }
-        }, true);
-
-        /* Baca notifikasi import dari sessionStorage saat halaman dimuat. */
-        (function () {
-            var alertBox = document.getElementById('importAlertBox');
-            if (!alertBox) {
-                alertBox = document.createElement('div');
-                alertBox.id = 'importAlertBox';
-                if (document.getElementById('daftar-siswa')) {
-                    document.getElementById('daftar-siswa').parentNode.insertBefore(alertBox, document.getElementById('daftar-siswa'));
-                } else {
-                    document.body.prepend(alertBox);
-                }
-            }
-
-            function escapeHtml(str) {
-                var div = document.createElement('div');
-                var txt = document.createTextNode(str);
-                div.appendChild(txt);
-                return div.innerHTML;
-            }
-
-            function showAlert(status, message, details) {
-                if (!alertBox) return;
-                alertBox.innerHTML = '';
-                if (!message) return;
-
-                var colorMap = {
-                    success: { bg: '#dcfce7', text: '#166534', icon: 'bx-check-circle', textColor: '#166534' },
-                    partial: { bg: '#fef9c3', text: '#854d0e', icon: 'bx-error-circle', textColor: '#854d0e' },
-                    error: { bg: '#fee2e2', text: '#991b1b', icon: 'bx-x-circle', textColor: '#991b1b' }
-                };
-                var style = colorMap[status] || colorMap.error;
-
-                var alert = document.createElement('div');
-                alert.className = 'alert alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
-                alert.setAttribute('role', 'alert');
-                alert.style.backgroundColor = style.bg;
-                alert.style.color = style.text;
-
-                var body = document.createElement('div');
-                body.className = 'flash-notice-body';
-
-                var top = document.createElement('div');
-                top.className = 'd-flex align-items-center';
-                top.innerHTML = '<i class="bx ' + style.icon + ' fs-5 me-2" style="color:' + style.text + '"></i>' +
-                    '<span>' + escapeHtml(message) + '</span>';
-                body.appendChild(top);
-
-                if (details && details.length > 0) {
-                    var ul = document.createElement('ul');
-                    ul.className = 'mb-0 ps-3 small mt-1';
-                    for (var i = 0; i < details.length; i++) {
-                        var li = document.createElement('li');
-                        li.innerHTML = escapeHtml(details[i]);
-                        ul.appendChild(li);
-                    }
-                    body.appendChild(ul);
-                }
-
-                var closeBtn = document.createElement('button');
-                closeBtn.type = 'button';
-                closeBtn.className = 'btn-close btn-close-sm';
-                closeBtn.setAttribute('data-bs-dismiss', 'alert');
-                closeBtn.setAttribute('aria-label', 'Tutup');
-                closeBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
-                alert.appendChild(body);
-                alert.appendChild(closeBtn);
-                alertBox.appendChild(alert);
-
-                try {
-                    var bsAlert = (typeof bootstrap !== 'undefined' && bootstrap.Alert) ? bootstrap.Alert : null;
-                    if (bsAlert) { new bsAlert(alert); }
-                } catch (e) {}
-            }
-
-            function readImportAlertFromStorage() {
-                try {
-                    var raw = sessionStorage.getItem('importAlert_legacy');
-                    if (!raw) return null;
-                    var parsed = JSON.parse(raw);
-                    sessionStorage.removeItem('importAlert_legacy');
-                    return parsed;
-                } catch (e) { return null; }
-            }
-
-            var stored = readImportAlertFromStorage();
-            if (stored) {
-                var status = stored.status || 'error';
-                var message = stored.message || '';
-                var details = Array.isArray(stored.details) ? stored.details : [];
-                showAlert(status, message, details);
-            }
-        })();
-    })();
-
-    })();
-
-    window.togglePrintScope = togglePrintScope;
-    window.confirmDeleteStudent = confirmDeleteStudent;
-    window.confirmDeleteAllStudents = confirmDeleteAllStudents;
+    bersihkan(nameEl);
+    bersihkan(nisnEl);
+    sync();
+    setTimeout(sync, 0);
+    setTimeout(sync, 150);
+})();
 </script>
 @endpush
-
-

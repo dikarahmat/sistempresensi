@@ -14,6 +14,7 @@ class SchoolClassesImport implements ToCollection, WithHeadingRow
     protected int $importedCount = 0;
     protected int $skippedCount = 0;
     protected array $errors = [];
+    protected array $seenInFile = []; // track duplicates within file
 
     public function collection(Collection $rows)
     {
@@ -117,38 +118,36 @@ class SchoolClassesImport implements ToCollection, WithHeadingRow
             }
 
             try {
-                // updateOrCreate berdasarkan nama kelas (termasuk yang ter-arsip agar
-                // tidak melanggar unique (name + academic_year_id))
+                // Cek duplikat dalam file itu sendiri
+                $fileKey = $grade . '|' . $name;
+                if (isset($this->seenInFile[$fileKey])) {
+                    $this->skippedCount++;
+                    continue;
+                }
+                $this->seenInFile[$fileKey] = true;
+
+                // Cek apakah kelas sudah ada (berdasarkan nama + tahun ajaran aktif)
                 $candidates = SchoolClass::withTrashed()->where('name', $name)->get();
-                $schoolClass = $candidates->firstWhere('academic_year_id', $activeYear->id)
+                $existingClass = $candidates->firstWhere('academic_year_id', $activeYear->id)
                     ?? $candidates->first();
 
-                if ($schoolClass) {
-                    $schoolClass->grade = $grade;
-                    $schoolClass->level = $level;
-                    $schoolClass->teacher_id = $teacherId;
-                    if ($schoolClass->trashed()) {
-                        $schoolClass->restore();
-                    } else {
-                        $schoolClass->save();
-                    }
-                } else {
-                    $schoolClass = SchoolClass::create([
-                        'name' => $name,
-                        'grade' => $grade,
-                        'level' => $level,
-                        'academic_year_id' => $activeYear->id,
-                        'teacher_id' => $teacherId,
-                    ]);
+                if ($existingClass) {
+                    // Sudah ada, jangan dihitung sebagai ditambahkan, jangan di-update
+                    $this->skippedCount++;
+                    continue;
                 }
+
+                $schoolClass = SchoolClass::create([
+                    'name' => $name,
+                    'grade' => $grade,
+                    'level' => $level,
+                    'academic_year_id' => $activeYear->id,
+                    'teacher_id' => $teacherId,
+                ]);
 
                 // Sinkronkan wali kelas ke Data Guru (TUGAS KELAS)
                 if ($teacherId) {
-                    // Lepaskan guru lama dari kelas ini (jika ada)
-                    SchoolClass::where('id', $schoolClass->id)->update(['teacher_id' => $teacherId]);
-                    // Lepaskan kelas lama dari guru ini (jika ada)
                     SchoolClass::where('teacher_id', $teacherId)->where('id', '!=', $schoolClass->id)->update(['teacher_id' => null]);
-                    // Update Teacher
                     Teacher::where('id', $teacherId)->update(['school_class_id' => $schoolClass->id]);
                 }
 

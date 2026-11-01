@@ -82,11 +82,40 @@
         align-items: center;
         justify-content: center;
         line-height: 1.5;
+        position: relative;
+        overflow: hidden;
     }
     .btn-submit-blue:hover { background-color: #2563eb; color: #ffffff; }
     .btn-submit-blue:disabled, .btn-submit-blue[aria-disabled="true"] {
         opacity: 0.65;
         cursor: not-allowed;
+    }
+
+    /* Loading progress 1-100% (biru penuh sejak persen pertama) */
+    .btn-submit-blue.is-loading,
+    .btn-submit-blue.is-loading:disabled,
+    .btn-submit-blue.is-loading:hover {
+        opacity: 1;
+        background-color: #3b82f6;
+        cursor: wait;
+        pointer-events: none;
+    }
+    .btn-submit-blue .bp-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0%;
+        background-color: #1d4ed8;
+        border-radius: inherit;
+        z-index: 0;
+        transition: width 0.15s linear;
+    }
+    .btn-submit-blue .bp-text {
+        position: relative;
+        z-index: 1;
+        color: #ffffff;
+        font-weight: 700;
     }
 
     .btn-cancel-gray {
@@ -158,7 +187,7 @@
         <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">
             <div class="flash-notice-body">
                 <div class="d-flex align-items-center">
-                    <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                    <i class='bx bx-check-circle fs-5 me-2 text-success flex-shrink-0'></i>
                     <span>{{ session('success') }}</span>
                 </div>
             </div>
@@ -170,7 +199,7 @@
         <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">
             <div class="flash-notice-body">
                 <div class="d-flex align-items-center">
-                    <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                    <i class='bx bx-error-circle fs-5 me-2 text-danger flex-shrink-0'></i>
                     <span>{{ session('error') }}</span>
                 </div>
             </div>
@@ -206,7 +235,7 @@
                 <div class="field-row" id="rowNisn">
                     <div class="info-label" style="color: #0f172a;">{{ __('NISN') }}</div>
                     <div id="viewNisn" class="info-value">{{ $student->nisn ?: '-' }}</div>
-                    <input type="text" id="editNisn" class="form-control d-none" style="width: 100%;" value="{{ $student->nisn }}" maxlength="10" inputmode="numeric" autocomplete="off">
+                    <input type="text" id="editNisn" class="form-control d-none" style="width: 100%;" value="{{ $student->nisn }}" maxlength="10" inputmode="numeric" autocomplete="off" placeholder="{{ __('10 digit angka') }}">
                     <div id="errNisn" class="invalid-feedback error-msg d-none"></div>
                 </div>
 
@@ -338,14 +367,14 @@
     function nameCheck() {
         var v = editNama ? editNama.value.trim() : '';
         if (!v) return { ok: false, msg: 'Nama siswa wajib diisi.' };
-        if (/\p{Nd}/u.test(v)) return { ok: false, msg: 'Nama siswa tidak boleh mengandung angka.' };
+        if (!/^[\p{L}\s.,'\-]+$/u.test(v)) return { ok: false, msg: 'Nama siswa hanya boleh berisi huruf, spasi, titik, koma, apostrof, dan tanda hubung.' };
         return { ok: true };
     }
 
     function nisnCheck() {
         var v = editNisn ? editNisn.value.trim() : '';
         if (!v) return { ok: false, msg: 'NISN wajib diisi.' };
-        if (!/^[0-9]{10}$/.test(v)) return { ok: false, msg: 'NISN harus berupa 10 digit angka.' };
+        if (!/^\d{10}$/.test(v)) return { ok: false, msg: 'NISN harus berupa 10 digit angka.' };
         return { ok: true };
     }
 
@@ -362,14 +391,13 @@
     }
 
     if (editNama) {
-        editNama.addEventListener('beforeinput', function (e) {
-            if (e.inputType === 'insertText' && /[0-9]/.test(e.data)) {
-                e.preventDefault();
-            }
-        });
-        editNama.addEventListener('input', function () {
-            this.value = this.value.replace(/\p{Nd}/gu, '');
+        function sanitizeEditNama() {
+            editNama.value = editNama.value.replace(/[^\p{L}\s.,'\-]/gu, '');
             hideFieldError(editNama, errNama);
+        }
+        editNama.addEventListener('input', sanitizeEditNama);
+        editNama.addEventListener('paste', function () {
+            setTimeout(sanitizeEditNama, 0);
         });
         editNama.addEventListener('blur', function () {
             var res = nameCheck();
@@ -378,9 +406,13 @@
     }
 
     if (editNisn) {
-        editNisn.addEventListener('input', function () {
-            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        function sanitizeEditNisn() {
+            editNisn.value = editNisn.value.replace(/\D/g, '').slice(0, 10);
             hideFieldError(editNisn, errNisn);
+        }
+        editNisn.addEventListener('input', sanitizeEditNisn);
+        editNisn.addEventListener('paste', function () {
+            setTimeout(sanitizeEditNisn, 0);
         });
         editNisn.addEventListener('blur', function () {
             var res = nisnCheck();
@@ -404,7 +436,14 @@
         });
     }
 
-    function showSuccessNotif(msg) {
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    // Notifikasi seragam: type = 'success' | 'danger'
+    function showNotif(type, msg) {
         var existingAlerts = document.querySelectorAll('.alert');
         existingAlerts.forEach(function (a) { a.remove(); });
 
@@ -419,11 +458,16 @@
                 document.body.prepend(container);
             }
         }
-        container.innerHTML = '<div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">'
+
+        var isDanger = type === 'danger';
+        var alertClass = isDanger ? 'alert-danger' : 'alert-success';
+        var iconClass = isDanger ? 'bx-error-circle text-danger' : 'bx-check-circle text-success';
+
+        container.innerHTML = '<div class="alert ' + alertClass + ' alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-4" role="alert">'
             + '<div class="flash-notice-body">'
             + '<div class="d-flex align-items-center">'
-            + '<i class="bx bx-check-circle fs-5 me-2 text-success"></i>'
-            + '<span>' + msg + '</span>'
+            + '<i class="bx ' + iconClass + ' fs-5 me-2 flex-shrink-0"></i>'
+            + '<span>' + escapeHtml(msg) + '</span>'
             + '</div>'
             + '</div>'
             + '<button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Tutup"></button>'
@@ -435,6 +479,50 @@
                 if (alertEl) new bootstrap.Alert(alertEl);
             }
         } catch (_) {}
+    }
+
+    // Progress 1-100% di dalam tombol
+    var progressTimer = null;
+    var progressValue = 0;
+
+    function setProgress(p) {
+        progressValue = p;
+        if (!btnSimpan) return;
+        var fill = btnSimpan.querySelector('.bp-fill');
+        var txt = btnSimpan.querySelector('.bp-text');
+        if (fill) fill.style.width = p + '%';
+        if (txt) txt.textContent = p + '%';
+    }
+
+    function startProgress() {
+        btnSimpan.style.minWidth = btnSimpan.offsetWidth + 'px';
+        btnSimpan.style.minHeight = btnSimpan.offsetHeight + 'px';
+        btnSimpan.classList.add('is-loading');   // sebelum disabled supaya tidak pudar
+        btnSimpan.innerHTML = '<span class="bp-fill"></span><span class="bp-text">1%</span>';
+        btnSimpan.disabled = true;
+        setProgress(1);
+        clearInterval(progressTimer);
+        progressTimer = setInterval(function () {
+            if (progressValue < 90) {
+                var step = progressValue < 50 ? 3 : (progressValue < 75 ? 2 : 1);
+                setProgress(Math.min(90, progressValue + step));
+            }
+        }, 100);
+    }
+
+    function stopProgress() {
+        clearInterval(progressTimer);
+        progressTimer = null;
+    }
+
+    function resetSaveButton() {
+        stopProgress();
+        btnSimpan.classList.remove('is-loading');
+        btnSimpan.textContent = 'Simpan Perubahan';
+        btnSimpan.style.minWidth = '';
+        btnSimpan.style.minHeight = '';
+        btnSimpan.disabled = false;
+        progressValue = 0;
     }
 
     if (btnEdit) {
@@ -482,8 +570,7 @@
                 return;
             }
 
-            btnSimpan.disabled = true;
-            btnSimpan.textContent = 'Menyimpan...';
+            startProgress();
             if (btnBatal) btnBatal.disabled = true;
 
             var fd = new FormData();
@@ -513,35 +600,45 @@
                 }
                 return res.json();
             }).then(function (data) {
-                var resData = (data && data.data) ? data.data : {};
-                savedData.classId = editKelas.value;
-                savedData.className = resData.school_class_name || (editKelas.options[editKelas.selectedIndex] ? editKelas.options[editKelas.selectedIndex].text.replace(/^Kelas\s+/i, '') : '');
-                savedData.nisn = resData.nisn !== undefined ? resData.nisn : editNisn.value.trim();
-                savedData.name = resData.name !== undefined ? resData.name : editNama.value.trim();
-                savedData.gender = resData.gender !== undefined ? resData.gender : editJk.value;
+                // Sukses: lompat ke 100%, tunggu sebentar, baru tampilkan hasil
+                stopProgress();
+                setProgress(100);
 
-                if (viewKelas) viewKelas.textContent = 'Kelas ' + savedData.className;
-                if (viewNisn) viewNisn.textContent = savedData.nisn || '-';
-                if (viewNama) viewNama.textContent = savedData.name;
-                if (viewJk) viewJk.textContent = savedData.gender;
+                return new Promise(function (resolve) {
+                    setTimeout(function () {
+                        var resData = (data && data.data) ? data.data : {};
+                        savedData.classId = editKelas.value;
+                        savedData.className = resData.school_class_name || (editKelas.options[editKelas.selectedIndex] ? editKelas.options[editKelas.selectedIndex].text.replace(/^Kelas\s+/i, '') : '');
+                        savedData.nisn = resData.nisn !== undefined ? resData.nisn : editNisn.value.trim();
+                        savedData.name = resData.name !== undefined ? resData.name : editNama.value.trim();
+                        savedData.gender = resData.gender !== undefined ? resData.gender : editJk.value;
 
-                var cardScale = document.querySelector('.kp-card-scale');
-                if (cardScale) {
-                    var nameDiv = cardScale.querySelector('div[style*="top:16.5mm"]');
-                    var nisnDiv = cardScale.querySelector('div[style*="top:20.6mm"]');
-                    var classDiv = cardScale.querySelector('div[style*="top:24.6mm"]');
-                    if (nameDiv) nameDiv.textContent = savedData.name.toUpperCase();
-                    if (nisnDiv) nisnDiv.textContent = savedData.nisn || '';
-                    if (classDiv) classDiv.textContent = savedData.className;
-                    if (resData.qr_src) {
-                        var qrImg = cardScale.querySelector('div[style*="top:30.5mm"] img');
-                        if (qrImg) qrImg.src = resData.qr_src;
-                    }
-                }
+                        if (viewKelas) viewKelas.textContent = 'Kelas ' + savedData.className;
+                        if (viewNisn) viewNisn.textContent = savedData.nisn || '-';
+                        if (viewNama) viewNama.textContent = savedData.name;
+                        if (viewJk) viewJk.textContent = savedData.gender;
 
-                setMode(false);
-                showSuccessNotif('Data siswa berhasil diperbarui!');
+                        var cardScale = document.querySelector('.kp-card-scale');
+                        if (cardScale) {
+                            var nameDiv = cardScale.querySelector('div[style*="top:16.5mm"]');
+                            var nisnDiv = cardScale.querySelector('div[style*="top:20.6mm"]');
+                            var classDiv = cardScale.querySelector('div[style*="top:24.6mm"]');
+                            if (nameDiv) nameDiv.textContent = savedData.name.toUpperCase();
+                            if (nisnDiv) nisnDiv.textContent = savedData.nisn || '';
+                            if (classDiv) classDiv.textContent = savedData.className;
+                            if (resData.qr_src) {
+                                var qrImg = cardScale.querySelector('div[style*="top:30.5mm"] img');
+                                if (qrImg) qrImg.src = resData.qr_src;
+                            }
+                        }
+
+                        setMode(false);
+                        showNotif('success', 'Data siswa berhasil diperbarui!');
+                        resolve();
+                    }, 300);
+                });
             }).catch(function (err) {
+                stopProgress();
                 if (err && err.status === 422) {
                     var errors = (err.json && err.json.errors) ? err.json.errors : {};
                     if (errors.school_class_id) {
@@ -558,12 +655,12 @@
                     }
                     var firstInvalid = document.querySelector('.card-modern .is-invalid');
                     if (firstInvalid) { try { firstInvalid.focus(); } catch (_) {} }
+                    showNotif('danger', 'Gagal menyimpan: periksa kembali data yang diisi.');
                 } else {
-                    alert((err && err.message) ? err.message : 'Gagal menyimpan data. Silakan coba lagi.');
+                    showNotif('danger', (err && err.message) ? err.message : 'Gagal menyimpan data. Silakan coba lagi.');
                 }
             }).finally(function () {
-                btnSimpan.disabled = false;
-                btnSimpan.textContent = 'Simpan Perubahan';
+                resetSaveButton();
                 if (btnBatal) btnBatal.disabled = false;
             });
         });

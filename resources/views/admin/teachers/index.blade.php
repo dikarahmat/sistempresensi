@@ -18,12 +18,45 @@
     #btnSaveTeacher {
         transition: background-color .15s ease, color .15s ease, opacity .15s ease;
     }
-    #btnSaveTeacher:disabled {
+    #btnSaveTeacher:disabled,
+    #btnSaveTeacher[disabled] {
         background-color: #2563eb !important;
         color: #ffffff !important;
         border-color: #2563eb !important;
         cursor: not-allowed !important;
         opacity: 0.5 !important;
+        box-shadow: none !important;
+        pointer-events: none !important;
+    }
+    #btnSaveTeacher.is-loading,
+    #btnSaveTeacher[data-saving="1"] {
+        opacity: 1 !important;
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        filter: none !important;
+    }
+    #btnSaveTeacher:not(:disabled) {
+        opacity: 1 !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    #btnSaveTeacher.btn-progress.is-running,
+    #btnSaveTeacher.btn-progress.is-done {
+        opacity: 1 !important;
+        cursor: default !important;
+        pointer-events: none !important;
+    }
+    #btnSaveTeacher.btn-progress:disabled:not(.is-running):not(.is-done):not(.is-loading):not([data-saving="1"]),
+    #btnSaveTeacher.btn-progress[disabled]:not(.is-running):not(.is-done):not(.is-loading):not([data-saving="1"]) {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
         box-shadow: none !important;
     }
     .field-error {
@@ -339,7 +372,7 @@
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" style="background-color: #fee2e2 !important; color: #991b1b !important;" role="alert">
         <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-error-circle fs-5 me-2' style="color: #991b1b !important;"></i>
+                <i class='bx bx-trash fs-5 me-2' style="color: #991b1b !important;"></i>
                 <span>{{ session('danger') }}</span>
             </div>
         </div>
@@ -520,41 +553,54 @@
                     <h5 class="fw-bold mb-0">{{ __('Tambah Guru Baru') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ panel_route('guru.store') }}" method="POST" novalidate id="addTeacherForm" data-no-loader>
+                <form action="{{ panel_route('guru.store') }}" method="POST" id="addTeacherForm">
                     @csrf
                     <div class="modal-body py-3">
+                        @if($errors->any() && session('open_modal') === 'add')
+                        <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
+                            <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Periksa isian yang bertanda merah.') }}
+                        </div>
+                        @endif
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">{{ __('Nama Lengkap Guru') }} <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="teacherName" class="form-control rounded-3" placeholder="{{ __('Masukkan nama lengkap & gelar guru') }}" maxlength="255" autocomplete="off">
-                            <div class="field-error"></div>
+                            <input type="text" name="name" id="teacherName" class="form-control rounded-3 {{ $errors->has('name') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('Masukkan nama lengkap & gelar guru') }}" maxlength="255" autocomplete="off" value="{{ old('name') }}">
+                            @if($errors->has('name') && session('open_modal') === 'add')
+                            <div class="invalid-feedback d-block">{{ $errors->first('name') }}</div>
+                            @endif
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">{{ __('NIP (Nomor Induk Pegawai)') }} <span class="text-danger">*</span></label>
-                            <input type="text" name="nip" id="teacherNip" class="form-control rounded-3" placeholder="{{ __('16 atau 18 digit angka') }}" inputmode="numeric" maxlength="18" autocomplete="off">
-                            <div class="field-error"></div>
+                            <input type="text" name="nip" id="teacherNip" class="form-control rounded-3 {{ $errors->has('nip') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('16 atau 18 digit angka') }}" inputmode="numeric" maxlength="18" autocomplete="off" value="{{ old('nip') }}">
+                            @if($errors->has('nip') && session('open_modal') === 'add')
+                            <div class="invalid-feedback d-block">{{ $errors->first('nip') }}</div>
+                            @endif
                         </div>
 
                         <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <label class="form-label small fw-semibold">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
-                                <select name="gender" id="teacherGender" class="form-select rounded-3">
-                                    <option value="">{{ __('Pilih jenis kelamin') }}</option>
-                                    <option value="Laki-laki">{{ __('Laki-laki') }}</option>
-                                    <option value="Perempuan">{{ __('Perempuan') }}</option>
+                                <select name="gender" id="teacherGender" class="form-select rounded-3 {{ $errors->has('gender') && session('open_modal') === 'add' ? 'is-invalid' : '' }}">
+                                    <option value="" {{ old('gender') ? '' : 'selected' }}>{{ __('Pilih jenis kelamin') }}</option>
+                                    <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
+                                    <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
                                 </select>
-                                <div class="field-error"></div>
+                                @if($errors->has('gender') && session('open_modal') === 'add')
+                                <div class="invalid-feedback d-block">{{ $errors->first('gender') }}</div>
+                                @endif
                             </div>
                             <div class="col-6">
                                 <label class="form-label small fw-semibold">{{ __('No. Telepon / WA') }} <span class="text-danger">*</span></label>
-                                <input type="text" name="phone_number" id="teacherPhone" class="form-control rounded-3" placeholder="{{ __('10-15 digit') }}" inputmode="numeric" maxlength="15" autocomplete="off">
-                                <div class="field-error"></div>
+                                <input type="text" name="phone_number" id="teacherPhone" class="form-control rounded-3 {{ $errors->has('phone_number') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" placeholder="{{ __('10-15 digit') }}" inputmode="numeric" maxlength="15" autocomplete="off" value="{{ old('phone_number') }}">
+                                @if($errors->has('phone_number') && session('open_modal') === 'add')
+                                <div class="invalid-feedback d-block">{{ $errors->first('phone_number') }}</div>
+                                @endif
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" id="btnSaveTeacher" disabled>{{ __('Simpan Data Guru') }}</button>
+                        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" data-dl-progress data-form-submit id="btnSaveTeacher" disabled="disabled">{{ __('Simpan Data Guru') }}</button>
                     </div>
                 </form>
             </div>
@@ -625,6 +671,15 @@
 
 @push('scripts')
 <script>
+@if(session('open_modal') === 'add')
+document.addEventListener('DOMContentLoaded', function() {
+    var modalEl = document.getElementById('addTeacherModal');
+    if (modalEl && window.bootstrap) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+});
+@endif
 console.log('[import-handler] aktif');
 (function () {
   var form = document.getElementById('teacherImportForm');
@@ -758,122 +813,126 @@ console.log('[import-handler] aktif');
         }
     })();
 
-    /* Pesan error kecil di bawah field (clear + set) */
-    function setFieldError(field, msg) {
-        if (!field) return;
-        const msgEl = field.parentNode.querySelector('.field-error');
-        if (!msgEl) return;
-        if (!msg) {
-            msgEl.textContent = '';
-            field.classList.remove('is-invalid');
-            field.style.borderColor = '';
+    /* Filter + kontrol tombol Simpan Data Guru */
+    function filterNamaGuru(el) {
+        if (!el) return;
+        var before = el.value;
+        var cleaned = before.replace(/[^\p{L}\s.,'\-]/gu, '');
+        if (cleaned !== before) {
+            var start = el.selectionStart;
+            el.value = cleaned;
+            var newStart = Math.min(start, el.value.length);
+            try { el.setSelectionRange(newStart, newStart); } catch (e) {}
+        }
+    }
+
+    function filterNipGuru(el) {
+        if (!el) return;
+        var before = el.value;
+        var cleaned = before.replace(/\D/g, '').slice(0, 18);
+        if (cleaned !== before) {
+            var start = el.selectionStart;
+            el.value = cleaned;
+            var newStart = Math.min(start, el.value.length);
+            try { el.setSelectionRange(newStart, newStart); } catch (e) {}
+        } else if (el.value.length > 18) {
+            el.value = el.value.slice(0, 18);
+        }
+    }
+
+    function filterPhoneGuru(el) {
+        if (!el) return;
+        var before = el.value;
+        var cleaned = before.replace(/\D/g, '').slice(0, 15);
+        if (cleaned !== before) {
+            var start = el.selectionStart;
+            el.value = cleaned;
+            var newStart = Math.min(start, el.value.length);
+            try { el.setSelectionRange(newStart, newStart); } catch (e) {}
+        } else if (el.value.length > 15) {
+            el.value = el.value.slice(0, 15);
+        }
+    }
+
+    function updateSimpanGuruState() {
+        var btn = document.getElementById('btnSaveTeacher');
+        if (!btn) return;
+        if (btn.classList.contains('is-running') || btn.classList.contains('is-done')) {
             return;
         }
-        msgEl.textContent = msg;
-        field.classList.add('is-invalid');
-        field.style.borderColor = '#dc2626';
+        var name = document.getElementById('teacherName');
+        var nip = document.getElementById('teacherNip');
+        var jk = document.getElementById('teacherGender');
+        var phone = document.getElementById('teacherPhone');
+        var namaVal = name ? (name.value || '').trim() : '';
+        var nipVal = nip ? (nip.value || '').trim() : '';
+        var jkVal = jk ? (jk.value || '').trim() : '';
+        var phoneVal = phone ? (phone.value || '').trim() : '';
+        var ok = namaVal !== '' && /^(\d{16}|\d{18})$/.test(nipVal) && jkVal !== '' && jkVal !== 'Pilih jenis kelamin' && /^\d{10,15}$/.test(phoneVal);
+        if (ok) {
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            btn.style.pointerEvents = '';
+        } else {
+            btn.disabled = true;
+            btn.setAttribute('disabled', 'disabled');
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
+        }
     }
 
-    /* Validasi form Tambah Guru (JS murni) */
-    function cekValiditasGuru(showErrors) {
-        const name = document.getElementById('teacherName');
-        const nip = document.getElementById('teacherNip');
-        const jk = document.getElementById('teacherGender');
-        const phone = document.getElementById('teacherPhone');
-        let ok = true;
-
-        function apply(field, message) {
-            if (showErrors || !message) {
-                setFieldError(field, message);
-            }
-        }
-
-        const namaVal = (name ? name.value : '').trim();
-        if (namaVal === '') {
-            apply(name, 'Nama guru wajib diisi.');
-            ok = false;
-        } else if (!/^[\p{L}\s.,'\-]+$/u.test(namaVal)) {
-            apply(name, 'Format nama hanya boleh huruf dan tanda baca.');
-            ok = false;
-        } else {
-            apply(name, '');
-        }
-
-        const nipVal = (nip ? nip.value : '').trim();
-        if (!/^(\d{16}|\d{18})$/.test(nipVal)) {
-            apply(nip, 'NIP/NUPTK harus 16 atau 18 digit angka.');
-            ok = false;
-        } else {
-            apply(nip, '');
-        }
-
-        const jkVal = (jk ? jk.value : '').trim();
-        if (jkVal === '') {
-            apply(jk, 'Pilih jenis kelamin.');
-            ok = false;
-        } else {
-            apply(jk, '');
-        }
-
-        const phoneVal = (phone ? phone.value : '').trim();
-        if (!/^\d{10,15}$/.test(phoneVal)) {
-            apply(phone, 'Nomor telepon harus 10-15 digit angka.');
-            ok = false;
-        } else {
-            apply(phone, '');
-        }
-
-        return ok;
-    }
-
-    /* Tombol Simpan aktif bila semua kolom wajib terisi dan valid */
-    function updateTombolSimpan() {
+    function cekTombolSimpanGuru() {
         var btn = document.getElementById('btnSaveTeacher');
-        if (!btn || btn.dataset.saving === '1') return;
-        var isValid = cekValiditasGuru(false);
-        btn.disabled = !isValid;
-        btn.setAttribute('aria-disabled', isValid ? 'false' : 'true');
-    }
-
-    /* Sanitasi input NIP: hanya angka, maks 18 digit */
-    function sanitizeNipInput(e) {
-        const el = e.target;
-        if (!el || el.id !== 'teacherNip') return;
-        const before = el.value;
-        const cleaned = before.replace(/[^0-9]/g, '').slice(0, 18);
-        if (cleaned !== before) {
-            const start = el.selectionStart;
-            el.value = cleaned;
-            const newStart = Math.min(start, el.value.length);
-            el.setSelectionRange(newStart, newStart);
+        if (!btn) return;
+        if (btn.dataset.saving === '1') return;
+        var name = document.getElementById('teacherName');
+        var nip = document.getElementById('teacherNip');
+        var jk = document.getElementById('teacherGender');
+        var phone = document.getElementById('teacherPhone');
+        if (name) filterNamaGuru(name);
+        if (nip) { nip.setAttribute('inputmode', 'numeric'); nip.setAttribute('maxlength', '18'); filterNipGuru(nip); }
+        if (phone) { phone.setAttribute('inputmode', 'numeric'); phone.setAttribute('maxlength', '15'); filterPhoneGuru(phone); }
+        updateSimpanGuruState();
+        if (typeof enforceSimpanGuruState === 'function') {
+            enforceSimpanGuruState();
         }
     }
 
-    /* Sanitasi input No Telepon: hanya angka, maks 15 digit */
-    function sanitizePhoneInput(e) {
-        const el = e.target;
-        if (!el || el.id !== 'teacherPhone') return;
-        const before = el.value;
-        const cleaned = before.replace(/[^0-9]/g, '').slice(0, 15);
-        if (cleaned !== before) {
-            const start = el.selectionStart;
-            el.value = cleaned;
-            const newStart = Math.min(start, el.value.length);
-            el.setSelectionRange(newStart, newStart);
-        }
-    }
-
-    /* Sanitasi input Nama: hapus angka saat mengetik */
-    function sanitizeNameInput(e) {
-        const el = e.target;
-        if (!el || el.id !== 'teacherName') return;
-        const before = el.value;
-        const cleaned = before.replace(/\p{Nd}/gu, '');
-        if (cleaned !== before) {
-            const start = el.selectionStart;
-            el.value = cleaned;
-            const newStart = Math.min(start, el.value.length);
-            el.setSelectionRange(newStart, newStart);
+    function enforceSimpanGuruState() {
+        var btn = document.getElementById('btnSaveTeacher');
+        if (!btn) return;
+        if (btn.dataset.saving === '1') return;
+        if (btn.classList.contains('is-running') || btn.classList.contains('is-done')) return;
+        var name = document.getElementById('teacherName');
+        var nip = document.getElementById('teacherNip');
+        var jk = document.getElementById('teacherGender');
+        var phone = document.getElementById('teacherPhone');
+        var namaVal = name ? (name.value || '').trim() : '';
+        var nipVal = nip ? (nip.value || '').trim() : '';
+        var jkVal = jk ? (jk.value || '').trim() : '';
+        var phoneVal = phone ? (phone.value || '').trim() : '';
+        var namaOk = namaVal !== '' && /^[\p{L}\s.,'\-]+$/u.test(namaVal);
+        var nipOk = /^(\d{16}|\d{18})$/.test(nipVal);
+        var jkOk = jkVal !== '' && jkVal !== 'Pilih jenis kelamin';
+        var phoneOk = /^\d{10,15}$/.test(phoneVal);
+        var ok = namaOk && nipOk && jkOk && phoneOk;
+        if (ok) {
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
+            btn.setAttribute('aria-disabled', 'false');
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            btn.style.pointerEvents = 'auto';
+        } else {
+            btn.disabled = true;
+            btn.setAttribute('disabled', 'disabled');
+            btn.setAttribute('aria-disabled', 'true');
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
         }
     }
 
@@ -883,139 +942,178 @@ console.log('[import-handler] aktif');
         return div.innerHTML;
     }
 
-    /* Handler form Tambah Guru */
+    /* Kontrol tombol Simpan Data Guru */
     (function () {
         var nameEl = document.getElementById('teacherName');
         var nipEl = document.getElementById('teacherNip');
         var jkEl = document.getElementById('teacherGender');
         var phoneEl = document.getElementById('teacherPhone');
         var form = document.getElementById('addTeacherForm');
-        if (!form) return;
+        var modalEl = document.getElementById('addTeacherModal');
+        var btn = document.getElementById('btnSaveTeacher');
 
-        function attach(el, evt, fn) {
-            if (!el) return;
-            el.addEventListener(evt, fn);
+        function runAll() {
+            if (nameEl) { filterNamaGuru(nameEl); }
+            if (nipEl) { nipEl.setAttribute('inputmode', 'numeric'); nipEl.setAttribute('maxlength', '18'); filterNipGuru(nipEl); }
+            if (phoneEl) { phoneEl.setAttribute('inputmode', 'numeric'); phoneEl.setAttribute('maxlength', '15'); filterPhoneGuru(phoneEl); }
+            cekTombolSimpanGuru();
+            updateSimpanGuruState();
+            if (typeof enforceSimpanGuruState === 'function') {
+                enforceSimpanGuruState();
+            }
         }
 
-        attach(nipEl, 'input', sanitizeNipInput);
-        attach(phoneEl, 'input', sanitizePhoneInput);
-        attach(nameEl, 'input', sanitizeNameInput);
+        function bindExtra() {
+            if (nameEl) {
+                nameEl.addEventListener('input', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                nameEl.addEventListener('change', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                nameEl.addEventListener('paste', function () { setTimeout(function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 0); });
+            }
+            if (nipEl) {
+                nipEl.addEventListener('input', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                nipEl.addEventListener('change', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                nipEl.addEventListener('paste', function () { setTimeout(function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 0); });
+            }
+            if (phoneEl) {
+                phoneEl.addEventListener('input', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                phoneEl.addEventListener('change', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                phoneEl.addEventListener('paste', function () { setTimeout(function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 0); });
+            }
+            if (jkEl) {
+                jkEl.addEventListener('change', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+                jkEl.addEventListener('input', function(){ updateSimpanGuruState(); if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); });
+            }
+        }
 
-        [nameEl, nipEl, jkEl, phoneEl].forEach(function (el) {
-            if (!el) return;
-            attach(el, 'input', function () {
-                setFieldError(el, '');
-                updateTombolSimpan();
+        if (nameEl) {
+            nameEl.addEventListener('input', runAll);
+            nameEl.addEventListener('change', runAll);
+            nameEl.addEventListener('paste', function () {
+                setTimeout(runAll, 0);
             });
-            attach(el, 'change', function () {
-                setFieldError(el, '');
-                updateTombolSimpan();
+        }
+        if (nipEl) {
+            nipEl.setAttribute('inputmode', 'numeric');
+            nipEl.setAttribute('maxlength', '18');
+            nipEl.addEventListener('input', runAll);
+            nipEl.addEventListener('change', runAll);
+            nipEl.addEventListener('paste', function () {
+                setTimeout(runAll, 0);
             });
-            attach(el, 'blur', function () {
-                setFieldError(el, '');
-                updateTombolSimpan();
+        }
+        if (phoneEl) {
+            phoneEl.setAttribute('inputmode', 'numeric');
+            phoneEl.setAttribute('maxlength', '15');
+            phoneEl.addEventListener('input', runAll);
+            phoneEl.addEventListener('change', runAll);
+            phoneEl.addEventListener('paste', function () {
+                setTimeout(runAll, 0);
             });
+        }
+        if (jkEl) {
+            jkEl.addEventListener('change', runAll);
+            jkEl.addEventListener('input', runAll);
+        }
+        bindExtra();
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal && modalEl) {
+            modalEl.addEventListener('show.bs.modal', function () {
+                if (form) {
+                    try { form.reset(); } catch (e) {}
+                }
+                if (nameEl) nameEl.value = '';
+                if (nipEl) nipEl.value = '';
+                if (jkEl) jkEl.value = '';
+                if (phoneEl) phoneEl.value = '';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.setAttribute('disabled', 'disabled');
+                    btn.setAttribute('aria-disabled', 'true');
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.style.pointerEvents = 'none';
+                }
+                setTimeout(runAll, 0);
+                setTimeout(updateSimpanGuruState, 10);
+                setTimeout(function(){ if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 0);
+                setTimeout(function(){ if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 50);
+            });
+            modalEl.addEventListener('shown.bs.modal', function () {
+                runAll();
+                updateSimpanGuruState();
+                if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState();
+                setTimeout(function(){ if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 0);
+                setTimeout(function(){ if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 50);
+            });
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (form) {
+                    try { form.reset(); } catch (e) {}
+                }
+                if (nameEl) nameEl.value = '';
+                if (nipEl) nipEl.value = '';
+                if (jkEl) jkEl.value = '';
+                if (phoneEl) phoneEl.value = '';
+                if (btn) {
+                    if (btn.classList.contains('is-running') || btn.classList.contains('is-done') || btn.dataset.saving === '1') {
+                        // biarkan logika progress yang mengatur
+                    } else {
+                        btn.disabled = true;
+                        btn.setAttribute('disabled', 'disabled');
+                        btn.setAttribute('aria-disabled', 'true');
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.pointerEvents = 'none';
+                    }
+                }
+                runAll();
+                updateSimpanGuruState();
+                if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState();
+                setTimeout(function(){ if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 0);
+                setTimeout(function(){ if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState(); }, 150);
+            });
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.setAttribute('disabled', 'disabled');
+            btn.setAttribute('aria-disabled', 'true');
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
+        }
+        if (btn && typeof MutationObserver !== 'undefined') {
+            try {
+                var obsG = null;
+                var obsGLock = false;
+                obsG = new MutationObserver(function(){
+                    if (obsGLock) return;
+                    obsGLock = true;
+                    try {
+                        if (typeof enforceSimpanGuruState === 'function') enforceSimpanGuruState();
+                    } finally {
+                        if (obsG) { try { obsG.takeRecords(); } catch(e){} }
+                        obsGLock = false;
+                    }
+                });
+                obsG.observe(btn, { attributes: true, attributeFilter: ['disabled', 'style', 'class'] });
+            } catch (e) {}
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            if (btn) {
+                btn.disabled = true;
+                btn.setAttribute('disabled', 'disabled');
+                btn.setAttribute('aria-disabled', 'true');
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.style.pointerEvents = 'none';
+            }
+            runAll();
+            updateSimpanGuruState();
+            if (typeof enforceSimpanGuruState === 'function') { enforceSimpanGuruState(); setTimeout(enforceSimpanGuruState,0); setTimeout(enforceSimpanGuruState,150); }
         });
-
-        var btnSubmit = document.getElementById('btnSaveTeacher');
-        var originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
-
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            if (!cekValiditasGuru(true)) {
-                var firstInvalid = form.querySelector('.is-invalid');
-                if (firstInvalid) firstInvalid.focus();
-                return;
-            }
-
-            if (btnSubmit) {
-                btnSubmit.dataset.saving = '1';
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...';
-            }
-
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin',
-                redirect: 'manual'
-            })
-            .then(function (response) {
-                if (response.status === 422) {
-                    return response.json().then(function (data) {
-                        var errors = data.errors || {};
-                        Object.keys(errors).forEach(function (key) {
-                            var field = form.querySelector('[name="' + key + '"]');
-                            if (field) setFieldError(field, errors[key][0]);
-                        });
-                        if (btnSubmit) {
-                            delete btnSubmit.dataset.saving;
-                            btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = originalBtnHtml;
-                        }
-                        var firstInvalid = form.querySelector('.is-invalid');
-                        if (firstInvalid) firstInvalid.focus();
-                    });
-                }
-                if (response.type === 'opaqueredirect' || response.status === 0) {
-                    window.location.reload();
-                    return;
-                }
-                if (!response.ok) {
-                    return response.json().catch(function () { return {}; }).then(function () {
-                        if (btnSubmit) {
-                            delete btnSubmit.dataset.saving;
-                            btnSubmit.disabled = false;
-                            btnSubmit.innerHTML = originalBtnHtml;
-                        }
-                        alert('Gagal menyimpan data. Coba lagi.');
-                    });
-                }
-                window.location.reload();
-            })
-            .catch(function () {
-                if (btnSubmit) {
-                    delete btnSubmit.dataset.saving;
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = originalBtnHtml;
-                }
-                alert('Gagal menyimpan data. Periksa koneksi lalu coba lagi.');
-            });
-        }, true);
-
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            document.addEventListener('show.bs.modal', function (e) {
-                var modal = e.target;
-                if (modal && modal.id === 'addTeacherModal') {
-                    setFieldError(nameEl, '');
-                    setFieldError(nipEl, '');
-                    setFieldError(jkEl, '');
-                    setFieldError(phoneEl, '');
-                    cekValiditasGuru(false);
-                    updateTombolSimpan();
-                }
-            });
-
-            document.addEventListener('hidden.bs.modal', function (e) {
-                var modal = e.target;
-                if (modal && modal.id === 'addTeacherModal') {
-                    form.reset();
-                    setFieldError(nameEl, '');
-                    setFieldError(nipEl, '');
-                    setFieldError(jkEl, '');
-                    setFieldError(phoneEl, '');
-                    updateTombolSimpan();
-                }
-            });
-        }
-
-        updateTombolSimpan();
+        runAll();
+        updateSimpanGuruState();
+        if (typeof enforceSimpanGuruState === 'function') { enforceSimpanGuruState(); setTimeout(enforceSimpanGuruState,0); setTimeout(enforceSimpanGuruState,150); }
     })();
 
     /* Konfirmasi hapus SATU guru */
@@ -1044,20 +1142,21 @@ console.log('[import-handler] aktif');
     function confirmDeleteAllTeachers() {
         if (typeof confirmUniversalDelete === 'function') {
             confirmUniversalDelete({
-                title: {!! json_encode(__('Pindahkan SEMUA guru aktif ke Tempat Sampah?')) !!},
+                title: {!! json_encode(__('Hapus seluruh data guru?')) !!},
                 icon: 'bx-error-circle',
-                html: {!! json_encode(__('Seluruh data guru aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan.')) !!},
+                html: '',
+                sub: {!! json_encode(__('Data akan dipindahkan ke Tempat Sampah di Pengaturan.')) !!},
                 confirmText: {!! json_encode(__('Hapus Semua')) !!},
                 cancelText: {!! json_encode(__('Tidak')) !!},
                 checks: [
-                    {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
+                    '<span style="display:block; white-space:nowrap">Saya memahami data akan dipindahkan ke Tempat</span><span style="display:block; white-space:nowrap">Sampah dan dapat dipulihkan.</span>',
                     {!! json_encode(__('Saya yakin ingin menghapus semua data guru aktif.')) !!}
                 ],
                 onConfirm: function () {
                     document.getElementById('deleteAllTeachersForm').submit();
                 }
             });
-        } else if (confirm({!! json_encode(__('Pindahkan SEMUA guru aktif ke Tempat Sampah?')) !!})) {
+        } else if (confirm({!! json_encode(__('Pindahkan semua guru aktif ke Tempat Sampah?')) !!})) {
             document.getElementById('deleteAllTeachersForm').submit();
         }
     }

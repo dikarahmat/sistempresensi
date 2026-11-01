@@ -365,13 +365,25 @@
     function phoneCheck() {
         var v = editPhone ? editPhone.value.trim() : '';
         if (!v) return { ok: false, msg: 'Nomor telepon wajib diisi.' };
-        if (!/^[0-9]{10,15}$/.test(v)) return { ok: false, msg: 'Nomor telepon harus 10-15 digit angka.' };
+        if (!/^\d{10,15}$/.test(v)) return { ok: false, msg: 'Nomor telepon harus 10-15 digit angka.' };
         return { ok: true };
     }
 
     if (editNama) {
+        editNama.setAttribute('maxlength', '255');
         editNama.addEventListener('input', function () {
-            this.value = this.value.replace(/\p{Nd}/gu, '');
+            this.value = this.value.replace(/[^\p{L}\s.,'\-]/gu, '');
+            hideFieldError(editNama, errNama);
+        });
+        editNama.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text') || '';
+            var cleaned = text.replace(/[^\p{L}\s.,'\-]/gu, '');
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+            this.value = this.value.slice(0, start) + cleaned + this.value.slice(end);
+            var newPos = start + cleaned.length;
+            try { this.setSelectionRange(newPos, newPos); } catch (err) {}
             hideFieldError(editNama, errNama);
         });
         editNama.addEventListener('blur', function () {
@@ -381,8 +393,21 @@
     }
 
     if (editNip) {
+        editNip.setAttribute('inputmode', 'numeric');
+        editNip.setAttribute('maxlength', '18');
         editNip.addEventListener('input', function () {
-            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18);
+            this.value = this.value.replace(/\D/g, '').slice(0, 18);
+            hideFieldError(editNip, errNip);
+        });
+        editNip.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text') || '';
+            var cleaned = text.replace(/\D/g, '').slice(0, 18);
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+            this.value = this.value.slice(0, start) + cleaned + this.value.slice(end);
+            var newPos = Math.min(start + cleaned.length, 18);
+            try { this.setSelectionRange(newPos, newPos); } catch (err) {}
             hideFieldError(editNip, errNip);
         });
         editNip.addEventListener('blur', function () {
@@ -400,8 +425,21 @@
     }
 
     if (editPhone) {
+        editPhone.setAttribute('inputmode', 'numeric');
+        editPhone.setAttribute('maxlength', '15');
         editPhone.addEventListener('input', function () {
-            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15);
+            this.value = this.value.replace(/\D/g, '').slice(0, 15);
+            hideFieldError(editPhone, errPhone);
+        });
+        editPhone.addEventListener('paste', function (e) {
+            e.preventDefault();
+            var text = (e.clipboardData || window.clipboardData).getData('text') || '';
+            var cleaned = text.replace(/\D/g, '').slice(0, 15);
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+            this.value = this.value.slice(0, start) + cleaned + this.value.slice(end);
+            var newPos = Math.min(start + cleaned.length, 15);
+            try { this.setSelectionRange(newPos, newPos); } catch (err) {}
             hideFieldError(editPhone, errPhone);
         });
         editPhone.addEventListener('blur', function () {

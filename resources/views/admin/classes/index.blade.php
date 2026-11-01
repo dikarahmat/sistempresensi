@@ -196,15 +196,34 @@
        (public/css/presensi-tokens.css) — tidak ada duplikasi di sini. */
 
     /* --------------------------------------------------------------------------
-       NOTIFIKASI HALAMAN DATA KELAS (.alert-kelas)
-       Struktur notifikasi: [ .alert-kelas-body (ikon + teks) ] [ tombol X ].
-       Perataan tombol X (center vertikal, selalu di dalam kotak) dikerjakan
-       oleh CSS notifikasi global di layout/app.blade.php supaya identik di
-       semua halaman. Di sini hanya sisanya.
-       Scoped hanya ke halaman ini -> halaman lain TIDAK ikut.
+       NOTIFIKASI HALAMAN DATA KELAS
+       Disamakan PERSIS dengan Data Siswa: markup .flash-notice-body (tanpa class
+       .alert-kelas), tampil FULL WIDTH tepat di bawah header halaman.
        -------------------------------------------------------------------------- */
-    .alert-kelas-body {
-        display: block;
+    .flash-notice-body .d-flex {
+        align-items: center !important;
+        line-height: 1;
+    }
+    .flash-notice-body .bx {
+        flex-shrink: 0 !important;
+        line-height: 1;
+    }
+    .flash-notice-body span {
+        line-height: 1;
+    }
+    .alert-dismissible .btn-close {
+        align-self: center !important;
+    }
+
+    /* Notifikasi sukses: hijau muda bersih tanpa border (sama dengan Data Siswa) */
+    .alert.alert-success {
+        background-color: #dcfce7 !important;
+        color: #166534 !important;
+        border: 0 !important;
+    }
+    .alert.alert-success .text-success,
+    .alert.alert-success .bx-check-circle {
+        color: #16a34a !important;
     }
 
     .btn-solid-pill,
@@ -225,18 +244,11 @@
         transition: filter 0.15s ease, transform 0.1s ease;
         box-shadow: none !important;
         /* === UKURAN 3 TOMBOL ACTION BAR DISAMAkan (SAMA NILAI DENGAN DATA SISWA) ===
-           Tanpa min-width, tiap tombol lebarnya mengikuti panjang teksnya
-           sendiri, sehingga "IMPORT EXCEL" (12 karakter) jauh lebih lebar dari
-           "HAPUS" (5 karakter).
            min-width 150px — nilai yang PERSIS sama dengan acuan Data Siswa,
-           yang di sana sudah cukup untuk "IMPORT EXCEL" (12 karakter) dan
-           "TAMBAH SISWA" (12 karakter). Di halaman ini teks terpanjang juga
-           12 karakter ("IMPORT EXCEL" dan "TAMBAH KELAS"), jadi 150px sudah
-           cukup dan ketiga tombol benar-benar sama lebar, teksnya rata tengah.
-           Tinggi sudah sama sejak awal (height: 38px di atas), dan jarak antar
-           tombol juga sudah sama (gap 0.5rem pada .action-buttons-wrap).
-           Di bawah 1024px, aturan layout bersama sudah memaksa tiap tombol
-           full width satu per satu, jadi tampilan mobile tidak berubah. */
+           cukup untuk "IMPORT EXCEL" dan "TAMBAH KELAS" (12 karakter), sehingga
+           ketiga tombol sama lebar, teks rata tengah.
+           Di bawah 1024px, aturan layout bersama memaksa tiap tombol full
+           width satu per satu, jadi tampilan mobile tidak berubah. */
         min-width: 150px;
         text-align: center;
     }
@@ -299,6 +311,61 @@
         font-size: 0.85rem;
     }
 
+    #btnSaveClass {
+        transition: background-color .15s ease, color .15s ease, opacity .15s ease;
+    }
+    #btnSaveClass:disabled,
+    #btnSaveClass[disabled] {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        cursor: not-allowed !important;
+        opacity: 0.5 !important;
+        box-shadow: none !important;
+        pointer-events: none !important;
+    }
+    #btnSaveClass.is-loading,
+    #btnSaveClass[data-saving="1"] {
+        opacity: 1 !important;
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        filter: none !important;
+    }
+    #btnSaveClass:not(:disabled) {
+        opacity: 1 !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    #btnSaveClass.btn-progress.is-running,
+    #btnSaveClass.btn-progress.is-done {
+        opacity: 1 !important;
+        cursor: default !important;
+        pointer-events: none !important;
+    }
+    #btnSaveClass.btn-progress:disabled:not(.is-running):not(.is-done):not(.is-loading):not([data-saving="1"]),
+    #btnSaveClass.btn-progress[disabled]:not(.is-running):not(.is-done):not(.is-loading):not([data-saving="1"]) {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border-color: #2563eb !important;
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Bar progres Simpan Kelas: biru tua pekat, lebih gelap dari biru tombol (#2563eb) */
+    #btnSaveClass .sv-bar {
+        background: #1e3a8a !important;
+        opacity: 1 !important;
+    }
+    #btnSaveClass .sv-txt {
+        color: #ffffff !important;
+        font-weight: 700;
+    }
+
     /* Kolom STATUS WALI KELAS: rata tengah, teks biasa, nama panjang wrap rapi */
     .wali-kelas-col {
         text-align: center !important;
@@ -328,12 +395,15 @@
 @endpush
 
 @section('content')
-    <!-- Alert Notifikasi (3 status import: hijau sukses / kuning sebagian / merah gagal) -->
+    {{-- Wadah notifikasi buatan JS (hasil Tambah Kelas): full width tepat di bawah header, sama dengan Data Siswa. --}}
+    <div id="classAlertBox"></div>
+
+    {{-- Notifikasi: markup disamakan PERSIS dengan Data Siswa (full width di bawah header). --}}
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
-        <div class="alert-kelas-body">
+    <div class="alert alert-success flash-server alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-check-circle fs-5 me-2 text-success'></i>
+                <i class='bx bx-check-circle fs-5 me-2 text-success flex-shrink-0'></i>
                 <span>{{ session('success') }}</span>
             </div>
         </div>
@@ -342,10 +412,10 @@
     @endif
 
     @if(session('warning'))
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
-        <div class="alert-kelas-body">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <i class='bx bx-error-circle fs-5 me-2 text-warning flex-shrink-0'></i>
                 <span>{{ session('warning') }}</span>
             </div>
             @if(session('import_errors') && count(session('import_errors')) > 0)
@@ -365,10 +435,10 @@
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
-        <div class="alert-kelas-body">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-x-circle fs-5 me-2 text-danger'></i>
+                <i class='bx bx-x-circle fs-5 me-2 text-danger flex-shrink-0'></i>
                 <span>{{ session('error') }}</span>
             </div>
             @if(session('import_errors') && count(session('import_errors')) > 0)
@@ -389,10 +459,10 @@
 
     {{-- Notifikasi sukses HAPUS: MERAH (alert-danger) + ikon tempat sampah. --}}
     @if(session('deleted'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas alert-deleted" role="alert">
-        <div class="alert-kelas-body">
+    <div class="alert alert-danger alert-deleted alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
             <div class="d-flex align-items-center">
-                <i class='bx bx-trash fs-5 me-2 text-danger'></i>
+                <i class='bx bx-trash fs-5 me-2 text-danger flex-shrink-0'></i>
                 <span>{{ session('deleted') }}</span>
             </div>
         </div>
@@ -402,10 +472,10 @@
 
     {{-- Rincian baris Excel yang dilewati ketika tidak ada pesan utama (3 status) --}}
     @if(!session('success') && !session('warning') && !session('error') && session('import_errors') && count(session('import_errors')) > 0)
-    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert">
-        <div class="alert-kelas-body">
+    <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
+        <div class="flash-notice-body">
             <div class="d-flex align-items-center mb-1">
-                <i class='bx bx-error-circle fs-5 me-2 text-warning'></i>
+                <i class='bx bx-error-circle fs-5 me-2 text-warning flex-shrink-0'></i>
                 <strong>Baris yang dilewati:</strong>
             </div>
             <ul class="mb-0 ps-3 small">
@@ -421,8 +491,8 @@
     @if($errors->any())
     {{-- Error validasi form: TETAP tampil (tidak hilang otomatis) sampai user
          memperbaikinya atau menekan tombol X. --}}
-    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3 alert-kelas" role="alert" data-flash-persist>
-        <div class="alert-kelas-body">
+    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
+        <div class="flash-notice-body">
             <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> Terjadi kesalahan input:</div>
             <ul class="mb-0 ps-3 small">
                 @foreach($errors->all() as $err)
@@ -498,7 +568,10 @@
                     </button>
 
                     <!-- 3. Hapus Semua Kelas (Solid Merah - Urutan Terakhir) -->
-                    <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Kelas') }}" onclick="confirmDeleteAllClasses()">
+                    @php
+                        $hasAnyClasses = isset($totalClassesCount) ? ($totalClassesCount > 0) : (isset($classes) && method_exists($classes, 'total') ? $classes->total() > 0 : false);
+                    @endphp
+                    <button type="button" id="btnDeleteAllClasses" class="btn-solid-pill btn-solid-red {{ !$hasAnyClasses ? 'disabled opacity-50' : '' }}" title="{{ __('Hapus Semua Kelas') }}" {{ !$hasAnyClasses ? 'disabled style=opacity:0.5;cursor:not-allowed;' : '' }} onclick="{{ $hasAnyClasses ? 'confirmDeleteAllClasses()' : 'return false;' }}">
                         <span>{{ __('Hapus') }}</span>
                     </button>
                     @endif
@@ -662,7 +735,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Perubahan') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" data-dl-progress data-form-submit>{{ __('Simpan Perubahan') }}</button>
                 </div>
             </form>
         </div>
@@ -678,9 +751,10 @@
                 <h5 class="fw-bold mb-0">{{ __('Tambah Kelas Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ panel_route('classes.store') }}" method="POST">
+            <form id="addClassForm" action="{{ panel_route('classes.store') }}" method="POST" data-no-loader>
                 @csrf
                 <div class="modal-body py-3">
+                    <div id="addClassFormError" class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3 d-none" role="alert"></div>
                     @if($errors->any() && session('open_modal') === 'add')
                     <div class="alert alert-danger border-0 rounded-3 py-2 px-3 small mb-3">
                         <i class='bx bx-error-circle fs-6 me-1'></i> {{ __('Periksa isian yang bertanda merah.') }}
@@ -696,6 +770,7 @@
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }} <span class="text-danger">*</span></label>
                         <select name="grade" class="form-select rounded-3 {{ $errors->has('grade') && session('open_modal') === 'add' ? 'is-invalid' : '' }}" required>
+                            <option value="" {{ old('grade') ? '' : 'selected' }}>{{ __('Pilih Kelas') }}</option>
                             <option value="7" {{ old('grade') == '7' ? 'selected' : '' }}>{{ __('Kelas 7') }}</option>
                             <option value="8" {{ old('grade') == '8' ? 'selected' : '' }}>{{ __('Kelas 8') }}</option>
                             <option value="9" {{ old('grade') == '9' ? 'selected' : '' }}>{{ __('Kelas 9') }}</option>
@@ -727,7 +802,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Kelas') }}</button>
+                    <button type="submit" id="btnSaveClass" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" disabled aria-disabled="true">{{ __('Simpan Kelas') }}</button>
                 </div>
             </form>
         </div>
@@ -770,6 +845,75 @@
 
 @endsection
 
+{{-- Notifikasi sukses hilang otomatis 3 detik (untuk semua role, bukan hanya admin) --}}
+@push('scripts')
+<script>
+(function () {
+    function fadeOutRemove(el, delay) {
+        setTimeout(function () {
+            el.style.transition = 'opacity .4s';
+            el.style.opacity = '0';
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+        }, delay);
+    }
+
+    /* Notifikasi buatan JS: markup & posisi sama dengan notifikasi server (full width di bawah header) */
+    window.kelasNotify = function (status, msg) {
+        var box = document.getElementById('classAlertBox');
+        if (!box || !msg) return null;
+        var ok = status === 'success';
+        var el = document.createElement('div');
+        el.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger') + ' alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3';
+        el.setAttribute('role', 'alert');
+        var body = document.createElement('div');
+        body.className = 'flash-notice-body';
+        var head = document.createElement('div');
+        head.className = 'd-flex align-items-center';
+        var icon = document.createElement('i');
+        icon.className = 'bx ' + (ok ? 'bx-check-circle text-success' : 'bx-x-circle text-danger') + ' fs-5 me-2 flex-shrink-0';
+        var span = document.createElement('span');
+        span.textContent = msg;
+        head.appendChild(icon);
+        head.appendChild(span);
+        body.appendChild(head);
+        el.appendChild(body);
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'btn-close btn-close-sm';
+        close.setAttribute('data-bs-dismiss', 'alert');
+        close.setAttribute('aria-label', 'Tutup');
+        close.addEventListener('click', function () { el.remove(); });
+        el.appendChild(close);
+        box.appendChild(el);
+        if (ok) fadeOutRemove(el, 3000);
+        return el;
+    };
+
+    var raw = null;
+    try { raw = sessionStorage.getItem('classAlert'); } catch (e) {}
+    var hasClientSuccess = false;
+    if (raw) {
+        try { sessionStorage.removeItem('classAlert'); } catch (e) {}
+        var d = {};
+        try { d = JSON.parse(raw) || {}; } catch (e) { d = {}; }
+        if (d.msg && window.kelasNotify(d.status || 'success', d.msg) && (d.status || 'success') === 'success') {
+            hasClientSuccess = true;
+        }
+    }
+
+    /* Notifikasi sukses dari server: kalau kembar dengan notifikasi JS, buang; kalau tidak, hilang sendiri 3 detik */
+    var list = document.querySelectorAll('.alert.alert-success.flash-server');
+    Array.prototype.forEach.call(list, function (el) {
+        if (hasClientSuccess) {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        } else {
+            fadeOutRemove(el, 3000);
+        }
+    });
+})();
+</script>
+@endpush
+
 @if(Auth::check() && Auth::user()->role === 'admin')
 @push('scripts')
 <script>
@@ -787,13 +931,14 @@
 
     function confirmDeleteAllClasses() {
         confirmUniversalDelete({
-            title: {!! json_encode(__('Hapus Seluruh Data Kelas?')) !!},
+            title: {!! json_encode(__('Hapus seluruh data kelas?')) !!},
             icon: 'bx-error-circle',
-            html: {!! json_encode(__('Seluruh data kelas aktif akan dihapus dan dipindahkan ke')) !!} + ' <strong>' + {!! json_encode(__('Tempat Sampah')) !!} + '</strong> ' + {!! json_encode(__('di Pengaturan. Kelas yang masih memiliki siswa aktif akan dilewati.')) !!},
+            html: '',
+            sub: {!! json_encode(__('Kelas yang masih memiliki siswa aktif akan dilewati.')) !!},
             confirmText: {!! json_encode(__('Hapus Semua')) !!},
             cancelText: {!! json_encode(__('Tidak')) !!},
             checks: [
-                {!! json_encode(__('Saya memahami data akan dipindahkan ke Tempat Sampah dan dapat dipulihkan.')) !!},
+                '<span style="display:block; white-space:nowrap">Saya memahami data akan dipindahkan ke Tempat</span><span style="display:block; white-space:nowrap">Sampah dan dapat dipulihkan.</span>',
                 {!! json_encode(__('Saya yakin ingin menghapus semua data kelas aktif.')) !!}
             ],
             onConfirm: function() {
@@ -801,6 +946,217 @@
             }
         });
     }
+
+    function enforceSimpanKelasState() {
+        var btn = document.getElementById('btnSaveClass');
+        if (!btn) return;
+        if (btn.dataset.saving === '1') return;
+        if (btn.classList.contains('is-running') || btn.classList.contains('is-done')) return;
+        var modal = document.getElementById('addClassModal');
+        if (!modal) return;
+        var form = modal.querySelector('form');
+        if (!form) return;
+        var nameField = form.querySelector('input[name="name"]');
+        var gradeField = form.querySelector('select[name="grade"]');
+        var namaVal = nameField ? (nameField.value || '').trim() : '';
+        var gradeVal = gradeField ? (gradeField.value || '').trim() : '';
+        var ok = namaVal !== '' && gradeVal !== '';
+        if (ok) {
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
+            btn.setAttribute('aria-disabled', 'false');
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            btn.style.pointerEvents = 'auto';
+        } else {
+            btn.disabled = true;
+            btn.setAttribute('disabled', 'disabled');
+            btn.setAttribute('aria-disabled', 'true');
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
+        }
+    }
+
+    (function(){
+        var btn = document.getElementById('btnSaveClass');
+        var modal = document.getElementById('addClassModal');
+        if (btn) {
+            btn.disabled = true;
+            btn.setAttribute('disabled', 'disabled');
+            btn.setAttribute('aria-disabled', 'true');
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
+            if (typeof MutationObserver !== 'undefined') {
+                try {
+                    var obsLock = false;
+                    var obs = new MutationObserver(function(){ if(obsLock) return; try { enforceSimpanKelasState(); } finally { obs.takeRecords(); obsLock = false; } });
+                    obs.observe(btn, { attributes: true, attributeFilter: ['disabled', 'style', 'class'] });
+                } catch(e){}
+            }
+        }
+        function bind(){
+            if (!modal) return;
+            var form = modal.querySelector('form');
+            if (!form) return;
+            var nameField = form.querySelector('input[name="name"]');
+            var gradeField = form.querySelector('select[name="grade"]');
+            if (nameField) {
+                nameField.addEventListener('input', function(){ setTimeout(enforceSimpanKelasState,0); });
+                nameField.addEventListener('change', function(){ setTimeout(enforceSimpanKelasState,0); });
+                nameField.addEventListener('paste', function(){ setTimeout(enforceSimpanKelasState,0); });
+            }
+            if (gradeField) {
+                gradeField.addEventListener('change', function(){ setTimeout(enforceSimpanKelasState,0); });
+                gradeField.addEventListener('input', function(){ setTimeout(enforceSimpanKelasState,0); });
+            }
+        }
+        bind();
+        if (modal && typeof bootstrap !== 'undefined') {
+            modal.addEventListener('show.bs.modal', function(){
+                var form = modal.querySelector('form');
+                if (form){ try{ form.reset(); }catch(e){} }
+                if (btn){
+                    btn.disabled = true;
+                    btn.setAttribute('disabled','disabled');
+                    btn.setAttribute('aria-disabled','true');
+                    btn.style.opacity='0.5'; btn.style.cursor='not-allowed'; btn.style.pointerEvents='none';
+                }
+                setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,50);
+            });
+            modal.addEventListener('shown.bs.modal', function(){ setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,50); });
+            modal.addEventListener('hidden.bs.modal', function(){
+                var form = modal.querySelector('form');
+                if (form){ try{ form.reset(); }catch(e){} }
+                if (btn){
+                    if (!(btn.classList.contains('is-running') || btn.classList.contains('is-done') || btn.dataset.saving==='1')){
+                        btn.disabled = true; btn.setAttribute('disabled','disabled'); btn.setAttribute('aria-disabled','true');
+                        btn.style.opacity='0.5'; btn.style.cursor='not-allowed'; btn.style.pointerEvents='none';
+                    }
+                }
+                setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,150);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function(){ enforceSimpanKelasState(); setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,150); });
+        setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,150);
+    })();
+
+    /* ===== Tambah Kelas: simpan via AJAX dengan progres + notifikasi full width di bawah header ===== */
+    (function () {
+        var form = document.getElementById('addClassForm');
+        var btn = document.getElementById('btnSaveClass');
+        var errBox = document.getElementById('addClassFormError');
+        if (!form || !btn) return;
+        var saving = false;
+        var label = btn.textContent;
+        var timer = null;
+
+        function showErr(msg) {
+            if (!errBox) return;
+            errBox.textContent = msg;
+            errBox.classList.remove('d-none');
+        }
+        function hideErr() {
+            if (!errBox) return;
+            errBox.textContent = '';
+            errBox.classList.add('d-none');
+        }
+        function resetSaving() {
+            saving = false;
+            clearInterval(timer);
+            delete btn.dataset.saving;
+            btn.classList.remove('is-saving');
+            btn.style.removeProperty('position');
+            btn.style.removeProperty('overflow');
+            btn.textContent = label;
+            enforceSimpanKelasState();
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (saving || btn.disabled) return;
+            hideErr();
+
+            saving = true;
+            btn.dataset.saving = '1';
+            btn.classList.add('is-saving');
+            btn.disabled = true;
+            btn.style.position = 'relative';
+            btn.style.overflow = 'hidden';
+            btn.innerHTML = '<span class="sv-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:#1e3a8a;transition:width .15s"></span><span class="sv-txt" style="position:relative">0%</span>';
+            var bar = btn.querySelector('.sv-bar');
+            var txt = btn.querySelector('.sv-txt');
+            var shown = 0, real = 0, done = false;
+
+            timer = setInterval(function () {
+                var target = done ? 100 : Math.max(real, Math.min(shown + 1, 92));
+                if (shown < target) {
+                    shown++;
+                    bar.style.width = shown + '%';
+                    txt.textContent = shown + '%';
+                }
+                if (shown >= 100) {
+                    clearInterval(timer);
+                    setTimeout(function () { location.reload(); }, 300);
+                }
+            }, 30);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', form.getAttribute('action'));
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.upload.onprogress = function (ev) {
+                if (!ev.lengthComputable) return;
+                real = Math.min(90, Math.round(ev.loaded / ev.total * 90));
+            };
+            xhr.onload = function () {
+                var json = null;
+                try { json = JSON.parse(xhr.responseText); } catch (_) {}
+                var ok = xhr.status < 400;
+                if (json && (json.status === 'error' || json.success === false || json.errors)) ok = false;
+
+                /* Server membalas HTML (redirect back) berisi alert error: ambil teksnya */
+                var htmlMsg = '';
+                if (!json) {
+                    try {
+                        var doc = new DOMParser().parseFromString(xhr.responseText, 'text/html');
+                        var el = doc.querySelector('.alert.alert-danger.alert-dismissible .flash-notice-body');
+                        if (el) {
+                            htmlMsg = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                            ok = false;
+                        }
+                    } catch (_) {}
+                }
+
+                if (!ok) {
+                    var msg = htmlMsg;
+                    if (json && json.errors) {
+                        var k = Object.keys(json.errors)[0];
+                        if (k) msg = String([].concat(json.errors[k])[0]);
+                    }
+                    if (!msg && json && json.message) msg = String(json.message);
+                    showErr(msg || 'Data kelas gagal disimpan. Periksa isian lalu coba lagi.');
+                    resetSaving();
+                    return;
+                }
+
+                try {
+                    sessionStorage.setItem('classAlert', JSON.stringify({
+                        status: 'success',
+                        msg: 'Data kelas berhasil ditambahkan!'
+                    }));
+                } catch (e) {}
+                done = true;
+            };
+            xhr.onerror = function () {
+                showErr('Koneksi bermasalah. Coba lagi.');
+                resetSaving();
+            };
+            xhr.send(new FormData(form));
+        }, true);
+    })();
 </script>
 @endpush
 @endif

@@ -29,14 +29,14 @@
         @csrf
         <div class="mb-3">
             <label class="form-label small fw-semibold">{{ __('Nama Lengkap Siswa') }}</label>
-            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" required value="{{ old('name') }}" placeholder="{{ __('Contoh: Muhammad Bintang') }}">
+            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" required value="{{ old('name') }}" placeholder="{{ __('Contoh: Muhammad Bintang') }}" oninput="this.value=this.value.replace(/[^\p{L}\s.,'\-]/gu,'')">
             @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>
 
         <div class="row g-3 mb-3">
             <div class="col-6">
                 <label class="form-label small fw-semibold">{{ __('NISN') }}</label>
-                <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" required value="{{ old('nisn') }}" placeholder="{{ __('Contoh: 0081234567') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                <input type="text" name="nisn" class="form-control @error('nisn') is-invalid @enderror" required value="{{ old('nisn') }}" placeholder="{{ __('10 digit angka') }}" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" oninput="this.value=this.value.replace(/\D/g,'')">
                 @error('nisn')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
         </div>

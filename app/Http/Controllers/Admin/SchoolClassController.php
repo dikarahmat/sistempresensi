@@ -38,8 +38,9 @@ class SchoolClassController extends Controller
             ->pluck('grade');
         
         $teachers = Teacher::whereNotNull('name')->orderBy('name')->get();
+        $totalClassesCount = SchoolClass::count();
 
-        return view('admin.classes.index', compact('classes', 'teachers', 'availableGrades'));
+        return view('admin.classes.index', compact('classes', 'teachers', 'availableGrades', 'totalClassesCount'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -302,22 +303,11 @@ class SchoolClassController extends Controller
     public function destroyAllActive(Request $request): RedirectResponse
     {
         try {
-            $emptyCount = 0;
-            $skipped = [];
+            if (SchoolClass::count() === 0) {
+                return redirect()->route('admin.classes.index')
+                    ->with('error', __('Tidak ada data kelas untuk dihapus.'));
+            }
 
-            SchoolClass::whereHas('students', function ($q) {
-                $q->whereNull('deleted_at');
-            })->doesntExist()
-            || SchoolClass::doesntHave('students')->with('students')->each(function ($class) use (&$emptyCount, &$skipped) {
-                if ($class->students()->whereNull('deleted_at')->exists()) {
-                    $skipped[] = $class->name;
-                    return;
-                }
-                $class->delete();
-                $emptyCount++;
-            });
-
-            // Alternatif yang lebih jelas:
             $skipped = [];
             $emptyCount = 0;
             SchoolClass::whereNull('deleted_at')->orderBy('id')->each(function (SchoolClass $class) use (&$emptyCount, &$skipped) {
@@ -332,18 +322,18 @@ class SchoolClassController extends Controller
                 $emptyCount++;
             });
 
-            if ($emptyCount === 0 && $skipped === []) {
+            if ($emptyCount === 0) {
                 return redirect()->route('admin.classes.index')
-                    ->with('error', __('Tidak ada kelas kosong yang bisa dihapus.'));
+                    ->with('error', __('Tidak ada kelas kosong untuk dihapus.'));
             }
 
-            $message = "{$emptyCount} kelas kosong dipindahkan ke Tempat Sampah.";
+            $message = __(':count kelas kosong berhasil dihapus dan dapat dipulihkan dari Tempat Sampah di Pengaturan.', ['count' => $emptyCount]);
             if ($skipped !== []) {
                 $message .= ' ' . count($skipped) . ' kelas dilewati karena masih memiliki siswa aktif: ' . implode(', ', $skipped) . '.';
             }
 
             return redirect()->route('admin.classes.index')
-                ->with('success', $message);
+                ->with('deleted', $message);
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('admin.classes.index')
@@ -478,15 +468,27 @@ class SchoolClassController extends Controller
         );
     }
 
-    public function import(Request $request): RedirectResponse
+    public function import(Request $request)
     {
-        $request->validate([
-            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
-        ], [
-            'file_excel.required' => 'Pilih file Excel data kelas yang akan diunggah.',
-            'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
-            'file_excel.max' => 'Ukuran file maksimal 5 MB.',
-        ]);
+        $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+        try {
+            $request->validate([
+                'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            ], [
+                'file_excel.required' => 'Pilih file Excel data kelas yang akan diunggah.',
+                'file_excel.mimes' => 'Format file harus berekstensi .xlsx, .xls, atau .csv.',
+                'file_excel.max' => 'Ukuran file maksimal 5 MB.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $message = $e->validator->errors()->first('file_excel') ?: 'File tidak valid.';
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return redirect()->route('admin.classes.index')
+                ->with('error', $message)
+                ->withErrors($e->validator);
+        }
 
         try {
             $import = new SchoolClassesImport();
@@ -498,29 +500,61 @@ class SchoolClassController extends Controller
 
             // 1) Semua baris berhasil -> notifikasi hijau (sukses)
             if ($imported > 0 && $skipped === 0) {
+                $message = __('Import berhasil: :imported kelas ditambahkan.', ['imported' => $imported]);
+                if ($isAjax) {
+                    session()->flash('success', $message);
+                    return response()->json(['success' => true, 'imported' => $imported, 'skipped' => $skipped, 'message' => $message]);
+                }
                 return redirect()->route('admin.classes.index')
-                    ->with('success', __('Import berhasil: :imported kelas diimpor.', ['imported' => $imported]));
+                    ->with('success', $message);
             }
 
-            // 2) Sebagian berhasil -> notifikasi kuning (peringatan) + alasan per baris
-            if ($imported > 0) {
+            // 2) Sebagian berhasil -> notifikasi
+            if ($imported > 0 && $skipped > 0) {
+                $message = __('Import selesai: :imported kelas ditambahkan, :skipped dilewati karena sudah ada.', ['imported' => $imported, 'skipped' => $skipped]);
+                if ($isAjax) {
+                    session()->flash('success', $message);
+                    if (!empty($errors)) {
+                        session()->flash('import_errors', $errors);
+                    }
+                    return response()->json(['success' => true, 'imported' => $imported, 'skipped' => $skipped, 'message' => $message]);
+                }
                 return redirect()->route('admin.classes.index')
-                    ->with('warning', __('Import sebagian berhasil: :imported diimpor, :skipped dilewati.', ['imported' => $imported, 'skipped' => $skipped]))
+                    ->with('success', $message)
                     ->with('import_errors', $errors);
             }
 
             // 3) Tidak ada baris yang masuk -> notifikasi merah (gagal)
-            $reason = $skipped > 0
-                ? "{$skipped} baris dilewati."
-                : 'File tidak memiliki baris data.';
-
-            return redirect()->route('admin.classes.index')
-                ->with('error', __('Import gagal: tidak ada data yang diimpor. :reason Periksa format file Excel.', ['reason' => $reason]))
-                ->with('import_errors', $errors);
+            if ($skipped > 0 && $imported === 0) {
+                $message = __('Import gagal: semua data kelas dalam file sudah ada (:skipped dilewati).', ['skipped' => $skipped]);
+                if ($isAjax) {
+                    session()->flash('error', $message);
+                    return response()->json(['success' => false, 'imported' => $imported, 'skipped' => $skipped, 'message' => $message], 200);
+                }
+                return redirect()->route('admin.classes.index')
+                    ->with('error', $message);
+            } else {
+                $message = __('Import gagal: tidak ada data yang diimpor. File tidak memiliki baris data atau format kolom salah. Periksa format file Excel.');
+                if ($isAjax) {
+                    session()->flash('error', $message);
+                    if (!empty($errors)) {
+                        session()->flash('import_errors', $errors);
+                    }
+                    return response()->json(['success' => false, 'imported' => $imported, 'skipped' => $skipped, 'message' => $message], 200);
+                }
+                return redirect()->route('admin.classes.index')
+                    ->with('error', $message)
+                    ->with('import_errors', $errors);
+            }
         } catch (\Throwable $e) {
             report($e);
+            $message = 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.';
+            if ($isAjax) {
+                session()->flash('error', $message);
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
             return redirect()->route('admin.classes.index')
-                ->with('error', 'Gagal memproses file Excel. Silakan coba lagi atau hubungi admin.');
+                ->with('error', $message);
         }
     }
 }

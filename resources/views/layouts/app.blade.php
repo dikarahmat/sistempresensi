@@ -335,6 +335,26 @@
             font-family: 'Poppins', 'Roboto', sans-serif;
         }
 
+        /* Tombol Batal global untuk modal SweetAlert2 & Bootstrap */
+        .swal2-popup .btn-light,
+        .app-dialog-cancel.btn-light,
+        .btn.btn-light {
+            background-color: #E5E7EB !important;
+            color: #374151 !important;
+            border: 1px solid #D1D5DB !important;
+            font-weight: 700 !important;
+        }
+        .swal2-popup .btn-light:hover,
+        .swal2-popup .btn-light:focus,
+        .app-dialog-cancel.btn-light:hover,
+        .app-dialog-cancel.btn-light:focus,
+        .btn.btn-light:hover,
+        .btn.btn-light:focus {
+            background-color: #D1D5DB !important;
+            color: #374151 !important;
+            border-color: #D1D5DB !important;
+        }
+
         /* ===========================================================================
            NOTIFIKASI GLOBAL (SEMUA HALAMAN)
            ---------------------------------------------------------------------------
@@ -3685,6 +3705,11 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             max-height: calc(100dvh - 32px) !important;
         }
 
+        .swal2-popup.app-dialog.app-dialog-wide {
+            max-width: 420px !important;
+            width: min(calc(100vw - 32px), 420px) !important;
+        }
+
         .swal2-popup.app-dialog .swal2-html-container {
             margin: 0 !important;
             padding: 0 !important;
@@ -3716,13 +3741,17 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
         }
 
         .app-dialog-title {
-            font-size: 18px !important;
+            font-size: 17px !important;
             font-weight: 700 !important;
             line-height: 1.3 !important;
             color: var(--app-dialog-text) !important;
             text-align: center !important;
             margin: 0 0 6px !important;
             text-transform: none !important;
+            white-space: normal !important;
+            word-break: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
         }
 
         .app-dialog-text {
@@ -3739,11 +3768,14 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
         }
 
         .app-dialog-sub {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             line-height: 1.4 !important;
-            color: #334155 !important;
+            color: #475569 !important;
             text-align: center !important;
-            margin: 6px 0 0 !important;
+            margin: 2px 0 0 !important;
+            white-space: nowrap !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
         }
 
         /* Teks abu Bootstrap di dalam modal (paragraf Cetak Kartu,
@@ -3762,7 +3794,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             flex-direction: column !important;
             gap: 10px !important;
             margin: 14px 0 0 !important;
-            padding: 0 !important;
+            padding: 0 0 0 6px !important;
             border: 0 !important;
             background: transparent !important;
             text-align: left !important;
@@ -3778,11 +3810,31 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             padding: 0 !important;
             margin: 0 !important;
             cursor: pointer !important;
-            font-size: 13px !important;
-            line-height: 1.45 !important;
+            font-size: 12px !important;
+            line-height: 1.4 !important;
             color: var(--app-dialog-text) !important;
             text-align: left !important;
             transition: color 0.1s ease !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+        }
+
+        .app-dialog-check input[type="checkbox"] {
+            margin-top: 2px !important;
+        }
+
+        .app-dialog-check-nowrap {
+            white-space: nowrap !important;
+            align-items: center !important;
+        }
+
+        .app-dialog-check-nowrap input[type="checkbox"] {
+            margin-top: 0 !important;
+        }
+
+        .app-dialog-check-wrap {
+            white-space: normal !important;
         }
 
         /* Border abu-abu gelap + merah saat dicentang, dan tetap jelas
@@ -6002,7 +6054,7 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
         const title = opts.title || ((window.__i18n && window.__i18n.delete_title) || 'Hapus Data?');
         const confirmText = opts.confirmText || ((window.__i18n && window.__i18n.hapus) || 'Hapus');
         const cancelText = opts.cancelText || ((window.__i18n && window.__i18n.tidak) || 'Tidak');
-        const message = opts.html || opts.text || ((window.__i18n && window.__i18n.delete_message) || 'Data ini akan dihapus.');
+        const message = (opts.html !== undefined && opts.html !== null && opts.html !== '') ? opts.html : (opts.text || '');
         const sub = opts.sub || '';
         const icon = opts.icon || 'bx-error-circle';
         const checks = Array.isArray(opts.checks) ? opts.checks : [];
@@ -6017,7 +6069,9 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
 
         html += '<div class="app-dialog-icon"><i class="bx ' + icon + '"></i></div>';
         html += '<h5 class="app-dialog-title">' + title + '</h5>';
-        html += '<p class="app-dialog-text">' + message + '</p>';
+        if (message !== '') {
+            html += '<p class="app-dialog-text">' + message + '</p>';
+        }
 
         if (sub) {
             html += '<p class="app-dialog-sub">' + sub + '</p>';
@@ -6026,7 +6080,13 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
         if (checks.length) {
             html += '<div class="app-dialog-checks">';
             checks.forEach(function (label, i) {
-                html += '<label class="app-dialog-check">'
+                var checkClass = 'app-dialog-check';
+                if (checks.length >= 2 && i === 0) {
+                    checkClass += ' app-dialog-check-wrap';
+                } else if (checks.length >= 2 && i === 1) {
+                    checkClass += ' app-dialog-check-nowrap';
+                }
+                html += '<label class="' + checkClass + '">'
                       + '<input type="checkbox" class="app-dialog-check-box" data-app-check="' + i + '">'
                       + '<span>' + label + '</span>'
                       + '</label>';
@@ -6049,7 +6109,7 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
             allowEscapeKey: true,
             draggable: false,
             customClass: {
-                popup: 'app-dialog' + (isPrimaryTone ? ' app-dialog-primary' : ''),
+                popup: 'app-dialog' + (isPrimaryTone ? ' app-dialog-primary' : '') + (checks.length ? ' app-dialog-wide' : ''),
                 actions: 'app-dialog-actions',
                 confirmButton: 'btn ' + (isPrimaryTone ? 'btn-primary' : 'btn-danger') + ' app-dialog-confirm',
                 cancelButton: 'btn btn-light app-dialog-cancel'

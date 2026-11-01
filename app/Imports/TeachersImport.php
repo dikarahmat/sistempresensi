@@ -135,13 +135,11 @@ class TeachersImport implements ToCollection, WithHeadingRow
 
                 if (isset($this->seenNipInFile[$nip])) {
                     $this->skippedCount++;
-                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP {$nip} duplikat di dalam file (sudah dipakai baris {$this->seenNipInFile[$nip]}). Baris dilewati.");
                     continue;
                 }
 
                 if (isset($this->existingNip[$nip])) {
                     $this->skippedCount++;
-                    $this->registerError($rowIndex, "Baris {$rowIndex}: NIP sudah terdaftar. Baris dilewati.");
                     continue;
                 }
 
@@ -160,13 +158,11 @@ class TeachersImport implements ToCollection, WithHeadingRow
             if ($nip === '' && $namePhoneKey !== '|') {
                 if (isset($this->seenNamePhoneInFile[$namePhoneKey])) {
                     $this->skippedCount++;
-                    $this->registerError($rowIndex, "Baris {$rowIndex}: Nama sudah terdaftar. Baris dilewati.");
                     continue;
                 }
 
                 if (isset($this->existingNamePhone[$namePhoneKey])) {
                     $this->skippedCount++;
-                    $this->registerError($rowIndex, "Baris {$rowIndex}: Nama sudah terdaftar. Baris dilewati.");
                     continue;
                 }
 

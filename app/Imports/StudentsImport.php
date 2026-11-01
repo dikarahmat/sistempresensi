@@ -198,6 +198,16 @@ class StudentsImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            if (!preg_match('/^[\pL\s.,\'\-]+$/u', $name)) {
+                $this->registerError($rowIndex, "Baris {$rowIndex} (NISN {$nisn}): Nama siswa hanya boleh berisi huruf, titik, dan koma.");
+                continue;
+            }
+
+            if (!preg_match('/^[0-9]{10}$/', $nisn)) {
+                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN hanya boleh berisi angka.");
+                continue;
+            }
+
             $this->seenNisnInFile[$nisn] = $rowIndex;
             $this->existingNisn[$nisn] = true;
 
