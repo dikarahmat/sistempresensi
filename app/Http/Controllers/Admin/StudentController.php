@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -62,7 +63,7 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'name' => ['required', 'string', 'max:255', 'regex:/^[\p{L}\s.,\'\-]+$/u'],
             'nisn' => ['required', 'digits:10', 'regex:/^\d{10}$/', 'unique:students,nisn'],
@@ -366,7 +367,6 @@ class StudentController extends Controller
         DB::beginTransaction();
 
         try {
-            SchoolClass::where('teacher_id', $student->id)->update(['teacher_id' => null]);
             $student->attendances()->delete();
 
             if ($student->photo && Storage::disk('public')->exists($student->photo)) {
@@ -400,10 +400,8 @@ class StudentController extends Controller
         DB::beginTransaction();
 
         try {
-            $trashed = Student::onlyTrashed();
             $deleted = 0;
-            $trashed->each(function (Student $s) use (&$deleted) {
-                SchoolClass::where('teacher_id', $s->id)->update(['teacher_id' => null]);
+            Student::onlyTrashed()->each(function (Student $s) use (&$deleted) {
                 $s->attendances()->delete();
 
                 if ($s->photo && Storage::disk('public')->exists($s->photo)) {
@@ -429,7 +427,7 @@ class StudentController extends Controller
 
     /**
      * Import data siswa dari file Excel.
-     * Selalu balas JSON {status, message}; HTTP 200 kalau sukses/partial, 422 kalau ada kesalahan.
+     * Balas JSON {status, message} untuk request AJAX; redirect untuk request biasa.
      */
     public function import(Request $request): JsonResponse|RedirectResponse
     {

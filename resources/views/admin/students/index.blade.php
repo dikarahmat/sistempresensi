@@ -479,7 +479,8 @@
     </div>
     @endif
 
-    <form id="deleteAllStudentsForm" action="{{ panel_route('students.destroy-all') }}" method="POST" class="d-none">
+    {{-- FIX: nama route yang benar adalah students.destroy-all-active (bukan students.destroy-all) --}}
+    <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all-active') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
         <input type="hidden" name="confirm_active" value="1">
@@ -517,28 +518,30 @@
                             @endforeach
                         </select>
                     </div>
-                </form>                    <div class="action-buttons-wrap">
-                        <button type="button" class="btn-solid-pill btn-solid-blue btn-cetak-kartu {{ $totalStudents == 0 ? 'is-disabled' : '' }}"
-                                data-bs-toggle="modal"
-                                data-bs-target="#printCardsModal"
-                                {{ $totalStudents == 0 ? 'disabled aria-disabled="true" tabindex="-1" title="Belum ada data untuk dicetak"' : '' }}>
-                            <span>{{ __('Cetak Kartu') }}</span>
-                        </button>
+                </form>
 
-                        @if(Auth::check() && Auth::user()->role === 'admin')
-                        <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
-                            <span>{{ __('Import Excel') }}</span>
-                        </button>
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-solid-pill btn-solid-blue btn-cetak-kartu {{ $totalStudents == 0 ? 'is-disabled' : '' }}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#printCardsModal"
+                            {{ $totalStudents == 0 ? 'disabled aria-disabled="true" tabindex="-1" title="Belum ada data untuk dicetak"' : '' }}>
+                        <span>{{ __('Cetak Kartu') }}</span>
+                    </button>
 
-                        <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                            <span>{{ __('Tambah Siswa') }}</span>
-                        </button>
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                    <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <span>{{ __('Import Excel') }}</span>
+                    </button>
 
-                        <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Siswa') }}" onclick="confirmDeleteAllStudents()">
-                            <span>{{ __('Hapus') }}</span>
-                        </button>
-                        @endif
-                    </div>
+                    <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <span>{{ __('Tambah Siswa') }}</span>
+                    </button>
+
+                    <button type="button" class="btn-solid-pill btn-solid-red" title="{{ __('Hapus Semua Data Siswa') }}" onclick="confirmDeleteAllStudents()">
+                        <span>{{ __('Hapus') }}</span>
+                    </button>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -585,7 +588,7 @@
                                 <button type="button" class="btn-row-action action-delete" title="{{ __('Hapus') }}" aria-label="{{ __('Hapus') }}" data-student-id="{{ $student->id }}" data-student-name="{{ addslashes($student->nama ?? $student->name) }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
-                                <form id="deleteStudentForm-{{ $student->id }}" action="{{ panel_route('students.destroy', $student->id) }}" method="POST" class="d-none">
+                                <form id="deleteStudentForm-{{ $student->id }}" action="{{ route('admin.students.destroy', $student->id) }}" method="POST" class="d-none">
                                     @csrf
                                     @method('DELETE')
                                 </form>
@@ -730,7 +733,7 @@
                 <h5 class="fw-bold mb-0">{{ __('Tambah Siswa Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addStudentForm" action="{{ panel_route('students.store') }}" method="POST" novalidate data-no-loader>
+            <form id="addStudentForm" action="{{ route('admin.students.store') }}" method="POST" novalidate data-no-loader>
                 @csrf
                 <div class="modal-body py-3">
                     <div class="mb-3">
@@ -784,7 +787,7 @@
                 <h5 class="fw-bold mb-0">{{ __('Import Data Siswa Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="studentImportForm" action="{{ panel_route('students.import') }}" method="POST" enctype="multipart/form-data" data-no-loader>
+            <form id="studentImportForm" action="{{ route('admin.students.import') }}" method="POST" enctype="multipart/form-data" data-no-loader>
                 @csrf
                 <div class="modal-body">
                     @if($errors->any() && $errors->has('file_excel'))
@@ -797,7 +800,8 @@
                         <div class="mb-2">
                             {{ __('Format kolom file Excel:') }} <strong>{{ __('NISN, Nama Lengkap, Kelas, Jenis Kelamin') }}</strong> {{ __('(.xlsx atau .csv)') }}
                         </div>
-                        <a href="{{ panel_route('students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
+                        {{-- FIX: href langsung ke route template (sebelumnya jatuh ke "#" sehingga yang terunduh halaman .htm) --}}
+                        <a href="{{ route('admin.students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                     </div>
                     <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
                     <input type="file" name="file_excel" class="form-control rounded-3 @error('file_excel') is-invalid @enderror" accept=".xlsx,.xls,.csv" required>
@@ -930,12 +934,15 @@
 
   if (!hasClientAlert) return;
 
+  /* FIX: controller mengirim status "warning" (bukan "partial"), jadi dua-duanya dipetakan ke warna kuning */
   var palette = {
     success: { bg: '#dcfce7', fg: '#166534', icon: 'bx-check-circle' },
     partial: { bg: '#fef3c7', fg: '#854d0e', icon: 'bx-error-circle' },
+    warning: { bg: '#fef3c7', fg: '#854d0e', icon: 'bx-error-circle' },
     error: { bg: '#fee2e2', fg: '#991b1b', icon: 'bx-error-circle' }
   };
   var color = palette[status] || palette.error;
+  var iconTone = status === 'success' ? 'success' : (status === 'error' ? 'danger' : 'warning');
   var alertEl = document.createElement('div');
   alertEl.className = 'alert alert-dismissible fade show border-0 rounded-3 small mb-3';
   alertEl.setAttribute('role', 'alert');
@@ -948,7 +955,7 @@
   var head = document.createElement('div');
   head.className = 'd-flex align-items-center';
   var icon = document.createElement('i');
-  icon.className = 'bx ' + color.icon + ' fs-5 me-2 text-' + (status === 'success' ? 'success' : 'danger') + ' flex-shrink-0';
+  icon.className = 'bx ' + color.icon + ' fs-5 me-2 text-' + iconTone + ' flex-shrink-0';
   var span = document.createElement('span');
   span.textContent = msg;
   head.appendChild(icon);

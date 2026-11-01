@@ -42,33 +42,48 @@
         .app-header-right { flex: 0 0 auto; margin-left: auto; }
     }
 
-    /* Buttons Export Responsif
-       UKURAN (lebar/tinggi/font/padding) TIDAK ditulis di sini lagi: sekarang
-       ikut token toolbar bersama di layouts/app.blade.php (--tb-btn-w, --tb-btn-h,
-       --tb-btn-font, --tb-btn-pad-x) supaya CETAK PDF & CETAK EXCEL lebarnya
-       PERSIS SAMA dengan tombol Import Excel / Tambah / Hapus di halaman lain.
-       Yang tetap di halaman ini hanya warna, hover, dan efeknya. */
-    .btn-green-excel {
-        background-color: #059669; color: #ffffff !important;
-        font-size: 0.82rem; font-weight: 600; border: none; border-radius: var(--clean-radius);
-        display: inline-flex;
-        align-items: center; justify-content: center; text-decoration: none;
-        white-space: nowrap; box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
-        transition: all 0.15s ease-in-out; flex-shrink: 0;
-        text-transform: uppercase; letter-spacing: 0.03em; font-family: 'Poppins', 'Roboto', sans-serif;
-    }
-    .btn-green-excel:hover { background-color: #047857; color: #ffffff !important; transform: translateY(-1px); }
-
+    /* Tombol Cetak PDF / Excel: tanpa animasi, tanpa efek naik-turun.
+       UKURAN (lebar/tinggi/font/padding) ikut token toolbar bersama di
+       layouts/app.blade.php (--tb-btn-w, --tb-btn-h, --tb-btn-font,
+       --tb-btn-pad-x). Di sini hanya warna. */
+    .btn-green-excel,
     .btn-red-pdf {
-        background-color: #ef4444; color: #ffffff !important;
+        color: #ffffff !important;
         font-size: 0.82rem; font-weight: 600; border: none; border-radius: var(--clean-radius);
-        display: inline-flex;
-        align-items: center; justify-content: center; text-decoration: none;
-        white-space: nowrap; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.2);
-        transition: all 0.15s ease-in-out; flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        text-decoration: none; white-space: nowrap; flex-shrink: 0;
         text-transform: uppercase; letter-spacing: 0.03em; font-family: 'Poppins', 'Roboto', sans-serif;
+        box-shadow: none;
+        transition: none !important;
+        transform: none !important;
+        -webkit-tap-highlight-color: transparent;
     }
-    .btn-red-pdf:hover { background-color: #dc2626; color: #ffffff !important; transform: translateY(-1px); }
+    .btn-green-excel { background-color: #059669; }
+    .btn-red-pdf { background-color: #ef4444; }
+    /* Warna TETAP di semua state (hover/active/focus): tidak berubah sama sekali. */
+    .btn-green-excel:hover, .btn-green-excel:active, .btn-green-excel:focus, .btn-green-excel:focus-visible { background-color: #059669 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
+    .btn-red-pdf:hover, .btn-red-pdf:active, .btn-red-pdf:focus, .btn-red-pdf:focus-visible { background-color: #ef4444 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
+
+    /* Tombol mobile pembuka popup cetak: tanpa animasi */
+    .recap-mobile-actions .btn {
+        transition: none !important;
+        transform: none !important;
+    }
+    /* Mobile: warna tetap saat disentuh/hover */
+    .recap-mobile-actions .btn-danger,
+    .recap-mobile-actions .btn-danger:hover,
+    .recap-mobile-actions .btn-danger:active,
+    .recap-mobile-actions .btn-danger:focus,
+    .recap-mobile-actions .btn-danger:focus-visible {
+        background-color: #ef4444 !important; border-color: #ef4444 !important; color: #ffffff !important; box-shadow: none !important;
+    }
+    .recap-mobile-actions .btn-success,
+    .recap-mobile-actions .btn-success:hover,
+    .recap-mobile-actions .btn-success:active,
+    .recap-mobile-actions .btn-success:focus,
+    .recap-mobile-actions .btn-success:focus-visible {
+        background-color: #059669 !important; border-color: #059669 !important; color: #ffffff !important; box-shadow: none !important;
+    }
 
     /* Period Switcher Tabs */
     .period-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 0.75rem; }
@@ -1215,7 +1230,7 @@
                 }
 
                 studentSearchTimer = setTimeout(() => {
-                    fetch('/admin/rekap/student-search?q=' + encodeURIComponent(query), {
+                    fetch(@json(panel_route('rekap.student-search')) + '?q=' + encodeURIComponent(query), {
                         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                     })
                     .then(r => r.json())
@@ -1965,7 +1980,7 @@
 
             e.preventDefault();
             const body = new FormData(e.target);
-            window.downloadWithProgress(submitBtn, e.target.getAttribute('action') || window.location.href, {
+            window.downloadWithProgress(submitBtn, @json(panel_route('rekap.print')), {
                 method: 'POST',
                 body: body,
                 csrf: rekapcsrf()
@@ -1978,6 +1993,10 @@
 
         // Initialize modal when shown - tugas ringan + inisialisasi yang diekspeksikan test
         document.getElementById('printRekapModal')?.addEventListener('show.bs.modal', function(event) {
+            // Backdrop Bootstrap dibuat di luar popup; class di <body> ini
+            // membuatnya ikut instan (tanpa fade) hanya untuk popup rekap.
+            document.body.classList.add('rekap-modal-instant');
+
             // Format sudah diambil saat klik tombol; relatedTarget hanya cadangan.
             setRekapPrintFormatFromButton(event.relatedTarget);
 
@@ -2019,6 +2038,8 @@
 
         // Reset state saat modal ditutup agar bersih untuk buka berikutnya.
         document.getElementById('printRekapModal')?.addEventListener('hidden.bs.modal', function() {
+            document.body.classList.remove('rekap-modal-instant');
+
             rekapResetPencarianSiswa();
             rekapResetPanel();
             rekapAktifkanTombolAwal();
@@ -2059,21 +2080,18 @@
     </script>
     @endpush
 <style>
-    /* ==== Cetak Rekap: modal instan ====
-       Samakan durasi/transisi dengan modal lain yang instan: transition/none.
-       Hapus fade/transisi supaya modal Bootstrap muncul seketika. */
-    .modal#printRekapModal,
-    .modal#printRekapModal.fade,
-    .modal#printRekapModal.show {
+    #printRekapModal,
+    #printRekapModal .modal-dialog {
         transition: none !important;
         animation: none !important;
     }
-    .modal#printRekapModal .modal-dialog {
+    body.rekap-modal-instant .modal-backdrop,
+    body.rekap-modal-instant .modal-backdrop.fade {
         transition: none !important;
         animation: none !important;
     }
 </style>
-<div class="modal fade" id="printRekapModal" tabindex="-1" aria-hidden="true">
+<div class="modal" id="printRekapModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 pb-0">
@@ -2270,7 +2288,7 @@
      di-capture dua kali oleh pengikatan otomatis. -->
                         <!-- Tombol Generate selalu biru sejak modal dibuka (bukan putih saat loading).
          :not(.is-done) supaya state hijau "Selesai" tetap menang. -->
-                        <button type="submit" class="btn-download-blue btn-progress px-3" data-download id="printRekapSubmitBtn">
+                        <button type="submit" class="btn-download-blue btn-progress px-3" data-download formaction="{{ panel_route('rekap.print') }}" data-url="{{ panel_route('rekap.print') }}" id="printRekapSubmitBtn">
                             <!-- Lapisan warna = bar progres (lebar = persen) -->
                             <span class="btn-progress__fill" id="rekapBtnFill" aria-hidden="true"></span>
                             <span class="btn-progress__label" id="rekapBtnLabel">{{ __('Generate & Unduh') }}</span>
