@@ -2,7 +2,6 @@
 
 @section('title', __('Pengaturan Sistem'))
 @section('page_title', __('PENGATURAN'))
-@section('page_subtitle', __('Kelola identitas sekolah, jadwal presensi, tahun ajaran, hari libur, dan tempat sampah.'))
 
 {{-- Kanvas dikunci setinggi satu layar dan isi form menggulir di dalam kanvas,
      sama seperti halaman acuan Presensi / Data Guru / Data Kelas. Class ini

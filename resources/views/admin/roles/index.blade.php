@@ -2,7 +2,6 @@
 
 @section('title', __('Manajemen Role & Permission'))
 @section('page_title', __('Manajemen Role & Permission'))
-@section('page_subtitle', __('Ringkasan hak akses modul dan otoritas 3 role utama sistem presensi'))
 
 @section('page_header_right')
 <!-- Widget Tanggal Real-time di Sisi Kanan -->

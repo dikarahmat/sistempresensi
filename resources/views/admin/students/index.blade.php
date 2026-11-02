@@ -2,7 +2,6 @@
 
 @section('title', __('Data Siswa'))
 @section('page_title', __('Data Siswa'))
-@section('page_subtitle', __('Kelola informasi siswa'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout bersama. --}}

@@ -1,179 +1,319 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\AcademicYearController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\HolidayController;
-use App\Http\Controllers\Admin\RekapController;
-use App\Http\Controllers\Admin\ScannerController;
+use App\Http\Controllers\Admin\RekapController as AdminRekapController;
+use App\Http\Controllers\Admin\RolePermissionController;
+use App\Http\Controllers\Admin\ScannerController as AdminScannerController;
 use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\UserAccountController;
-use App\Http\Controllers\Admin\AcademicYearController;
+use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
-// Root redirect berdasarkan role (admin/guru/piket) atau ke login.
+// ============================================================================
+// PUBLIK: root, autentikasi, bahasa
+// ============================================================================
+
+// Redirect root ke dashboard sesuai role (admin/guru/piket), atau ke login
 Route::get('/', [AuthController::class, 'redirectRoot'])->name('root');
 
-// AUTH - Login universal
+// Autentikasi
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('throttle:10,1');
 
-// LOCALE - Pengganti bahasa (id/en) via form POST di sidebar
-Route::post('/locale/set', function (Request $request) {
-    $request->validate(['lang' => ['required', 'string', 'in:id,en']]);
-    $request->session()->put('locale', $request->input('lang'));
-    return back();
+// Bahasa (id / en) - dipanggil dari pop-up kartu akun di sidebar bersama.
+// - POST + CSRF, bukan link GET.
+// - Menerima dua bentuk sekaligus: POST /locale/en (parameter URL) atau
+//   POST /locale dengan input "lang" di body form.
+// - Hanya "id" dan "en" yang diterima; selain itu 404.
+// - Pilihan disimpan di session, lalu user dikembalikan ke halaman asal.
+Route::post('/locale/{lang?}', function (Request $request, ?string $lang = null) {
+    $lang = $request->input('lang', $lang);
+
+    abort_unless(in_array($lang, ['id', 'en'], true), 404);
+
+    $request->session()->put('locale', $lang);
+
+    return redirect()->back();
 })->name('locale.set');
 
 // ============================================================================
-// ADMIN - middleware role:admin
+// 1. GROUP ADMIN
 // ============================================================================
-Route::middleware(['role:admin'])->group(function () {
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/guru', [TeacherController::class, 'index'])->name('admin.guru.index');
-    // Guru: tambah/import/template/cetak kartu/edit/hapus. Route statis di atas route berparameter.
-    Route::get('/admin/guru/template', [TeacherController::class, 'downloadTemplate'])->name('admin.guru.template');
-    Route::post('/admin/guru/import', [TeacherController::class, 'import'])->name('admin.guru.import')->middleware('throttle:10,1');
-    Route::post('/admin/guru/print-cards', [TeacherController::class, 'printCards'])->name('admin.guru.print-cards');
-    Route::delete('/admin/guru/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('admin.guru.trash-destroy-all');
-    Route::post('/admin/guru', [TeacherController::class, 'store'])->name('admin.guru.store');
-    Route::get('/admin/guru/{teacher}', [TeacherController::class, 'show'])->name('admin.guru.show')->whereNumber('teacher');
-    Route::get('/admin/guru/{teacher}/download-card', [TeacherController::class, 'downloadCard'])->name('admin.guru.download-card')->whereNumber('teacher');
-    Route::put('/admin/guru/{teacher}', [TeacherController::class, 'update'])->name('admin.guru.update')->whereNumber('teacher');
-    Route::delete('/admin/guru/{teacher}', [TeacherController::class, 'destroy'])->name('admin.guru.destroy')->whereNumber('teacher');
-    Route::post('/admin/teachers/{id}/restore', [TeacherController::class, 'restore'])->name('admin.teachers.restore')->whereNumber('id');
-    Route::get('/admin/pengaturan/jadwal', [SettingController::class, 'index'])->name('admin.pengaturan.jadwal');
-    Route::get('/admin/settings', [SettingController::class, 'index'])->name('admin.settings.index');
-    Route::get('/admin/accounts', [UserAccountController::class, 'index'])->name('admin.accounts.index');
+Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(function () {
+    // Utama
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // ===== SISWA (admin) =====
-    // Route statis di atas, route berparameter ({student}, {id}) di bawah.
-    Route::get('/admin/students', [StudentController::class, 'index'])->name('admin.students.index');
-    Route::get('/admin/students/template', [StudentController::class, 'downloadTemplate'])->name('admin.students.template');
-    Route::get('/admin/students/trash', [StudentController::class, 'trash'])->name('admin.students.trash');
-    Route::post('/admin/students/import', [StudentController::class, 'import'])->name('admin.students.import')->middleware('throttle:10,1');
-    Route::post('/admin/students/print-cards', [StudentController::class, 'printCards'])->name('admin.students.print-cards');
-    Route::delete('/admin/students/destroy-all-active', [StudentController::class, 'destroyAllActive'])->name('admin.students.destroy-all-active');
-    Route::delete('/admin/students/trash-destroy-all', [StudentController::class, 'destroyAllTrashed'])->name('admin.students.trash-destroy-all');
-    Route::post('/admin/students', [StudentController::class, 'store'])->name('admin.students.store');
+    // Presensi / Absensi
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
+    // Route statis WAJIB didaftarkan sebelum route berparameter dinamis di bawahnya,
+    // supaya /admin/absensi/kiosk tidak ditangkap {schoolClass} (showClass('kiosk') -> TypeError).
+    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
+    Route::post('/absensi/override', [AttendanceController::class, 'override'])->name('absensi.override')->middleware('throttle:20,1');
+    Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
 
-    Route::post('/admin/students/{id}/restore', [StudentController::class, 'restore'])->name('admin.students.restore')->whereNumber('id');
-    Route::delete('/admin/students/{id}/force-delete', [StudentController::class, 'forceDelete'])->name('admin.students.force-delete')->whereNumber('id');
-
-    Route::get('/admin/students/{student}', [StudentController::class, 'show'])->name('admin.students.show')->whereNumber('student');
-    Route::get('/admin/students/{student}/download-card', [StudentController::class, 'downloadCard'])->name('admin.students.download-card')->whereNumber('student');
-    Route::get('/admin/students/{student}/card', [StudentController::class, 'card'])->name('admin.students.card')->whereNumber('student');
-    Route::put('/admin/students/{student}', [StudentController::class, 'update'])->name('admin.students.update')->whereNumber('student');
-    Route::delete('/admin/students/{student}', [StudentController::class, 'destroy'])->name('admin.students.destroy')->whereNumber('student');
-
-    Route::delete('/admin/guru/destroy-all', [TeacherController::class, 'destroyAllActive'])->name('admin.guru.destroy-all');
-    Route::delete('/admin/teachers/{teacher}/force-delete', [TeacherController::class, 'forceDelete'])->name('admin.teachers.force-delete');
-    Route::get('/admin/teachers/trash', [TeacherController::class, 'trash'])->name('admin.teachers.trash');
-    Route::delete('/admin/classes/destroy-all', [SchoolClassController::class, 'destroyAll'])->name('admin.classes.destroy-all');
-    Route::get('/admin/kelas', [SchoolClassController::class, 'index'])->name('admin.kelas.index');
-    Route::get('/admin/classes', [SchoolClassController::class, 'index'])->name('admin.classes.index');
-    Route::get('/admin/absensi', [AttendanceController::class, 'index'])->name('admin.absensi.index');
-    Route::get('/admin/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('admin.absensi.show');
-    Route::get('/admin/kehadiran', [AttendanceController::class, 'kehadiran'])->name('admin.kehadiran');
-    Route::get('/admin/kehadiran/{schoolClass}/detail', [AttendanceController::class, 'kehadiranDetail'])->name('admin.kehadiran.detail');
-    Route::get('/admin/kehadiran/student-history/{student}', [AttendanceController::class, 'studentHistory'])->name('admin.kehadiran.student-history');
-    Route::get('/admin/rekap', [RekapController::class, 'index'])->name('admin.rekap');
-    // Rekap: cetak (POST) & pencarian siswa. Route statis, di bawah rekap index.
-    Route::post('/admin/rekap/print', [RekapController::class, 'printRekap'])->name('admin.rekap.print');
-    Route::get('/admin/rekap/student-search', [RekapController::class, 'studentSearch'])->name('admin.rekap.student-search');
-    Route::get('/admin/holidays', [HolidayController::class, 'index'])->name('admin.holidays.index');
-    Route::get('/admin/scanner', [ScannerController::class, 'index'])->name('admin.scanner');
-    Route::get('/admin/presensi', [ScannerController::class, 'index'])->name('admin.presensi.index');
-    Route::get('/admin/absensi/kiosk', [ScannerController::class, 'kiosk'])->name('admin.absensi.kiosk');
-    Route::get('/admin/kiosk', [ScannerController::class, 'kiosk'])->name('admin.kiosk');
-});
-
-// Academic years - admin only
-Route::middleware(['role:admin'])->group(function () {
-    Route::get('/admin/academic-years', [AcademicYearController::class, 'index'])->name('admin.academic-years.index');
-});
-
-// ============================================================================
-// GURU - middleware role:guru (READ-ONLY untuk Siswa & Kelas; tanpa Pengaturan)
-// ============================================================================
-Route::middleware(['role:guru'])->group(function () {
-    Route::get('/guru/dashboard', [AdminDashboardController::class, 'index'])->name('guru.dashboard');
-    Route::get('/guru/students', [StudentController::class, 'index'])->name('guru.students.index');
-    // Siswa READ-ONLY: lihat detail + cetak/unduh kartu. TANPA store/update/destroy/import.
-    // Route statis (print-cards) di atas route berparameter ({student}).
-    Route::post('/guru/students/print-cards', [StudentController::class, 'printCards'])->name('guru.students.print-cards');
-    Route::get('/guru/students/{student}', [StudentController::class, 'show'])->name('guru.students.show')->whereNumber('student');
-    Route::get('/guru/students/{student}/download-card', [StudentController::class, 'downloadCard'])->name('guru.students.download-card')->whereNumber('student');
-    Route::get('/guru/students/{student}/card', [StudentController::class, 'card'])->name('guru.students.card')->whereNumber('student');
-    Route::get('/guru/kelas', [SchoolClassController::class, 'index'])->name('guru.kelas.index');
-    Route::get('/guru/classes', [SchoolClassController::class, 'index'])->name('guru.classes.index');
-    Route::get('/guru/absensi', [AttendanceController::class, 'index'])->name('guru.absensi.index');
-    Route::get('/guru/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('guru.absensi.show');
-    Route::get('/guru/kehadiran', [AttendanceController::class, 'kehadiran'])->name('guru.kehadiran');
-    Route::get('/guru/kehadiran/{schoolClass}/detail', [AttendanceController::class, 'kehadiranDetail'])->name('guru.kehadiran.detail');
-    Route::get('/guru/kehadiran/student-history/{student}', [AttendanceController::class, 'studentHistory'])->name('guru.kehadiran.student-history');
-    Route::get('/guru/rekap', [RekapController::class, 'index'])->name('guru.rekap');
-    // Rekap: cetak (POST) & pencarian siswa.
-    Route::post('/guru/rekap/print', [RekapController::class, 'printRekap'])->name('guru.rekap.print');
-    Route::get('/guru/rekap/student-search', [RekapController::class, 'studentSearch'])->name('guru.rekap.student-search');
-    Route::get('/guru/scanner', [ScannerController::class, 'index'])->name('guru.scanner');
-    Route::get('/guru/presensi', [ScannerController::class, 'index'])->name('guru.presensi.index');
-    Route::get('/guru/absensi/kiosk', [ScannerController::class, 'kiosk'])->name('guru.absensi.kiosk');
-    Route::get('/guru/kiosk', [ScannerController::class, 'kiosk'])->name('guru.kiosk');
-});
-
-// ============================================================================
-// PIKET - middleware role:piket (placeholder; belum ada controller khusus)
-// ============================================================================
-Route::middleware(['role:piket'])->group(function () {
-    Route::get('/piket/dashboard', [AdminDashboardController::class, 'index'])->name('piket.dashboard');
-
-    // Presensi / scanner
-    Route::get('/piket/scanner', [ScannerController::class, 'index'])->name('piket.scanner');
-    Route::get('/piket/presensi', [ScannerController::class, 'index'])->name('piket.presensi.index');
-    Route::get('/piket/absensi/kiosk', [ScannerController::class, 'kiosk'])->name('piket.absensi.kiosk');
-    Route::get('/piket/kiosk', [ScannerController::class, 'kiosk'])->name('piket.kiosk');
-
-    // Absensi & Kehadiran (read-only)
-    Route::get('/piket/absensi', [AttendanceController::class, 'index'])->name('piket.absensi.index');
-    Route::get('/piket/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('piket.absensi.show');
-    Route::get('/piket/kehadiran', [AttendanceController::class, 'kehadiran'])->name('piket.kehadiran');
-    Route::get('/piket/kehadiran/{schoolClass}/detail', [AttendanceController::class, 'kehadiranDetail'])->name('piket.kehadiran.detail');
-    Route::get('/piket/kehadiran/student-history/{student}', [AttendanceController::class, 'studentHistory'])->name('piket.kehadiran.student-history');
+    // Kehadiran
+    Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::post('/kehadiran/override', [AttendanceController::class, 'override'])->name('kehadiran.override')->middleware('throttle:20,1');
+    // Riwayat Presensi per Siswa (akses dari menu Kehadiran)
+    Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 
     // Rekap
-    Route::get('/piket/rekap', [RekapController::class, 'index'])->name('piket.rekap');
-    Route::post('/piket/rekap/print', [RekapController::class, 'printRekap'])->name('piket.rekap.print');
-    Route::get('/piket/rekap/student-search', [RekapController::class, 'studentSearch'])->name('piket.rekap.student-search');
+    Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
+    Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
+    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
+    Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
 
-    // Data Siswa & Kelas (read-only)
-    Route::get('/piket/students', [StudentController::class, 'index'])->name('piket.students.index');
-    Route::post('/piket/students/print-cards', [StudentController::class, 'printCards'])->name('piket.students.print-cards');
-    Route::get('/piket/students/{student}', [StudentController::class, 'show'])->name('piket.students.show')->whereNumber('student');
-    Route::get('/piket/students/{student}/download-card', [StudentController::class, 'downloadCard'])->name('piket.students.download-card')->whereNumber('student');
-    Route::get('/piket/kelas', [SchoolClassController::class, 'index'])->name('piket.kelas.index');
-    Route::get('/piket/classes', [SchoolClassController::class, 'index'])->name('piket.classes.index');
+    // Scanner & Mode Gerbang / Kiosk Absensi
+    Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
+    Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
+    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
+
+    // URL LAMA modul Tahun Ajaran & Hari Libur. Modul ini kini hidup di bawah
+    // Pengaturan (admin/settings/...), tapi URL lama tidak boleh mati diam-diam:
+    // tetap menjawab 301 (permanen) ke URL baru. Nama route, controller, method,
+    // middleware, dan HTTP method modul TIDAK diubah.
+    Route::get('academic-years', fn () => redirect()->route('admin.academic-years.index', [], 301));
+    Route::get('holidays', fn () => redirect()->route('admin.holidays.index', [], 301));
+    Route::get('holidays/template', fn () => redirect()->route('admin.holidays.template', [], 301));
+
+    // Pengaturan Sistem + modul yang dikelola dari halaman Pengaturan.
+    // Route statis (toggle-active, template) didaftarkan lebih dulu supaya tidak
+    // tertangkap route resource yang berparameter.
+    Route::prefix('settings')->group(function () {
+        // Master Tahun Ajaran
+        Route::post('academic-years/{academic_year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
+        Route::resource('academic-years', AcademicYearController::class)->except(['show', 'create', 'edit']);
+
+        // Master Hari Libur & Import
+        // ->names('holidays') dipakai AGAR nama route tetap admin.holidays.*
+        // Hanya URL (path) yang berubah, nama route tidak.
+        Route::get('hari-libur/template', [HolidayController::class, 'template'])->name('holidays.template');
+        Route::get('hari-libur/import', function () {
+            return redirect()->route('admin.holidays.index');
+        });
+        Route::post('hari-libur/import', [HolidayController::class, 'import'])->name('holidays.import')->middleware('throttle:10,1');
+        Route::delete('hari-libur/destroy-all', [HolidayController::class, 'destroyAll'])->name('holidays.destroy-all');
+        Route::resource('hari-libur', HolidayController::class)->names('holidays')->except(['show', 'create', 'edit']);
+    });
+
+    // Pengaturan Sistem Dinamis
+    Route::get('/pengaturan/jadwal', [SettingController::class, 'index'])->name('pengaturan.jadwal');
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('settings', [SettingController::class, 'update'])->name('settings.update')->middleware('throttle:10,1');
+
+    // Master Kelas, Import, & Hapus Semua
+    Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
+    Route::delete('classes/destroy-all', [SchoolClassController::class, 'destroyAllActive'])->name('classes.destroy-all');
+    Route::get('classes/template', [SchoolClassController::class, 'template'])->name('classes.template');
+    Route::get('classes/import', function () {
+        return redirect()->route('admin.classes.index');
+    });
+    Route::post('classes/import', [SchoolClassController::class, 'import'])->name('classes.import')->middleware('throttle:10,1');
+
+    // Soft Delete Routes untuk Kelas (Tempat Sampah).
+    // Route statis WAJIB didaftarkan SEBELUM Route::resource('classes') di bawah
+    // supaya tidak tertangkap parameter {class}. classes.destroy-all di atas
+    // tetap utuh untuk aksi "Hapus Semua" di halaman Data Kelas.
+    Route::delete('classes/trash-destroy-all', [SchoolClassController::class, 'destroyAllTrashed'])->name('classes.trash-destroy-all');
+    Route::get('classes/trash', [SchoolClassController::class, 'trash'])->name('classes.trash');
+    Route::post('classes/{id}/restore', [SchoolClassController::class, 'restore'])->name('classes.restore');
+    Route::delete('classes/{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('classes.force-delete');
+
+    Route::resource('classes', SchoolClassController::class)->except(['show', 'create', 'edit']);
+
+    // Master Siswa, Import, Upload Foto ZIP, & Hapus Semua
+    Route::get('/siswa', [AdminStudentController::class, 'index'])->name('siswa.index');
+    Route::match(['get', 'post'], '/siswa/generate-qr', [AdminStudentController::class, 'printCards'])->name('siswa.generate-qr');
+    Route::delete('students/destroy-all', [AdminStudentController::class, 'destroyAllActive'])->name('students.destroy-all');
+    // Hapus massal siswa AKTIF dari toolbar Data Siswa (soft delete -> Tempat Sampah).
+    // Route statis WAJIB didaftarkan sebelum Route::resource('students') di bawah
+    // supaya tidak tertangkap parameter {student}.
+    Route::delete('students/destroy-all-active', [AdminStudentController::class, 'destroyAllActive'])->name('students.destroy-all-active');
+    // Kosongkan Tempat Sampah Siswa: hapus PERMANEN seluruh siswa yang sudah
+    // soft delete (destroyAllActive = pindahkan ke sampah; destroyAllTrashed =
+    // hapus permanen isi sampah). Diberikan konfirmasi di view trash.
+    Route::delete('students/trash-destroy-all', [AdminStudentController::class, 'destroyAllTrashed'])->name('students.trash-destroy-all');
+    Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
+    Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
+    Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import')->middleware('throttle:10,1');
+    Route::get('students/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
+    // Alias "card" (sama seperti di group guru) -> unduh kartu siswa.
+    Route::get('students/{student}/card', [AdminStudentController::class, 'downloadCard'])->name('students.card');
+    Route::get('students/{id}/print-card', [AdminStudentController::class, 'printCard'])->name('students.print-card');
+    Route::get('students-print-all', [AdminStudentController::class, 'printCard'])->name('students.print-all');
+
+    // Soft Delete Routes Siswa
+    Route::get('students/trash', [AdminStudentController::class, 'trash'])->name('students.trash');
+    Route::post('students/{id}/restore', [AdminStudentController::class, 'restore'])->name('students.restore');
+    Route::delete('students/{id}/force-delete', [AdminStudentController::class, 'forceDelete'])->name('students.force-delete');
+
+    Route::resource('students', AdminStudentController::class)->except(['edit']);
+
+    // Manajemen Data Guru (/admin/guru)
+    // Route statis WAJIB di atas Route::resource('guru') supaya tidak tertangkap {teacher}.
+    Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAllActive'])->name('guru.destroy-all');
+    Route::delete('guru/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('guru.trash-destroy-all');
+    Route::match(['get', 'post'], 'guru/print-cards', [TeacherController::class, 'printCards'])->name('guru.print-cards');
+    Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
+    Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import')->middleware('throttle:10,1');
+    Route::get('guru/{teacher}/download-card', [TeacherController::class, 'downloadCard'])->name('guru.download-card');
+    Route::resource('guru', TeacherController::class)->parameters(['guru' => 'teacher'])->only(['index', 'show', 'store', 'update', 'destroy']);
+
+    // Kompatibilitas Route Teachers (+ Tempat Sampah Guru)
+    Route::delete('teachers/destroy-all', [TeacherController::class, 'destroyAll'])->name('teachers.destroy-all');
+    Route::get('teachers/template', [TeacherController::class, 'downloadTemplate'])->name('teachers.template');
+    Route::post('teachers/import', [TeacherController::class, 'import'])->name('teachers.import')->middleware('throttle:10,1');
+
+    // WAJIB didaftarkan sebelum Route::resource('teachers') di bawah supaya tidak
+    // tertangkap parameter {teacher} pada route DELETE teachers/{teacher}.
+    Route::delete('teachers/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('teachers.trash-destroy-all');
+
+    Route::resource('teachers', TeacherController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Soft Delete Routes untuk Teachers
+    Route::get('teachers/trash', [TeacherController::class, 'trash'])->name('teachers.trash');
+    Route::post('teachers/{id}/restore', [TeacherController::class, 'restore'])->name('teachers.restore');
+    Route::delete('teachers/{id}/force-delete', [TeacherController::class, 'forceDelete'])->name('teachers.force-delete');
+
+    // Manajemen Role & Permission
+    Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.index');
+    Route::post('/roles-permissions', [RolePermissionController::class, 'update'])->name('roles.update');
+
+    // ==========================================================================
+    // KELOLA AKUN (khusus ADMIN)
+    // Halaman pengelolaan akun login (tambah, edit, reset password).
+    // Berada DI DALAM group ini sehingga otomatis terkunci middleware
+    // role:admin - role lain (guru, piket) menerima 403.
+    // Akun hanya dibuat lewat sini; tidak ada registrasi publik.
+    // ==========================================================================
+    Route::prefix('kelola-akun')->name('accounts.')->group(function () {
+        Route::get('/', [UserAccountController::class, 'index'])->name('index');
+        Route::post('/', [UserAccountController::class, 'store'])->name('store');
+        Route::put('/{user}/update', [UserAccountController::class, 'update'])->name('update');
+        // Endpoint khusus admin: dekripsi password terenkripsi untuk ditampilkan
+        // di modal Edit (read-only, hanya dikembalikan sebagai JSON).
+        Route::get('/{user}/password', [UserAccountController::class, 'getEncryptedPassword'])->name('password');
+        Route::delete('/{user}', [UserAccountController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ============================================================================
-// KELAS - aksi pengelolaan: ADMIN SAJA. Guru read-only lewat guru.classes.index.
-// Route statis HARUS di atas route berparameter ({class}, {id}).
+// 2. GROUP GURU (DASHBOARD GURU)
 // ============================================================================
-Route::middleware(['role:admin'])->group(function () {
-    Route::get('/kelas', [SchoolClassController::class, 'index'])->name('classes.index');
-    Route::get('/kelas/template', [SchoolClassController::class, 'template'])->name('classes.template');
-    Route::get('/kelas/trash', [SchoolClassController::class, 'trash'])->name('classes.trash');
-    Route::delete('/kelas/destroy-all', [SchoolClassController::class, 'destroyAll'])->name('classes.destroy-all');
-    Route::delete('/kelas/trash-destroy-all', [SchoolClassController::class, 'destroyAllTrashed'])->name('classes.trash-destroy-all');
-    Route::post('/kelas/import', [SchoolClassController::class, 'import'])->name('classes.import')->middleware('throttle:10,1');
-    Route::post('/kelas', [SchoolClassController::class, 'store'])->name('classes.store');
-    Route::put('/kelas/{class}', [SchoolClassController::class, 'update'])->name('classes.update')->whereNumber('class');
-    Route::delete('/kelas/{class}', [SchoolClassController::class, 'destroy'])->name('classes.destroy')->whereNumber('class');
-    Route::post('/kelas/{id}/restore', [SchoolClassController::class, 'restore'])->name('classes.restore')->whereNumber('id');
-    Route::delete('/kelas/{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('classes.force-delete')->whereNumber('id');
+// Memakai controller, view, dan komponen yang SAMA PERSIS dengan admin
+// (single source of truth). Yang berbeda hanya hak akses: guru read-only,
+// kecuali modul Presensi (scanner & mode gerbang) yang tetap penuh fungsional.
+// Route khusus admin (tambah/edit/hapus/import/pengaturan) TIDAK didaftarkan
+// di sini, sehingga guru otomatis menerima HTTP 403 bila mencoba mengaksesnya.
+// ============================================================================
+Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function () {
+    // Dashboard (identik dashboard admin)
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // PRESENSI - identik admin (absensi harian, detail kelas, scanner, mode gerbang)
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
+    // Route statis WAJIB didaftarkan sebelum route berparameter dinamis di bawahnya,
+    // supaya /guru/absensi/kiosk tidak ditangkap {schoolClass}.
+    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
+    Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
+    Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
+    Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
+    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
+
+    // KEHADIRAN - identik admin tetapi READ-ONLY
+    // (route ubah status presensi / override sengaja tidak didaftarkan => 403)
+    Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
+
+    // REKAP - identik admin (filter + unduh Excel/PDF)
+    Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
+    Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
+    Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
+    Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
+
+    // SISWA - identik admin, READ-ONLY (detail + cetak kartu & unduh QR)
+    Route::get('/siswa', [AdminStudentController::class, 'index'])->name('students.index');
+    // Route statis didaftarkan lebih dulu agar tidak tertangkap {student}.
+    Route::match(['get', 'post'], '/siswa/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
+    Route::get('/siswa/{student}/download-card', [AdminStudentController::class, 'downloadCard'])->name('students.download-card');
+    Route::get('/siswa/{student}/card', [AdminStudentController::class, 'downloadCard'])->name('students.card');
+    Route::get('/siswa/{student}', [AdminStudentController::class, 'show'])->name('students.show');
+
+    // KELAS - identik admin, READ-ONLY (dua nama, sama seperti admin)
+    Route::get('/kelas', [SchoolClassController::class, 'index'])->name('kelas.index');
+    Route::get('/classes', [SchoolClassController::class, 'index'])->name('classes.index');
+
+    // GURU - cetak kartu presensi guru (dilayani oleh controller yang sama)
+    // Nama lengkap route: guru.guru.print-cards dan guru.guru.download-card
+    Route::match(['get', 'post'], '/kartu', [TeacherController::class, 'printCards'])->name('guru.print-cards');
+    Route::get('/kartu/download/{teacher}', [TeacherController::class, 'downloadCard'])->name('guru.download-card');
+});
+
+// ============================================================================
+// 3. GROUP GURU PIKET
+// ============================================================================
+// Akses HANYA KE DUA MODUL: KEHADIRAN dan PRESENSI (scan QR / mode gerbang).
+// Route Dashboard, Rekap (termasuk export/cetak), Siswa, Guru, Kelas,
+// Pengaturan, Tahun Ajaran, Hari Libur, Tempat Sampah, Kelola Akun, maupun
+// override absensi TIDAK didaftarkan di sini - sehingga piket otomatis
+// menerima HTTP 403 untuk SEMUA method (GET/POST/PUT/PATCH/DELETE) bila
+// URL diketik manual. View yang dipakai tetap view bersama admin/guru;
+// menu disesuaikan lewat partials/sidebar.blade.php & bottom nav.
+// Setelah login, piket diarahkan ke Presensi (lihat AuthController).
+// ============================================================================
+Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(function () {
+    // PRESENSI - identik admin/guru (absensi harian, detail kelas, scanner, kiosk)
+    // Route statis WAJIB didaftarkan sebelum route berparameter dinamis,
+    // supaya /piket/absensi/kiosk tidak ditangkap {schoolClass}.
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
+    Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
+    Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
+    Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
+    Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
+    Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
+    Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
+    Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
+
+    // KEHADIRAN - READ-ONLY (route override absensi sengaja tidak ada => 403)
+    Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
+    Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
+});
+
+// ============================================================================
+// 4. ALIAS KOMPATIBILITAS KELAS (khusus ADMIN)
+// ============================================================================
+// Versi lama route memakai nama classes.* tanpa prefix admin (URL /kelas/...).
+// Dipertahankan HANYA supaya view lama yang masih memanggil route('classes.*')
+// tidak error. Setelah semua view memakai admin.classes.*, seluruh blok ini
+// boleh dihapus. Route statis tetap di atas route berparameter.
+// ============================================================================
+Route::middleware(['role:admin'])->prefix('kelas')->name('classes.')->group(function () {
+    Route::get('/', [SchoolClassController::class, 'index'])->name('index');
+    Route::get('template', [SchoolClassController::class, 'template'])->name('template');
+    Route::get('trash', [SchoolClassController::class, 'trash'])->name('trash');
+    Route::delete('destroy-all', [SchoolClassController::class, 'destroyAllActive'])->name('destroy-all');
+    Route::delete('trash-destroy-all', [SchoolClassController::class, 'destroyAllTrashed'])->name('trash-destroy-all');
+    Route::post('import', [SchoolClassController::class, 'import'])->name('import')->middleware('throttle:10,1');
+    Route::post('/', [SchoolClassController::class, 'store'])->name('store');
+    Route::post('{id}/restore', [SchoolClassController::class, 'restore'])->name('restore')->whereNumber('id');
+    Route::delete('{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('force-delete')->whereNumber('id');
+    Route::put('{class}', [SchoolClassController::class, 'update'])->name('update')->whereNumber('class');
+    Route::delete('{class}', [SchoolClassController::class, 'destroy'])->name('destroy')->whereNumber('class');
 });

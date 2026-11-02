@@ -11,7 +11,6 @@
 
 @section('title', __('Data Kelas'))
 @section('page_title', __('Data Kelas'))
-@section('page_subtitle', __('Kelola rombongan belajar dan penetapan wali kelas.'))
 
 @push('styles')
 <style>

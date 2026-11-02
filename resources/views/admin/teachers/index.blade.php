@@ -2,7 +2,6 @@
 
 @section('title', __('Data Guru'))
 @section('page_title', __('Data Guru'))
-@section('page_subtitle', __('Kelola data guru pendidik'))
 
 @push('styles')
 <style>

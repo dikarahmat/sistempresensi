@@ -2,7 +2,6 @@
 
 @section('title', __('Rekap Presensi Siswa'))
 @section('page_title', __('Rekap Presensi Siswa'))
-@section('page_subtitle', __('Kelola rekapitulasi kehadiran siswa harian, mingguan, dan bulanan.'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout

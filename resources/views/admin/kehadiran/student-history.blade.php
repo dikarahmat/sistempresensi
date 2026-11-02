@@ -2,7 +2,6 @@
 
 @section('title', __('Riwayat Presensi'))
 @section('page_title', __('Riwayat Presensi'))
-@section('page_subtitle', __('HISTORI KEHADIRAN SISWA PER PERIODE'))
 
 @push('styles')
 <style>

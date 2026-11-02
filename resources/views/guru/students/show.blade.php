@@ -2,8 +2,6 @@
 
 @section('title', __('Detail Guru'))
 @section('page_title', __('Detail Guru'))
-@section('page_subtitle', __('Informasi biodata, tugas kelas, dan kode QR presensi guru'))
-
 @push('styles')
 <style>
     .card-modern {

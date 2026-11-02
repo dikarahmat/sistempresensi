@@ -51,8 +51,11 @@ class AdminDashboardController extends Controller
         // Label kecil menyesuaikan isi: "Hari Ini" hanya sah bila memang hari ini.
         $dateLabel = $isToday ? 'Tanggal Hari Ini' : 'Tanggal Dipilih';
         
+        // $startOfWeek dan $endOfWeek ditahan untuk bagian "REKAP MINGGUAN PER
+        // ROMBEL" (bukan grafik). Grafik kesehatan kini pakai rentang mandiri
+        // dari todayJakarta supaya tidak terpengaruh tanggal yang dipilih user.
         $startOfWeek = $selectedDate->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
-        $endOfWeek = $dateString;
+        $endOfWeek   = $dateString;
 
         $activeYear = AcademicYear::getActive();
 
@@ -135,108 +138,127 @@ class AdminDashboardController extends Controller
             return $cls;
         });
 
-        $chartMode = (string) $request->query('mode', 'mingguan');
+        $chartMode = (string) $request->query('mode', 'harian');
         if (! in_array($chartMode, ['harian', 'mingguan', 'bulanan'], true)) {
-            $chartMode = 'mingguan';
+            $chartMode = 'harian';
         }
 
-        // --- 3b. MODE HARIAN: satu titik per hari dalam minggu terpilih
-        // Kapasitas memakai jumlah siswa aktif di seluruh rombel * jumlah hari efektif,
-        // sehingga persentasenya sebanding dengan mode mingguan.
+        // --------------------------------------------------------------------
+        // GRAFIK: satu sumber data per mode, semua pakai timezone Asia/Jakarta.
+        // - Harian  : hari ini saja (1 titik).
+        // - Mingguan: 7 hari terakhir termasuk hari ini (7 titik, per tanggal).
+        // - Bulanan : bulan berjalan saja (1 titik per tanggal dari 1 s.d. akhir
+        //             bulan), tanpa 12 bulan terakhir.
+        // --------------------------------------------------------------------
+        $todayJakarta = Carbon::now('Asia/Jakarta');
         $totalActiveStudents = (int) $classesList->sum('total_students');
-        $weeklyDays = max(1, $effectiveDays);
-
-        $dailyHadirCounts = Attendance::whereBetween('date', [$startOfWeek, $endOfWeek])
-            ->where('status', 'Hadir')
-            ->selectRaw('date, count(*) as total')
-            ->groupBy('date')
-            ->pluck('total', 'date');
 
         $chartLabels = [];
         $chartValues = [];
 
         if ($chartMode === 'harian') {
-            for ($d = Carbon::parse($startOfWeek); $d->lte(Carbon::parse($endOfWeek)); $d->addDay()) {
-                $key = $d->toDateString();
-                $hadir = (int) ($dailyHadirCounts->get($key) ?? 0);
-                $kapasitas = $totalActiveStudents * $weeklyDays;
+            // HARI INI SAJA.
+            $periodStart = $todayJakarta->copy()->startOfDay();
+            $periodEnd   = $todayJakarta->copy()->endOfDay();
 
-                $chartLabels[] = $d->translatedFormat('D, d M');
-                $chartValues[] = $kapasitas > 0
-                    ? min(100, round(($hadir / $kapasitas) * 100))
-                    : 0;
-            }
-        } elseif ($chartMode === 'bulanan') {
-            // --- 3c. MODE BULANAN: satu titik per bulan (12 bulan terakhir).
-            // Dipilih "per bulan" (bukan per hari dalam 1 bulan) karena tabel
-            // attendances hanya punya kolom `date` tanpa jam. Agregasi per bulan
-            // tetap bermakna walau hanya ada 1-2 catatan per hari, sedangkan
-            // titik per hari dalam sebulan akan banyak bernilai 0 sehingga
-            // garis grafik didominasi angka nol tanpa informasi berguna.
-            $bulanIni = $selectedDate->copy()->startOfMonth();
-            $bulanAwal = $selectedDate->copy()->subMonths(11)->startOfMonth();
-
-            $monthlyHadirCounts = Attendance::whereBetween('date', [$bulanAwal->toDateString(), $bulanIni->copy()->endOfMonth()->toDateString()])
+            $dailyHadirCounts = Attendance::whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
                 ->where('status', 'Hadir')
-                ->selectRaw("substr(date, 1, 7) as ym, count(*) as total")
-                ->groupBy('ym')
-                ->pluck('total', 'ym');
+                ->selectRaw('date, count(*) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
 
-            for ($m = $bulanAwal->copy(); $m->lte($bulanIni); $m->addMonth()) {
-                $hadir = (int) ($monthlyHadirCounts->get($m->format('Y-m')) ?? 0);
-                // Kapasitas: siswa aktif x jumlah hari efektif di bulan tersebut.
-                $hariEfektif = max(1, (int) $m->daysInMonth);
-                $kapasitas = $totalActiveStudents * $hariEfektif;
+            $hadir     = (int) ($dailyHadirCounts->get($periodStart->toDateString()) ?? 0);
+            $kapasitas = $totalActiveStudents;
 
-                $chartLabels[] = $m->translatedFormat('M Y');
+            $chartLabels[] = $periodStart->translatedFormat('d M Y');
+            $chartValues[] = $kapasitas > 0
+                ? min(100, round(($hadir / $kapasitas) * 100))
+                : 0;
+        } elseif ($chartMode === 'mingguan') {
+            // 7 HARI TERAKHIR TERMASUK HARI INI (MON-SUN jika hari ini belum
+            // weekend, dst). Sumbu X = per tanggal/hari.
+            $periodStart = $todayJakarta->copy()->subDays(6)->startOfDay();
+            $periodEnd   = $todayJakarta->copy()->endOfDay();
+
+            $dailyHadirCounts = Attendance::whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
+                ->where('status', 'Hadir')
+                ->selectRaw('date, count(*) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            for ($d = $periodStart->copy(); $d->lte($periodEnd); $d->addDay()) {
+                $key = $d->toDateString();
+                $hadir     = (int) ($dailyHadirCounts->get($key) ?? 0);
+                $kapasitas = $totalActiveStudents;
+
+                $chartLabels[] = $d->translatedFormat('d M');
                 $chartValues[] = $kapasitas > 0
                     ? min(100, round(($hadir / $kapasitas) * 100))
                     : 0;
             }
         } else {
-            // Mingguan: label & data per-rombel (persis seperti sebelumnya).
-            $chartLabels = $classesAttendance->pluck('name')->toArray();
-            $chartValues = $classesAttendance->pluck('percentage')->toArray();
+            // BULANAN: bulan berjalan SAJA (1 s.d. akhir bulan), sumbu X per
+            // tanggal. 12 bulan terakhir TIDAK lagi ditampilkan.
+            $periodStart = $todayJakarta->copy()->startOfMonth();
+            $periodEnd   = $todayJakarta->copy()->endOfMonth();
+
+            $dailyHadirCounts = Attendance::whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
+                ->where('status', 'Hadir')
+                ->selectRaw('date, count(*) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+
+            for ($d = $periodStart->copy(); $d->lte($periodEnd); $d->addDay()) {
+                $key = $d->toDateString();
+                $hadir     = (int) ($dailyHadirCounts->get($key) ?? 0);
+                $kapasitas = $totalActiveStudents;
+
+                $chartLabels[] = $d->translatedFormat('d M');
+                $chartValues[] = $kapasitas > 0
+                    ? min(100, round(($hadir / $kapasitas) * 100))
+                    : 0;
+            }
         }
 
         $totalChartPoints = count($chartValues);
 
-        // Apakah periode yang sedang ditampilkan benar-benar punya catatan
-        // presensi? Mode harian/bulanan SELALU menghasilkan titik (7 hari / 12
-        // bulan) walau datanya nol, sehingga tanpa penanda ini kartu tidak
-        // pernah menampilkan "Belum ada data" dan hanya menampilkan garis
-        // rata di angka 0. Mode mingguan memakai periode yang sama.
-        $periodeChart = ($chartMode === 'bulanan')
-            ? [$selectedDate->copy()->subMonths(11)->startOfMonth()->toDateString(),
-               $selectedDate->copy()->endOfMonth()->toDateString()]
-            : [$startOfWeek, $endOfWeek];
+        // Apakah periode yang sedang ditampilkan punya catatan presensi?
+        $periodeChart = match ($chartMode) {
+            'harian'   => [$todayJakarta->copy()->startOfDay()->toDateString(),
+                           $todayJakarta->copy()->endOfDay()->toDateString()],
+            'mingguan' => [$todayJakarta->copy()->subDays(6)->startOfDay()->toDateString(),
+                           $todayJakarta->copy()->endOfDay()->toDateString()],
+            default    => [$todayJakarta->copy()->startOfMonth()->toDateString(),
+                           $todayJakarta->copy()->endOfMonth()->toDateString()],
+        };
 
         $chartHasData = Attendance::whereBetween('date', $periodeChart)->exists();
 
-        // Teks-teks yang menyesuaikan mode (judul kartu, periode, total, kosong).
-        // Nilai default = mode MINGGUAN, sehingga tampilan saat mode mingguan
-        // identik dengan sebelumnya.
+        // Teks pendukung (judul kartu, periode, total, kosong) disesuaikan
+        // dengan rentang yang baru.
+        $formatPeriod =
+            app()->getLocale() === 'en'
+                ? fn(Carbon $c) => $c->locale('en')->translatedFormat('d M')
+                : fn(Carbon $c) => $c->translatedFormat('d M');
+
         if ($chartMode === 'harian') {
-            $chartTitle = 'Grafik Garis Kehadiran Harian';
-            $chartPeriodLabel = Carbon::parse($startOfWeek)->translatedFormat('d M')
-                . ' - ' . Carbon::parse($endOfWeek)->translatedFormat('d M Y');
-            $chartTotalText = 'Total: ' . $totalChartPoints . ' Hari';
-            $chartScopeText = 'Per hari dalam minggu ini';
-            $chartEmptyText = 'Belum ada data kehadiran pada periode ini.';
+            $chartTitle       = 'Grafik Garis Kehadiran Harian';
+            $chartPeriodLabel = $todayJakarta->translatedFormat('d M Y');
+            $chartTotalText   = 'Total: ' . $totalChartPoints . ' Hari';
+            $chartScopeText   = 'Hari ini';
+            $chartEmptyText   = 'Belum ada data kehadiran hari ini.';
         } elseif ($chartMode === 'bulanan') {
-            $chartTitle = 'Grafik Garis Kehadiran Bulanan';
-            $chartPeriodLabel = Carbon::parse($selectedDate)->copy()->subMonths(11)->translatedFormat('M Y')
-                . ' - ' . Carbon::parse($selectedDate)->translatedFormat('M Y');
-            $chartTotalText = 'Total: ' . $totalChartPoints . ' Bulan';
-            $chartScopeText = 'Per bulan, 12 bulan terakhir';
-            $chartEmptyText = 'Belum ada data kehadiran pada periode 12 bulan terakhir.';
+            $chartTitle       = 'Grafik Garis Kehadiran Bulanan';
+            $chartPeriodLabel = $todayJakarta->translatedFormat('M Y');
+            $chartTotalText   = 'Total: ' . $totalChartPoints . ' Hari';
+            $chartScopeText   = 'Per hari, bulan ' . $todayJakarta->translatedFormat('M') . ' ini';
+            $chartEmptyText   = 'Belum ada data kehadiran pada bulan ini.';
         } else {
-            $chartTitle = 'Grafik Garis Kehadiran Mingguan';
-            $chartPeriodLabel = Carbon::parse($startOfWeek)->translatedFormat('d M')
-                . ' - ' . Carbon::parse($endOfWeek)->translatedFormat('d M Y');
-            $chartTotalText = 'Total: ' . count($classesAttendance ?? []) . ' Rombel';
-            $chartScopeText = ($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C');
-            $chartEmptyText = 'Belum ada data kehadiran rombel pada minggu ini.';
+            $chartTitle       = 'Grafik Garis Kehadiran Mingguan';
+            $chartPeriodLabel = $formatPeriod($periodStart) . ' - ' . $formatPeriod($periodEnd);
+            $chartTotalText   = 'Total: ' . $totalChartPoints . ' Hari';
+            $chartScopeText   = 'Per hari, 7 hari terakhir';
+            $chartEmptyText   = 'Belum ada data kehadiran pada 7 hari terakhir.';
         }
 
         // 4. Pengaturan Jadwal Operasional dari Cache Teroptimasi

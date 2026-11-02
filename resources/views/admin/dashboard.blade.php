@@ -2,7 +2,7 @@
 
 @section('title', is_admin() ? __('Dashboard Admin') : __('Dashboard Guru'))
 @section('page_title', is_admin() ? __('Dashboard Administrator') : __('DASHBOARD GURU'))
-@section('page_subtitle', is_admin() ? __('Sistem Presensi Terintegrasi') : __('Selamat datang, ') . (Auth::user()?->roleLabel() ?: 'Guru'))
+
 
 {{-- Kanvas dikunci setinggi satu layar (sama seperti halaman acuan Presensi /
      Data Guru / Data Kelas) dan isi dashboard menggulir di dalam kanvas.
@@ -16,12 +16,11 @@
      Memilih tanggal hanya submitting GET ke halaman dashboard yang sama dengan
      ?tanggal=YYYY-MM-DD, lalu controller menghitung ulang seluruh statistik,
      grafik, dan ketidakhadiran. Tampilan (ikon, teks, ukuran, warna) TIDAK diubah. -->
-<form method="GET" action="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard') }}" class="dashboard-date-form d-none d-lg-flex align-items-center gap-2.5 text-end">
-    {{-- Mode grafik & filter status ikut dipertahankan saat tanggal diganti --}}
-    <input type="hidden" name="mode" value="{{ $chartMode ?? 'mingguan' }}">
-    @if(request('status'))
-    <input type="hidden" name="status" value="{{ request('status') }}">
-    @endif
+<form method="GET" action="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard') }}" class="dashboard-date-form d-none d-lg-flex align-items-center gap-2.5 text-end">            {{-- Mode grafik & filter status ikut dipertahankan saat tanggal diganti --}}
+            <input type="hidden" name="mode" value="{{ $chartMode ?? 'harian' }}">
+            @if(request('status'))
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            @endif
 
     <div class="dashboard-date-text">
         <span class="text-secondary fw-semibold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">{{ __($dateLabel ?? 'Tanggal Hari Ini') }}</span>
@@ -47,15 +46,13 @@
     </button>
 </form>
 
-{{-- Kembali ke Hari Ini: hanya tampil bila tanggal yang dipilih bukan hari ini --}}
-@if(!($isToday ?? true))
-<a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['mode' => $chartMode ?? 'mingguan', 'status' => request('status')])) }}"
-   class="btn btn-light border text-dark fw-semibold rounded-2 px-2.5 py-1 d-none d-lg-inline-flex align-items-center gap-1 dashboard-reset-today"
-   style="font-size: 0.78rem;" title="{{ __('Kembali ke data hari ini') }}">
-    <i class='bx bx-undo'></i> {{ __('Hari Ini') }}
-</a>
-@endif
-@endsection
+{{-- Kembali ke Hari Ini: hanya tampil bila tanggal yang dipilih bukan hari ini --}}            @if(!($isToday ?? true))            <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['mode' => $chartMode ?? 'harian', 'status' => request('status')])) }}"
+                   class="btn btn-light border text-dark fw-semibold rounded-2 px-2.5 py-1 d-none d-lg-inline-flex align-items-center gap-1 dashboard-reset-today"
+                   style="font-size: 0.78rem;" title="{{ __('Kembali ke data hari ini') }}">
+                    <i class='bx bx-undo'></i> {{ __('Hari Ini') }}
+                </a>
+            @endif
+        @endsection
 
 @push('styles')
 <style>
@@ -981,15 +978,18 @@
         <div class="dash-card">
             <div class="dash-shortcut-head">
                 <i class='bx bx-zap text-warning fs-4'></i>
-                <span class="dash-card-title">{{ __('Pintasan Cepat') }}</span>
-            </div>
+                <span class="dash-card-title">{{ __('Pintasan Cepat') }}</span></div>
 
-            <div class="dash-shortcut-grid">
+                <div class="dash-shortcut-grid">
 
-                <!-- 1. Presensi Hari Ini (ikon QR/Scan) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â menuju HALAMAN PRESENSI -->
-                <a href="{{ panel_route('absensi.index') }}?scan=1"
+                <!-- 1. Presensi Hari Ini (ikon QR/Scan) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â langsung ke MODE GERBANG (kiosk).
+                     Kamera otomatis menyala saat halaman dibuka lewat pintasan ini; tidak
+                     perlu lagi klik tombol Mode Gerbang.
+                     URL dibangun ulang per role agar route guru/piket tetap valid
+                     (guru & piket juga memakai route absensi.kiosk lewat panel_route). -->
+                <a href="{{ panel_route('absensi.kiosk') }}"
                    class="dash-shortcut-item"
-                   title="{{ __('Buka halaman Presensi (Scanner QR & Mode Gerbang)') }}">
+                   title="{{ __('Buka Mode Gerbang (Scanner QR otomatis nyala)') }}">
                     <span class="dash-sc-icon" style="--sc-soft: #dbeafe;">
                         <i class='bx bx-qr-scan text-primary'></i>
                     </span>
@@ -1089,7 +1089,7 @@
                 <div>
                     <div class="d-flex align-items-center justify-content-between gap-2 pb-3 mb-3">
                         <div class="d-flex align-items-center gap-2 min-w-0">
-                            <span class="fw-bold text-dark text-truncate dashboard-box-title" style="font-size: 0.9rem;">{{ __($chartTitle ?? 'Grafik Garis Kehadiran Mingguan') }}</span>
+                            <span class="fw-bold text-dark text-truncate dashboard-box-title" style="font-size: 0.9rem;">{{ $chartTitle ?? 'Grafik Garis Kehadiran Mingguan' }}</span>
                         </div>
 
                         <div class="d-flex align-items-center gap-2 flex-shrink-0 chart-header-actions">
@@ -1098,20 +1098,16 @@
                                  jadi tidak ada endpoint atau JS tambahan. --}}
                             <div class="chart-mode-toggle dash-seg" role="group" aria-label="{{ __('Mode grafik kehadiran') }}">
                                 @foreach(['harian' => __('Harian'), 'mingguan' => __('Mingguan'), 'bulanan' => __('Bulanan')] as $modeKey => $modeLabel)
-                                    <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $modeKey, 'status' => request('status')])) }}"
-                                       class="chart-mode-btn dash-seg__btn {{ ($chartMode ?? 'mingguan') === $modeKey ? 'active dash-seg__btn--solid' : '' }}"
+                                    <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $modeKey, 'status' => request('status')])) }}"                                                class="chart-mode-btn dash-seg__btn {{ ($chartMode ?? 'harian') === $modeKey ? 'active dash-seg__btn--solid' : '' }}"
                                        title="{{ ['harian' => __('Tampilkan grafik harian'), 'mingguan' => __('Tampilkan grafik mingguan'), 'bulanan' => __('Tampilkan grafik bulanan')][$modeKey] }}">{{ $modeLabel }}</a>
                                 @endforeach
                             </div>
 
                             <span class="badge bg-light text-secondary rounded-pill px-2 px-md-3 py-1 py-md-1.5 fw-semibold flex-shrink-0 text-nowrap dash-period" style="font-size: 0.68rem;">
-                                {{-- Periode grafik. Nilai dari controller (id) dipakai apa adanya saat bahasa
-                                 Indonesia; untuk English format yang sama persis
-                                 ('d M' - 'd M Y') dibangun ulang di view dengan
-                                 locale en. --}}
-                                {{ app()->getLocale() === 'en'
-                                    ? \Illuminate\Support\Carbon::parse($startOfWeek)->locale('en')->translatedFormat('d M') . ' - ' . \Illuminate\Support\Carbon::parse($endOfWeek)->locale('en')->translatedFormat('d M Y')
-                                    : ($chartPeriodLabel ?? (\Carbon\Carbon::parse($startOfWeek)->translatedFormat('d M') . ' - ' . \Carbon\Carbon::parse($endOfWeek)->translatedFormat('d M Y'))) }}
+                                {{-- Periode grafik: nilai controller sudah sesuai mode.
+                                     Hanya mode mingguan yang butuh format ulang di view
+                                     karena rentangnya dibangun dari hari ini ke belakang. --}}
+                                {{ ($chartPeriodLabel ?? '') }}
                             </span>
                         </div>
                     </div>
@@ -1136,12 +1132,9 @@
                              Yang diterjemahkan hanya kata "Total" dan satuannya, angka
                              tetap apa adanya. --}}
                         @php
-                            $__dashTotal = (string) ($chartTotalText ?? ('Total: ' . count($classesAttendance ?? []) . ' Rombel'));
-                            $__dashTotal = preg_replace_callback('/^(.*?):\s*(\d+)\s*(.*)$/u', function ($m) {
-                                return __($m[1]).': '.$m[2].' '.__($m[3]);
-                            }, $__dashTotal);
+                            $__dashTotal = $chartTotalText ?? 'Total: ' . count($chartValues ?? []) . ' Hari';
                         @endphp
-                        <span class="text-truncate"><strong class="text-dark">{{ __('Garis Tren Kehadiran') }}</strong> <span class="d-none d-sm-inline">({{ __($chartScopeText ?? (($classesList->first()->name ?? '7A') . ' s/d ' . ($classesList->last()->name ?? '9C'))) }})</span></span>
+                        <span class="text-truncate"><strong class="text-dark">{{ __('Garis Tren Kehadiran') }}</strong> <span class="d-none d-sm-inline">({{ $chartScopeText ?? 'Per hari, 7 hari terakhir' }})</span></span>
                     </div>
                     <span class="fw-semibold text-dark flex-shrink-0 text-nowrap">{{ $__dashTotal }}</span>
                 </div>
@@ -1422,10 +1415,7 @@
                         displayColors: false,
                         callbacks: {
                             label: function (context) {
-                                return {!! json_encode(__('Tingkat Kehadiran')) !!} + ': ' + context.parsed.y + '%';
-                            }
-                        }
-                    }
+                                return {!! json_encode(__('Tingkat Kehadiran')) !!} + ': ' + context.parsed.y + '%';}} }
                 },
                 scales: {
                     x: {
@@ -1472,12 +1462,7 @@
                             callback: function (val) {
                                 return val + '%';
                             },
-                            padding: 8
-                        }
-                    }
-                }
-            }
-        });
+                            padding: 8}} }}});
 
     });
 </script>

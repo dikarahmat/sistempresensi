@@ -2,8 +2,6 @@
 
 @section('title', __('Presensi Kelas') . ' ' . ($selectedClass->name ?? ''))
 @section('page_title', __('Presensi Kelas') . ' ' . ($selectedClass->name ?? '-'))
-@section('page_subtitle', \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y') . (!empty($isHoliday) ? ' · ' . ($holidayDescription ?? __('Hari Libur')) : ''))
-
 @push('styles')
 <style>
     .page-subtitle-date {

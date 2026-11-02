@@ -2,7 +2,6 @@
 
 @section('title', __('Catatan Kehadiran'))
 @section('page_title', __('Catatan Kehadiran'))
-@section('page_subtitle', __('Lihat histori kehadiran hari ini'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
@@ -26,91 +25,135 @@
     }
 
     /* ==========================================================================
-       FILTER SEARCH + DROPDOWN "SEMUA KELAS" - SAMA PERSIS DENGAN DATA SISWA
-       (acuan: resources/views/admin/students/index.blade.php)
+       FILTER BAR: [ kolom pencarian ] [ reset ] [ dropdown "Semua Kelas" ]
 
-       MARKUP & CLASS-nya juga disamakan persis dengan Data Siswa / Data Guru /
-       Data Kelas:
-         - .input-group.search-box-wrap  -> input 38px + tombol ikon search
-           (kaca pembesar) yang menempel di kanan input (gaya bersama di
-           layout: border #cbd5e1, radius 6px, padding-right 2.75rem supaya
-           teks tidak ketiban ikon);
-         - .filter-box-wrap              -> pembungkus <select>;
-         - .action-search-form           -> pemicu aturan susunan mobile yang
-           sama persis di layout bersama (lihat blok "TOOLBAR HALAMAN DATA").
+       Memakai CSS GRID supaya lebarnya pasti:
+         >= 1024px : 1fr | 44px | 1fr  -> search dan dropdown SAMA LEBAR,
+                     reset tepat di tengah-tengah, semuanya satu baris.
+         <  1024px : baris 1 = search + reset, baris 2 = dropdown lebar penuh.
 
-       Yang ditulis di halaman ini hanya LEBAR & JARAK, juga sama dengan
-       Data Siswa:
-         - input cari : flex 1 1 240px, min 170px (mengisi sisa ruang)
-         - dropdown   : flex 0 1 200px, min 150px, max 200px
-         - jarak      : 0.5rem, align-items center (sejajar vertikal, tinggi
-                        sama-sama 38px)
+       Tinggi ketiganya sama: --kh-h (44px). Ubah satu angka itu untuk
+       mengecilkan / membesarkan semuanya sekaligus.
 
-       >= 1280px memakai proporsi yang sama dengan action bar Data Siswa
-       (input mengisi ruang, dropdown 36% dengan min 160px).
-       < 1024px aturan bersama di layout men-stack: search di atas, dropdown
-       di bawah, keduanya lebar penuh - persis seperti Data Siswa.
+       Selector memakai form#formFilterKehadiran.kehadiran-filter-form supaya
+       menang atas aturan toolbar di layout bersama (tanpa mengubah layout).
        Fungsi search & filter TIDAK diubah: name="search", name="class_filter",
        id="filterSearch", id="classFilter", dan onchange submit tetap sama.
        ========================================================================== */
-    .kehadiran-filter-form {
-        display: flex;
-        flex-wrap: wrap;
+    form#formFilterKehadiran.kehadiran-filter-form {
+        --kh-h: 44px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) var(--kh-h);
+        grid-template-areas:
+            "search reset"
+            "kelas  kelas";
+        column-gap: 0.5rem;
+        row-gap: 0.5rem;
         align-items: center;
-        /* TINGGI WRAPPER MENGIKUTI ISI - tidak ada lagi pembengkakan:
-           tanpa height/min-height/flex-grow yang memaksa melar. */
+        width: 100% !important;
+        flex: 1 1 100% !important;
         height: auto;
         min-height: 0;
-        align-content: flex-start;
-        gap: 0.5rem;
-        flex: 1 1 380px;
         min-width: 0;
         margin: 0;
         padding: 0;
     }
 
-    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
-    .kehadiran-filter-form .search-box-wrap {
+    @media (min-width: 1024px) {
+        form#formFilterKehadiran.kehadiran-filter-form {
+            grid-template-columns: minmax(0, 1fr) var(--kh-h) minmax(0, 1fr);
+            grid-template-areas: "search reset kelas";
+            row-gap: 0;
+        }
+    }
+
+    /* Penempatan tiap kolom + buang lebar lama dari layout bersama */
+    form#formFilterKehadiran.kehadiran-filter-form .search-box-wrap,
+    form#formFilterKehadiran.kehadiran-filter-form .filter-box-wrap {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .search-box-wrap {
+        grid-area: search;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .btn-reset {
+        grid-area: reset;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .filter-box-wrap {
+        grid-area: kelas;
+    }
+
+    /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap {
         display: flex;
         flex-wrap: nowrap;
         align-items: stretch;
-        flex: 1 1 240px;
-        min-width: 170px;
-        width: auto;
-        max-width: none;
-        height: 38px;
-        margin-bottom: 0;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
     }
-    .kehadiran-filter-form .search-box-wrap input.form-control {
-        height: 38px;
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap > .form-control,
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap > .btn {
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        box-sizing: border-box;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap > .form-control {
         min-width: 0;
     }
-    .kehadiran-filter-form .search-box-wrap > .btn {
-        height: 38px;
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap > .btn {
         flex: 0 0 auto;
     }
-
-    .kehadiran-filter-form .filter-box-wrap {
-        flex: 0 1 200px;
-        min-width: 150px;
-        max-width: 200px;
-        width: auto;
-    }
-    .kehadiran-filter-form .filter-box-wrap select.form-select {
-        height: 38px;
+    /* Ikon kaca pembesar 20px (kelas fs-6 dari Bootstrap bersifat !important) */
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap > .btn i,
+    form#formFilterKehadiran.kehadiran-filter-form .input-group.search-box-wrap > .btn .bx {
+        font-size: 20px !important;
+        line-height: 1;
     }
 
-    @media (min-width: 1280px) {
-        .kehadiran-filter-form .search-box-wrap {
-            flex: 1 1 0%;
-            min-width: 220px;
-            max-width: none;
-        }
-        .kehadiran-filter-form .filter-box-wrap {
-            flex: 0 1 36%;
-            min-width: 160px;
-            max-width: none;
-        }
+    /* Dropdown "Semua Kelas" */
+    form#formFilterKehadiran.kehadiran-filter-form .filter-box-wrap select.form-select {
+        width: 100% !important;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        box-sizing: border-box;
+    }
+
+    /* Tombol Reset: kotak 44x44, ikon abu-abu, biru saat hover/focus */
+    form#formFilterKehadiran.kehadiran-filter-form .btn-reset {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: var(--kh-h);
+        height: var(--kh-h);
+        padding: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        color: #64748b;              /* samakan dengan warna ikon kaca pembesar */
+        text-decoration: none;
+        cursor: pointer;
+        outline: none;
+        transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .btn-reset svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .btn-reset:hover,
+    form#formFilterKehadiran.kehadiran-filter-form .btn-reset:focus-visible {
+        color: #2563eb;
+        border-color: #2563eb;
+        background: #f8fafc;
+        text-decoration: none;
+    }
+    form#formFilterKehadiran.kehadiran-filter-form .btn-reset:focus-visible {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
     }
 
     .table-enterprise {
@@ -167,16 +210,10 @@
                 kesatuan tetap di tengah kolom, di bawah header.
        - .wali-kelas-inner : lebar TETAP & SAMA untuk semua baris, dengan
                 text-align LEFT di dalamnya. Karena lebarnya sama persis
-                untuk setiap baris, titik mulai huruf (mis. huruf "B" pada
-                Bianca) akan identik untuk semua baris — tidak lagi geser
-                sendiri-sendiri kayak sebelumnya, tapi tetap terlihat
-                center sebagai grup di bawah "GURU KELAS".
-       - overflow: visible + white-space: nowrap -> nama yang lebih
-                panjang dari lebar acuan tetap tampil utuh (tidak terpotong),
-                cuma "meluber" sedikit ke kanan, bukan ke luar dari titik
-                start yang sama.
-       Kalau titik mulainya masih kurang pas / kurang ke tengah, TINGGAL
-       UBAH angka width di bawah ini (mis. 230px jadi 250px / 210px).
+                untuk setiap baris, titik mulai huruf identik untuk semua
+                baris, tapi tetap terlihat center sebagai grup.
+       - overflow: visible + white-space: nowrap -> nama panjang tetap utuh.
+       Kalau titik mulainya kurang pas, UBAH angka width di bawah ini.
        -------------------------------------------------------------------- */
     .table-enterprise td.col-wali-kelas {
         text-align: center;
@@ -278,14 +315,7 @@
     /* ==========================================================================
        LAYOUT KARTU CATATAN KEHADIRAN
        Susunan vertikal (satu kartu): toolbar filter -> tabel -> paginasi,
-       semuanya di dalam #daftar-kehadiran. Hanya .table-responsive yang jadi
-       tempat scroll vertikal, sehingga baris terakhir tidak pernah tertutup
-       paginasi dan paginasi tidak ikut ter-scroll / terpotong tepi layar.
-
-       Toolbar filter kini jadi anak pertama kartu ini (bukan kartu terpisah),
-       jadi angkanya sama persis dengan #daftar-siswa:
-         >=1024 : 9.1rem  |  768-1023 : 14.25rem
-         640-767 : 11.25rem  |  <640  : 10.9rem
+       semuanya di dalam #daftar-kehadiran.
        ========================================================================== */
     #daftar-kehadiran {
         display: block;
@@ -309,8 +339,7 @@
 
     /* ==========================================================================
        HEADER STICKY - BERSIH, BARIS TIDAK MENIMPA / TIDAK TERPOTONG
-       Latar header dibuat pekat (opaque) dan berada di atas semua baris,
-       sehingga tidak ada baris yang "bocor" melewati header saat digulir.
+       Latar header dibuat pekat (opaque) dan berada di atas semua baris.
        Warna, border, dan font header TIDAK diubah - hanya posisi & layering.
        ========================================================================== */
     #daftar-kehadiran .table-responsive > table > thead {
@@ -321,7 +350,6 @@
         position: sticky !important;
         top: 0 !important;
         z-index: 5 !important;
-        /* palet sama seperti aslinya, dipaksa pekat untuk sticky header */
         background-color: #f8fafc !important;
     }
 
@@ -337,15 +365,11 @@
        Area klik dibuat nyaman lewat PADDING, bukan lewat bentuk.
        ========================================================================== */
     .kehadiran-pagination {
-        /* Sekarang berada DI DALAM area scroll, jadi bukan lagi flex item kartu.
-           Padding atas/bawah lega supaya tidak menempel baris terakhir dan tidak
-           terpotong tepi bawah layar saat scroll sudah mentok. */
         padding: 1.25rem 0.5rem 1.5rem;
         margin: 0;
         text-align: center;
         border-top: 1px solid #f1f5f9;
         background-color: #ffffff;
-        /* Lebar penuh area scroll, tidak melebar Horizontal. */
         width: 100%;
         box-sizing: border-box;
     }
@@ -427,16 +451,8 @@
         letter-spacing: 0.02em;
     }
 
-    /* Keterangan periode angka pada tabel (sama seperti di halaman Riwayat). */
-    .kehadiran-period-caption {
-        margin: 0 0 0.5rem;
-        font-size: 0.85rem;
-        color: #64748b;
-        letter-spacing: 0.02em;
-    }
-
     /* ==========================================================================
-       PERBAIKAN MOBILE: rapatkan tabel & aksi agar tidak neurotransisi
+       PERBAIKAN MOBILE: rapatkan tabel & aksi
        ========================================================================== */
     @media (max-width: 767.98px) {
         .table-enterprise {
@@ -477,36 +493,16 @@
 @endpush
 
 @section('content')
-    <!-- Filter Search & Kelas (tanpa label, dropdown full-width di mobile)
-         CATATAN: tombol RESET DIHAPUS. Tidak ada lagi aksi manual yang
-         diperlukan karena:
-           - dropdown kelas langsung memuat ulang data saat diganti,
-           - pencarian hanya jalan saat Enter atau klik ikon kaca pembesar (event input/keyup/auto-submit debounce dihapus).
-         Tampilan search + dropdown disamakan PERSIS dengan Data Siswa / Data
-         Guru / Data Kelas (tinggi 38px, ikon search di kanan input, dropdown
-         "Semua Kelas" max 200px, jarak 0.5rem). Fungsi tidak berubah. -->
-    <!-- ==========================================================
-         SATU KARTU: toolbar filter + tabel (PERSIS seperti Data Siswa)
-
-         Sebelumnya toolbar berada di kartu TERPISAH di atas kartu tabel.
-         Akibatnya Searching & dropdown "Semua Kelas" tampak seperti
-         memiliki wrapper yang membengkak: kartu toolbar + kartu tabel
-         (yang punya tinggi tetap) menyisakan kotak putih kosong besar
-         sehingga tabel terdorong jauh ke bawah.
-
-         Sekarang toolbar jadi anak PERTAMA dari kartu tabel, dengan
-         padding 16px (mobile) / 24px (desktop) + garis pemisah
-         `border-bottom` - persis seperti Data Siswa / Data Guru /
-         Data Kelas. Tidak ada lagi kartu atau celah di antara
-         search dan tabel.
-         ========================================================== -->
+    {{-- SATU KARTU: toolbar filter + tabel (seperti Data Siswa).
+         Filter bar: [ pencarian ] [ reset ] [ dropdown kelas ], lihat CSS di atas.
+         - dropdown kelas langsung memuat ulang data saat diganti,
+         - pencarian jalan saat Enter atau klik ikon kaca pembesar,
+         - reset = link ke halaman kehadiran tanpa parameter. --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kehadiran">
 
-        <!-- Action Bar & Filter: tinggi wrapper mengikuti isi (height:auto),
-             search + tombol cari + dropdown dalam satu baris, tinggi 38px. -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <form method="GET" action="{{ panel_route('kehadiran') }}" class="action-search-form kehadiran-filter-form" id="formFilterKehadiran">
-                <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
+                <!-- Kolom pencarian: input + ikon search satu kesatuan -->
                 <div class="input-group search-box-wrap">
                     <input type="text"
                            name="search"
@@ -522,13 +518,17 @@
                     </button>
                 </div>
 
+                <!-- Tombol Reset: di tengah antara pencarian dan dropdown -->
+                <a href="{{ panel_route('kehadiran') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                </a>
+
                 <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang -->
                 <div class="filter-box-wrap">
                     <select name="class_filter" id="classFilter" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Semua Kelas') }}">
                         {{-- Opsi "Semua Kelas" memakai nilai kosong (tidak ada filter). --}}
                         <option value="" {{ request('class_filter') == '' ? 'selected' : '' }}>{{ __('Semua Kelas') }}</option>
-                        {{-- Daftar kelas SELALU lengkap: tidak lagi ikut ter-filter
-                             oleh kata pencarian. --}}
+                        {{-- Daftar kelas SELALU lengkap: tidak ikut ter-filter oleh kata pencarian. --}}
                         @foreach($classHistories as $class)
                             <option value="{{ $class->name }}" {{ request('class_filter') == $class->name ? 'selected' : '' }}>
                                 {{ $class->name }}
@@ -539,27 +539,21 @@
             </form>
         </div>
 
-        <!-- Periode angka pada tabel (sama dengan mode "Semua" di Riwayat
-             Presensi) supaya user tahu angka mana yang sedang ditampilkan. -->
-        <div class="kehadiran-period-caption">
-            {{ __('Periode:') }} <strong>{{ $periodeLabel ?? '-' }}</strong>
-        </div>
-
         <!-- Tabel Histori Kehadiran per Siswa -->
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom">
+        <div class="table-responsive" style="padding: 0 24px;">
+            <table class="table table-hover align-middle mb-0 table-enterprise table-zebra-custom" style="table-layout: fixed; width: 100%; padding: 0 24px;">
                 <thead class="bg-light">
                     <tr class="small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
                         <th class="text-center py-3" style="width: 5%;">{{ __('No') }}</th>
-                        <th class="text-center py-3" style="width: 10%;">{{ __('NISN') }}</th>
-                        <th class="text-start py-3" style="width: 25%;">{{ __('Nama Siswa') }}</th>
-                        <th class="text-center py-3" style="width: 10%;">{{ __('Kelas') }}</th>
-                        <th class="text-center py-3" style="width: 8%;"><span style="color:#059669 !important">{{ __('Hadir') }}</span></th>
-                        <th class="text-center py-3" style="width: 8%;"><span style="color:#d97706 !important">{{ __('Terlambat') }}</span></th>
-                        <th class="text-center py-3" style="width: 8%;"><span style="color:#2563eb !important">{{ __('Sakit') }}</span></th>
-                        <th class="text-center py-3" style="width: 8%;"><span style="color:#7e22ce !important">{{ __('Izin') }}</span></th>
-                        <th class="text-center py-3" style="width: 8%;"><span style="color:#dc2626 !important">{{ __('Alfa') }}</span></th>
-                        <th class="text-center py-3" style="width: 10%;">{{ __('Aksi') }}</th>
+                        <th class="text-center py-3" style="width: 11%;">{{ __('NISN') }}</th>
+                        <th class="text-start py-3" style="width: 18%; padding-left: 32px;">{{ __('Nama Siswa') }}</th>
+                        <th class="text-center py-3" style="width: 8%;">{{ __('Kelas') }}</th>
+                        <th class="text-center py-3" style="width: 10.4%;"><span style="color:#059669 !important">{{ __('Hadir') }}</span></th>
+                        <th class="text-center py-3" style="width: 11.4%;"><span style="color:#d97706 !important">{{ __('Terlambat') }}</span></th>
+                        <th class="text-center py-3" style="width: 10.4%;"><span style="color:#2563eb !important">{{ __('Sakit') }}</span></th>
+                        <th class="text-center py-3" style="width: 10.4%;"><span style="color:#7e22ce !important">{{ __('Izin') }}</span></th>
+                        <th class="text-center py-3" style="width: 10.4%;"><span style="color:#dc2626 !important">{{ __('Alfa') }}</span></th>
+                        <th class="text-center py-3" style="width: 5%;">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -570,20 +564,18 @@
                             : ($idx + 1);
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td class="text-center text-muted fw-normal">{{ $rowNumber }}</td>
-                        <td class="text-center text-nowrap fw-normal">{{ $item->nisn ?: '-' }}</td>
-                        <td class="text-start text-nowrap fw-normal">{{ $item->name }}</td>
-                        <td class="text-center text-nowrap fw-normal">{{ $item->class_name }}</td>
-                        <td class="text-center fw-normal" style="color:#059669 !important"><span style="color:#059669 !important">{{ $item->hadir }}</span></td>
-                        <td class="text-center fw-normal" style="color:#d97706 !important"><span style="color:#d97706 !important">{{ $item->terlambat }}</span></td>
-                        <td class="text-center fw-normal" style="color:#2563eb !important"><span style="color:#2563eb !important">{{ $item->sakit }}</span></td>
-                        <td class="text-center fw-normal" style="color:#7e22ce !important"><span style="color:#7e22ce !important">{{ $item->izin }}</span></td>
-                        <td class="text-center fw-normal" style="color:#dc2626 !important"><span style="color:#dc2626 !important">{{ $item->alfa }}</span></td>
-                        <td class="text-center text-nowrap">
-                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
+                        <td class="text-center text-muted fw-normal" style="width: 5%;">{{ $rowNumber }}</td>
+                        <td class="text-center text-nowrap fw-normal" style="width: 11%;">{{ $item->nisn ?: '-' }}</td>
+                        <td class="text-start text-nowrap fw-normal" style="width: 25%; padding-left: 32px;">{{ $item->name }}</td>
+                        <td class="text-center text-nowrap fw-normal" style="width: 8%;">{{ $item->class_name }}</td>
+                        <td class="text-center fw-normal" style="width: 9%; color:#059669 !important"><span style="color:#059669 !important">{{ $item->hadir }}</span></td>
+                        <td class="text-center fw-normal" style="width: 10%; color:#d97706 !important"><span style="color:#d97706 !important">{{ $item->terlambat }}</span></td>
+                        <td class="text-center fw-normal" style="width: 9%; color:#2563eb !important"><span style="color:#2563eb !important">{{ $item->sakit }}</span></td>
+                        <td class="text-center fw-normal" style="width: 9%; color:#7e22ce !important"><span style="color:#7e22ce !important">{{ $item->izin }}</span></td>
+                        <td class="text-center fw-normal" style="width: 9%; color:#dc2626 !important"><span style="color:#dc2626 !important">{{ $item->alfa }}</span></td>
+                        <td class="text-center text-nowrap" style="width: 5%;"><a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-                            </a>
-                        </td>
+                            </a></td>
                     </tr>
                     @empty
                     <tr>
@@ -600,22 +592,16 @@
                 </tbody>
             </table>
 
-        <!-- ==========================================================================
-         PAGINASI CATATAN KEHADIRAN - TEKS MURNI (TANPA KONTAINER)
-         Markup sendiri, BUKAN helper render_compact_pagination, supaya helper
-         bersama yang dipakai halaman lain (Guru, Kelas, Rekap, Arsip, dll.)
-         tidak ikut berubah. Tanpa background/border/shadow/pill - murni teks.
-
-         POSISI: blok ini sengaja DI DALAM .table-responsive (area scroll),
-         tepat di bawah baris terakhir. Jadi pagination ikut ter-scroll dan
-         baru terlihat setelah user menggulir sampai baris ke-100.
-         ======================================================================= -->
+        {{-- PAGINASI CATATAN KEHADIRAN - TEKS MURNI (TANPA KONTAINER)
+             Markup sendiri, BUKAN helper render_compact_pagination, supaya helper
+             bersama yang dipakai halaman lain tidak ikut berubah.
+             Blok ini sengaja DI DALAM .table-responsive, tepat di bawah baris terakhir. --}}
         @php
             $pgCurrent = $studentHistories->currentPage();
             $pgLast = $studentHistories->lastPage();
             $pgHash = '#daftar-kehadiran';
 
-            // Semua nomor ditampilkan bila <= 7 halaman (500 siswa / 100 = 5 hal).
+            // Semua nomor ditampilkan bila <= 7 halaman.
             // Kalau lebih, sisipkan "..." di kiri & kanan sekitar halaman aktif.
             $pgPages = [];
             if ($pgLast <= 7) {
@@ -676,8 +662,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // 1. Ganti dropdown kelas -> langsung memuat ulang data (tanpa tombol).
-            //    Dipindah ke sini (bukan blok script inline di atas) karena
-            //    toolbar kini berada di dalam kartu tabel yang sama.
             const classFilter = document.getElementById('classFilter');
             if (classFilter) {
                 classFilter.addEventListener('change', function () {
@@ -686,8 +670,7 @@
             }
 
             // 2. Pencarian HANYA saat Enter atau klik ikon submit
-            //    (event input/keyup/debounce auto-submit dihapus).
-            //    Ditangani secarasam mungkin oleh form action GET.
+            //    (ditangani oleh form action GET, tanpa auto-submit).
 
             // 3. Fokus ke tabel saat datang dari paginasi: scroll INSTAN di
             //    dalam area scroll halaman (bukan smooth) supaya header sticky

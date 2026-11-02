@@ -38,7 +38,8 @@ if (!window.__kioskScanner) {
         isProcessingScan: false,
         resetTimer: null,
         lastCameraError: null,
-        initialized: false
+        initialized: false,
+        started: false
     };
 }
 
@@ -794,7 +795,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('keydown', unlockOnce, { once: true });
 
     runCamera(async () => {
-        await startCameraKiosk();
+        if (scanner.state === 'idle' || scanner.state === 'starting') {
+            await startCameraKiosk();
+        }
     });
 });
 

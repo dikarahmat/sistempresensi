@@ -2,18 +2,6 @@
 
 @section('title', __('Presensi Hari Ini'))
 @section('page_title', __('Presensi Hari Ini'))
-@section('page_subtitle')
-    @php
-        \Carbon\Carbon::setLocale(app()->getLocale());
-        $tanggalStr = \Carbon\Carbon::parse($tanggal ?? now())->translatedFormat('l, d F Y');
-    @endphp
-    {{-- Subjudul HANYA tanggal hari ini, sama persis dengan versi mobile.
-         Sumber tanggal tetap $tanggal ?? now() (tidak di-hardcode), format
-         "l, d F Y" -> contoh: "Minggu, 11 Oktober 2026". Ukuran & warna font
-         tetap dari .header-main-subtitle di layout bersama, jadi tidak perlu
-         CSS tambahan dan tampilan HP tidak berubah. --}}
-    <span>{{ $tanggalStr }}</span>
-@endsection
 
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">
@@ -147,42 +135,38 @@
         }
     }
 
-    /* Mode Gerbang Button (Green) */
+    /* Mode Gerbang Button (Green) - STATIS, tidak ada hover/active perubahan */
     .btn-portal-gate {
         background-color: #16a34a;
         color: #ffffff !important;
         border-color: #16a34a;
         box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
     }
-    .btn-portal-gate:hover {
-        background-color: #15803d;
-        border-color: #15803d;
+    .btn-portal-gate:hover,
+    .btn-portal-gate:active,
+    .btn-portal-gate:focus {
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
         color: #ffffff !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(22, 163, 74, 0.25);
-    }
-    .btn-portal-gate:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
+        transform: none !important;
+        box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2) !important;
     }
 
-    /* Buka Scanner Button (Royal Blue Primary) */
+    /* Buka Scanner Button (Royal Blue Primary) - STATIS, tidak ada hover/active perubahan */
     .btn-portal-scanner {
         background-color: #3b62f6;
         color: #ffffff !important;
         border-color: #3b62f6;
         box-shadow: 0 1px 3px rgba(59, 98, 246, 0.25);
     }
-    .btn-portal-scanner:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
+    .btn-portal-scanner:hover,
+    .btn-portal-scanner:active,
+    .btn-portal-scanner:focus {
+        background-color: #3b62f6 !important;
+        border-color: #3b62f6 !important;
         color: #ffffff !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(59, 98, 246, 0.35);
-    }
-    .btn-portal-scanner:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 3px rgba(59, 98, 246, 0.25);
+        transform: none !important;
+        box-shadow: 0 1px 3px rgba(59, 98, 246, 0.25) !important;
     }
     .btn-portal-scanner.scanner-active {
         background-color: #ef4444 !important;
@@ -261,18 +245,19 @@
         .stat-chip {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 13.5px;
-            line-height: 1;
-        }
-        .stat-chip strong {
-            font-size: 17px;
+            gap: 7px;
+            font-size: 14px;
             font-weight: 700;
             line-height: 1;
+            text-transform: capitalize;
+        }
+        .stat-chip strong {
+            font-size: 14px;
+            font-weight: 700;
         }
         .stat-ico {
-            width: 17px;
-            height: 17px;
+            width: 15px;
+            height: 15px;
             flex: none;
             background: none;
             border: 0;
@@ -770,9 +755,9 @@
     <!-- ========================================================================= -->
     <div class="badges-scroll-container mb-3 no-scrollbar d-none d-md-block" style="scrollbar-width: none; -ms-overflow-style: none;">
         <div class="stats-bar">
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {!! __('sudah presensi') !!}</span></div>
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5"/></svg><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {!! __('belum presensi') !!}</span></div>
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--all" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.6"/><path d="M5.5 21v-2.2a6.5 6.5 0 0 1 13 0V21z"/><circle cx="4.6" cy="9.2" r="2.4" opacity=".75"/><path d="M0 19.5v-1.3a4.6 4.6 0 0 1 4.6-4.6c.7 0 1.3.1 1.9.4A8 8 0 0 0 4.4 19.5z" opacity=".75"/><circle cx="19.4" cy="9.2" r="2.4" opacity=".75"/><path d="M24 19.5v-1.3a4.6 4.6 0 0 0-4.6-4.6c-.7 0-1.3.1-1.9.4a8 8 0 0 1 2.1 5.5z" opacity=".75"/></svg><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {!! __('total siswa') !!}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {!! __('Sudah Presensi') !!}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5"/></svg><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {!! __('Belum Presensi') !!}</span></div>
+<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--all" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.6"/><path d="M5.5 21v-2.2a6.5 6.5 0 0 1 13 0V21z"/><circle cx="4.6" cy="9.2" r="2.4" opacity=".75"/><path d="M0 19.5v-1.3a4.6 4.6 0 0 1 4.6-4.6c.7 0 1.3.1 1.9.4A8 8 0 0 0 4.4 19.5z" opacity=".75"/><circle cx="19.4" cy="9.2" r="2.4" opacity=".75"/><path d="M24 19.5v-1.3a4.6 4.6 0 0 0-4.6-4.6c-.7 0-1.3.1-1.9.4a8 8 0 0 1 2.1 5.5z" opacity=".75"/></svg><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {!! __('Total Siswa') !!}</span></div>
         </div>
     </div>
 

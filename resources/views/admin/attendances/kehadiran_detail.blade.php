@@ -2,9 +2,7 @@
 
 @section('title', __('Histori Kehadiran Kelas') . ' ' . ($schoolClass->name ?? ''))
 @section('page_title', __('Histori Kehadiran: Kelas') . ' ' . ($schoolClass->name ?? '-'))
-@section('page_subtitle')
-    <span class="text-secondary fw-normal">{{ __('Guru Kelas:') }} {{ $schoolClass->teacher->name ?? __('Belum ditentukan') }}</span>
-@endsection
+
 
 @push('styles')
 <style>

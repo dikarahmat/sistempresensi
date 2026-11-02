@@ -5641,7 +5641,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
      production (Railway) sehingga memunculkan garis/belah biru gelap di tepi
      sidebar. Warna kanvas kini di-hardcode #3b62f6 (sama persis dengan
      sidebar) lewat CSS di dalam <head>, jadi identik di semua environment. -->
-<body class="app-canvas overflow-hidden m-0 p-0" x-data="{ sidebarOpen: false }">
+<body class="app-canvas m-0 p-0" x-data="{ sidebarOpen: false }">
 
 {{-- Global Smart Loader Component --}}
 @include('components.loading-overlay')
@@ -5687,8 +5687,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
                             aria-label="{{ __('Buka/Tutup sidebar') }}">
                         <i class='bx bx-menu'></i>
                     </button>
-                    <!-- Wadah Blok Teks Header Solid (Judul & Subjudul Sejajar Vertikal Presisi) -->
-                    <div class="header-text-block min-w-0 flex-1 d-flex flex-column justify-content-start">
+                    <div class="header-text-block min-w-0 flex-1 d-flex flex-column justify-content-center">
                         <h1 class="header-main-title truncate m-0 p-0">
                             @hasSection('page_title')
                                 @yield('page_title')
@@ -5696,9 +5695,6 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
                                 @yield('title', 'Sistem Presensi')
                             @endif
                         </h1>
-                        @hasSection('page_subtitle')
-                        <p class="header-main-subtitle truncate m-0 p-0">@yield('page_subtitle')</p>
-                        @endif
                     </div>
                 </div>
                 @hasSection('page_header_right')

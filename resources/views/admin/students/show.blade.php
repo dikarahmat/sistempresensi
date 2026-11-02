@@ -2,7 +2,6 @@
 
 @section('title', __('Detail Siswa'))
 @section('page_title', __('Detail Siswa'))
-@section('page_subtitle', __('Informasi biodata, kelas, dan kode QR presensi siswa'))
 
 @push('styles')
 <style>

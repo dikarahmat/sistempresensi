@@ -67,9 +67,9 @@
     --sidebar-gap: 10px;
 
     /* Token dimensi & gaya kamera gerbang (SAMA PERSIS dipakai kiosk & panel Scanner QR) */
-    --gerbang-camera-size: 380px;
+    --gerbang-camera-size: 370px;
     --gerbang-camera-radius: 16px;
-    --gerbang-scan-ratio: 70%;
+    --gerbang-scan-ratio: 72%;
 
     /* Token unduhan: mesin progres bersama memakai --btn-progress-base /
        --btn-progress-fill yang dipasang per tombol oleh JS (warnaDasar()).
@@ -683,6 +683,23 @@
     transform: none !important;
     scale: none !important;
 }
+
+/* Corner bracket: gate screens use square, 4px white corners only (no mid-side
+   borders, no inner fill/overlay). Sizes kept proportional to qrbox. */
+.kiosk-corner {
+    width: 36px !important;
+    height: 36px !important;
+    border-width: 4px !important;
+    border-radius: 0 !important;
+}
+
+/* Panel scanner QR: keep bracket parity with gate (kiosk) sizes. */
+#scannerColumn .panel-corner {
+    width: 36px !important;
+    height: 36px !important;
+    border-width: 4px !important;
+    border-radius: 0 !important;
+}
 /* ==========================================================================
    PARITY GERBANG — PANEL SCANNER QR (khusus #scannerColumn di daily/class,
    dipakai admin maupun guru karena view yang sama).
@@ -771,10 +788,10 @@
     height: 28px;
     border: 5px solid #ffffff;
 }
-#scannerColumn .panel-corner--tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
-#scannerColumn .panel-corner--tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
-#scannerColumn .panel-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
-#scannerColumn .panel-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+#scannerColumn .panel-corner--tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 0; }
+#scannerColumn .panel-corner--tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0; }
+#scannerColumn .panel-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0; }
+#scannerColumn .panel-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0; }
 
 /* ==========================================================================
    STANDAR MOBILE (max-width: 640px) — SATU SUMBER UKURAN KONTROL & TEKS
@@ -879,11 +896,21 @@
         padding: 0 0.75rem !important;
         border-radius: var(--m-ctl-r) !important;
         box-sizing: border-box !important;
-    }
-    body .btn-portal-action i {
+        /* Non-aktif transition agar warna tombol statis, tidak ada animasi putih saat hover/active/focus */
+        transition: none !important;
+    }body .btn-portal-action i {
         font-size: var(--m-ico) !important;
     }
-    /* Inset horizontal = --m-inset (sama dengan toolbar Data Siswa) &
+    /* Warna tombol tetap statis - tidak ada perubahan saat hover/active/focus */
+    body .btn-portal-action:hover,
+    body .btn-portal-action:active,
+    body .btn-portal-action:focus {
+        background-color: inherit !important;
+        border-color: inherit !important;
+        color: inherit !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }/* Inset horizontal = --m-inset (sama dengan toolbar Data Siswa) &
        jarak ke tabel di bawahnya .75rem */
     body .presensi-mobile-actions {
         padding-left: var(--m-inset);

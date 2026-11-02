@@ -2,7 +2,6 @@
 
 @section('title', __('Tambah Siswa'))
 @section('page_title', __('Tambah Siswa Baru'))
-@section('page_subtitle', __('Formulir pendaftaran dan registrasi siswa baru'))
 
 @section('page_header_right')
 <a href="{{ panel_route('students.index') }}" class="btn btn-light border rounded-3 px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs text-secondary fw-semibold" style="font-size: 0.85rem;">

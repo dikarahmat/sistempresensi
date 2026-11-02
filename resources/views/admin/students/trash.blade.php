@@ -16,7 +16,6 @@
 
 @section('title', __('Tempat Sampah'))
 @section('page_title', __('Tempat Sampah'))
-@section('page_subtitle', __('Pulihkan atau hapus permanen data yang telah dihapus'))
 
 @push('styles')
 <style>

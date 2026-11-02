@@ -2,7 +2,6 @@
 
 @section('title', __('Hari Libur'))
 @section('page_title', __('Hari Libur & Cuti'))
-@section('page_subtitle', __('Daftar hari libur nasional'))
 
 @push('styles')
 <style>

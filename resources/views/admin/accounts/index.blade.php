@@ -2,7 +2,6 @@
 
 @section('title', __('Kelola Akun'))
 @section('page_title', __('Kelola Akun'))
-@section('page_subtitle', __('Kelola akun yang bisa login ke sistem: tambah akun, ubah data, dan reset password.'))
 
 @section('page_header_right')
     <button type="button" class="btn btn-sm btn-primary akun-btn-tambah" id="btnTambahAkun">

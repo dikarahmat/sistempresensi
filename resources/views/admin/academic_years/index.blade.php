@@ -2,7 +2,6 @@
 
 @section('title', __('Tahun Ajaran'))
 @section('page_title', __('Tahun Ajaran'))
-@section('page_subtitle', __('Kelola periode akademik dan tentukan satu tahun ajaran aktif sistem.'))
 
 @section('page_header_right')
 <!-- Tombol Aksi Header Versi Desktop (>= 768px): Diam Total Tanpa Efek Putih/Klik -->
