@@ -58,6 +58,127 @@
         display: none;
     }
 
+    /* ==========================================================================
+       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ reset ] [ dropdown kelas ]
+       Menggunakan CSS GRID agar konsisten dengan halaman kehadiran:
+         >= 1024px : 1fr | 44px | 1fr  -> search dan dropdown sama lebar,
+                     reset di tengah, dalam satu baris.
+         <  1024px : baris 1 = search + reset, baris 2 = dropdown lebar penuh.
+       ========================================================================== */
+    form.action-search-form {
+        --kh-h: 44px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) var(--kh-h);
+        grid-template-areas:
+            "search reset"
+            "kelas  kelas";
+        column-gap: 0.5rem;
+        row-gap: 0.5rem;
+        align-items: center;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        height: auto;
+        min-height: 0;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    @media (min-width: 1024px) {
+        form.action-search-form {
+            grid-template-columns: minmax(0, 1fr) var(--kh-h) minmax(0, 1fr);
+            grid-template-areas: "search reset kelas";
+            row-gap: 0;
+        }
+    }
+
+    form.action-search-form .search-box-wrap,
+    form.action-search-form .filter-box-wrap {
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+    form.action-search-form .search-box-wrap {
+        grid-area: search;
+    }
+    form.action-search-form .btn-reset {
+        grid-area: reset;
+    }
+    form.action-search-form .filter-box-wrap {
+        grid-area: kelas;
+    }
+
+    /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
+    form.action-search-form .input-group.search-box-wrap {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+    }
+    form.action-search-form .input-group.search-box-wrap > .form-control,
+    form.action-search-form .input-group.search-box-wrap > .btn {
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        box-sizing: border-box;
+    }
+    form.action-search-form .input-group.search-box-wrap > .form-control {
+        min-width: 0;
+    }
+    form.action-search-form .input-group.search-box-wrap > .btn {
+        flex: 0 0 auto;
+    }
+    form.action-search-form .input-group.search-box-wrap > .btn i,
+    form.action-search-form .input-group.search-box-wrap > .btn .bx {
+        font-size: 20px !important;
+        line-height: 1;
+    }
+
+    /* Dropdown Filter Kelas */
+    form.action-search-form .filter-box-wrap select.form-select {
+        width: 100% !important;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        box-sizing: border-box;
+    }
+
+    /* Tombol Reset: kotak 44x44, ikon abu-abu, biru saat hover/focus[cite: 5] */
+    form.action-search-form .btn-reset {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: var(--kh-h);
+        height: var(--kh-h);
+        padding: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        color: #64748b;
+        text-decoration: none;
+        cursor: pointer;
+        outline: none;
+        transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+    }
+    form.action-search-form .btn-reset svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+    }
+    form.action-search-form .btn-reset:hover,
+    form.action-search-form .btn-reset:focus-visible {
+        color: #2563eb;
+        border-color: #2563eb;
+        background: #f8fafc;
+        text-decoration: none;
+    }
+    form.action-search-form .btn-reset:focus-visible {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
+    }
+
     /* Zebra Striping Khusus */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
@@ -216,7 +337,7 @@
         }
     }
 
-    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
+    /* Row Action Buttons (Pure Icon) */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
@@ -256,7 +377,7 @@
     .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    /* Matikan Cetak Kartu saat data kosong (biru dipudarkan) */
+    /* Matikan Cetak Kartu saat data kosong */
     .btn-cetak-kartu.is-disabled {
         background-color: #2563eb !important;
         color: #ffffff !important;
@@ -297,7 +418,6 @@
         border: none !important;
     }
 
-    /* Saat proses import berjalan: tombol tidak boleh pudar */
     #btnImportSubmit.is-saving,
     #btnImportSubmit.is-saving:disabled {
         opacity: 1 !important;
@@ -307,7 +427,6 @@
         color: #ffffff !important;
     }
 
-    /* Tombol Simpan Siswa: kosong/belum valid = pudar & disabled; valid = biru normal */
     #btnSaveStudent:disabled,
     #btnSaveStudent[disabled],
     #btnSaveStudent.btn-progress:disabled,
@@ -335,13 +454,12 @@
         color: #ffffff !important;
     }
 
-    /* Bar progres: warna lebih tua & pekat dari warna tombolnya */
     #btnSaveStudent .sv-bar {
-        background: #1e3a8a !important;   /* biru tua pekat */
+        background: #1e3a8a !important;
         opacity: 1 !important;
     }
     #btnImportSubmit .imp-bar {
-        background: #064e3b !important;   /* hijau tua pekat */
+        background: #064e3b !important;
         opacity: 1 !important;
     }
     #btnSaveStudent .sv-txt,
@@ -350,7 +468,6 @@
         font-weight: 700;
     }
 
-    /* Alert import: teks tidak bertumpuk dengan ikon */
     .import-summary {
         display: block;
         line-height: 1.4;
@@ -361,7 +478,6 @@
         min-width: 0;
     }
 
-    /* Notifikasi: ikon dan teks sejajar vertikal */
     .flash-notice-body .d-flex {
         align-items: center !important;
         line-height: 1;
@@ -378,7 +494,6 @@
         align-self: center !important;
     }
 
-    /* Notifikasi sukses: hijau muda bersih tanpa border (sama dengan hasil Import) */
     #importAlertBox .alert.alert-success,
     .alert.alert-success {
         background-color: #dcfce7 !important;
@@ -478,7 +593,6 @@
     </div>
     @endif
 
-    {{-- FIX: nama route yang benar adalah students.destroy-all-active (bukan students.destroy-all) --}}
     <form id="deleteAllStudentsForm" action="{{ route('admin.students.destroy-all-active') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
@@ -492,6 +606,7 @@
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
                 <form method="GET" action="{{ panel_route('students.index') }}" class="action-search-form">
+                    <!-- Kolom pencarian: input + ikon search satu kesatuan -->
                     <div class="input-group search-box-wrap">
                         <input type="text"
                                name="search"
@@ -507,6 +622,12 @@
                         </button>
                     </div>
 
+                    <!-- Tombol Reset: di tengah antara pencarian dan dropdown -->
+                    <a href="{{ panel_route('students.index') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                    </a>
+
+                    <!-- Dropdown Filter Kelas -->
                     <div class="filter-box-wrap">
                         <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Pilih kelas') }}">
                             <option value="">{{ __('Semua Kelas') }}</option>
@@ -799,7 +920,6 @@
                         <div class="mb-2">
                             {{ __('Format kolom file Excel:') }} <strong>{{ __('NISN, Nama Lengkap, Kelas, Jenis Kelamin') }}</strong> {{ __('(.xlsx atau .csv)') }}
                         </div>
-                        {{-- FIX: href langsung ke route template (sebelumnya jatuh ke "#" sehingga yang terunduh halaman .htm) --}}
                         <a href="{{ route('admin.students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                     </div>
                     <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>
@@ -896,7 +1016,7 @@
   if (modal) modal.addEventListener('hidden.bs.modal', function () { if (importing) return; form.reset(); sync(); });
 })();
 
-/* ===== Notifikasi (Import DAN Tambah Siswa): hanya SATU notifikasi, sukses hilang 3 detik ===== */
+/* ===== Notifikasi ===== */
 (function () {
   var box = document.getElementById('importAlertBox');
 
@@ -920,8 +1040,6 @@
   var details = Array.isArray(data.details) ? data.details : [];
   var hasClientAlert = !!(raw && box && (msg || details.length));
 
-  /* Notifikasi sukses bawaan server (flash session): buang kalau kembar dengan notifikasi JS,
-     kalau tidak kembar tetap ditampilkan tapi hilang otomatis 3 detik. */
   var serverAlerts = document.querySelectorAll('.alert.alert-success.flash-server');
   Array.prototype.forEach.call(serverAlerts, function (el) {
     if (hasClientAlert && status === 'success') {
@@ -933,7 +1051,6 @@
 
   if (!hasClientAlert) return;
 
-  /* FIX: controller mengirim status "warning" (bukan "partial"), jadi dua-duanya dipetakan ke warna kuning */
   var palette = {
     success: { bg: '#dcfce7', fg: '#166534', icon: 'bx-check-circle' },
     partial: { bg: '#fef3c7', fg: '#854d0e', icon: 'bx-error-circle' },
@@ -1058,7 +1175,7 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
 </script>
 
 <script>
-/* ===== Tambah Siswa: filter input + status tombol + simpan DENGAN PROGRESS ===== */
+/* ===== Tambah Siswa ===== */
 (function () {
     var form = document.getElementById('addStudentForm');
     var btn = document.getElementById('btnSaveStudent');
@@ -1177,7 +1294,6 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
         btn.disabled = true;
         btn.style.position = 'relative';
         btn.style.overflow = 'hidden';
-        /* bar progres: biru tua pekat (#1e3a8a), lebih gelap dari biru tombol (#2563eb) */
         btn.innerHTML = '<span class="sv-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:#1e3a8a;transition:width .15s"></span><span class="sv-txt" style="position:relative">0%</span>';
         var bar = btn.querySelector('.sv-bar');
         var txt = btn.querySelector('.sv-txt');

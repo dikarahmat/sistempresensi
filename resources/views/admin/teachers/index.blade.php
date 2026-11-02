@@ -218,34 +218,99 @@
         gap: 0.6rem 1rem;
     }
 
-    .action-search-form {
-        display: flex;
-        flex-wrap: wrap;
+    /* ==========================================================================
+       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ reset ]
+       Menggunakan CSS GRID agar konsisten dengan halaman siswa/kehadiran:
+         >= 1024px : 1fr | 44px -> search dan tombol reset dalam satu baris rapi.
+       ========================================================================== */
+    form.action-search-form {
+        --kh-h: 38px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) var(--kh-h);
+        grid-template-areas: "search reset";
+        column-gap: 0.5rem;
+        row-gap: 0;
         align-items: center;
-        gap: 0.5rem;
-        flex: 1 1 380px;
+        width: 100% !important;
+        flex: 1 1 380px !important;
+        height: auto;
+        min-height: 0;
         min-width: 0;
         margin: 0;
+        padding: 0;
     }
 
-    .action-search-form .search-box-wrap {
+    form.action-search-form .search-box-wrap {
+        grid-area: search;
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+    form.action-search-form .btn-reset {
+        grid-area: reset;
+    }
+
+    /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
+    form.action-search-form .input-group.search-box-wrap {
         display: flex;
         flex-wrap: nowrap;
         align-items: stretch;
-        flex: 1 1 240px;
-        min-width: 170px;
-        width: auto;
-        max-width: none;
-        height: 38px;
-        margin-bottom: 0;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
     }
-    .action-search-form .search-box-wrap input.form-control {
-        height: 38px;
+    form.action-search-form .input-group.search-box-wrap > .form-control,
+    form.action-search-form .input-group.search-box-wrap > .btn {
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        box-sizing: border-box;
+    }
+    form.action-search-form .input-group.search-box-wrap > .form-control {
         min-width: 0;
     }
-    .action-search-form .search-box-wrap button.btn {
-        height: 38px;
+    form.action-search-form .input-group.search-box-wrap > .btn {
         flex: 0 0 auto;
+    }
+    form.action-search-form .input-group.search-box-wrap > .btn i,
+    form.action-search-form .input-group.search-box-wrap > .btn .bx {
+        font-size: 18px !important;
+        line-height: 1;
+    }
+
+    /* Tombol Reset: kotak 38x38, ikon abu-abu, biru saat hover/focus[cite: 5] */
+    form.action-search-form .btn-reset {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: var(--kh-h);
+        height: var(--kh-h);
+        padding: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        color: #64748b;
+        text-decoration: none;
+        cursor: pointer;
+        outline: none;
+        transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+    }
+    form.action-search-form .btn-reset svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+    }
+    form.action-search-form .btn-reset:hover,
+    form.action-search-form .btn-reset:focus-visible {
+        color: #2563eb;
+        border-color: #2563eb;
+        background: #f8fafc;
+        text-decoration: none;
+    }
+    form.action-search-form .btn-reset:focus-visible {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
     }
 
     .action-buttons-wrap {
@@ -330,8 +395,7 @@
     .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    /* === Matikan Cetak Kartu saat data kosong, biarkan tombol lain normal ===
-       Biru aktif yang dipudarkan (opacity .5, teks putih, cursor not-allowed). BUKAN abu-abu. */
+    /* === Matikan Cetak Kartu saat data kosong === */
     .btn-cetak-kartu.is-disabled {
         background-color: #2563eb !important;
         color: #ffffff !important;
@@ -430,6 +494,11 @@
                             <i class='bx bx-search fs-6'></i>
                         </button>
                     </div>
+
+                    <!-- Tombol Reset: di samping kolom pencarian[cite: 5, 7] -->
+                    <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                    </a>
                 </form>
 
                 @if(Auth::check() && Auth::user()->role === 'admin')

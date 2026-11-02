@@ -108,7 +108,22 @@
         height: 38px;
         cursor: pointer;
     }
+    /* Tombol Tampilkan: kotak 1:1 berisi ikon kaca pembesar */
+    .date-filter-group .btn.btn-icon-square {
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .date-filter-group .btn.btn-icon-square i {
+        font-size: 1.15rem;
+        line-height: 1;
+    }
 
+    /* ===== TABEL CLEAN ===== */
     .table-responsive .table-history,
     .table-history {
         width: 100% !important;
@@ -116,12 +131,13 @@
         table-layout: auto;
     }
     .table-history thead tr > th {
-        background-color: #2563eb !important;
+        background: transparent !important;
         background-image: none !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        padding: 6px 6px !important;
-        border: 1px solid #1d4ed8 !important;
+        color: #111827 !important;
+        font-weight: 400 !important;
+        padding: 8px 6px !important;
+        border: 0 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
         text-align: center !important;
         vertical-align: middle !important;
         white-space: nowrap !important;
@@ -129,22 +145,17 @@
         font-size: 11px !important;
         line-height: 1.2 !important;
     }
-    .table-history thead tr > th:first-child {
-        border-top-left-radius: 8px !important;
-    }
-    .table-history thead tr > th:last-child {
-        border-top-right-radius: 8px !important;
-    }
-    .table-history thead tr > th.summary-h { background-color: #059669 !important; color: #ffffff !important; border: 1px solid #047857 !important; }
-    .table-history thead tr > th.summary-t { background-color: #d97706 !important; color: #ffffff !important; border: 1px solid #b45309 !important; }
-    .table-history thead tr > th.summary-s { background-color: #2563eb !important; color: #ffffff !important; border: 1px solid #1d4ed8 !important; }
-    .table-history thead tr > th.summary-i { background-color: #7e22ce !important; color: #ffffff !important; border: 1px solid #7e22ce !important; }
-    .table-history thead tr > th.summary-a { background-color: #dc2626 !important; color: #ffffff !important; border: 1px solid #b91c1c !important; }
-    .table-history thead tr > th.summary-p { background-color: #2563eb !important; color: #ffffff !important; border: 1px solid #1d4ed8 !important; }
-    
+    /* Huruf header ringkasan sesuai warna status */
+    .table-history thead tr > th.summary-h { color: #059669 !important; }
+    .table-history thead tr > th.summary-t { color: #d97706 !important; }
+    .table-history thead tr > th.summary-s { color: #2563eb !important; }
+    .table-history thead tr > th.summary-i { color: #7e22ce !important; }
+    .table-history thead tr > th.summary-a { color: #dc2626 !important; }
+    .table-history thead tr > th.summary-p { color: #111827 !important; }
+
     .tabel-history-wrap {
         border-radius: 8px !important;
-        overflow: hidden !important;
+        overflow: auto !important;
     }
     .table-history tbody td {
         padding: 8px 6px !important;
@@ -154,32 +165,66 @@
         font-weight: 400 !important;
         font-size: 11px !important;
         white-space: nowrap;
+        border: 0 !important;
+        border-bottom: 1px solid #f1f5f9 !important;
     }
     .table-history tbody td.text-left { text-align: left !important; }
-    .table-history tbody td.summary-h { color: #059669 !important; font-weight: 700 !important; }
-    .table-history tbody td.summary-t { color: #d97706 !important; font-weight: 700 !important; }
-    .table-history tbody td.summary-s { color: #2563eb !important; font-weight: 700 !important; }
-    .table-history tbody td.summary-i { color: #7e22ce !important; font-weight: 700 !important; }
-    .table-history tbody td.summary-a { color: #dc2626 !important; font-weight: 700 !important; }
-    .table-history tbody td.summary-p { color: #111827 !important; font-weight: 700 !important; }
-    .day-h { color: #059669 !important; font-weight: 700 !important; }
-    .day-t { color: #d97706 !important; font-weight: 700 !important; }
-    .day-s { color: #2563eb !important; font-weight: 700 !important; }
-    .day-i { color: #7e22ce !important; font-weight: 700 !important; }
-    .day-a { color: #dc2626 !important; font-weight: 700 !important; }
-    .badge-h { color: #059669 !important; font-weight: 700 !important; }
-    .badge-t { color: #d97706 !important; font-weight: 700 !important; }
-    .badge-s { color: #2563eb !important; font-weight: 700 !important; }
-    .badge-i { color: #7e22ce !important; font-weight: 700 !important; }
-    .badge-a { color: #dc2626 !important; font-weight: 700 !important; }
-    
-    .table-history tbody tr:nth-child(even) > td { background-color: #f8fafc !important; }
-    .table-history tbody tr:nth-child(odd) > td { background-color: #ffffff !important; }
-    .table-history tbody tr:hover > td { background-color: #e2e8f0 !important; }
+    .table-history tbody td.summary-h { color: #059669 !important; }
+    .table-history tbody td.summary-t { color: #d97706 !important; }
+    .table-history tbody td.summary-s { color: #2563eb !important; }
+    .table-history tbody td.summary-i { color: #7e22ce !important; }
+    .table-history tbody td.summary-a { color: #dc2626 !important; }
+    .table-history tbody td.summary-p { color: #111827 !important; }
+    .badge-h { color: #059669 !important; font-weight: 400 !important; }
+    .badge-t { color: #d97706 !important; font-weight: 400 !important; }
+    .badge-s { color: #2563eb !important; font-weight: 400 !important; }
+    .badge-i { color: #7e22ce !important; font-weight: 400 !important; }
+    .badge-a { color: #dc2626 !important; font-weight: 400 !important; }
+
+    .table-history tbody tr > td { background-color: #ffffff !important; }
+    .table-history tbody tr:hover > td { background-color: #f1f5f9 !important; }
 </style>
 @endpush
 
 @section('content')
+    @php
+        $currentPeriod = request()->get('period', $period ?? 'harian');
+        $_subType = ($currentPeriod === 'semua') ? ($periodSubType ?? 'semua') : 'semua';
+
+        /*
+         * Kolom bulan semester/tahunan (tahun ajaran Juli - Juni):
+         *  - Ganjil  : Juli s/d Desember (6 bulan)
+         *  - Genap   : Januari s/d Juni  (6 bulan)
+         *  - Tahunan : Juli s/d Juni     (12 bulan)
+         * Tahun ajaran ditentukan dari tanggal yang dipilih ($anchor).
+         */
+        if ($currentPeriod === 'semua' && in_array($_subType, ['ganjil', 'genap', 'tahunan'], true)) {
+            $namaBulan = ['JAN','FEB','MAR','APR','MEI','JUN','JUL','AGT','SEP','OKT','NOV','DES'];
+            $startYear = $anchor->month >= 7 ? $anchor->year : $anchor->year - 1;
+
+            if ($_subType === 'genap') {
+                $startMonth = \Carbon\Carbon::create($startYear + 1, 1, 1);
+                $jumlahBulan = 6;
+            } elseif ($_subType === 'ganjil') {
+                $startMonth = \Carbon\Carbon::create($startYear, 7, 1);
+                $jumlahBulan = 6;
+            } else {
+                $startMonth = \Carbon\Carbon::create($startYear, 7, 1);
+                $jumlahBulan = 12;
+            }
+
+            $months = [];
+            for ($i = 0; $i < $jumlahBulan; $i++) {
+                $d = $startMonth->copy()->addMonthsNoOverflow($i);
+                $months[] = [
+                    'key'   => $d->format('Y-m'),
+                    'label' => $namaBulan[$d->month - 1],
+                    'year'  => $d->year,
+                ];
+            }
+        }
+    @endphp
+
     <div class="mb-2">
         <h5 class="mb-1" style="color: #0f172a; text-transform: uppercase; font-weight: 400;">{{ $student->name }}</h5>
         <p class="text-secondary mb-0" style="font-size: 0.85rem; text-transform: uppercase;">
@@ -220,10 +265,9 @@
 
             <?php
             $semesterLabel = 'SEMESTER/TAHUN';
-            $_st = ($period === 'semua') ? ($periodSubType ?? 'semua') : 'semua';
-            if ($_st === 'ganjil') { $semesterLabel = 'SEMESTER GANJIL'; }
-            elseif ($_st === 'genap') { $semesterLabel = 'SEMESTER GENAP'; }
-            elseif ($_st === 'tahunan') { $semesterLabel = 'TAHUNAN'; }
+            if ($_subType === 'ganjil') { $semesterLabel = 'SEMESTER GANJIL'; }
+            elseif ($_subType === 'genap') { $semesterLabel = 'SEMESTER GENAP'; }
+            elseif ($_subType === 'tahunan') { $semesterLabel = 'TAHUNAN'; }
             $semesterTanggal = $anchor->toDateString();
             ?>
             <div class="period-nav mb-2">
@@ -241,9 +285,9 @@
                         {{ $semesterLabel }} <i class="bx bx-chevron-down" style="font-size:0.7rem; margin-left:0.25rem; vertical-align:middle;"></i>
                     </button>
                     <div id="semesterMenu" class="semester-menu" style="display:none; position:absolute; left:0; right:0; top:100%; z-index:1060; width:100%; min-width:0; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 10px 25px -8px rgba(15,23,42,0.35); margin-top:4px;">
-                        <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'period_subtype' => 'ganjil', 'tanggal' => $semesterTanggal]) }}" class="semester-menu-item" style="display:block; width:100%; box-sizing:border-box; padding:0.5rem 1rem; font-size:0.85rem; color:#1e293b; text-decoration:none; border-radius:0; white-space:nowrap;">{{ __('Semester Ganjil') }}</a>
-                        <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'period_subtype' => 'genap', 'tanggal' => $semesterTanggal]) }}" class="semester-menu-item" style="display:block; width:100%; box-sizing:border-box; padding:0.5rem 1rem; font-size:0.85rem; color:#1e293b; text-decoration:none; border-radius:0; white-space:nowrap;">{{ __('Semester Genap') }}</a>
-                        <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'period_subtype' => 'tahunan', 'tanggal' => $semesterTanggal]) }}" class="semester-menu-item" style="display:block; width:100%; box-sizing:border-box; padding:0.5rem 1rem; font-size:0.85rem; color:#1e293b; text-decoration:none; border-radius:0; white-space:nowrap;">{{ __('Tahun Ajaran') }}</a>
+                        <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'period_subtype' => 'ganjil', 'tanggal' => $semesterTanggal]) }}" class="semester-menu-item" style="display:block; width:100%; box-sizing:border-box; padding:0.5rem 1rem; font-size:0.85rem; color:#1e293b; text-decoration:none; border-radius:0; white-space:nowrap;">{{ __('Semester Ganjil') }} (Jul - Des)</a>
+                        <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'period_subtype' => 'genap', 'tanggal' => $semesterTanggal]) }}" class="semester-menu-item" style="display:block; width:100%; box-sizing:border-box; padding:0.5rem 1rem; font-size:0.85rem; color:#1e293b; text-decoration:none; border-radius:0; white-space:nowrap;">{{ __('Semester Genap') }} (Jan - Jun)</a>
+                        <a href="{{ panel_route('kehadiran.student-history', [$student->id, 'period' => 'semua', 'period_subtype' => 'tahunan', 'tanggal' => $semesterTanggal]) }}" class="semester-menu-item" style="display:block; width:100%; box-sizing:border-box; padding:0.5rem 1rem; font-size:0.85rem; color:#1e293b; text-decoration:none; border-radius:0; white-space:nowrap;">{{ __('Tahunan') }} (Jul - Jun)</a>
                     </div>
                 </div>
             </div>
@@ -259,7 +303,9 @@
                 @else
                     <input type="date" name="tanggal" id="studentHistoryDate" class="form-control" value="{{ $anchor->toDateString() }}" aria-label="{{ __('Pilih tanggal') }}">
                 @endif
-                <button type="button" class="btn btn-success" id="btnTampilkan">{{ __('Tampilkan') }}</button>
+                <button type="button" class="btn btn-success btn-icon-square" id="btnTampilkan" title="{{ __('Tampilkan') }}" aria-label="{{ __('Tampilkan') }}">
+                    <i class="bx bx-search"></i>
+                </button>
                 <button type="button" class="btn btn-danger" id="printPeriodBtn">{{ __('Cetak PDF') }}</button>
             </div>
         </form>
@@ -268,7 +314,6 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
         <div class="table-responsive tabel-history-wrap">@php
                 $wNo = 4; $wNisn = 9; $wNama = 20; $wKelas = 8; $wJk = 3;
-                $currentPeriod = request()->get('period', $period ?? 'harian');
 
                 if ($currentPeriod === 'mingguan' && request()->filled('start_date')) {
                     $startDateInput = \Carbon\Carbon::parse(request()->get('start_date'));
@@ -341,7 +386,7 @@
                             @foreach($months as $m)
                                 <th style="font-size: 11px; padding: 8px 4px;">
                                     {{ $m['label'] }}
-                                    <span class="th-sub" style="font-size: 9px; display:block; opacity:0.9;">{{ $m['year'] }}</span>
+                                    <span class="th-sub" style="font-size: 9px; display:block;">{{ $m['year'] }}</span>
                                 </th>
                             @endforeach
                             <th class="summary-h" style="width: 2.6%; font-size: 11px; padding: 8px 4px;">H</th>
@@ -356,12 +401,12 @@
                 <tbody>
                     @foreach($rows as $row)
                         <tr data-student-id="{{ $row['student']->id }}">
-                            <td style="width: {{ $wNo }}%; text-transform: uppercase; font-weight: 400;">{{ $row['no'] }}</td>
-                            <td style="width: {{ $wNisn }}%; text-transform: uppercase; font-weight: 400;">{{ $row['student']->nisn ?: '-' }}</td>
-                            <td class="nama-siswa" style="width: {{ $wNama }}%; text-transform: uppercase; font-weight: 400;">{{ $row['student']->name }}</td>
-                            <td style="width: {{ $wKelas }}%; text-transform: uppercase; font-weight: 400;">{{ $row['student']->schoolClass->name ?? '-' }}</td>
-                            <td style="width: {{ $wJk }}%; text-transform: uppercase; font-weight: 400;">{{ strtoupper(substr($row['harian']->gender ?? 'L', 0, 1)) }}</td>
-                            
+                            <td style="width: {{ $wNo }}%; text-transform: uppercase;">{{ $row['no'] }}</td>
+                            <td style="width: {{ $wNisn }}%; text-transform: uppercase;">{{ $row['student']->nisn ?: '-' }}</td>
+                            <td class="nama-siswa" style="width: {{ $wNama }}%; text-transform: uppercase;">{{ $row['student']->name }}</td>
+                            <td style="width: {{ $wKelas }}%; text-transform: uppercase;">{{ $row['student']->schoolClass->name ?? '-' }}</td>
+                            <td style="width: {{ $wJk }}%; text-transform: uppercase;">{{ strtoupper(substr($row['harian']->gender ?? 'L', 0, 1)) }}</td>
+
                             @if($currentPeriod === 'harian')
                                 @php
                                     $_h = $row['harian'];
@@ -377,24 +422,14 @@
                                         'Alfa' => '#dc2626',
                                         default => '#6b7280',
                                     };
-                                    @endphp
-                                <td style="color: #111827 !important; text-transform: uppercase; font-weight: 400;">{{ $_h->jam_masuk ?? '-' }}</td>
-                                <td style="color: #111827 !important; text-transform: uppercase; font-weight: 400;">{{ $_lateText }}</td>
-                                <td style="color: {{ $_statusColor }} !important; text-transform: uppercase; font-weight: 400;">{{ $_statusNorm }}</td>
-                            @elseif($currentPeriod === 'mingguan')
+                                @endphp
+                                <td style="text-transform: uppercase;">{{ $_h->jam_masuk ?? '-' }}</td>
+                                <td style="text-transform: uppercase;">{{ $_lateText }}</td>
+                                <td style="color: {{ $_statusColor }} !important; text-transform: uppercase;">{{ $_statusNorm }}</td>
+                            @elseif(in_array($currentPeriod, ['mingguan', 'bulanan'], true))
                                 @foreach($dateColumns as $d)
                                     @php
                                         $_code = strtoupper(trim((string) ($days[$d['date']] ?? '-')));
-                                        $_codeColor = match($_code) {
-                                            'T', 'TERLAMBAT' => '#d97706',
-                                            'H', 'HADIR' => '#059669',
-                                            'S', 'SAKIT' => '#2563eb',
-                                            'I', 'IZIN' => '#7e22ce',
-                                            'A', 'ALFA' => '#dc2626',
-                                            default => '',
-                                        };
-                                        $_tdStyle = $_codeColor ? ' style="font-size: 10px; color: '.$_codeColor.' !important;"' : ' style="font-size: 10px;"';
-                                        $_spanStyle = $_codeColor ? ' style="color: '.$_codeColor.' !important;"' : '';
                                         $_codeClass = match($_code) {
                                             'T', 'TERLAMBAT' => 'badge-t',
                                             'H', 'HADIR' => 'badge-h',
@@ -404,38 +439,7 @@
                                             default => '',
                                         };
                                     @endphp
-                                    <td class="{{ $_codeClass }}"{{ $_tdStyle }}><span class="{{ $_codeClass }}"{{ $_spanStyle }}>{{ $_code }}</span></td>
-                                @endforeach
-                                <td class="summary-h">{{ $row['hadir'] }}</td>
-                                <td class="summary-t">{{ $row['terlambat'] }}</td>
-                                <td class="summary-s">{{ $row['sakit'] }}</td>
-                                <td class="summary-i">{{ $row['izin'] }}</td>
-                                <td class="summary-a">{{ $row['alfa'] }}</td>
-                                <td class="summary-p">{{ $row['percentage'] }}%</td>
-                            @elseif($currentPeriod === 'bulanan')
-                                @foreach($dateColumns as $d)
-                                    @php
-                                        $_code = strtoupper(trim((string) ($days[$d['date']] ?? '-')));
-                                        $_codeColor = match($_code) {
-                                            'T', 'TERLAMBAT' => '#d97706',
-                                            'H', 'HADIR' => '#059669',
-                                            'S', 'SAKIT' => '#2563eb',
-                                            'I', 'IZIN' => '#7e22ce',
-                                            'A', 'ALFA' => '#dc2626',
-                                            default => '',
-                                        };
-                                        $_tdStyle = $_codeColor ? ' style="font-size: 10px; color: '.$_codeColor.' !important;"' : ' style="font-size: 10px;"';
-                                        $_spanStyle = $_codeColor ? ' style="color: '.$_codeColor.' !important;"' : '';
-                                        $_codeClass = match($_code) {
-                                            'T', 'TERLAMBAT' => 'badge-t',
-                                            'H', 'HADIR' => 'badge-h',
-                                            'S', 'SAKIT' => 'badge-s',
-                                            'I', 'IZIN' => 'badge-i',
-                                            'A', 'ALFA' => 'badge-a',
-                                            default => '',
-                                        };
-                                    @endphp
-                                    <td class="{{ $_codeClass }}"{{ $_tdStyle }}><span class="{{ $_codeClass }}"{{ $_spanStyle }}>{{ $_code }}</span></td>
+                                    <td class="{{ $_codeClass }}" style="font-size: 10px;">{{ $_code }}</td>
                                 @endforeach
                                 <td class="summary-h">{{ $row['hadir'] }}</td>
                                 <td class="summary-t">{{ $row['terlambat'] }}</td>
@@ -524,37 +528,42 @@
     if (printBtn) {
         printBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            var tanggal = document.getElementById('studentHistoryDate') ? document.getElementById('studentHistoryDate').value : '{{ $anchor->toDateString() }}';
+
             var period = getActivePeriod();
             var periodSubType = getPeriodSubType();
+            var dateEl = document.getElementById('studentHistoryDate') || document.getElementById('startDate');
+            var tanggal = dateEl ? dateEl.value : '{{ $anchor->toDateString() }}';
+            var type = period === 'semua' ? (periodSubType === 'tahunan' ? 'tahunan' : 'semester') : period;
 
             var form = document.createElement('form');
             form.method = 'POST';
             form.action = {!! json_encode(panel_route('rekap.print')) !!};
-            form.target = '_blank';
+            form.style.display = 'none';
 
-            var inputs = {
+            var params = {
                 '_token': csrfToken,
                 'format': 'pdf',
-                'type': period === 'semua' ? (periodSubType === 'tahunan' ? 'tahunan' : 'semester') : period,
-                'period_type': period === 'semua' ? (periodSubType === 'tahunan' ? 'tahunan' : 'semester') : period,
+                'type': type,
+                'period_type': type,
                 'print_mode': 'student',
                 'student_scope': 'single',
                 'student_id': studentId,
                 'period_date': tanggal
             };
 
-            for (var key in inputs) {
-                var input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = inputs[key];
-                form.appendChild(input);
+            for (var key in params) {
+                if (params.hasOwnProperty(key)) {
+                    var hiddenField = document.createElement('input');
+                    hiddenField.type = 'hidden';
+                    hiddenField.name = key;
+                    hiddenField.value = params[key];
+                    form.appendChild(hiddenField);
+                }
             }
 
             document.body.appendChild(form);
             form.submit();
-            form.remove();
+            document.body.removeChild(form);
         });
     }
 })();

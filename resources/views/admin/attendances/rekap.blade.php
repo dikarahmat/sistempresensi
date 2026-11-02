@@ -4,8 +4,7 @@
 @section('page_title', __('Rekap Presensi Siswa'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
-     sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
-     bersama, sama seperti halaman acuan. --}}
+     sehingga tabelnya (bukan halaman) yang menggulir. --}}
 @section('canvas_class', 'page-canvas-fixed')
 
 @push('styles')
@@ -41,10 +40,7 @@
         .app-header-right { flex: 0 0 auto; margin-left: auto; }
     }
 
-    /* Tombol Cetak PDF / Excel: tanpa animasi, tanpa efek naik-turun.
-       UKURAN (lebar/tinggi/font/padding) ikut token toolbar bersama di
-       layouts/app.blade.php (--tb-btn-w, --tb-btn-h, --tb-btn-font,
-       --tb-btn-pad-x). Di sini hanya warna. */
+    /* Tombol Cetak PDF / Excel: tanpa animasi. Ukuran ikut token toolbar bersama. */
     .btn-green-excel,
     .btn-red-pdf {
         color: #ffffff !important;
@@ -59,16 +55,13 @@
     }
     .btn-green-excel { background-color: #059669; }
     .btn-red-pdf { background-color: #ef4444; }
-    /* Warna TETAP di semua state (hover/active/focus): tidak berubah sama sekali. */
     .btn-green-excel:hover, .btn-green-excel:active, .btn-green-excel:focus, .btn-green-excel:focus-visible { background-color: #059669 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
     .btn-red-pdf:hover, .btn-red-pdf:active, .btn-red-pdf:focus, .btn-red-pdf:focus-visible { background-color: #ef4444 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
 
-    /* Tombol mobile pembuka popup cetak: tanpa animasi */
     .recap-mobile-actions .btn {
         transition: none !important;
         transform: none !important;
     }
-    /* Mobile: warna tetap saat disentuh/hover */
     .recap-mobile-actions .btn-danger,
     .recap-mobile-actions .btn-danger:hover,
     .recap-mobile-actions .btn-danger:active,
@@ -119,12 +112,7 @@
 
     .filter-card { background: transparent !important; border: none !important; margin-bottom: 1.25rem !important; }
 
-    /* ===== REVISI CLEAN LOOK: jarak antar field filter =====
-       - Desktop: form memakai utilitas .gap-2 (8px); dinaikkan jadi 10px
-         supaya rapat tapi tidak rapat sekali (target 10-12px).
-       - Mobile: kelompok field memakai utilitas .mb-2 (8px); dinaikkan 10px.
-       Hanya JARAK yang diubah - urutan field, label, border, dan fungsinya
-       (onchange submit) tidak disentuh. */
+    /* Jarak antar field filter */
     .filter-card > form {
         gap: 0.625rem !important;
     }
@@ -156,6 +144,38 @@
     .table-matrix tbody tr:hover > td { background-color: #e2e8f0 !important; }
     .table-matrix tbody td { padding: 0.7rem 0.5rem; text-align: center; vertical-align: middle; border-right: 1px solid #f1f5f9; color: #1e293b; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em; font-family: 'Poppins', 'Roboto', sans-serif; font-weight: 400; overflow: hidden; text-overflow: ellipsis; }
 
+    /* ===== KOLOM IDENTITAS: sama di Harian, Mingguan, Bulanan ===== */
+    .table-matrix th:nth-child(2),
+    .table-matrix td:nth-child(2) {
+        white-space: nowrap;
+        overflow: visible !important;      /* NISN tampil penuh */
+        text-overflow: clip !important;
+    }
+    .table-matrix th:nth-child(3),
+    .table-matrix td:nth-child(3) {
+        text-align: left !important;       /* nama rata kiri, sejajar header */
+        padding-left: 0.75rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ===== KOLOM RINGKASAN H T S I A %: dikunci, sama di Mingguan & Bulanan ===== */
+    .table-matrix .col-sum { width: 36px; }
+    .table-matrix .col-pct { width: 64px; }
+    .table-matrix thead th.th-sum,
+    .table-matrix tbody td.td-sum {
+        padding-left: 0.15rem;
+        padding-right: 0.15rem;
+        text-align: center;
+        font-weight: 700;
+    }
+    .table-matrix tbody td.td-pct {
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #212529;
+    }
+
     /* Status Colors */
     .cell-present { color: #16a34a !important; font-weight: 700; }
     .cell-late { color: #d97706 !important; font-weight: 700; }
@@ -165,11 +185,7 @@
     .cell-holiday { color: #64748b !important; font-weight: 600; }
     .cell-future { color: #cbd5e1 !important; font-weight: 400; }
 
-    /* ===== LEGENDA/KETERANGAN: ringkas tapi tetap jelas =====
-       Nilai disatukan dari dua blok lama (dasar + "poin 2: diperbesar") karena
-       di HP 390px legenda melipat jadi 4-5 baris & terlihat gemuk. Yang dijaga:
-       warna, border putus-putus, latar, huruf Keterangan tetap sama; hanya
-       padding, gap, dan ukuran huruf diturunkan sedikit supaya muat 2-3 baris. */
+    /* Legenda / Keterangan */
     .rekap-legend {
         display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.5rem;
         padding: 0.4rem 0.6rem; border: 1px dashed #e2e8f0; border-radius: 10px;
@@ -180,41 +196,22 @@
     .rekap-legend-item { display: inline-flex; align-items: center; gap: 0.2rem; white-space: nowrap; font-size: 0.82rem; }
     .rekap-legend-item strong { font-size: 0.9rem; font-weight: 700; }
 
-    /* ===== JK (poin 1): warna cerah, huruf medium (bukan bold) =====
-       L = biru cerah (#3B82F6), P = merah cerah (#EF4444),
-       font-weight 500, ukuran 0.82rem — PERSIS SAMA dengan teks kolom
-       tabel lainnya supaya tidak terlihat "menonjol"/tegas berlebihan.
-
-       Kenapa !important tetap dipakai di sini (hanya pada .rekap-jk):
-         - .table-matrix tbody td menetapkan `color` (#1e293b);
-         - .table-hover Bootstrap 5.3 menimpa `color` pada <td> saat hover;
-         - baris abu-abu/hover hanya mengubah background, bukan warna teks.
-       Karena span ini punya deklarasi `color` sendiri, nilainya selalu menang
-       atas pewarisan (inheritance) dari <td> — di hover, di baris abu-abu,
-       maupun di baris putih, jadi warnanya tidak pernah pudar/tertimpa.
-       TIDAK ada `opacity` di sini: tidak ada aturan lain yang membuat
-       L/P terlihat pucat, jadi opacity hanya perlu dihapus, bukan ditambahkan. */
+    /* JK: L biru cerah, P merah cerah, huruf medium */
     .rekap-jk {
-        font-size: 0.82rem;           /* 13px, sama dengan teks tabel lain */
+        font-size: 0.82rem;
         font-weight: 500;
         line-height: 1.2;
     }
     .rekap-jk.is-laki {
-        color: #3B82F6 !important;    /* biru cerah */
+        color: #3B82F6 !important;
         font-weight: 500 !important;
     }
     .rekap-jk.is-perempuan {
-        color: #EF4444 !important;    /* merah cerah */
+        color: #EF4444 !important;
         font-weight: 500 !important;
     }
 
-    /* ======================================================================
-       LAYOUT KARTU REKAP (poin 7)
-       Pola sama dengan Presensi & Catatan Kehadiran: kartu tabel mengisi sisa
-       tinggi layar, hanya .table-responsive yang jadi area scroll (scrollbar
-       kanan + header sticky), dan pagination berada DI DALAM area scroll tepat
-       di bawah baris ke-100.
-       ====================================================================== */
+    /* Layout kartu rekap */
     #daftar-rekap {
         display: block;
         height: auto;
@@ -227,7 +224,6 @@
         overflow-y: visible !important;
     }
 
-    /* Header sticky bersih: latar pekat & selalu di atas baris data. */
     #daftar-rekap .table-responsive > table > thead { z-index: 5 !important; }
     #daftar-rekap .table-responsive > table > thead th {
         position: sticky !important;
@@ -239,16 +235,7 @@
         z-index: 1;
     }
 
-    /* ======================================================================
-       PAGINASI REKAP (poin 7)
-       NILAI & GAYA PERSIS SAMA dengan Catatan Kehadiran (kelas .kehadiran-pagination*).
-       Sengaja memakai nama kelas yang sama supaya tidak ada gaya baru:
-       block CSS di bawah merupakan SALINAN nilai yang sama, karena CSS Catatan
-       Kehadiran berada di blok push styles milik view lain dan tidak bisa
-       dipakai lintas halaman tanpa menyentuh file yang dilarang sesi ini.
-       (Catatan: teks "push styles" sengaja ditulis tanpa tanda @ karena
-        directive Blade harus ditutup, bukan disebut di dalam komentar CSS.)
-       ====================================================================== */
+    /* Paginasi (sama dengan Catatan Kehadiran) */
     .kehadiran-pagination {
         padding: 1.25rem 0.5rem 1.5rem;
         margin: 0;
@@ -332,7 +319,6 @@
         letter-spacing: 0.02em;
     }
 
-    /* Gaya Pagination Disamakan Persis dengan Data Siswa */
     .pagination-compact .pagination {
         margin-bottom: 0;
         font-size: 0.82rem;
@@ -350,30 +336,20 @@
         }
     }
 
-    /* ===== PROGRES DI DALAM TOMBOL UTAMA =====
-       Memakai komponen bersama (.btn-progress / .btn-progress__fill) supaya
-       tampilan identik dengan tombol unduhan lain: lapisan isian mewarisi
-       warna tombol lalu digelapkan (brightness .82), transisi width .4s ease,
-       tanpa spinner dan tanpa shimmer. Persen = kelas selesai / total. */
+    /* Progres di dalam tombol utama popup */
     #printRekapSubmitBtn {
         position: relative;
         overflow: hidden;
         min-width: 0;
         white-space: nowrap;
         isolation: isolate;
-        /* Bleu depuis l'ouverture du popup : jamais blanc au chargement.
-           State hijau "Selesai" (.is-done) di bawah tetap menang. */
         background-color: #2563eb !important;
         border-color: #2563eb !important;
         color: #fff !important;
     }
-    /* Selesai semua: tombol hijau sesaat, teks "Selesai" tanpa ikon.
-        !important wajib: aturan biru di atas juga !important dan berdempetan. */
     #printRekapSubmitBtn.is-done { background-color: #16a34a !important; border-color: #16a34a !important; color: #fff !important; }
     #printRekapSubmitBtn.is-done .btn-progress__fill { display: none; }
 
-    /* Footer: dua tombol sama lebar (flex:1 1 0, tanpa min-width tetap),
-       satu baris, teks utuh. Batal/Hentikan tidak pernah mengecil. */
     #printRekapModal .dl-actions > .btn {
         flex: 1 1 0;
         min-width: 0;
@@ -404,12 +380,6 @@
 
     <!-- 1. MOBILE VIEW -->
     <div class="d-block d-md-none mb-3">
-        {{-- DULU: <div class="card border border-light-subtle shadow-sm rounded-3 p-3 bg-white recap-mobile-card">
-             REVISI CLEAN LOOK: kontainer/card pembungkus filter DIHAPUS (border,
-             latar, shadow, radius, padding). Filter kini menempel langsung di
-             kanvas putih tanpa indent bekas kontainer - persis pola filter di
-             halaman Data Siswa/Guru/Kelas. Border INPUT/DROPDOWN/TOMBOL sendiri
-             tetap. class .recap-mobile-card dipertahankan sebagai jangkar CSS. --}}
         <div class="recap-mobile-card">
             <form method="GET" action="{{ panel_route('rekap') }}" class="recap-mobile-period mb-2">
                 @foreach(request()->except(['type', 'page']) as $key => $value)
@@ -431,11 +401,9 @@
                 <input type="hidden" name="type" value="{{ $type }}">
                 @if($type === 'harian')
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Tanggal Presensi') }}</label>
                         <input type="date" name="date" id="mobileRekapDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm border-secondary-subtle shadow-sm rounded-3" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                             <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
@@ -455,7 +423,6 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                             <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
@@ -483,7 +450,6 @@
                         </div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label text-muted small fw-semibold mb-1">{{ __('Pilih Kelas') }}</label>
                         <select name="class_id" id="mobileRekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm border-secondary-subtle shadow-sm rounded-3">
                             <option value="">{{ __('Semua Kelas') }}</option>
                             @foreach($classes as $c)
@@ -526,7 +492,6 @@
                 <input type="hidden" name="type" value="{{ $type }}">
                 @if($type === 'harian')
                     <div class="d-flex flex-column" style="width: 180px;">
-                        <label class="filter-label">{{ __('Tanggal Presensi') }}</label>
                         <input type="date" name="date" id="rekapDate" onchange="debounceRekapFilterSubmit(this.form)" class="form-control form-control-sm filter-input" value="{{ $date ?? date('Y-m-d') }}">
                     </div>
                 @elseif($type === 'mingguan')
@@ -557,7 +522,6 @@
                     </div>
                 @endif
                 <div class="d-flex flex-column" style="min-width: 200px; flex: 1;">
-                    <label class="filter-label">{{ __('Pilih Kelas') }}</label>
                     <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3">
                         <option value="">{{ __('Semua Kelas') }}</option>
                         @foreach($classes as $c)
@@ -606,16 +570,15 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="table-layout: fixed; width: 100%;">
                     <colgroup>
                         <col style="width: 45px;">
-                        <col style="width: 85px;">
-                        <col style="width: 170px;">
-                        <col style="width: 80px;">
-                        <col style="width: 35px;">
-                        <col style="width: 100px;">
-                        <col style="width: 115px;">
-                        <col style="width: 100px;">
+                        <col style="width: 120px;">
+                        <col style="width: 240px;">
+                        <col style="width: 64px;">
+                        <col style="width: 48px;">
+                        <col style="width: auto;">
+                        <col style="width: auto;">
                         <col style="width: auto;">
                     </colgroup>
                     <thead>
@@ -628,7 +591,6 @@
                             <th>{{ __('Jam Masuk') }}</th>
                             <th>{{ __('Keterlambatan') }}</th>
                             <th>{{ __('Status') }}</th>
-                            <th class="text-start">{{ __('Keterangan') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -638,8 +600,6 @@
                             $status = is_array($item) ? ($item['status'] ?? '-') : 'Libur';
                             $checkIn = is_array($item) ? ($item['check_in'] ?? '-') : '-';
                             $lateText = is_array($item) ? ($item['late_text'] ?? '-') : '-';
-                            $proofDoc = is_array($item) ? ($item['proof_document'] ?? null) : null;
-                            $notes = is_array($item) ? ($item['notes'] ?? '-') : '-';
                             $rowNum = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator)
                                 ? ($dataRows->firstItem() + $loop->index)
                                 : ($loop->iteration);
@@ -648,9 +608,7 @@
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
                             <td>{{ $st->nisn ?: '-' }}</td>
-                            <td class="text-start text-truncate" style="max-width: 200px;">
-                                {{ $st->name }}
-                            </td>
+                            <td class="text-start" title="{{ $st->name }}">{{ $st->name }}</td>
                             <td>{{ $st->schoolClass ? $st->schoolClass->name : '-' }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ optional($st)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
@@ -662,7 +620,6 @@
                                 @if($lateText === 'Tepat Waktu')
                                     <span class="text-success small">{{ __('Tepat Waktu') }}</span>
                                 @elseif($status === 'Terlambat')
-                                    {{-- Format ramah dari rekap_format_late_minutes(): "15 MNT" / "1 JAM 5 MNT" --}}
                                     <span class="text-warning-emphasis small fw-semibold">{{ $lateText }}</span>
                                 @else
                                     <span class="text-muted">-</span>
@@ -678,17 +635,11 @@
                                 @elseif(str_contains($status, 'Belum')) <span class="text-muted">-</span>
                                 @else <span class="text-secondary">{{ $status }}</span> @endif
                             </td>
-                            <td class="text-start">
-                                @if(!empty($proofDoc))
-                                    <a href="{{ asset('storage/' . $proofDoc) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-2 me-1" style="font-size: 0.75rem;">{{ __('Surat') }}</a>
-                                @endif
-                                <span class="small text-muted">{{ $notes !== '-' ? $notes : '' }}</span>
-                            </td>
                         </tr>
                         @endif
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-secondary empty-state">
+                            <td colspan="8" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ __('Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.') }}
                             </td>
@@ -701,11 +652,13 @@
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
                     <colgroup>
                         <col style="width: 45px;">
-                        <col style="width: 85px;">
-                        <col style="width: 170px;">
-                        <col style="width: 80px;">
-                        <col style="width: 35px;">
-                        <col style="width: auto;" span="{{ count($dateColumns) + 6 }}">
+                        <col style="width: 120px;">
+                        <col style="width: 240px;">
+                        <col style="width: 64px;">
+                        <col style="width: 48px;">
+                        <col style="width: auto;" span="{{ count($dateColumns) }}">
+                        <col class="col-sum" span="5">
+                        <col class="col-pct">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
@@ -717,12 +670,12 @@
                             @foreach($dateColumns as $col)
                                 <th class="{{ $col['is_holiday'] ? 'th-holiday' : '' }}">{{ $col['label'] }}</th>
                             @endforeach
-                            <th class="text-success">H</th>
-                            <th style="color: #d97706;">T</th>
-                            <th class="text-primary">S</th>
-                            <th style="color: #7e22ce;">I</th>
-                            <th style="color: #ef4444;">A</th>
-                            <th class="text-secondary">%</th>
+                            <th class="th-sum" style="color: #198754;">H</th>
+                            <th class="th-sum" style="color: #d97706;">T</th>
+                            <th class="th-sum" style="color: #0d6efd;">S</th>
+                            <th class="th-sum" style="color: #7e22ce;">I</th>
+                            <th class="th-sum" style="color: #ef4444;">A</th>
+                            <th class="th-sum" style="color: #212529; font-size: 0.95rem;">%</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -738,9 +691,7 @@
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
                             <td>{{ $student->nisn ?: '-' }}</td>
-                            <td class="text-start text-truncate" style="max-width: 200px;">
-                                {{ $student->name }}
-                            </td>
+                            <td class="text-start" title="{{ $student->name }}">{{ $student->name }}</td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
@@ -759,12 +710,12 @@
                                     @else <span class="cell-future">-</span> @endif
                                 </td>
                             @endforeach
-                            <td class="text-success fw-bold">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
-                            <td class="fw-bold" style="color: #d97706 !important;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
-                            <td class="text-primary fw-bold">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
-                            <td class="fw-bold" style="color: #7e22ce !important;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
-                            <td class="fw-bold" style="color: #ef4444 !important;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
-                            <td class="text-dark fw-bold">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
+                            <td class="td-sum" style="color: #198754;">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #d97706;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #0d6efd;">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #7e22ce;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #ef4444;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
+                            <td class="td-pct">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
                         </tr>
                         @endif
                         @empty
@@ -779,15 +730,16 @@
                 </table>
 
             @else
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="min-width: 1400px;">
                     <colgroup>
                         <col style="width: 45px;">
-                        <col style="width: 85px;">
-                        <col style="width: 170px;">
-                        <col style="width: 80px;">
-                        <col style="width: 35px;">
-                        <col style="width: auto;" span="{{ $daysInMonth + 5 }}">
+                        <col style="width: 120px;">
+                        <col style="width: 240px;">
                         <col style="width: 64px;">
+                        <col style="width: 48px;">
+                        <col style="width: auto;" span="{{ $daysInMonth }}">
+                        <col class="col-sum" span="5">
+                        <col class="col-pct">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
@@ -800,12 +752,12 @@
                                 @php $isHol = isset($holidayMap[$d]); @endphp
                                 <th class="{{ $isHol ? 'th-holiday' : '' }}">{{ $d }}</th>
                             @endfor
-                            <th style="color: var(--bs-success, #198754) !important; font-weight: 700 !important;">H</th>
-                            <th style="color: #d97706 !important; font-weight: 700 !important;">T</th>
-                            <th style="color: var(--bs-primary, #0d6efd) !important; font-weight: 700 !important;">S</th>
-                            <th style="color: #7e22ce !important; font-weight: 700 !important;">I</th>
-                            <th style="color: #ef4444 !important; font-weight: 700 !important;">A</th>
-                            <th style="color: #212529 !important; font-weight: 700 !important; font-size: 0.95rem !important;">%</th>
+                            <th class="th-sum" style="color: #198754;">H</th>
+                            <th class="th-sum" style="color: #d97706;">T</th>
+                            <th class="th-sum" style="color: #0d6efd;">S</th>
+                            <th class="th-sum" style="color: #7e22ce;">I</th>
+                            <th class="th-sum" style="color: #ef4444;">A</th>
+                            <th class="th-sum" style="color: #212529; font-size: 0.95rem;">%</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -821,12 +773,9 @@
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
                             <td>{{ $student->nisn ?: '-' }}</td>
-                            <td class="text-start text-truncate" style="max-width: 200px;">
-                                {{ $student->name }}
-                            </td>
+                            <td class="text-start" title="{{ $student->name }}">{{ $student->name }}</td>
                             <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             <td class="text-center">
-                                {{-- JK: L biru cerah, P merah cerah, huruf medium (bukan bold). --}}
                                 <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
                                     {{ optional($student)->gender == 'Perempuan' ? 'P' : 'L' }}
                                 </span>
@@ -843,12 +792,12 @@
                                     @else <span class="cell-future">-</span> @endif
                                 </td>
                             @endfor
-                            <td class="text-success fw-bold">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
-                            <td class="fw-bold" style="color: #d97706 !important;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
-                            <td class="text-primary fw-bold">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
-                            <td class="fw-bold" style="color: #7e22ce !important;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
-                            <td class="fw-bold" style="color: #ef4444 !important;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
-                            <td class="text-dark fw-bold">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
+                            <td class="td-sum" style="color: #198754;">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #d97706;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #0d6efd;">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #7e22ce;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
+                            <td class="td-sum" style="color: #ef4444;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
+                            <td class="td-pct">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
                         </tr>
                         @endif
                         @empty
@@ -863,12 +812,7 @@
                 </table>
             @endif
 
-        <!-- ==========================================================================
-             PAGINASI REKAP - TEKS MURNI (TANPA KONTAINER)
-             Gaya PERSIS SAMA dengan Catatan Kehadiran (kelas .kehadiran-pagination*).
-             POSISI: DI DALAM .table-responsive, tepat di bawah baris ke-100, jadi
-             ikut ter-scroll dan baru terlihat setelah user scroll ke baris terakhir.
-             ====================================================================== -->
+        <!-- PAGINASI REKAP: di dalam .table-responsive, tepat di bawah baris terakhir -->
         @php
             $pgPaginator = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator) ? $dataRows : null;
             $pgCurrent = $pgPaginator ? $pgPaginator->currentPage() : 1;
@@ -922,19 +866,14 @@
                 </p>
             </nav>
         @endif
-        </div><!-- /.table-responsive : pagination ikut di dalam area scroll -->
+        </div><!-- /.table-responsive -->
     </div>
 
     @push('scripts')
     {{-- JSZip (bundel Vite, bukan CDN) hanya untuk popup cetak "Semua Kelas". --}}
     @vite(['resources/js/rekap-print-zip.js'])
     <script>
-        /* Filter otomatis Rekap: debounce 250ms supaya ganti beberapa
-           dropdown berturut-turut hanya memicu SATU submit form GET yang
-           sama persis seperti tombol kaca pembesar sebelumnya (parameter
-           identik). Pakai event change (bukan input/keyup) sehingga navigasi
-           panah keyboard tidak memicu reload; submit hanya saat pilihan
-           dikomit (klik/Enter/blur). Loader global tampil otomatis. */
+        /* Filter otomatis Rekap: debounce 250ms, satu submit form GET. */
         (function () {
             var rekapFilterTimer = null;
             window.debounceRekapFilterSubmit = function (form) {
@@ -952,10 +891,7 @@
             if (urlParams.has('page')) {
                 const el = document.getElementById('daftar-rekap');
                 if (el) {
-                    // Scroll INSTAN (tanpa animasi) di dalam area scroll halaman.
-                    // scrollIntoView smooth sebelumnya memicu animasi scroll yang
-                    // menggerakkan header sticky/address-bar mobile berulang
-                    // sehingga navbar tampak berkedip/lompat tiap ganti halaman.
+                    // Scroll instan (tanpa animasi) supaya header tidak berkedip.
                     var scroller = el.closest('main');
                     scroller = scroller ? scroller.querySelector(':scope > .flex-1') : null;
                     var header = document.querySelector('.app-header-bar');
@@ -972,7 +908,6 @@
         });
 
         // ==================== MODAL CETAK REKAP PRESENSI ====================
-        // Data kelas dikirim server ke popup (sumber: $classes + $siswaPerKelas).
         window.REKAP_KELAS_CETAK = @json($kelasCetak ?? []);
         window.REKAP_SISWA_PER_KELAS = @json($siswaPerKelas ?? []);
         window.REKAP_SISWA_TOTAL = @json($siswaTotal ?? null);
@@ -984,7 +919,6 @@
             });
         }
 
-        // Utility: update info box text
         function updateRekapInfoText() {
             const mode = document.querySelector('input[name="print_mode"]:checked')?.value;
             const scope = document.querySelector('input[name="student_scope"]:checked')?.value;
@@ -993,7 +927,6 @@
             const infoText = document.getElementById('rekapInfoText');
             if (!infoText) return;
 
-            // Deskripsi modal berdasarkan format yang dipilih
             const descText = document.getElementById('rekapInfoDesc');
             if (descText) {
                 descText.textContent = format === 'excel'
@@ -1028,7 +961,6 @@
                 }
 
                 if (scope === 'classes') {
-                    // "Semua Kelas": satu file per kelas, jumlah kelas yang punya siswa.
                     text = {!! json_encode(__('Semua Kelas')) !!} + ' • ' + rangeText
                         + ' • ' + rekapKelasDenganSiswa().length + ' ' + {!! json_encode(__('kelas')) !!}
                         + ' • ' + formatLabel + ' (' + {!! json_encode(__('satu file per kelas')) !!} + ')';
@@ -1051,14 +983,6 @@
             infoText.textContent = text;
         }
 
-        // ==========================================================
-        // SATU FUNGSI PENYELENAI: seluruh tampilan popup mengikuti
-        // radio yang sedang aktif. Dipanggil dari onchange radio
-        // (toggleRekapPrintScope / toggleRekapStudentScope) maupun
-        // dari handler buka popup, sehingga tidak ada lagi kondisi
-        // tampilan yang "nyangkut" dari mode sebelumnya.
-        // ==========================================================
-
         /** Kosongkan pencarian siswa: input, siswa terpilih, dropdown, pesan. */
         function rekapResetPencarianSiswa() {
             const input = document.getElementById('rekapStudentSearch');
@@ -1080,6 +1004,7 @@
             }
         }
 
+        /** Satu fungsi penyelaras: tampilan popup mengikuti radio yang aktif. */
         function syncModeUI() {
             const modeSiswa = !!document.getElementById('printModeStudent')?.checked;
             const scope = document.querySelector('input[name="student_scope"]:checked')?.value;
@@ -1091,22 +1016,10 @@
             const scopeSingle = modeSiswa && scope === 'single';
             const scopeClass = modeSiswa && scope === 'class';
 
-            // "Cari Siswa" (dan input + teks bantuannya) HANYA tampil pada
-            // mode Per Siswa + cakupan Satu Siswa. Mode Per Kelas dan
-            // cakupan lain wajib tersembunyi penuh, bukan sekadar dikosongkan.
             if (studentScopeContainer) studentScopeContainer.style.display = modeSiswa ? 'block' : 'none';
             if (singleStudentContainer) singleStudentContainer.style.display = scopeSingle ? 'block' : 'none';
             if (classScopeContainer) classScopeContainer.style.display = scopeClass ? 'block' : 'none';
 
-            // Catatan: form ini SELALU memakai data-no-download (lihat tag <form>).
-            // Smart loader memasang listener submit di fase CAPTURE pada document
-            // lalu melakukan stopPropagation, jadi listener submit form ini tidak
-            // akan pernah jalan. Semua mode ditangani di sini: mode "Semua Kelas"
-            // oleh loop per kelas (cetakSemuaKelas), mode lain oleh helper
-            // downloadWithProgress().
-
-            // Berpindah dari Per Siswa ke Per Kelas: buang sisa pencarian supaya
-            // dropdown hasil & pesan error tidak ikut terbawa.
             if (!modeSiswa) {
                 rekapResetPencarianSiswa();
             }
@@ -1114,13 +1027,11 @@
             updateRekapInfoText();
         }
 
-        // Dipakai sebagai onchange inline pada radio "Jenis Cetak".
         function toggleRekapPrintScope() {
             syncModeUI();
             toggleRekapPeriodFields();
         }
 
-        // Dipakai sebagai onchange inline pada radio "Cakupan Siswa".
         function toggleRekapStudentScope() {
             syncModeUI();
             toggleRekapPeriodFields();
@@ -1134,11 +1045,7 @@
                 if (!el) return;
                 const active = (id === 'period' + period.charAt(0).toUpperCase() + period.slice(1));
                 el.style.display = active ? 'block' : 'none';
-                // Field tersembunyi ikut terkirim kalau hanya disembunyikan
-                // (input/select tersembunyi tetap terkirim). Karena itu:
-                // (1) dua <select name="period_academic_year"> saling menimpa,
-                // (2) nilai periode halaman lama ikut terkirim. Nonaktifkan
-                // semua kontrol di blok yang tidak aktif.
+                // Kontrol di blok tidak aktif dinonaktifkan supaya tidak ikut terkirim.
                 el.querySelectorAll('input, select, textarea').forEach(ctrl => {
                     ctrl.disabled = !active;
                 });
@@ -1146,8 +1053,6 @@
             updateRekapInfoText();
         }
 
-        // Hitung rentang periode di sisi browser untuk info box popup.
-        // Mengikuti aturan yang sama dengan resolveDateRange() di server.
         const BULAN = [
             {!! json_encode(__('Januari')) !!}, {!! json_encode(__('Februari')) !!}, {!! json_encode(__('Maret')) !!},
             {!! json_encode(__('April')) !!}, {!! json_encode(__('Mei')) !!}, {!! json_encode(__('Juni')) !!},
@@ -1210,7 +1115,7 @@
             return null;
         }
 
-        // Student search with debounce
+        // Pencarian siswa dengan debounce
         let studentSearchTimer = null;
         const studentSearchInput = document.getElementById('rekapStudentSearch');
         const studentSearchResults = document.getElementById('studentSearchResults');
@@ -1256,7 +1161,6 @@
                 }, 250);
             });
 
-            // Hide results when clicking outside
             document.addEventListener('click', function(e) {
                 if (!studentSearchInput.contains(e.target) && !studentSearchResults.contains(e.target)) {
                     studentSearchResults.style.display = 'none';
@@ -1264,9 +1168,7 @@
             });
         }
 
-        // Form submit handling
-        // Format cetakan dipilih dari TOMBOL yang diklik (bukan dari event.relatedTarget
-        // yang rapuh: bisa null sehingga jatuh ke fallback 'pdf').
+        // Format cetakan dipilih dari TOMBOL yang diklik.
         window.rekapPrintFormat = 'pdf';
         function setRekapPrintFormatFromButton(btn) {
             const f = btn?.getAttribute('data-format');
@@ -1276,13 +1178,8 @@
             updateRekapInfoText();
         }
 
-        // Terapkan format saat submit, tepat sebelum form dikirim, supaya
-        // tidak ada kode lain yang menimpanya kembali ke 'pdf'.
-
         // ================= CETAK "SEMUA KELAS" =================
-        // Server selalu_dp_tangani satu kelas per request (student_scope=class).
-        // Di sini kita mengulang request itu satu per satu, BERURUTAN, jeda 500 ms,
-        // lalu mengubah tiap respons blob menjadi unduhan otomatis.
+        // Satu request per kelas, berurutan, jeda 500 ms, hasilnya dikumpulkan ke ZIP.
         let rekapLoopStopped = false;
         let rekapLoopRunning = false;
         let rekapGagalKelas = [];   // daftar {nama, kelas, alasan}
@@ -1291,8 +1188,7 @@
             return new Promise(function (resolve) { setTimeout(resolve, ms); });
         }
 
-        /** Tunggu display mencapai 100%, tahan ~300 ms, lalu tombol "Selesai".
-            Maksimal 3 detik supaya tidak pernah menggantung. */
+        /** Tunggu display mencapai 100%, maksimal 3 detik. */
         function rekapTungguSelesai() {
             return new Promise(function (resolve) {
                 const awal = Date.now();
@@ -1312,16 +1208,7 @@
         }
 
         /* ---------- progres DI DALAM tombol utama ---------- */
-        /* ---------- progres DI DALAM tombol utama ----------
-           Persen ASLI (target) dipisahkan dari persen TAMPIL. Display naik
-           1 demi 1 lewat timer komponen bersama (tidak pernah mundur, tidak
-           pernah diam di 0%).
-
-           Ceiling saat menunggu kelas ke-i dari N:
-               ceiling = persenSelesai + 0.9 * (100 / N)
-           Jadi angka merayap maju selama kelas diproses, tapi tidak pernah
-           melewati batas kelas berikutnya sebelum kelas itu selesai. */
-        const REKAP_MARGIN = 0.9;   // bagian dari 1 kelas yang boleh dimakanahead
+        const REKAP_MARGIN = 0.9;   // bagian dari 1 kelas yang boleh didahului
 
         function rekapMargin(total) {
             const n = total || 0;
@@ -1333,17 +1220,14 @@
             if (label) label.textContent = teks;
         }
 
-        /** Kelas selesai -> target baru; display mengejar cepat tanpa lompat. */
         function rekapSetProgress(selesai, total) {
             const totalNum = total || 0;
             const persenSelesai = totalNum > 0 ? (selesai / totalNum) * 100 : 0;
             const margin = rekapMargin(totalNum);
 
-            // Target = persen kelas yang sudah selesai, ceiling sedikit di atasnya.
             if (window.dlProgressSet) {
                 window.dlProgressSet(persenSelesai, margin);
             } else {
-                // Fallback tanpa komponen bersama.
                 const persen = Math.round(persenSelesai);
                 const fill = document.getElementById('rekapBtnFill');
                 if (fill) fill.style.width = persen + '%';
@@ -1372,8 +1256,7 @@
             rekapSetProgress(0, 0);
         }
 
-        /* Menunggu Retry-After: kita benar-benar tidak tahu persentasenya,
-           jadi dipakai mode GESER (bar gelap melintas + teks "Memproses..."). */
+        /* Menunggu Retry-After: mode GESER (bar gelap melintas). */
         function rekapTampilkanAntrean() {
             const btn = document.getElementById('printRekapSubmitBtn');
             if (!btn) return;
@@ -1397,8 +1280,6 @@
                 btn.style.backgroundColor = '';
                 btn.style.borderColor = '';
                 btn.removeAttribute('data-mode');
-                // Mode biasa (bukan loop ZIP) butuh estimasi komponen bersama,
-                // jadi tanda 'asli' yang dipasang loop harus dibuang di sini.
                 btn.removeAttribute('data-dl-persen');
                 rekapIsiTombol({!! json_encode(__('Generate & Unduh')) !!});
             }
@@ -1414,13 +1295,11 @@
             }
         }
 
-        /* ---------- hasil akhir ---------- */
-
-        /** Tutup popup rekap (dipakai setelah selesai / setelah dibatalkan). */
+        /** Tutup popup rekap. */
         function rekapTutupPopup() {
             const modal = document.getElementById('printRekapModal');
             if (!modal) return;
-            if (!modal.classList.contains('show')) return;   // sudah tertutup, jangan recursion
+            if (!modal.classList.contains('show')) return;
             try {
                 if (window.bootstrap && window.bootstrap.Modal) {
                     const inst = window.bootstrap.Modal.getInstance(modal) || new window.bootstrap.Modal(modal);
@@ -1432,8 +1311,7 @@
             } catch (e) { /* popup tetap bisa ditutup manual */ }
         }
 
-/** Semua kelas berhasil: tombol hijau "Selesai" 1 detik lalu popup menutup sendiri.
-            Teks "Selesai" SAJA — tanpa ikon centang. */
+        /** Semua kelas berhasil: tombol hijau "Selesai" 1 detik lalu popup menutup. */
         function rekapTampilkanSukses() {
             const btn = document.getElementById('printRekapSubmitBtn');
             const cancel = document.getElementById('rekapCancelBtn');
@@ -1454,7 +1332,7 @@
             setTimeout(rekapTutupPopup, 1000);
         }
 
-        /** Ada kelas gagal: tombol jadi "Coba lagi (n)" + satu baris merah di bawah field. */
+        /** Ada kelas gagal: tombol jadi "Coba lagi (n)" + baris merah. */
         function rekapTampilkanGagal() {
             rekapLoopRunning = false;
             const jumlah = rekapGagalKelas.length;
@@ -1465,7 +1343,6 @@
                 btn.classList.remove('is-running', 'is-done');
                 btn.style.backgroundColor = '';
                 btn.style.borderColor = '';
-                // Tombol ini jadi pemicu "Coba lagi".
                 btn.dataset.mode = 'retry';
                 rekapIsiTombol('Coba lagi (' + jumlah + ')');
             }
@@ -1496,7 +1373,7 @@
             if (toggle) toggle.textContent = {!! json_encode(__('Lihat detail')) !!};
         }
 
-        /** Ubah blob + nama file dari header Content-Disposition menjadi unduhan. */
+        /** Ubah blob menjadi unduhan. */
         function rekapSimpanBlob(blob, fileName) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1509,7 +1386,7 @@
             setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
         }
 
-        /* ============ ZIP (JSZip, dimuat via Vite hanya di halaman ini) ============ */
+        /* ============ ZIP (JSZip via Vite) ============ */
 
         function rekapZipTersedia() {
             return typeof window.JSZip !== 'undefined' && window.JSZip !== null;
@@ -1524,7 +1401,6 @@
             }
         }
 
-        /** Simpan satu blob kelas ke dalam ZIP (tidak langsung diunduh). */
         function rekapZipTambah(namaDasar, blob) {
             if (!rekapZipTersedia()) return null;
             if (!window.REKAP_ZIP) {
@@ -1539,11 +1415,7 @@
             return window.REKAP_ZIP ? Object.keys(window.REKAP_ZIP.files || {}).length : 0;
         }
 
-        /**
-         * Rakit ZIP lalu unduh SATU file.
-         * PDF/XLSX sudah terkompresi sendiri, jadi compression 'STORE' jauh lebih
-         * cepat daripada DEFLATE dan hasilnya hampir sama.
-         */
+        /** Rakit ZIP lalu unduh SATU file (compression STORE: PDF/XLSX sudah terkompresi). */
         async function rekapZipUnduh() {
             if (!window.REKAP_ZIP) return false;
             const blob = await window.REKAP_ZIP.generateAsync({ type: 'blob', compression: 'STORE' });
@@ -1559,7 +1431,7 @@
             return true;
         }
 
-        /** Token periode untuk nama file: mis. "10_2026" (bulanan), "2026-10-06" (harian). */
+        /** Token periode untuk nama file: "10_2026" (bulanan), "20261006" (harian). */
         function rekapTokenPeriode(periodType, baseFields) {
             const cari = function (nama) {
                 const found = baseFields.filter(function (f) { return f[0] === nama; });
@@ -1581,7 +1453,6 @@
                 .replace(/[^A-Za-z0-9_-]/g, '');
         }
 
-        /** Nama file ZIP gabungan. */
         function rekapNamaZip(token) {
             return 'Profil_Presensi_Semua_Kelas_' + (token || 'periode') + '.zip';
         }
@@ -1596,7 +1467,7 @@
             return basic ? basic[1] : null;
         }
 
-        /** 429 = kondisi sementara: baca Retry-After, tunggu, lalu coba lagi. */
+        /** 429 = sementara: baca Retry-After, tunggu, coba lagi. */
         function rekapRetryAfter(res) {
             const h = res && res.headers && res.headers.get ? res.headers.get('Retry-After') : null;
             const detik = parseInt(h || '', 10);
@@ -1647,7 +1518,6 @@
                 }
 
                 const blob = await res.blob();
-                // Disimpan ke ZIP: Profil_<Kelas>_<Periode>.<ext>
                 const ext = (ct.indexOf('spreadsheetml') !== -1) ? 'xlsx' : 'pdf';
                 const nama = 'Profil_' + namaKelas + '_' + (window.REKAP_TOKEN_PERIODE || '') + '.' + ext;
                 const tersimpan = rekapZipTambah(nama, blob);
@@ -1669,11 +1539,7 @@
             const cancel = document.getElementById('rekapCancelBtn');
             const infoText = document.getElementById('rekapInfoText');
 
-            /* Progres started LANGSUNG di baris pertama: tampil 0%, lalu naik ke 1%
-               dalam <=100 ms. Tidak menunggu daftar kelas / penyiapan ZIP.
-               Tandai 'asli' supaya timer ESTIMASI komponen bersama tidak ikut
-               menebak: loop di bawah memang mengirim persen kelas asli lewat
-               window.dlProgressSet, dan tanpa tanda ini angka bisa melompat. */
+            // Progres dimulai langsung; tandai 'asli' supaya timer estimasi tidak ikut menebak.
             if (btn && window.dlProgressMulai) {
                 btn.dataset.dlPersen = 'asli';
                 window.dlProgressMulai(btn, 3);
@@ -1690,19 +1556,15 @@
             }
 
             rekapResetPanel();
-            // Pada retry, file kelas yang sudah berhasil masih ada di ZIP, jadi
-            // progres dilanjutkan dari situ (bar tidak melompat balik ke 0).
+            // Saat retry, file yang sudah berhasil masih ada di ZIP; progres lanjut dari situ.
             const offset = Array.isArray(daftarOverride) ? rekapZipJumlahFile() : 0;
             const totalKeseluruhan = offset + daftar.length;
 
             if (!Array.isArray(daftarOverride)) {
-                // Unduhan baru: objek ZIP dibuang agar memori bebas.
                 rekapZipKosong();
             }
 
             if (btn) {
-                // Angkanya sudah jalan sejak klik; sekarang baru pakai ceiling
-                // yang benar sesuai jumlah kelas.
                 if (window.dlProgressSet) {
                     window.dlProgressSet(0, rekapMargin(totalKeseluruhan));
                 } else {
@@ -1718,10 +1580,7 @@
                 cancel.removeAttribute('data-bs-dismiss');
             }
 
-            // Field periode diambil dari BLOK periode yang aktif (yang sedang tampil),
-            // bukan dengan memeriksa atribut disabled - kalau disable belum
-            // berjalan, hasil sebelumnya kosong dan server tidak pernah
-            // menerima periode.
+            // Field periode diambil dari BLOK periode yang aktif.
             const periodTypeSel = document.getElementById('rekapPeriodType');
             const periodType = periodTypeSel && periodTypeSel.value ? periodTypeSel.value : '{{ $type }}';
             const blockIds = {
@@ -1742,7 +1601,6 @@
             const csrf = rekapcsrf();
             const format = window.rekapPrintFormat === 'excel' ? 'excel' : 'pdf';
 
-            // Nama file di dalam ZIP: Profil_<Kelas>_<Periode>.<ext>
             window.REKAP_TOKEN_PERIODE = rekapTokenPeriode(periodType, baseFields);
             window.REKAP_ZIP_NAMA_FILE = rekapNamaZip(window.REKAP_TOKEN_PERIODE);
 
@@ -1772,20 +1630,15 @@
 
                 rekapSetProgress(offset + selesai + rekapGagalKelas.length, totalKeseluruhan);
 
-                // Jeda antar unduhan supaya browser sempat menyimpan file.
                 if (i < daftarTugas.length - 1) await rekapPause(500);
             }
 
-            // Ada kelas gagal? ZIP TIDAK langsung diunduh supaya pengguna bisa
-            // menekan "Coba lagi (n)" lebih dulu. File yang sudah berhasil
-            // tetap tersimpan di objek ZIP (tidak perlu diunduh ulang).
+            // Ada kelas gagal: ZIP belum diunduh supaya pengguna bisa "Coba lagi (n)".
             if (rekapGagalKelas.length > 0) {
                 rekapTampilkanGagal();
                 return;
             }
 
-            // Semua kelas sudah masuk ZIP: display mengejar 100% (+1 tiap 12 ms),
-            // tahan ~300 ms, baru tombol hijau "Selesai".
             rekapSetProgress(totalKeseluruhan, totalKeseluruhan);
             if (btn) btn.classList.add('is-running', 'btn-progress');
 
@@ -1802,7 +1655,6 @@
                 return;
             }
 
-            // Beri waktu display sampai benar-benar 100% sebelum "Selesai".
             if (window.dlProgressFinal) {
                 window.dlProgressFinal();
             }
@@ -1810,23 +1662,20 @@
             rekapTampilkanSukses();
         }
 
-        /** Ulangi HANYA kelas yang gagal (tombol utama berubah jadi "Coba lagi (n)"). */
+        /** Ulangi HANYA kelas yang gagal. */
         async function cetakUlangKelasGagal() {
             if (rekapLoopRunning || !rekapGagalKelas.length) return;
-            // Abaikan entri kegagalan yang bukan kelas (mis. gagal menyusun ZIP).
             const sisaKelas = rekapGagalKelas
                 .filter(function (item) { return item.kelas; })
                 .map(function (item) { return item.kelas; });
             rekapGagalKelas = [];
             if (!sisaKelas.length) {
-                // Tidak ada kelas gagal (hanya ZIP yang gagal): coba susun ulang.
                 await cetakSemuaKelas();
                 return;
             }
             await cetakSemuaKelas(sisaKelas);
         }
 
-        // Tombol utama jadi pemicu retry saat sedang menampilkan "Coba lagi (n)".
         document.getElementById('printRekapSubmitBtn')?.addEventListener('click', function (e) {
             if (this.dataset.mode === 'retry') {
                 e.preventDefault();
@@ -1844,10 +1693,8 @@
         });
 
         /* ---------- Batal / Hentikan ----------
-           Berlaku untuk SEMUA mode: tombol Batal, tombol X, dan klik backdrop
-           semuanya membatalkan unduhan (AbortController.abort()), menghentikan
-           timer, lalu LANGSUNG menutup popup. Tidak ada teks pembatalan,
-           tidak ada toast, tidak ada pesan error sama sekali. */
+           Tombol Batal, tombol X, dan klik backdrop membatalkan unduhan
+           dan langsung menutup popup, tanpa pesan apa pun. */
         (function () {
             const btn    = document.getElementById('printRekapSubmitBtn');
             const batal  = document.getElementById('rekapCancelBtn');
@@ -1864,13 +1711,11 @@
             }
 
             function batalkanSemua() {
-                // Loop "Semua Kelas": hentikan loop + buang objek ZIP.
                 if (rekapLoopRunning) {
                     rekapLoopStopped = true;
                     rekapZipKosong();
                     rekapLoopRunning = false;
                 }
-                // Mode lain: abort lewat helper (senyap, tanpa pesan).
                 if (typeof window.dlProgressAbort === 'function') {
                     window.dlProgressAbort();
                 }
@@ -1880,10 +1725,9 @@
             }
 
             btn.addEventListener('dl-busy-start', function (e) {
-                if (rekapLoopRunning) return;    // loop "Semua Kelas" aturan sendiri
+                if (rekapLoopRunning) return;
                 controller = e.detail ? e.detail.controller : null;
                 if (!controller) return;
-                // "Batal" -> "Hentikan" (lebar tetap, gaya tetap).
                 batal.textContent = {!! json_encode(__('Hentikan')) !!};
                 batal.removeAttribute('data-bs-dismiss');
             });
@@ -1892,7 +1736,6 @@
                 keModeBatal();
             });
 
-            // Klik tombol Batal/Hentikan.
             batal.addEventListener('click', function (e) {
                 if (batal.textContent !== {!! json_encode(__('Hentikan')) !!} && !rekapLoopRunning) return;
                 e.preventDefault();
@@ -1900,7 +1743,6 @@
                 batalkanSemua();
             }, true);
 
-            // Tombol X dan klik backdrop -> hide.bs.modal.
             modal.addEventListener('hide.bs.modal', function () {
                 const jalan = rekapLoopRunning
                     || (typeof window.dlProgressBusy === 'function' && window.dlProgressBusy());
@@ -1908,19 +1750,15 @@
             });
         })();
 
-        /* ---------- tombol utama jadi pemicu retry saat mode = retry ---------- */
-
         document.getElementById('printRekapForm')?.addEventListener('submit', function(e) {
             const formatInput = document.getElementById('printFormat');
             if (formatInput) {
                 formatInput.value = (window.rekapPrintFormat === 'excel') ? 'excel' : 'pdf';
             }
 
-            const mode = document.querySelector('input[name="print_mode"]:checked')?.value;
-            const format = document.getElementById('printFormat')?.value;
             const scope = document.querySelector('input[name="student_scope"]:checked')?.value;
 
-            // Validation
+            // Validasi
             if (document.getElementById('printModeStudent').checked) {
                 if (scope === 'single' && !document.getElementById('rekapStudentId').value) {
                     e.preventDefault();
@@ -1932,16 +1770,8 @@
                     alert({!! json_encode(__('Pilih kelas terlebih dahulu.')) !!});
                     return;
                 }
-            } else if (document.getElementById('printModeClass')?.checked) {
-                // Cetak per Kelas memakai class_id tersembunyi milik form ini.
-                // Nilai kosong = semua kelas, itu sah jadi TIDAK diblokir.
-                // (Dulu kode ini menunjuk #modalClassId yang tidak pernah ada,
-                //  jadi selalu melempar TypeError.)
-                const classIdInput = document.querySelector('#printRekapForm input[name="class_id"]');
-                if (classIdInput && !classIdInput.value) {
-                    // Semua kelas: tidak perlu konfirmasi.
-                }
             }
+            // Mode Per Kelas: class_id kosong = semua kelas, sah, tidak diblokir.
 
             // Validasi periode: hanya field periode AKTIF yang penting.
             if (!computeRekapRange()) {
@@ -1950,11 +1780,9 @@
                 return;
             }
 
-            // "Semua Kelas" TIDAK dikirim sebagai satu form. Browser memecahnya
-            // jadi satu request per kelas (student_scope=class), berurutan.
+            // "Semua Kelas" dipecah jadi satu request per kelas, berurutan.
             if (document.getElementById('printModeStudent')?.checked && scope === 'classes') {
                 e.preventDefault();
-                // Kalau loop melempar error, tombol tetap harus dipulihkan.
                 Promise.resolve()
                     .then(function () { return cetakSemuaKelas(); })
                     .catch(function (err) {
@@ -1969,12 +1797,10 @@
                 return;
             }
 
-            // Mode selain "Semua Kelas": kirim lewat helper bersama supaya progres
-            // persen muncul DI DALAM tombol. Logika server (format, periode,
-            // scope) tetap sama karena isi form tidak berubah.
+            // Mode lain: kirim lewat helper bersama supaya progres persen muncul di tombol.
             const submitBtn = document.getElementById('printRekapSubmitBtn');
             if (typeof window.downloadWithProgress !== 'function') {
-                return;   // helper tidak termuat: biarkan submit normal berjalan
+                return;   // helper tidak termuat: submit normal berjalan
             }
 
             e.preventDefault();
@@ -1984,22 +1810,15 @@
                 body: body,
                 csrf: rekapcsrf()
             }).then(function (ok) {
-                // Berhasil: helper sudah menampilkan "Selesai" 1 detik, lalu tutup popup.
-                // Dibatalkan / gagal: JANGAN tampilkan apa pun.
                 if (ok) rekapTutupPopup();
             });
         });
 
-        // Initialize modal when shown - tugas ringan + inisialisasi yang diekspeksikan test
         document.getElementById('printRekapModal')?.addEventListener('show.bs.modal', function(event) {
-            // Backdrop Bootstrap dibuat di luar popup; class di <body> ini
-            // membuatnya ikut instan (tanpa fade) hanya untuk popup rekap.
             document.body.classList.add('rekap-modal-instant');
 
-            // Format sudah diambil saat klik tombol; relatedTarget hanya cadangan.
             setRekapPrintFormatFromButton(event.relatedTarget);
 
-            // Set periode berdasarkan tab aktif (harian/mingguan/bulanan).
             const currentType = {!! json_encode($type) !!};
             const periodMap = { harian: 'harian', mingguan: 'mingguan', bulanan: 'bulanan' };
             const periodSelect = document.getElementById('rekapPeriodType');
@@ -2007,9 +1826,6 @@
                 periodSelect.value = periodMap[currentType];
             }
 
-            // Set blok periode sesuai periode halaman, lalu buat field
-            // default (Bulan/Tahun = bulan/tahun sekarang; Tanggal = hari ini)
-            // supaya teks info dan validasi baca nilai yang benar.
             toggleRekapPeriodFields();
             const today = new Date();
             const bulan = String(today.getMonth() + 1).padStart(2, '0');
@@ -2020,22 +1836,18 @@
             if (bulanSel) bulanSel.value = bulan;
             if (tahunSel) tahunSel.value = tahun;
             const tanggal = document.getElementById('periodHarian') ? document.getElementById('periodHarian').querySelector('input[data-role="period-date"]') : null;
-            if (tanggal) tanggal.value = today.getFullYear() + '-' + bulan + '-' + today.getDate();
+            if (tanggal) tanggal.value = today.getFullYear() + '-' + bulan + '-' + String(today.getDate()).padStart(2, '0');
 
-            // Paksa ke mode "Cetak per Kelas" setiap popup dibuka (diekspeksikan test).
+            // Paksa ke mode "Cetak per Kelas" setiap popup dibuka.
             document.getElementById('printModeClass').checked = true;
             document.getElementById('scopeSingle').checked = true;
             document.getElementById('rekapPeriodType').value = periodMap[currentType] || 'bulanan';
 
-            // syncModeUI() diekspeksikan test dipanggil saat buka popup.
             syncModeUI();
-            // rekapZipKosong dipanggil saat buka popup (jaring pengaman).
             rekapZipKosong();
-            // rekapResetPencarianSiswa() diekspeksikan test dipanggil saat buka popup.
             rekapResetPencarianSiswa();
         });
 
-        // Reset state saat modal ditutup agar bersih untuk buka berikutnya.
         document.getElementById('printRekapModal')?.addEventListener('hidden.bs.modal', function() {
             document.body.classList.remove('rekap-modal-instant');
 
@@ -2045,29 +1857,22 @@
             if (typeof window.dlProgressReset === 'function') window.dlProgressReset();
         });
 
-        // Initialize on DOM ready — semua inisialisasi berat dilakukan SEKALI di sini,
-        // bukan di show.bs.modal, agar modal muncul instan saat diklik.
         document.addEventListener('DOMContentLoaded', function() {
-            // Keadaan awal popup mengikuti radio default (Per Kelas).
             syncModeUI();
             rekapResetPencarianSiswa();
             rekapResetPanel();
             rekapAktifkanTombolAwal();
             if (typeof window.dlProgressReset === 'function') window.dlProgressReset();
 
-            // Student search autocomplete URL (konstan dari server).
             const searchUrl = '{{ panel_route("rekap.student-search") }}';
             window.rekapStudentSearchUrl = searchUrl;
 
-            // Semua tombol pembuka modal (desktop + mobile) mengunci format-nya
-            // di sini, jadi tidak bergantung pada relatedTarget.
             document.querySelectorAll('[data-bs-target="#printRekapModal"]').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     setRekapPrintFormatFromButton(btn);
                 });
             });
 
-            // Info box & rentang ikut berubah begitu field periode diubah.
             const periodScope = document.getElementById('periodFields');
             if (periodScope) {
                 periodScope.addEventListener('change', updateRekapInfoText);
@@ -2097,13 +1902,8 @@
                 <h5 class="fw-bold mb-0">{{ __('Cetak Rekap Presensi') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-                {{-- data-no-download: smart loader (instant-download.js) memasang
-                     listener submit di fase CAPTURE pada document lalu
-                     preventDefault + stopPropagation, sehingga listener submit form
-                     ini tidak akan pernah jalan. Semua mode (Per Kelas / Satu Kelas /
-                     Satu Siswa) memakai helper bersama downloadWithProgress() supaya
-                     progres persen tampil DI DALAM tombol, dan "Semua Kelas" memakai
-                     loop per kelas sendiri. --}}
+                {{-- data-no-download: semua mode memakai helper bersama downloadWithProgress()
+                     dan "Semua Kelas" memakai loop per kelas sendiri. --}}
                 <form action="{{ panel_route('rekap.print') }}" method="POST" id="printRekapForm" data-no-download>
                 @csrf
                 <input type="hidden" name="format" id="printFormat" value="pdf">
@@ -2155,7 +1955,7 @@
                         </div>
                     </div>
 
-                    <!-- Pilih Siswa (untuk scope single) -->
+                    <!-- Pilih Siswa (scope single) -->
                     <div class="mb-3" id="singleStudentContainer" style="display: none;">
                         <label class="form-label small fw-semibold" for="rekapStudentSearch">{{ __('Cari Siswa') }} <span class="text-danger">*</span></label>
                         <div class="position-relative">
@@ -2166,7 +1966,7 @@
                         <input type="hidden" name="student_id" id="rekapStudentId">
                     </div>
 
-                    <!-- Pilih Kelas (untuk scope class) -->
+                    <!-- Pilih Kelas (scope class) -->
                     <div class="mb-3" id="classScopeContainer" style="display: none;">
                         <label class="form-label small fw-semibold">{{ __('Pilih Kelas') }} <span class="text-danger">*</span></label>
                         <select name="scope_class_id" id="rekapScopeClassId" class="form-select form-select-sm rounded-3">
@@ -2189,15 +1989,7 @@
                         </select>
                     </div>
 
-                    <!-- Periode Fields Dinamis.
-                         CATATAN: nilai awal TIDAK lagi diambil dari $startDate/$endDate
-                         hasil filter halaman. Dulu modal mewarisi rentang bulan bawaan
-                         halaman (mis. 01 Okt - 31 Okt), jadi memilih "Mingguan" tetap
-                         mengirim rentang bulan itu. Sekarang setiap periode punya
-                         field sendiri dan rentang FINAL dihitung resolveDateRange()
-                         dari nilai di sini, sehingga pilihan popup yang menang.
-                         Field tersembunyi juga di-disable oleh JS supaya tidak ikut
-                         terkirim (duplikat period_academic_year sebelumnya). -->
+                    <!-- Periode Fields Dinamis. Field tersembunyi di-disable oleh JS. -->
                     <div id="periodFields">
                         <!-- Harian: 1 tanggal -->
                         <div class="mb-3" id="periodHarian" style="display: none;">
@@ -2267,8 +2059,7 @@
                         <i class='bx bx-info-circle me-1'></i> <span id="rekapInfoText">{{ __('Pilih opsi cetak di atas untuk melihat ringkasan hasil.') }}</span>
                     </div>
 
-                    <!-- Baris kegagalan: hanya muncul kalau ada kelas yang gagal.
-                         Kalau tidak ada, disembunyikan sehingga tidak memakan ruang. -->
+                    <!-- Baris kegagalan: hanya muncul kalau ada kelas yang gagal. -->
                     <div class="small text-danger d-none mb-2" id="rekapFailLine" role="status" aria-live="polite">
                         <span id="rekapFailCount"></span>
                         <a href="#" id="rekapDetailToggle" class="ms-1">{{ __('Lihat detail') }}</a>
@@ -2277,18 +2068,9 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <!-- Dua tombol sama lebar, lebar tetap. Saat proses berjalan
-                         "Batal" berubah jadi "Hentikan" (lebar tetap). -->
                     <div class="dl-actions">
                         <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal" id="rekapCancelBtn">{{ __('Batal') }}</button>
-                        <!-- Tombol ini punya logika submit sendiri (#printRekapForm submit handler):
-     semua mode sudah diarahkan ke window.downloadWithProgress, termasuk loop
-     ZIP per kelas. Karena itu TIDAK diberi data-dl-progress supaya tidak
-     di-capture dua kali oleh pengikatan otomatis. -->
-                        <!-- Tombol Generate selalu biru sejak modal dibuka (bukan putih saat loading).
-         :not(.is-done) supaya state hijau "Selesai" tetap menang. -->
                         <button type="submit" class="btn-download-blue btn-progress px-3" data-download formaction="{{ panel_route('rekap.print') }}" data-url="{{ panel_route('rekap.print') }}" id="printRekapSubmitBtn">
-                            <!-- Lapisan warna = bar progres (lebar = persen) -->
                             <span class="btn-progress__fill" id="rekapBtnFill" aria-hidden="true"></span>
                             <span class="btn-progress__label" id="rekapBtnLabel">{{ __('Generate & Unduh') }}</span>
                         </button>

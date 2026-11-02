@@ -231,7 +231,6 @@
                 <th style="width: 10%;">{!! __('Jam Masuk') !!}</th>
                 <th style="width: 12%;">{!! __('Keterlambatan') !!}</th>
                 <th style="width: 8%;">{!! __('Status') !!}</th>
-                <th style="text-align: left; width: 26%;">{!! __('Catatan') !!}</th>
             </tr>
         </thead>
         <tbody>
@@ -263,11 +262,10 @@
                         <span class="badge-l">{{ $row['status'] }}</span>
                     @endif
                 </td>
-                <td class="text-left" style="font-size: 7.5pt;">{{ $row['notes'] }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+                <td colspan="8" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>

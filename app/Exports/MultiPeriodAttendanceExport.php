@@ -481,7 +481,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $dataLines = [];
 
         if ($this->type === 'harian') {
-            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK', 'Jam Masuk', 'Keterlambatan', 'Status', 'Catatan'];
+            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK', 'Jam Masuk', 'Keterlambatan', 'Status'];
 
             foreach ($rows as $row) {
                 $student = $row['student'];
@@ -495,7 +495,6 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $row['check_in'],
                     $row['late_text'],
                     $displayStatus,
-                    $row['notes'],
                 ]);
             }
         } elseif (in_array($this->type, ['semester', 'tahunan'], true)) {

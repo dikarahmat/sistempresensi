@@ -32,10 +32,6 @@
     .table-zebra-custom {
         width: 100%;
         table-layout: fixed;
-        /* Lantai lebar tabel: di layar sempit tabel digeser kiri-kanan, bukan
-           kolom-kolomnya dipipihkan. Semua kolom (NO, KELAS, NAMA KELAS,
-           STATUS WALI KELAS, JUMLAH SISWA, AKSI) ikut dihitung; nilai desktop
-           tidak berubah karena tabel selalu lebih lebar dari ini. */
         min-width: 880px;
         margin-bottom: 0;
     }
@@ -93,7 +89,7 @@
         }
     }
 
-    /* Header tabel Data Kelas: nilai DESKTOP (>= 1024px) tidak berubah. */
+    /* Header tabel Data Kelas */
     .table-zebra-custom thead th {
         color: #111827 !important;
         font-size: 0.75rem !important;
@@ -108,8 +104,6 @@
         font-family: 'Poppins', 'Roboto', sans-serif;
     }
 
-    /* TABLET & HP (<= 1023.98px): header jadi LATAR PUTIH + teks gelap
-       semibold + SATU garis tipis. Desktop >= 1024px tidak disentuh. */
     @media (max-width: 1023.98px) {
         .table-zebra-custom thead th {
             background-color: #ffffff !important;
@@ -118,72 +112,136 @@
         }
     }
 
-    /* ===== Action Bar: SATU BARIS RATA (pola sama persis dengan Data Siswa & Data Guru) =====
-       [input cari][ikon search][dropdown tingkat] ..... [IMPORT EXCEL][TAMBAH KELAS][HAPUS].
-       Semua elemen tinggi 38px dan sejajar vertikal; ikon search MENEMPEL di samping input. */
+    /* ==========================================================================
+       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ reset ] [ dropdown tingkat ]
+       Menggunakan CSS GRID agar konsisten dengan halaman siswa/guru:
+         >= 1024px : 1fr | 38px | 170px -> search, reset, dan dropdown dalam satu baris.
+       ========================================================================== */
     .action-bar-section {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem; /* 8px */
+        gap: 0.5rem;
     }
 
-    .action-bar-section .action-search-form {
-        display: flex;
-        flex-wrap: nowrap;
+    form.action-search-form {
+        --kh-h: 38px;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) var(--kh-h) 170px;
+        grid-template-areas: "search reset grade";
+        column-gap: 0.5rem;
+        row-gap: 0.5rem;
         align-items: center;
-        gap: 0.5rem;
-        flex: 1 1 auto;
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        height: auto;
+        min-height: 0;
         min-width: 0;
         margin: 0;
+        padding: 0;
     }
 
-    /* Input pencarian + ikon search = satu kesatuan, tidak pernah turun baris */
-    .action-bar-section .search-box-wrap {
+    @media (max-width: 1023.98px) {
+        form.action-search-form {
+            grid-template-columns: minmax(0, 1fr) var(--kh-h);
+            grid-template-areas:
+                "search reset"
+                "grade  grade";
+        }
+    }
+
+    form.action-search-form .search-box-wrap {
+        grid-area: search;
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+    form.action-search-form .btn-reset {
+        grid-area: reset;
+    }
+    form.action-search-form .filter-box-wrap {
+        grid-area: grade;
+        flex: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
+    form.action-search-form .input-group.search-box-wrap {
         display: flex;
         flex-wrap: nowrap;
         align-items: stretch;
-        flex: 1 1 auto;
-        min-width: 0;
-        width: auto;
-        max-width: none;
-        height: 38px;
-        margin-bottom: 0;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
     }
-    .action-bar-section .search-box-wrap input.form-control {
-        flex: 1 1 auto;
-        width: 100%;
-        min-width: 0;
-        height: 38px;
+    form.action-search-form .input-group.search-box-wrap > .form-control,
+    form.action-search-form .input-group.search-box-wrap > .btn {
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        box-sizing: border-box;
     }
-    .action-bar-section .search-box-wrap > .btn {
+    form.action-search-form .input-group.search-box-wrap > .form-control {
+        min-width: 0;
+    }
+    form.action-search-form .input-group.search-box-wrap > .btn {
         flex: 0 0 auto;
-        height: 38px;
+    }
+    form.action-search-form .input-group.search-box-wrap > .btn i,
+    form.action-search-form .input-group.search-box-wrap > .btn .bx {
+        font-size: 18px !important;
+        line-height: 1;
     }
 
-    .action-bar-section .filter-box-wrap {
-        flex: 0 0 auto;
-        min-width: 170px;
-        width: 170px;
-        margin-right: 2rem; /* 32px geser dropdown ke kiri, 8px gap ke tombol IMPORT EXCEL */
+    /* Tombol Reset: kotak 38x38, ikon abu-abu, biru saat hover/focus[cite: 5] */
+    form.action-search-form .btn-reset {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: var(--kh-h);
+        height: var(--kh-h);
+        padding: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        color: #64748b;
+        text-decoration: none;
+        cursor: pointer;
+        outline: none;
+        transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
     }
+    form.action-search-form .btn-reset svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+    }
+    form.action-search-form .btn-reset:hover,
+    form.action-search-form .btn-reset:focus-visible {
+        color: #2563eb;
+        border-color: #2563eb;
+        background: #f8fafc;
+        text-decoration: none;
+    }
+    form.action-search-form .btn-reset:focus-visible {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
+    }
+
     .action-bar-section .filter-box-wrap select.form-select {
-        height: 38px;
-        width: 100%;
-        min-width: 170px;
+        height: var(--kh-h) !important;
+        min-height: var(--kh-h) !important;
+        width: 100% !important;
         padding-left: 12px;
-        padding-right: 40px; /* ruang untuk panah dropdown */
+        padding-right: 40px;
         font-size: 0.85rem;
         letter-spacing: 0.03em;
-        text-overflow: clip;
-        overflow: visible;
-    }
-    .action-bar-section .filter-box-wrap select.form-select option {
-        font-size: 0.85rem;
-        padding: 0.375rem 0.75rem;
+        box-sizing: border-box;
     }
 
-    /* Deretan tombol aksi di kanan: tidak mengecil dan tidak menumpuk */
+    /* Deretan tombol aksi di kanan */
     .action-bar-section .action-buttons-wrap {
         display: flex;
         flex-wrap: wrap;
@@ -197,15 +255,7 @@
         flex: 0 0 auto;
     }
 
-    /* CATATAN: aturan susunan mobile untuk action bar sudah dipindah ke
-       layout bersama (layouts/app.blade.php) dan standar mobile
-       (public/css/presensi-tokens.css) - tidak ada duplikasi di sini. */
-
-    /* --------------------------------------------------------------------------
-       NOTIFIKASI HALAMAN DATA KELAS
-       Disamakan PERSIS dengan Data Siswa: markup .flash-notice-body (tanpa class
-       .alert-kelas), tampil FULL WIDTH tepat di bawah header halaman.
-       -------------------------------------------------------------------------- */
+    /* Notifikasi Halaman Data Kelas */
     .flash-notice-body .d-flex {
         align-items: center !important;
         line-height: 1;
@@ -221,7 +271,6 @@
         align-self: center !important;
     }
 
-    /* Notifikasi sukses: hijau muda bersih tanpa border (sama dengan Data Siswa) */
     .alert.alert-success {
         background-color: #dcfce7 !important;
         color: #166534 !important;
@@ -240,7 +289,7 @@
         justify-content: center;
         gap: 0.4rem;
         height: 38px !important;
-        border-radius: var(--clean-radius) !important; /* token radius bersama (6px), sama dengan .form-select */
+        border-radius: var(--clean-radius) !important;
         border: none !important;
         font-size: 0.85rem;
         font-weight: 600;
@@ -249,8 +298,6 @@
         padding: 0 1rem;
         transition: filter 0.15s ease, transform 0.1s ease;
         box-shadow: none !important;
-        /* UKURAN 3 TOMBOL ACTION BAR DISAMAKAN (SAMA DENGAN DATA SISWA): min-width 150px.
-           Di bawah 1024px, aturan layout bersama memaksa tiap tombol full width. */
         min-width: 150px;
         text-align: center;
     }
@@ -265,7 +312,7 @@
     .btn-solid-blue { background-color: #2563eb; }
     .btn-solid-red { background-color: #dc2626; }
 
-    /* Row Action Buttons (Pure Icon): tanpa background box, hanya ikon berwarna */
+    /* Row Action Buttons (Pure Icon) */
     .btn-row-action {
         display: inline-flex;
         align-items: center;
@@ -300,18 +347,10 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
     }
-    .btn-row-action.action-edit { color: #f59e0b; }        /* kuning/oranye */
+    .btn-row-action.action-edit { color: #f59e0b; }
     .btn-row-action.action-edit:hover { color: #d97706; }
-    .btn-row-action.action-delete { color: #dc2626; }      /* merah */
+    .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
-
-    /* Dropdown filter disamakan bentuknya (kotak sudut tumpul) */
-    .filter-select-wrap select.form-select,
-    .search-filter-group select.form-select {
-        border-radius: var(--clean-radius) !important;
-        height: 38px;
-        font-size: 0.85rem;
-    }
 
     #btnSaveClass {
         transition: background-color .15s ease, color .15s ease, opacity .15s ease;
@@ -358,7 +397,6 @@
         box-shadow: none !important;
     }
 
-    /* Bar progres Simpan Kelas: biru tua pekat, lebih gelap dari biru tombol (#2563eb) */
     #btnSaveClass .sv-bar {
         background: #1e3a8a !important;
         opacity: 1 !important;
@@ -368,7 +406,6 @@
         font-weight: 700;
     }
 
-    /* Kolom STATUS WALI KELAS: rata tengah, teks biasa, nama panjang wrap rapi */
     .wali-kelas-col {
         text-align: center !important;
         white-space: normal !important;
@@ -379,13 +416,11 @@
         color: #94a3b8 !important;
     }
 
-    /* Kolom JUMLAH SISWA: format konsisten "29 SISWA" */
     .jumlah-siswa-col {
         text-align: center !important;
         white-space: nowrap !important;
     }
 
-    /* Kolom AKSI: ikon rata tengah, jarak sama, tooltip ready */
     .aksi-col {
         text-align: center !important;
         white-space: nowrap !important;
@@ -397,10 +432,8 @@
 @endpush
 
 @section('content')
-    {{-- Wadah notifikasi buatan JS (hasil Tambah Kelas): full width tepat di bawah header, sama dengan Data Siswa. --}}
     <div id="classAlertBox"></div>
 
-    {{-- Notifikasi: markup disamakan PERSIS dengan Data Siswa (full width di bawah header). --}}
     @if(session('success'))
     <div class="alert alert-success flash-server alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -459,7 +492,6 @@
     </div>
     @endif
 
-    {{-- Notifikasi sukses HAPUS: MERAH (alert-danger) + ikon tempat sampah. --}}
     @if(session('deleted'))
     <div class="alert alert-danger alert-deleted alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -472,7 +504,6 @@
     </div>
     @endif
 
-    {{-- Rincian baris Excel yang dilewati ketika tidak ada pesan utama (3 status) --}}
     @if(!session('success') && !session('warning') && !session('error') && session('import_errors') && count(session('import_errors')) > 0)
     <div class="alert alert-warning alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert">
         <div class="flash-notice-body">
@@ -491,7 +522,6 @@
     @endif
 
     @if($errors->any())
-    {{-- Error validasi form: TETAP tampil sampai user memperbaikinya atau menekan tombol X. --}}
     <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-xs small mb-3" role="alert" data-flash-persist>
         <div class="flash-notice-body">
             <div class="fw-bold mb-1"><i class='bx bx-error me-1'></i> {{ __('Terjadi kesalahan input:') }}</div>
@@ -506,26 +536,18 @@
     @endif
 
     @if($canManage)
-    {{-- Form Hapus Semua Kelas (Hidden, dipanggil via confirmDeleteAllClasses()) --}}
     <form id="deleteAllClassesForm" action="{{ panel_route('classes.destroy-all') }}" method="POST" class="d-none">
         @csrf
         @method('DELETE')
     </form>
     @endif
 
-    <!-- ========================================================================= -->
-    <!-- KARTU UTAMA MASTER DATA KELAS: CLEAN ACTION BAR & TABEL TERPADU           -->
-    <!-- (Layout & container disamakan persis dengan Data Guru & Data Siswa)      -->
-    <!-- ========================================================================= -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kelas">
 
-        <!-- Action Bar & Filter -->
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section">
 
-                <!-- Sisi Kiri: Form Pencarian & Dropdown Tingkat Kelas (satu baris sejajar) -->
                 <form method="GET" action="{{ url()->current() }}" class="action-search-form">
-                    <!-- Search Bar: input + ikon search satu kesatuan (tidak turun baris) -->
                     <div class="input-group search-box-wrap">
                         <input type="text"
                                name="search"
@@ -541,7 +563,11 @@
                         </button>
                     </div>
 
-                    <!-- Dropdown Filter Tingkat Kelas: ganti tingkat -> langsung memuat ulang -->
+                    <!-- Tombol Reset: di samping kolom pencarian[cite: 5, 7, 8] -->
+                    <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                    </a>
+
                     <div class="filter-box-wrap">
                         <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal" aria-label="{{ __('Pilih tingkat kelas') }}">
                             <option value="">{{ __('Semua Tingkat') }}</option>
@@ -550,25 +576,20 @@
                             @endforeach
                         </select>
                     </div>
-
                 </form>
 
-                <!-- Sisi Kanan: Deretan Tombol Aksi (Admin & Guru) -->
                 <div class="action-buttons-wrap">
                     @if($canManage)
                     @if($importRoute)
-                    <!-- 1. Import Excel (Solid Hijau) -->
                     <button type="button" class="btn-solid-pill btn-solid-green" data-bs-toggle="modal" data-bs-target="#importClassModal">
                         <span>{{ __('Import Excel') }}</span>
                     </button>
                     @endif
 
-                    <!-- 2. Tambah Kelas (Solid Biru, Aksi Utama) -->
                     <button type="button" class="btn-solid-pill btn-solid-blue" data-bs-toggle="modal" data-bs-target="#addClassModal">
                         <span>{{ __('Tambah Kelas') }}</span>
                     </button>
 
-                    <!-- 3. Hapus Semua Kelas (Solid Merah - Urutan Terakhir) -->
                     @php
                         $hasAnyClasses = isset($totalClassesCount) ? ($totalClassesCount > 0) : (isset($classes) && method_exists($classes, 'total') ? $classes->total() > 0 : false);
                     @endphp
@@ -581,24 +602,22 @@
             </div>
         </div>
 
-        {{-- Tabel Master Data Kelas (Alignment & style disamakan persis dengan Data Guru & Data Siswa) --}}
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom">
                 <colgroup>
                     @if($canManage)
-                    <col style="width: 6%; min-width: 50px;">    {{-- NO --}}
-                    <col style="width: 12%; min-width: 80px;">   {{-- KELAS --}}
-                    <col style="width: 14%; min-width: 100px;">  {{-- NAMA KELAS --}}
-                    <col style="width: 30%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
-                    <col style="width: 20%; min-width: 140px;">  {{-- JUMLAH SISWA --}}
-                    <col style="width: 18%; min-width: 120px;">  {{-- AKSI --}}
+                    <col style="width: 6%; min-width: 50px;">
+                    <col style="width: 12%; min-width: 80px;">
+                    <col style="width: 14%; min-width: 100px;">
+                    <col style="width: 30%; min-width: 220px;">
+                    <col style="width: 20%; min-width: 140px;">
+                    <col style="width: 18%; min-width: 120px;">
                     @else
-                    {{-- Guru: tanpa kolom AKSI, proporsi sama dengan admin dan total 100% (full-width) --}}
-                    <col style="width: 7%; min-width: 50px;">    {{-- NO --}}
-                    <col style="width: 15%; min-width: 80px;">   {{-- KELAS --}}
-                    <col style="width: 17%; min-width: 100px;">  {{-- NAMA KELAS --}}
-                    <col style="width: 37%; min-width: 220px;">  {{-- STATUS WALI KELAS --}}
-                    <col style="width: 24%; min-width: 140px;">  {{-- JUMLAH SISWA --}}
+                    <col style="width: 7%; min-width: 50px;">
+                    <col style="width: 15%; min-width: 80px;">
+                    <col style="width: 17%; min-width: 100px;">
+                    <col style="width: 37%; min-width: 220px;">
+                    <col style="width: 24%; min-width: 140px;">
                     @endif
                 </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
@@ -636,12 +655,10 @@
                         @if($canManage)
                         <td data-label="{{ __('Aksi') }}" class="aksi-col px-3">
                             <div class="crud-center-wrapper">
-                                <!-- Tombol Edit Modal -->
                                 <button type="button" class="btn-row-action action-edit" data-bs-toggle="modal" data-bs-target="#editClassModal{{ $class->id }}" title="{{ __('Edit') }}" aria-label="{{ __('Edit') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
                                 </button>
 
-                                <!-- Tombol Hapus Satuan -->
                                 <button type="button" class="btn-row-action action-delete" onclick="confirmDeleteClass('{{ $class->id }}', '{{ addslashes($class->name) }}')" title="{{ __('Hapus') }}" aria-label="{{ __('Hapus') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                 </button>
@@ -673,7 +690,6 @@
     </div>
 
 @if($canManage)
-<!-- ================= MODAL EDIT KELAS (DIPINDAHKAN KE LUAR TABEL) ================= -->
 @foreach($classes as $class)
 <div class="modal fade" id="editClassModal{{ $class->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -745,7 +761,6 @@
 </div>
 @endforeach
 
-<!-- MODAL TAMBAH KELAS -->
 <div class="modal fade" id="addClassModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -812,7 +827,6 @@
 </div>
 
 @if($importRoute)
-<!-- MODAL IMPORT EXCEL KELAS -->
 <div class="modal fade" id="importClassModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -847,7 +861,6 @@
 
 @endsection
 
-{{-- Notifikasi sukses hilang otomatis 3 detik (untuk semua role) --}}
 @push('scripts')
 <script>
 (function () {
@@ -859,7 +872,6 @@
         }, delay);
     }
 
-    /* Notifikasi buatan JS: markup & posisi sama dengan notifikasi server (full width di bawah header) */
     window.kelasNotify = function (status, msg) {
         var box = document.getElementById('classAlertBox');
         if (!box || !msg) return null;
@@ -903,7 +915,6 @@
         }
     }
 
-    /* Notifikasi sukses dari server: kalau kembar dengan notifikasi JS, buang; kalau tidak, hilang sendiri 3 detik */
     var list = document.querySelectorAll('.alert.alert-success.flash-server');
     Array.prototype.forEach.call(list, function (el) {
         if (hasClientSuccess) {
@@ -1044,7 +1055,6 @@
         setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,150);
     })();
 
-    /* ===== Tambah Kelas: simpan via AJAX dengan progres + notifikasi full width di bawah header ===== */
     (function () {
         var form = document.getElementById('addClassForm');
         var btn = document.getElementById('btnSaveClass');
@@ -1119,7 +1129,6 @@
                 var ok = xhr.status < 400;
                 if (json && (json.status === 'error' || json.success === false || json.errors)) ok = false;
 
-                /* Server membalas HTML (redirect back) berisi alert error: ambil teksnya */
                 var htmlMsg = '';
                 if (!json) {
                     try {

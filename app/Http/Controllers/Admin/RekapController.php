@@ -78,16 +78,16 @@ class RekapController extends Controller
 
                 if ($att) {
                     $status = $row['status'];
-                    if ($status === self::STATUS_TERLAMBAT) {
+                    if ($status === Attendance::STATUS_TERLAMBAT) {
                         $totalTerlambat++;
                         $totalHadir++;
-                    } elseif ($status === self::STATUS_HADIR) {
+                    } elseif ($status === Attendance::STATUS_HADIR) {
                         $totalHadir++;
-                    } elseif ($status === self::STATUS_SAKIT) {
+                    } elseif ($status === Attendance::STATUS_SAKIT) {
                         $totalSakit++;
-                    } elseif ($status === self::STATUS_IZIN) {
+                    } elseif ($status === Attendance::STATUS_IZIN) {
                         $totalIzin++;
-                    } elseif ($status === self::STATUS_ALFA) {
+                    } elseif ($status === Attendance::STATUS_ALFA) {
                         $totalAlfa++;
                     }
                 } else {
@@ -467,7 +467,7 @@ class RekapController extends Controller
      */
     public function index(Request $request): View
     {
-        $type = $request->input('type', 'bulanan');
+        $type = $request->input('type', 'harian');
         $classId = $request->filled('class_id') ? (int) $request->input('class_id') : null;
         $classes = SchoolClass::orderBy('name')->get();
         $activeYear = AcademicYear::getActive();
