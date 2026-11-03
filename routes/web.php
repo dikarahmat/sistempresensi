@@ -21,6 +21,26 @@ use Illuminate\Support\Facades\Route;
 // ============================================================================
 
 // Redirect root ke dashboard sesuai role (admin/guru/piket), atau ke login
+// Rekap Presensi Guru
+    // Rekap Guru - Data Endpoint
+    Route::get('rekap/guru/data', [AdminRekapController::class, 'teacherRekap'])->name('rekap.guru.data');
+
+    // Rekap Guru - PDF Export
+    Route::get('rekap/guru/pdf', [AdminRekapController::class, 'exportTeacherPdf'])->name('rekap.guru.pdf');
+
+    // Rekap Guru - Excel Export  
+    Route::get('rekap/guru/excel', [AdminRekapController::class, 'exportTeacherExcel'])->name('rekap.guru.excel');
+
+    // Rekap Siswa - Data Endpoint  
+    Route::get('rekap/siswa/data', [AdminRekapController::class, 'getSiswaRecapData'])->name('rekap.siswa.data');
+
+    // Rekap Siswa - PDF Export
+    Route::get('rekap/siswa/pdf', [AdminRekapController::class, 'exportSiswaPdf'])->name('rekap.siswa.pdf');
+
+    // Rekap Siswa - Excel Export  
+    Route::get('rekap/siswa/excel', [AdminRekapController::class, 'exportSiswaExcel'])->name('rekap.siswa.excel');
+
+    // Route statis Wajib di atas Route::resource('guru' supaya tidak tertangkap {teacher}.
 Route::get('/', [AuthController::class, 'redirectRoot'])->name('root');
 
 // Autentikasi
@@ -63,6 +83,9 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
 
     // Kehadiran
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
+    Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
+    Route::post('/kehadiran/guru/{teacher}/history/pdf', [AttendanceController::class, 'printGuruHistory'])->name('kehadiran.guru-history.pdf');
     Route::post('/kehadiran/override', [AttendanceController::class, 'override'])->name('kehadiran.override')->middleware('throttle:20,1');
     // Riwayat Presensi per Siswa (akses dari menu Kehadiran)
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
@@ -237,6 +260,8 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     // KEHADIRAN - identik admin tetapi READ-ONLY
     // (route ubah status presensi / override sengaja tidak didaftarkan => 403)
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
+    Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 
@@ -292,6 +317,8 @@ Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(functi
 
     // KEHADIRAN - READ-ONLY (route override absensi sengaja tidak ada => 403)
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
+    Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 });

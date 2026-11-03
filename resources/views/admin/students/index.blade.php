@@ -144,7 +144,7 @@
         box-sizing: border-box;
     }
 
-    /* Tombol Reset: kotak 44x44, ikon abu-abu, biru saat hover/focus[cite: 5] */
+    /* Tombol Reset: kotak 44x44, ikon abu-abu, biru saat hover/focus */
     form.action-search-form .btn-reset {
         display: flex;
         align-items: center;
@@ -428,9 +428,7 @@
     }
 
     #btnSaveStudent:disabled,
-    #btnSaveStudent[disabled],
-    #btnSaveStudent.btn-progress:disabled,
-    #btnSaveStudent.btn-progress[disabled] {
+    #btnSaveStudent[disabled] {
         background-color: #2563eb !important;
         color: #ffffff !important;
         border-color: #2563eb !important;
@@ -444,25 +442,11 @@
         cursor: pointer !important;
         pointer-events: auto !important;
     }
-    #btnSaveStudent.btn-progress.is-saving,
-    #btnSaveStudent.btn-progress.is-saving:disabled {
-        opacity: 1 !important;
-        cursor: default !important;
-        pointer-events: none !important;
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-    }
 
-    #btnSaveStudent .sv-bar {
-        background: #1e3a8a !important;
-        opacity: 1 !important;
-    }
     #btnImportSubmit .imp-bar {
         background: #064e3b !important;
         opacity: 1 !important;
     }
-    #btnSaveStudent .sv-txt,
     #btnImportSubmit .imp-txt {
         color: #ffffff !important;
         font-weight: 700;
@@ -853,6 +837,7 @@
                 <h5 class="fw-bold mb-0">{{ __('Tambah Siswa Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <!-- Menggunakan data-no-loader agar layout global tidak memunculkan spinner besar -->
             <form id="addStudentForm" action="{{ route('admin.students.store') }}" method="POST" novalidate data-no-loader>
                 @csrf
                 <div class="modal-body py-3">
@@ -892,7 +877,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" id="btnSaveStudent" disabled aria-disabled="true">{{ __('Simpan Siswa') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold" id="btnSaveStudent" disabled aria-disabled="true">{{ __('Simpan Siswa') }}</button>
                 </div>
             </form>
         </div>
@@ -1175,7 +1160,7 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
 </script>
 
 <script>
-/* ===== Tambah Siswa ===== */
+/* ===== Tambah Siswa (Langsung tutup pop-up & simpan instan tanpa loader) ===== */
 (function () {
     var form = document.getElementById('addStudentForm');
     var btn = document.getElementById('btnSaveStudent');
@@ -1186,9 +1171,6 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
     var nisnEl = form.querySelector('[name="nisn"]');
     var kelasEl = form.querySelector('[name="school_class_id"]');
     var jkEl = form.querySelector('[name="gender"]');
-    var saving = false;
-    var labelAsli = btn.textContent;
-    var timerRef = null;
 
     var RE_NAMA_BUANG = /[^\p{L}\s.,'\-]/gu;
     var RE_NAMA_OK = /^[\p{L}\s.,'\-]+$/u;
@@ -1223,7 +1205,6 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
     }
 
     function sync() {
-        if (saving) return;
         var ok = valid();
         btn.disabled = !ok;
         btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
@@ -1242,7 +1223,7 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
         var el = e.target;
         if (el === nameEl || el === nisnEl) bersihkan(el);
         if (el === nameEl || el === nisnEl || el === kelasEl || el === jkEl) {
-            if (!saving) setErr(el, '');
+            setErr(el, '');
             sync();
         }
     }
@@ -1251,108 +1232,47 @@ window.confirmDeleteAllStudents = confirmDeleteAllStudents;
     form.addEventListener('paste', function (e) { setTimeout(function () { onChange(e); }, 0); });
     form.addEventListener('drop', function (e) { setTimeout(function () { onChange(e); }, 0); });
 
-    function resetSaving() {
-        saving = false;
-        clearInterval(timerRef);
-        delete btn.dataset.saving;
-        btn.classList.remove('is-saving');
-        btn.style.removeProperty('position');
-        btn.style.removeProperty('overflow');
-        btn.textContent = labelAsli;
-        sync();
-    }
-
-    function gagal(json) {
-        var map = { name: nameEl, nisn: nisnEl, school_class_id: kelasEl, gender: jkEl };
-        var tampil = false;
-        if (json && json.errors) {
-            Object.keys(json.errors).forEach(function (k) {
-                if (map[k]) {
-                    var m = [].concat(json.errors[k])[0];
-                    setErr(map[k], String(m));
-                    tampil = true;
-                }
-            });
-        }
-        if (!tampil) {
-            setErr(nisnEl, (json && json.message) ? String(json.message) : 'Data gagal disimpan. Periksa isian lalu coba lagi.');
-        }
-        resetSaving();
-    }
-
+    /* Begitu tombol Simpan diklik: langsung tutup modal, submit data secara senyap di background, lalu reload halaman */
     form.addEventListener('submit', function (e) {
         e.preventDefault();
-        e.stopImmediatePropagation();
-        if (saving) return;
         bersihkan(nameEl);
         bersihkan(nisnEl);
-        if (!valid()) { sync(); return; }
+        if (!valid()) {
+            sync();
+            return;
+        }
 
-        saving = true;
-        btn.dataset.saving = '1';
-        btn.classList.add('is-saving');
-        btn.disabled = true;
-        btn.style.position = 'relative';
-        btn.style.overflow = 'hidden';
-        btn.innerHTML = '<span class="sv-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:#1e3a8a;transition:width .15s"></span><span class="sv-txt" style="position:relative">0%</span>';
-        var bar = btn.querySelector('.sv-bar');
-        var txt = btn.querySelector('.sv-txt');
-        var shown = 0, real = 0, done = false;
+        // Tutup modal secara instan detik itu juga
+        if (window.bootstrap && modalEl) {
+            var modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
+        }
 
-        timerRef = setInterval(function () {
-            var target = done ? 100 : Math.max(real, Math.min(shown + 1, 92));
-            if (shown < target) {
-                shown++;
-                bar.style.width = shown + '%';
-                txt.textContent = shown + '%';
+        // Kirim data via fetch (AJAX) tanpa menampilkan loader muter di layar
+        var formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json, text/javascript, */*'
             }
-            if (shown >= 100) {
-                clearInterval(timerRef);
-                setTimeout(function () { location.reload(); }, 300);
-            }
-        }, 30);
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', form.getAttribute('action'));
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.upload.onprogress = function (ev) {
-            if (!ev.lengthComputable) return;
-            real = Math.min(90, Math.round(ev.loaded / ev.total * 90));
-        };
-        xhr.onload = function () {
-            var json = null;
-            try { json = JSON.parse(xhr.responseText); } catch (_) {}
-            var ok = xhr.status < 400;
-            if (json && (json.status === 'error' || json.success === false || json.errors)) ok = false;
-            if (!json && xhr.responseText.indexOf('id="addStudentForm"') > -1 && xhr.responseText.indexOf('is-invalid') > -1) ok = false;
-            if (!ok) { gagal(json); return; }
-            try {
-                sessionStorage.setItem('importAlert', JSON.stringify({
-                    status: 'success',
-                    msg: 'Data siswa berhasil ditambahkan!',
-                    details: []
-                }));
-            } catch (e) {}
-            done = true;
-        };
-        xhr.onerror = function () {
-            setErr(nisnEl, 'Koneksi bermasalah. Coba lagi.');
-            resetSaving();
-        };
-        xhr.send(new FormData(form));
-    }, true);
+        }).then(function (response) {
+            // Langsung reload halaman untuk menampilkan data terbaru dan notifikasi sukses dari server
+            window.location.reload();
+        }).catch(function () {
+            window.location.reload();
+        });
+    });
 
     if (modalEl) {
         modalEl.addEventListener('show.bs.modal', function () {
-            if (saving) return;
             try { form.reset(); } catch (e) {}
             [nameEl, nisnEl, kelasEl, jkEl].forEach(function (el) { setErr(el, ''); });
             sync();
         });
         modalEl.addEventListener('shown.bs.modal', function () { setTimeout(sync, 0); setTimeout(sync, 150); });
         modalEl.addEventListener('hidden.bs.modal', function () {
-            if (saving) return;
             try { form.reset(); } catch (e) {}
             setTimeout(sync, 0); setTimeout(sync, 150);
         });

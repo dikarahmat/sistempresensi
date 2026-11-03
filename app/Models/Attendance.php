@@ -330,18 +330,41 @@ class Attendance extends Model
         $timezone = 'Asia/Jakarta';
         $todayStr = \Carbon\Carbon::now($timezone)->toDateString();
 
+        $checkInTimeStr = Setting::getCheckInTime(); // e.g. '06:45'
+        // Normalize: pastikan format H:i:s untuk perbandingan
+        if (strlen($checkInTimeStr) === 5) {
+            $checkInTimeStr .= ':00';
+        }
+
         $lateLimitStr = $lateLimit ?: Setting::getLateLimitTime();
         if (strlen($lateLimitStr) === 5) {
             $lateLimitStr .= ':00';
         }
 
+        // --- TAMBAHAN: Cek apakah scan masih sebelum jam buka presensi ---
         $checkInCarbon = ($checkIn instanceof \Carbon\Carbon)
             ? $checkIn->copy()->setTimezone($timezone)
             : \Carbon\Carbon::parse($todayStr . ' ' . $checkIn, $timezone);
+        $openingCarbon = \Carbon\Carbon::parse($todayStr . ' ' . $checkInTimeStr, $timezone);
+
+        // Jika scan sebelum jam buka presensi, tolak dengan pesan khusus
+        if ($checkInCarbon->lessThan($openingCarbon)) {
+            return [
+                'db_status' => null,
+                'status' => Attendance::STATUS_ALFA,
+                'display_status' => Attendance::STATUS_ALFA,
+                'time_remark' => 'Presensi belum dibuka. Presensi dimulai pukul ' . Setting::getCheckInTime() . '.',
+                'is_late' => false,
+                'late_minutes' => 0,
+                'display_remark' => 'Presensi belum dibuka',
+            ];
+        }
+        // ---------------------------------------------------------
 
         $cutoffCarbon = \Carbon\Carbon::parse($todayStr . ' ' . $lateLimitStr, $timezone);
 
         $isLate = $checkInCarbon->greaterThan($cutoffCarbon);
+
         $lateMinutes = 0;
 
         if ($isLate) {

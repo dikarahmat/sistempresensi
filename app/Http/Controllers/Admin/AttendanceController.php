@@ -10,10 +10,14 @@ use App\Models\Holiday;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\TeacherAttendance;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AttendanceController extends Controller
@@ -533,6 +537,7 @@ class AttendanceController extends Controller
             'selectedYearId' => $selectedYearId,
             'activeYear' => $activeYear,
             'search' => $search,
+            'viewFor' => 'siswa',
             'totalKelas' => $totalKelas,
             'maxHari' => $maxHari,
             'totalSiswaSemua' => $totalSiswaSemua,
@@ -545,6 +550,450 @@ class AttendanceController extends Controller
         }
 
         return view('admin.attendances.kehadiran', $props);
+    }
+
+    /**
+     * Halaman Catatan Kehadiran Guru - /admin/kehadiran/guru
+     * Layout sama dengan catatan kehadiran siswa, bedanya data guru, kolom NIP,
+     * tanpa kolom kelas dan tanpa filter kelas.
+     */
+    public function kehadiranGuru(Request $request)
+    {
+        Carbon::setLocale('id');
+        $search = trim($request->input('search', ''));
+        $activeYear = AcademicYear::getActive();
+
+        $today = Carbon::now('Asia/Jakarta')->toDateString();
+
+        $todayAttendances = TeacherAttendance::where('date', $today)
+            ->select(['id', 'teacher_id', 'status', 'time_remark'])
+            ->get()
+            ->keyBy('teacher_id');
+
+        $teachersQuery = Teacher::query()
+            ->select(['id', 'nip', 'name'])
+            ->orderBy('name', 'asc');
+
+        if ($search !== '') {
+            $teachersQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        $teacherPaginator = $teachersQuery->paginate(100)->withQueryString();
+        $teachersList = $teacherPaginator->getCollection();
+
+        [$periodeMulai, $periodeAkhir, $periodeLabel] = Attendance::activeYearPeriod();
+        $hariSekolahLalu = Attendance::schoolDaysCount($periodeMulai, $periodeAkhir, true);
+        $hariSekolahDepan = max(0, Attendance::schoolDaysCount($periodeMulai, $periodeAkhir, false) - $hariSekolahLalu);
+
+        $teacherIds = $teachersList->pluck('id')->toArray();
+        $attendancesByTeacher = collect();
+        if ($teacherIds) {
+            $attendancesByTeacher = TeacherAttendance::whereIn('teacher_id', $teacherIds)
+                ->whereBetween('date', [$periodeMulai, $periodeAkhir])
+                ->get()
+                ->groupBy('teacher_id');
+        }
+
+        $teacherHistories = collect();
+        foreach ($teachersList as $teacher) {
+            $teacherAtts = $attendancesByTeacher->get($teacher->id, collect());
+
+            $ringkasan = TeacherAttendance::summarizeTeacher($teacherAtts, $hariSekolahLalu, $hariSekolahDepan);
+
+            $teacherHistories->push((object) [
+                'id' => $teacher->id,
+                'nip' => $teacher->nip ?: '-',
+                'name' => $teacher->name ?? '-',
+                'hadir' => $ringkasan['hadir'],
+                'terlambat' => $ringkasan['terlambat'],
+                'sakit' => $ringkasan['sakit'],
+                'izin' => $ringkasan['izin'],
+                'alfa' => $ringkasan['alfa'],
+            ]);
+        }
+
+        $teacherPaginator->setCollection($teacherHistories);
+        $studentHistories = $teacherPaginator;
+
+        $props = [
+            'studentHistories' => $studentHistories,
+            'classHistories' => collect(),
+            'search' => $search,
+            'activeYear' => $activeYear,
+            'viewFor' => 'guru',
+            'todayAttendances' => $todayAttendances,
+        ];
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($props);
+        }
+
+        return view('admin.attendances.kehadiran', $props);
+    }
+
+    /**
+     * Riwayat presensi spesifik per guru (dari menu Kehadiran guru).
+     * Menampilkan identitas guru, ringkasan Hadir/Terlambat/Sakit/Izin/Alfa,
+     * dan riwayat per tanggal (terbaru di atas).
+     */
+    public function teacherHistory(Request $request, Teacher $teacher): View
+    {
+        Carbon::setLocale('id');
+        $period = (string) $request->input('period', 'harian');
+        if (! in_array($period, ['harian', 'mingguan', 'bulanan', 'semua'], true)) {
+            $period = 'semua';
+        }
+
+        $anchor = Carbon::parse($request->input('tanggal', Carbon::now('Asia/Jakarta')->toDateString()));
+
+        // Determine date range based on period type
+        if ($period === 'harian') {
+            $startDate = $anchor->copy()->startOfDay();
+            $endDate = $anchor->copy()->endOfDay();
+            $periodLabel = $anchor->translatedFormat('l, d F Y');
+        } elseif ($period === 'bulanan') {
+            $startDate = $anchor->copy()->startOfMonth();
+            $endDate = $anchor->copy()->endOfMonth();
+            $periodLabel = $anchor->translatedFormat('F Y');
+        } elseif ($period === 'mingguan') {
+            $startDate = $anchor->copy()->startOfWeek(Carbon::MONDAY);
+            $endDate = $anchor->copy()->endOfWeek(Carbon::SUNDAY);
+            $periodLabel = $startDate->translatedFormat('d M')
+                . ' - ' . $endDate->translatedFormat('d M Y');
+        } else {
+            [$startDate, $endDate, $periodLabel] = Attendance::activeYearPeriod();
+        }
+
+        // Keamanan: pastikan rentang tidak terbalik.
+        if ($endDate->lt($startDate)) {
+            [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
+        }
+
+        $startDateStr = $startDate->toDateString();
+        $endDateStr = $endDate->toDateString();
+
+        // Data HANYA dari periode terpilih, urutan terbaru di atas.
+        $attendances = TeacherAttendance::where('teacher_id', $teacher->id)
+            ->whereBetween('date', [$startDateStr, $endDateStr])
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // Hitung stats menggunakan TeacherAttendance::summarizeTeacher
+        $hariSekolahLalu = Attendance::schoolDaysCount($startDate, $endDate, true);
+        $hariSekolahDepan = max(0, Attendance::schoolDaysCount($startDate, $endDate, false) - $hariSekolahLalu);
+        $totalHariBelajar = $hariSekolahLalu + $hariSekolahDepan;
+        $stats = TeacherAttendance::summarizeTeacher($attendances, $hariSekolahLalu, $hariSekolahDepan);
+
+        $h = $stats['hadir'] + $stats['terlambat'];
+        $percentage = $totalHariBelajar > 0 ? round(($h / $totalHariBelajar) * 100) : 0;
+
+        // Build rows untuk tabel riwayat per tanggal
+        $rows = [];
+        $no = 1;
+        foreach ($attendances as $att) {
+            $status = $att->effective_status;
+            $statusColor = match ($status) {
+                'Terlambat' => '#d97706',
+                'Hadir' => '#059669',
+                'Sakit' => '#2563eb',
+                'Izin' => '#7e22ce',
+                'Alfa' => '#dc2626',
+                default => '#6b7280',
+            };
+            $rows[] = [
+                'no' => $no++,
+                'date' => $att->date ? $att->date->format('d M Y') : '-',
+                'day' => $att->date ? $att->date->translatedFormat('l') : '-',
+                'status' => $status,
+                'status_color' => $statusColor,
+                'keterangan' => $att->time_remark ?: '-',
+                'check_in' => $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-',
+                'notes' => $att->notes ?: '-',
+            ];
+        }
+
+        if (empty($rows)) {
+            $rows[] = [
+                'no' => 1,
+                'date' => '-',
+                'day' => '-',
+                'status' => '-',
+                'status_color' => '#6b7280',
+                'keterangan' => '-',
+                'check_in' => '-',
+                'notes' => '-',
+            ];
+        }
+
+        $props = [
+            'teacher' => $teacher,
+            'attendances' => $attendances,
+            'rows' => $rows,
+            'stats' => $stats,
+            'period' => $period,
+            'periodLabel' => $periodLabel,
+            'anchor' => $anchor,
+            'totalHariBelajar' => $totalHariBelajar,
+            'attendanceRate' => $percentage,
+        ];
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($props);
+        }
+
+        return view('admin.kehadiran.teacher-history', $props);
+    }
+
+    /**
+     * Cetak Riwayat Kehadiran Guru (PDF) via tombol Cetak PDF di halaman
+     * riwayat guru. Template sama persis dengan PDF siswa (pdf_student_profile),
+     * bedanya data guru dan tanpa kotak ringkasan.
+     */
+    public function printGuruHistory(Request $request, Teacher $teacher)
+    {
+        $request->validate([
+            'period' => 'required|in:harian,mingguan,bulanan,semua',
+            'tanggal' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+        ]);
+
+        Carbon::setLocale('id');
+
+        $period = $request->input('period', 'harian');
+        $anchor = Carbon::parse($request->input('tanggal', Carbon::now('Asia/Jakarta')->toDateString()));
+
+        // Tentukan rentang tanggal — sama logika dengan teacherHistory
+        if ($period === 'harian') {
+            $startDate = $anchor->copy()->startOfDay();
+            $endDate = $anchor->copy()->endOfDay();
+            $periodLabel = $anchor->translatedFormat('l, d F Y');
+        } elseif ($period === 'bulanan') {
+            $startDate = $anchor->copy()->startOfMonth();
+            $endDate = $anchor->copy()->endOfMonth();
+            $periodLabel = $anchor->translatedFormat('F Y');
+        } elseif ($period === 'mingguan') {
+            $startDate = Carbon::parse($request->input('start_date', $anchor->copy()->startOfWeek(Carbon::MONDAY)->toDateString()))->startOfWeek(Carbon::MONDAY);
+            $endDate = Carbon::parse($request->input('end_date', $anchor->copy()->endOfWeek(Carbon::SUNDAY)->toDateString()))->endOfWeek(Carbon::SUNDAY);
+            $periodLabel = $startDate->translatedFormat('d M') . ' - ' . $endDate->translatedFormat('d M Y');
+        } else {
+            [$startDate, $endDate, $periodLabel] = Attendance::activeYearPeriod();
+        }
+
+        // Keamanan: pastikan rentang tidak terbalik.
+        if ($endDate->lt($startDate)) {
+            [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
+        }
+
+        $startDateStr = $startDate->toDateString();
+        $endDateStr = $endDate->toDateString();
+
+        // Data HANYA dari periode terpilih.
+        $attendances = TeacherAttendance::where('teacher_id', $teacher->id)
+            ->whereBetween('date', [$startDateStr, $endDateStr])
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $activeYear = AcademicYear::getActive();
+        $schoolName = Setting::getSchoolName();
+        $schoolAddress = Setting::getSchoolAddress();
+        $headmasterName = Setting::getHeadmasterName();
+        $headmasterNip = Setting::getHeadmasterNip();
+        $printedAt = Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i');
+        $signedAt = Carbon::now('Asia/Jakarta')->translatedFormat('d F Y');
+
+        $signPlaceholder = \App\Exports\MultiPeriodAttendanceExport::NAME_PLACEHOLDER;
+        $legendLines = \App\Exports\MultiPeriodAttendanceExport::legendLines();
+
+        // Logo sekolah (base64)
+        $logoBase64 = null;
+        $relative = Setting::getLogo();
+        if ($relative) {
+            $path = public_path($relative);
+            if (is_file($path)) {
+                $mime = mime_content_type($path) ?: 'image/png';
+                $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+            }
+        }
+
+        // Judul & subjudul PDF
+        $periodUpper = strtoupper($period);
+        $reportTitle = 'LAPORAN REKAPITULASI PRESENSI ' . $periodUpper . ' - ' . $schoolName;
+        if ($period === 'harian') {
+            $reportSubtitle = 'Tanggal: ' . $startDate->translatedFormat('l, d F Y') . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
+        } elseif ($period === 'bulanan') {
+            $reportSubtitle = 'Bulan: ' . $startDate->translatedFormat('F Y') . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
+        } elseif ($period === 'mingguan') {
+            $reportSubtitle = 'Periode: ' . $startDate->translatedFormat('d M Y') . ' s/d ' . $endDate->translatedFormat('d M Y') . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
+        } else {
+            $reportSubtitle = 'Periode: ' . $periodLabel . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
+        }
+
+        // Hitung stats (tidak ditampilkan di PDF, hanya untuk referensi)
+        $hariSekolahLalu = Attendance::schoolDaysCount($startDate, $endDate, true);
+        $hariSekolahDepan = max(0, Attendance::schoolDaysCount($startDate, $endDate, false) - $hariSekolahLalu);
+        $totalHariBelajar = $hariSekolahLalu + $hariSekolahDepan;
+
+        $lateLimitTime = Setting::getLateLimitTime();
+        $dateColumns = [];
+        $months = [];
+        $daysInMonth = null;
+        $periodType = $period;
+
+        if ($period === 'mingguan') {
+            $cur = Carbon::parse($startDateStr)->copy();
+            $endObj = Carbon::parse($endDateStr);
+            while ($cur->lte($endObj)) {
+                $dateColumns[] = [
+                    'date' => $cur->toDateString(),
+                    'carbon' => $cur->copy(),
+                    'label' => $cur->translatedFormat('D, d/m'),
+                    'is_holiday' => $cur->isWeekend() || Holiday::isHoliday($cur->toDateString()),
+                ];
+                $cur->addDay();
+            }
+        } elseif ($period === 'bulanan') {
+            $daysInMonth = (int) $anchor->daysInMonth;
+            $cur = Carbon::parse($startDateStr)->copy();
+            $endObj = Carbon::parse($endDateStr);
+            while ($cur->lte($endObj)) {
+                $dateColumns[] = [
+                    'date' => $cur->toDateString(),
+                    'carbon' => $cur->copy(),
+                    'label' => $cur->format('d'),
+                    'is_holiday' => $cur->isWeekend() || Holiday::isHoliday($cur->toDateString()),
+                ];
+                $cur->addDay();
+            }
+        } elseif ($period === 'semua') {
+            $months = $this->buildMonthColumns($startDateStr, $endDateStr);
+        }
+
+        // Build rows untuk tabel
+        $attendancesByDate = $attendances->keyBy(fn($att) => $att->date->toDateString());
+        $guruRows = [];
+
+        if ($period === 'harian') {
+            $att = $attendances->first();
+            if ($att) {
+                $status = $att->effective_status;
+                $lateMinutes = 0;
+                if ($status === 'Terlambat' && $att->check_in) {
+                    try {
+                        $lateMinutes = (int) \Carbon\Carbon::parse($att->check_in)->diffInMinutes(\Carbon\Carbon::parse($lateLimitTime, 'Asia/Jakarta'), false);
+                        if ($lateMinutes < 1) $lateMinutes = 1;
+                    } catch (\Throwable $e) {
+                        $lateMinutes = 1;
+                    }
+                }
+                $lateText = $status === 'Terlambat' ? ($lateMinutes < 60 ? $lateMinutes . ' MNT' : intdiv($lateMinutes, 60) . ' JAM ' . ($lateMinutes % 60) . ' MNT') : '-';
+                $guruRows[] = [
+                    'no' => 1,
+                    'nip' => $teacher->nip ?: '-',
+                    'name' => $teacher->name,
+                    'gender' => $teacher->gender ?? 'Laki-laki',
+                    'check_in' => $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-',
+                    'late_text' => $lateText,
+                    'status' => $status,
+                    'notes' => $att->notes ?: '-',
+                ];
+            } else {
+                $guruRows[] = [
+                    'no' => 1,
+                    'nip' => $teacher->nip ?: '-',
+                    'name' => $teacher->name,
+                    'gender' => $teacher->gender ?? 'Laki-laki',
+                    'check_in' => '-',
+                    'late_text' => '-',
+                    'status' => 'Belum',
+                    'notes' => '-',
+                ];
+            }
+        } else {
+            // Matrix format: mingguan, bulanan, semua
+            $days = [];
+            if ($period === 'mingguan' || $period === 'bulanan') {
+                foreach ($dateColumns as $col) {
+                    $dStr = $col['date'];
+                    $att = $attendancesByDate->get($dStr);
+                    $code = '-';
+                    if ($att) {
+                        $status = $att->effective_status;
+                        $code = match ($status) {
+                            'Hadir' => 'H',
+                            'Terlambat' => 'T',
+                            'Sakit' => 'S',
+                            'Izin' => 'I',
+                            'Alfa' => 'A',
+                            default => '-',
+                        };
+                    } elseif ($col['is_holiday'] ?? false) {
+                        $code = 'L';
+                    }
+                    // Bulanan: kunci berupa integer hari (1..31) agar cocok dengan
+                    // template PDF (sama seperti siswa). Mingguan/semua tetap
+                    // memakai kunci tanggal string.
+                    $daysKey = ($period === 'bulanan') ? (int) $col['carbon']->day : $dStr;
+                    $days[$daysKey] = $code;
+                }
+            } elseif ($period === 'semua') {
+                foreach ($months as $mInfo) {
+                    $ym = $mInfo['key'];
+                    $monthAtts = $attendances->filter(fn($att) => substr($att->date->toDateString(), 0, 7) === $ym);
+                    $hadirCount = 0;
+                    foreach ($monthAtts as $mAtt) {
+                        if (in_array($mAtt->effective_status, ['Hadir', 'Terlambat'], true)) {
+                            $hadirCount++;
+                        }
+                    }
+                    $days[$ym] = $hadirCount ?: '-';
+                }
+            }
+
+            $guruRows[] = [
+                'no' => 1,
+                'nip' => $teacher->nip ?: '-',
+                'name' => $teacher->name,
+                'gender' => $teacher->gender ?? 'Laki-laki',
+                'days' => $days,
+            ];
+        }
+
+        $fileName = 'Profil_Presensi_' . $period . '_' . Str::slug($teacher->nip ?: $teacher->name) . '.pdf';
+
+        $pdf = Pdf::loadView('admin.kehadiran.pdf_teacher_history', [
+            'title' => 'Riwayat Kehadiran Guru - ' . $teacher->name,
+            'sections' => [
+                [
+                    'rows' => $guruRows,
+                    'heading' => $reportTitle,
+                    'subtitle' => $reportSubtitle,
+                ],
+            ],
+            'type' => $period,
+            'teacherName' => $teacher->name,
+            'teacherNip' => $teacher->nip ?: '-',
+            'dateColumns' => $dateColumns,
+            'months' => $months,
+            'daysInMonth' => $daysInMonth,
+            'activeYear' => $activeYear,
+            'schoolName' => $schoolName,
+            'schoolAddress' => $schoolAddress,
+            'headmasterName' => $headmasterName,
+            'headmasterNip' => $headmasterNip,
+            'logoBase64' => $logoBase64,
+            'printedAt' => $printedAt,
+            'signedAt' => $signedAt,
+            'signPlaceholder' => $signPlaceholder,
+            'legendLines' => $legendLines,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($fileName);
     }
 
     /**
@@ -1053,6 +1502,22 @@ class AttendanceController extends Controller
 
             // Satu-satunya penentu status terlambat (satu sumber kebenaran).
             $evaluasi = Attendance::evaluateCheckInTime($jamMasuk, $batasTerlambat);
+            // Cek apakah scan sebelum jam buka presensi (ditolak)
+
+            if ($evaluasi["db_status"] === null) {
+
+                // Scan sebelum jam buka - tolak dan kembalikan response error
+
+                return response()->json([
+
+                    "success" => false,
+
+                    "message" => $evaluasi["time_remark"]
+
+                ], 422);
+
+            }
+
 
             if ($requestedStatus === Attendance::STATUS_TERLAMBAT) {
                 // Pilihan admin = koreksi manual, DIDAHULUKAN walaupun jamnya

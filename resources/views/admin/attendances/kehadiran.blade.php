@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', __('Catatan Kehadiran'))
-@section('page_title', __('Catatan Kehadiran'))
+@section('title', $viewFor === 'guru' ? __('Catatan Kehadiran Guru') : __('Catatan Kehadiran Siswa'))
+@section('page_title', $viewFor === 'guru' ? __('CATATAN KEHADIRAN GURU') : __('CATATAN KEHADIRAN SISWA'))
 
 {{-- Kanvas dikunci setinggi satu layar; kartu tabel mengisi sisa tinggi kanvas
      sehingga tabelnya (bukan halaman) yang menggulir. Class ini diatur di layout
@@ -492,6 +492,16 @@
 </style>
 @endpush
 
+@section('page_header_right')
+    <a href="{{ $viewFor === 'guru' ? panel_route('kehadiran') : panel_route('kehadiran.guru') }}"
+       class="btn btn-primary btn-sm"
+       style="transition: none !important;"
+       title="{{ $viewFor === 'guru' ? __('Mode Siswa') : __('Mode Guru') }}"
+       aria-label="{{ $viewFor === 'guru' ? __('Mode Siswa') : __('Mode Guru') }}">
+        {{ $viewFor === 'guru' ? __('Mode Siswa') : __('Mode Guru') }}
+    </a>
+@endsection
+
 @section('content')
     {{-- SATU KARTU: toolbar filter + tabel (seperti Data Siswa).
          Filter bar: [ pencarian ] [ reset ] [ dropdown kelas ], lihat CSS di atas.
@@ -501,16 +511,16 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kehadiran">
 
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
-            <form method="GET" action="{{ panel_route('kehadiran') }}" class="action-search-form kehadiran-filter-form" id="formFilterKehadiran">
+            <form method="GET" action="{{ $viewFor === 'guru' ? panel_route('kehadiran.guru') : panel_route('kehadiran') }}" class="action-search-form kehadiran-filter-form" id="formFilterKehadiran">
                 <!-- Kolom pencarian: input + ikon search satu kesatuan -->
                 <div class="input-group search-box-wrap">
                     <input type="text"
                            name="search"
                            id="filterSearch"
                            class="form-control shadow-none"
-                           placeholder="{{ __('Cari nama atau NISN...') }}"
+                           placeholder="{{ $viewFor === 'guru' ? __('Cari nama atau NIP...') : __('Cari nama atau NISN...') }}"
                            value="{{ $search }}"
-                           aria-label="{{ __('Cari nama atau NISN') }}"
+                           aria-label="{{ $viewFor === 'guru' ? __('Cari nama atau NIP') : __('Cari nama atau NISN') }}"
                            autocomplete="off"
                            style="font-size: 0.85rem; letter-spacing: 0.03em;">
                     <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
@@ -519,10 +529,12 @@
                 </div>
 
                 <!-- Tombol Reset: di tengah antara pencarian dan dropdown -->
-                <a href="{{ panel_route('kehadiran') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                <a href="{{ $viewFor === 'guru' ? panel_route('kehadiran.guru') : panel_route('kehadiran') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
                 </a>
 
+                {{-- Dropdown Filter Kelas hanya tampil di halaman siswa --}}
+                @if($viewFor !== 'guru')
                 <!-- Dropdown Filter Kelas: ganti kelas -> langsung memuat ulang -->
                 <div class="filter-box-wrap">
                     <select name="class_filter" id="classFilter" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Semua Kelas') }}">
@@ -536,6 +548,7 @@
                         @endforeach
                     </select>
                 </div>
+                @endif
             </form>
         </div>
 
@@ -545,9 +558,11 @@
                 <thead class="bg-light">
                     <tr class="small fw-bold text-uppercase" style="letter-spacing: 0.03em; color: #000000 !important;">
                         <th class="text-center py-3" style="width: 5%;">{{ __('No') }}</th>
-                        <th class="text-center py-3" style="width: 11%;">{{ __('NISN') }}</th>
-                        <th class="text-start py-3" style="width: 18%; padding-left: 32px;">{{ __('Nama Siswa') }}</th>
+                        <th class="text-center py-3" style="width: 11%;">{{ $viewFor === 'guru' ? __('NIP') : __('NISN') }}</th>
+                        <th class="text-start py-3" style="width: 18%; padding-left: 32px;">{{ $viewFor === 'guru' ? __('Nama Guru') : __('Nama Siswa') }}</th>
+                        @if($viewFor !== 'guru')
                         <th class="text-center py-3" style="width: 8%;">{{ __('Kelas') }}</th>
+                        @endif
                         <th class="text-center py-3" style="width: 10.4%;"><span style="color:#059669 !important">{{ __('Hadir') }}</span></th>
                         <th class="text-center py-3" style="width: 11.4%;"><span style="color:#d97706 !important">{{ __('Terlambat') }}</span></th>
                         <th class="text-center py-3" style="width: 10.4%;"><span style="color:#2563eb !important">{{ __('Sakit') }}</span></th>
@@ -565,26 +580,34 @@
                     @endphp
                     <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td class="text-center text-muted fw-normal" style="width: 5%;">{{ $rowNumber }}</td>
-                        <td class="text-center text-nowrap fw-normal" style="width: 11%;">{{ $item->nisn ?: '-' }}</td>
+                        <td class="text-center text-nowrap fw-normal" style="width: 11%;">{{ $viewFor === 'guru' ? ($item->nip ?: '-') : ($item->nisn ?: '-') }}</td>
                         <td class="text-start text-nowrap fw-normal" style="width: 25%; padding-left: 32px;">{{ $item->name }}</td>
+                        @if($viewFor !== 'guru')
                         <td class="text-center text-nowrap fw-normal" style="width: 8%;">{{ $item->class_name }}</td>
+                        @endif
                         <td class="text-center fw-normal" style="width: 9%; color:#059669 !important"><span style="color:#059669 !important">{{ $item->hadir }}</span></td>
                         <td class="text-center fw-normal" style="width: 10%; color:#d97706 !important"><span style="color:#d97706 !important">{{ $item->terlambat }}</span></td>
                         <td class="text-center fw-normal" style="width: 9%; color:#2563eb !important"><span style="color:#2563eb !important">{{ $item->sakit }}</span></td>
                         <td class="text-center fw-normal" style="width: 9%; color:#7e22ce !important"><span style="color:#7e22ce !important">{{ $item->izin }}</span></td>
                         <td class="text-center fw-normal" style="width: 9%; color:#dc2626 !important"><span style="color:#dc2626 !important">{{ $item->alfa }}</span></td>
-                        <td class="text-center text-nowrap" style="width: 5%;"><a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
+                        <td class="text-center text-nowrap" style="width: 5%;">
+                            @if($viewFor === 'guru')
+                            <a href="{{ panel_route('kehadiran.guru-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
+                            @else
+                            <a href="{{ panel_route('kehadiran.student-history', $item->id) }}" class="btn-action-lihat" title="{{ __('Lihat riwayat presensi') }} {{ $item->name }}" aria-label="{{ __('Lihat riwayat presensi') }} {{ $item->name }}">
+                            @endif
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-                            </a></td>
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5 text-muted fw-normal empty-state">
+                        <td colspan="{{ $viewFor === 'guru' ? 9 : 10 }}" class="text-center py-5 text-muted fw-normal empty-state">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_filter'))
-                                {{ __('TIDAK ADA DATA SISWA YANG COCOK DENGAN PENCARIAN/FILTER.') }}
+                                {{ $viewFor === 'guru' ? __('TIDAK ADA DATA GURU YANG COCOK DENGAN PENCARIAN.') : __('TIDAK ADA DATA SISWA YANG COCOK DENGAN PENCARIAN/FILTER.') }}
                             @else
-                                {{ __('BELUM ADA DATA SISWA YANG TERDAFTAR.') }}
+                                {{ $viewFor === 'guru' ? __('BELUM ADA DATA GURU YANG TERDAFTAR.') : __('BELUM ADA DATA SISWA YANG TERDAFTAR.') }}
                             @endif
                         </td>
                     </tr>
@@ -651,7 +674,7 @@
 
                 <p class="kehadiran-pagination-info">
                     {{ __('Menampilkan') }} {{ $studentHistories->firstItem() ?? 0 }}&ndash;{{ $studentHistories->lastItem() ?? 0 }}
-                    {{ __('dari') }} {{ $studentHistories->total() }} {{ __('siswa') }}
+                    {{ __('dari') }} {{ $studentHistories->total() }} {{ $viewFor === 'guru' ? __('guru') : __('siswa') }}
                 </p>
             </nav>
         @endif

@@ -8,6 +8,8 @@ use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Setting;
 use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\TeacherAttendance;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -111,9 +113,23 @@ class ScannerController extends Controller
             ->first();
 
         if (!$student) {
+            // Coba cari guru: kartu guru mengandung NIP (atau ID guru sebagai fallback),
+            // bukan NISN. Cek qr_token, nip, dan id agar semua kartu guru tetap dikenali
+            // meski sudah dicetak dengan format lama/baru.
+            $teacher = Teacher::where(function ($query) use ($cleanToken) {
+                $query->where('qr_token', $cleanToken)
+                      ->orWhere('nip', $cleanToken)
+                      ->orWhere('id', $cleanToken);
+            })->first();
+
+            if ($teacher) {
+                $teacherResult = $this->processTeacherScan($request, $teacher, $cleanToken, $todayDate, $currentTime);
+                return response()->json($teacherResult['response'], $teacherResult['status_code'] ?? 200);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Kartu tidak dikenali atau data siswa tidak ditemukan!',
+                'message' => 'Kartu tidak dikenali atau data siswa/guru tidak ditemukan!',
             ], 404);
         }
 
@@ -298,5 +314,108 @@ class ScannerController extends Controller
         });
 
         return response()->json($result['response'], $result['status_code'] ?? 200);
+    }
+
+    /**
+     * Proses pemindaian QR Kartu Guru (Check-in).
+     * Format respons kompatibel dengan UI scanner siswa (body.student/teacher, time_short, is_late, late_minutes, dll.)
+     * agar layar scanner/kiosk tidak perlu diubah.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Teacher  $teacher
+     * @param  string  $cleanToken
+     * @param  string  $todayDate
+     * @param  string  $currentTime
+     * @return array
+     */
+    protected function processTeacherScan(Request $request, Teacher $teacher, string $cleanToken, string $todayDate, string $currentTime): array
+    {
+        $activeYear = AcademicYear::getActive();
+        if (!$activeYear) {
+            return [
+                'status_code' => 400,
+                'should_notify_wa' => false,
+                'response' => [
+                    'success' => false,
+                    'message' => 'Tahun ajaran aktif belum ditetapkan. Presensi guru tidak dapat disimpan.',
+                    'teacher' => $this->teacherResponseArray($teacher),
+                ],
+            ];
+        }
+
+        // Anti-double scan: cek apakah guru sudah presensi hari ini.
+        $existingAttendance = TeacherAttendance::where('teacher_id', $teacher->id)
+            ->whereDate('date', $todayDate)
+            ->first();
+
+        if ($existingAttendance) {
+            return [
+                'status_code' => 400,
+                'should_notify_wa' => false,
+                'response' => [
+                    'success' => false,
+                    'message' => 'Guru atas nama '.$teacher->name.' sudah melakukan presensi hari ini.',
+                    'teacher' => $this->teacherResponseArray($teacher),
+                ],
+            ];
+        }
+
+        // Evaluasi jam masuk (tepat waktu / terlambat) — sama logika dengan siswa.
+        $lateLimitTime = Setting::getLateLimitTime();
+        $eval = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime);
+
+        $className = '-';
+        $class = $teacher->schoolClass;
+        if ($class) {
+            $className = $class->name;
+        } elseif ($teacher->schoolClasses()->exists()) {
+            $className = $teacher->schoolClasses()->first()->name;
+        }
+
+        // Status baku untuk tabel teacher_attendances (enum sudah termasuk 'Terlambat').
+        $dbStatus = $eval['is_late'] ? Attendance::STATUS_TERLAMBAT : Attendance::STATUS_HADIR;
+        $timeRemark = $eval['time_remark']; // 'Tepat Waktu' atau 'Terlambat'
+
+        $teacherAttendance = TeacherAttendance::create([
+            'teacher_id' => $teacher->id,
+            'date' => $todayDate,
+            'status' => $dbStatus,
+            'time_remark' => $timeRemark,
+        ]);
+
+        return [
+            'status_code' => 200,
+            'should_notify_wa' => false,
+            'response' => [
+                'success' => true,
+                'message' => 'Presensi Masuk Berhasil!',
+                'type' => 'check_in',
+                'time' => substr($currentTime, 0, 8),
+                'time_short' => substr($currentTime, 0, 5),
+                'remark' => $timeRemark,
+                'display_remark' => $eval['display_remark'],
+                'is_late' => (bool) $eval['is_late'],
+                'late_minutes' => (int) $eval['late_minutes'],
+                'student' => [
+                    'name' => $teacher->name,
+                    'nisn' => $teacher->nip ?: '-',
+                    'class' => $className,
+                    'photo' => $teacher->photo ? asset('storage/' . $teacher->photo) : null,
+                ],
+                'teacher' => $this->teacherResponseArray($teacher),
+            ],
+        ];
+    }
+
+    /**
+     * Susun array response data guru untuk konsistensi antara check-in dan anti-double-scan.
+     */
+    protected function teacherResponseArray(Teacher $teacher): array
+    {
+        return [
+            'id' => $teacher->id,
+            'name' => $teacher->name,
+            'nip' => $teacher->nip ?: '-',
+        ];
     }
 }

@@ -195,7 +195,7 @@
         line-height: 1;
     }
 
-    /* Tombol Reset: kotak 38x38, ikon abu-abu, biru saat hover/focus[cite: 5] */
+    /* Tombol Reset: kotak 38x38, ikon abu-abu, biru saat hover/focus */
     form.action-search-form .btn-reset {
         display: flex;
         align-items: center;
@@ -365,45 +365,10 @@
         box-shadow: none !important;
         pointer-events: none !important;
     }
-    #btnSaveClass.is-loading,
-    #btnSaveClass[data-saving="1"] {
-        opacity: 1 !important;
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-        cursor: default !important;
-        pointer-events: none !important;
-        filter: none !important;
-    }
     #btnSaveClass:not(:disabled) {
         opacity: 1 !important;
         cursor: pointer !important;
         pointer-events: auto !important;
-    }
-    #btnSaveClass.btn-progress.is-running,
-    #btnSaveClass.btn-progress.is-done {
-        opacity: 1 !important;
-        cursor: default !important;
-        pointer-events: none !important;
-    }
-    #btnSaveClass.btn-progress:disabled:not(.is-running):not(.is-done):not(.is-loading):not([data-saving="1"]),
-    #btnSaveClass.btn-progress[disabled]:not(.is-running):not(.is-done):not(.is-loading):not([data-saving="1"]) {
-        background-color: #2563eb !important;
-        color: #ffffff !important;
-        border-color: #2563eb !important;
-        opacity: 0.5 !important;
-        cursor: not-allowed !important;
-        pointer-events: none !important;
-        box-shadow: none !important;
-    }
-
-    #btnSaveClass .sv-bar {
-        background: #1e3a8a !important;
-        opacity: 1 !important;
-    }
-    #btnSaveClass .sv-txt {
-        color: #ffffff !important;
-        font-weight: 700;
     }
 
     .wali-kelas-col {
@@ -563,7 +528,7 @@
                         </button>
                     </div>
 
-                    <!-- Tombol Reset: di samping kolom pencarian[cite: 5, 7, 8] -->
+                    <!-- Tombol Reset: di samping kolom pencarian -->
                     <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
                     </a>
@@ -753,7 +718,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" data-dl-progress data-form-submit>{{ __('Simpan Perubahan') }}</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4 fw-semibold">{{ __('Simpan Perubahan') }}</button>
                 </div>
             </form>
         </div>
@@ -768,6 +733,7 @@
                 <h5 class="fw-bold mb-0">{{ __('Tambah Kelas Baru') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <!-- Menggunakan data-no-loader agar layout global tidak memunculkan spinner besar -->
             <form id="addClassForm" action="{{ panel_route('classes.store') }}" method="POST" data-no-loader>
                 @csrf
                 <div class="modal-body py-3">
@@ -819,7 +785,7 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                    <button type="submit" id="btnSaveClass" class="btn btn-primary rounded-3 px-4 fw-semibold btn-progress" disabled aria-disabled="true">{{ __('Simpan Kelas') }}</button>
+                    <button type="submit" id="btnSaveClass" class="btn btn-primary rounded-3 px-4 fw-semibold" disabled aria-disabled="true">{{ __('Simpan Kelas') }}</button>
                 </div>
             </form>
         </div>
@@ -963,8 +929,6 @@
     function enforceSimpanKelasState() {
         var btn = document.getElementById('btnSaveClass');
         if (!btn) return;
-        if (btn.dataset.saving === '1') return;
-        if (btn.classList.contains('is-running') || btn.classList.contains('is-done')) return;
         var modal = document.getElementById('addClassModal');
         if (!modal) return;
         var form = modal.querySelector('form');
@@ -1001,13 +965,6 @@
             btn.style.opacity = '0.5';
             btn.style.cursor = 'not-allowed';
             btn.style.pointerEvents = 'none';
-            if (typeof MutationObserver !== 'undefined') {
-                try {
-                    var obsLock = false;
-                    var obs = new MutationObserver(function(){ if(obsLock) return; try { enforceSimpanKelasState(); } finally { obs.takeRecords(); obsLock = false; } });
-                    obs.observe(btn, { attributes: true, attributeFilter: ['disabled', 'style', 'class'] });
-                } catch(e){}
-            }
         }
         function bind(){
             if (!modal) return;
@@ -1042,12 +999,6 @@
             modal.addEventListener('hidden.bs.modal', function(){
                 var form = modal.querySelector('form');
                 if (form){ try{ form.reset(); }catch(e){} }
-                if (btn){
-                    if (!(btn.classList.contains('is-running') || btn.classList.contains('is-done') || btn.dataset.saving==='1')){
-                        btn.disabled = true; btn.setAttribute('disabled','disabled'); btn.setAttribute('aria-disabled','true');
-                        btn.style.opacity='0.5'; btn.style.cursor='not-allowed'; btn.style.pointerEvents='none';
-                    }
-                }
                 setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,150);
             });
         }
@@ -1055,14 +1006,13 @@
         setTimeout(enforceSimpanKelasState,0); setTimeout(enforceSimpanKelasState,150);
     })();
 
+    /* ===== Tambah Kelas: Langsung tutup pop-up & simpan instan tanpa loader ===== */
     (function () {
         var form = document.getElementById('addClassForm');
         var btn = document.getElementById('btnSaveClass');
         var errBox = document.getElementById('addClassFormError');
+        var modalEl = document.getElementById('addClassModal');
         if (!form || !btn) return;
-        var saving = false;
-        var label = btn.textContent;
-        var timer = null;
 
         function showErr(msg) {
             if (!errBox) return;
@@ -1074,98 +1024,40 @@
             errBox.textContent = '';
             errBox.classList.add('d-none');
         }
-        function resetSaving() {
-            saving = false;
-            clearInterval(timer);
-            delete btn.dataset.saving;
-            btn.classList.remove('is-saving');
-            btn.style.removeProperty('position');
-            btn.style.removeProperty('overflow');
-            btn.textContent = label;
-            enforceSimpanKelasState();
-        }
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            e.stopImmediatePropagation();
-            if (saving || btn.disabled) return;
             hideErr();
 
-            saving = true;
-            btn.dataset.saving = '1';
-            btn.classList.add('is-saving');
-            btn.disabled = true;
-            btn.style.position = 'relative';
-            btn.style.overflow = 'hidden';
-            btn.innerHTML = '<span class="sv-bar" style="position:absolute;left:0;top:0;bottom:0;width:0%;background:#1e3a8a;transition:width .15s"></span><span class="sv-txt" style="position:relative">0%</span>';
-            var bar = btn.querySelector('.sv-bar');
-            var txt = btn.querySelector('.sv-txt');
-            var shown = 0, real = 0, done = false;
+            // Tutup modal secara instan detik itu juga tanpa animasi atau jeda
+            if (window.bootstrap && modalEl) {
+                var modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+            }
 
-            timer = setInterval(function () {
-                var target = done ? 100 : Math.max(real, Math.min(shown + 1, 92));
-                if (shown < target) {
-                    shown++;
-                    bar.style.width = shown + '%';
-                    txt.textContent = shown + '%';
+            // Simpan pesan notifikasi sukses ke sessionStorage agar muncul setelah halaman reload
+            try {
+                sessionStorage.setItem('classAlert', JSON.stringify({
+                    status: 'success',
+                    msg: {!! json_encode(__('Data kelas berhasil ditambahkan!')) !!}
+                }));
+            } catch (e) {}
+
+            // Kirim data via fetch (AJAX) secara senyap di background tanpa loader
+            var formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json, text/javascript, */*'
                 }
-                if (shown >= 100) {
-                    clearInterval(timer);
-                    setTimeout(function () { location.reload(); }, 300);
-                }
-            }, 30);
-
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', form.getAttribute('action'));
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Accept', 'application/json');
-            xhr.upload.onprogress = function (ev) {
-                if (!ev.lengthComputable) return;
-                real = Math.min(90, Math.round(ev.loaded / ev.total * 90));
-            };
-            xhr.onload = function () {
-                var json = null;
-                try { json = JSON.parse(xhr.responseText); } catch (_) {}
-                var ok = xhr.status < 400;
-                if (json && (json.status === 'error' || json.success === false || json.errors)) ok = false;
-
-                var htmlMsg = '';
-                if (!json) {
-                    try {
-                        var doc = new DOMParser().parseFromString(xhr.responseText, 'text/html');
-                        var el = doc.querySelector('.alert.alert-danger.alert-dismissible .flash-notice-body');
-                        if (el) {
-                            htmlMsg = (el.textContent || '').replace(/\s+/g, ' ').trim();
-                            ok = false;
-                        }
-                    } catch (_) {}
-                }
-
-                if (!ok) {
-                    var msg = htmlMsg;
-                    if (json && json.errors) {
-                        var k = Object.keys(json.errors)[0];
-                        if (k) msg = String([].concat(json.errors[k])[0]);
-                    }
-                    if (!msg && json && json.message) msg = String(json.message);
-                    showErr(msg || {!! json_encode(__('Data kelas gagal disimpan. Periksa isian lalu coba lagi.')) !!});
-                    resetSaving();
-                    return;
-                }
-
-                try {
-                    sessionStorage.setItem('classAlert', JSON.stringify({
-                        status: 'success',
-                        msg: {!! json_encode(__('Data kelas berhasil ditambahkan!')) !!}
-                    }));
-                } catch (e) {}
-                done = true;
-            };
-            xhr.onerror = function () {
-                showErr({!! json_encode(__('Koneksi bermasalah. Coba lagi.')) !!});
-                resetSaving();
-            };
-            xhr.send(new FormData(form));
+            }).then(function (response) {
+                // Langsung reload halaman untuk memperbarui data tabel dan menampilkan notifikasi
+                window.location.reload();
+            }).catch(function () {
+                window.location.reload();
+            });
         }, true);
     })();
 </script>
