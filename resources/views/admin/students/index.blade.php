@@ -59,19 +59,18 @@
     }
 
     /* ==========================================================================
-       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ reset ] [ dropdown kelas ]
-       Menggunakan CSS GRID agar konsisten dengan halaman kehadiran:
-         >= 1024px : 1fr | 44px | 1fr  -> search dan dropdown sama lebar,
-                     reset di tengah, dalam satu baris.
-         <  1024px : baris 1 = search + reset, baris 2 = dropdown lebar penuh.
+       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ dropdown kelas ] [ reset ]
+       Menggunakan CSS GRID:
+         >= 1024px : 1fr | 220px | 44px -> search, dropdown, reset dalam satu baris.
+         <  1024px : baris 1 = search lebar penuh, baris 2 = dropdown + reset.
        ========================================================================== */
     form.action-search-form {
         --kh-h: 44px;
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) var(--kh-h);
         grid-template-areas:
-            "search reset"
-            "kelas  kelas";
+            "search search"
+            "kelas  reset";
         column-gap: 0.5rem;
         row-gap: 0.5rem;
         align-items: center;
@@ -86,8 +85,8 @@
 
     @media (min-width: 1024px) {
         form.action-search-form {
-            grid-template-columns: minmax(0, 1fr) var(--kh-h) minmax(0, 1fr);
-            grid-template-areas: "search reset kelas";
+            grid-template-columns: minmax(0, 1fr) 220px var(--kh-h);
+            grid-template-areas: "search kelas reset";
             row-gap: 0;
         }
     }
@@ -108,6 +107,7 @@
     }
     form.action-search-form .filter-box-wrap {
         grid-area: kelas;
+        min-width: 200px !important;
     }
 
     /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
@@ -142,6 +142,9 @@
         height: var(--kh-h) !important;
         min-height: var(--kh-h) !important;
         box-sizing: border-box;
+        white-space: nowrap;
+        text-overflow: clip;
+        padding-right: 32px;
     }
 
     /* Tombol Reset: kotak 44x44, ikon abu-abu, biru saat hover/focus */
@@ -606,11 +609,6 @@
                         </button>
                     </div>
 
-                    <!-- Tombol Reset: di tengah antara pencarian dan dropdown -->
-                    <a href="{{ panel_route('students.index') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                    </a>
-
                     <!-- Dropdown Filter Kelas -->
                     <div class="filter-box-wrap">
                         <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" style="font-size: 0.82rem; letter-spacing: 0.02em;" aria-label="{{ __('Pilih kelas') }}">
@@ -622,6 +620,11 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Tombol Reset: di samping kanan dropdown -->
+                    <a href="{{ panel_route('students.index') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                    </a>
                 </form>
 
                 <div class="action-buttons-wrap">

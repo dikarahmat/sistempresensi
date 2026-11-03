@@ -113,9 +113,9 @@
     }
 
     /* ==========================================================================
-       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ reset ] [ dropdown tingkat ]
+       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ dropdown tingkat ] [ reset ]
        Menggunakan CSS GRID agar konsisten dengan halaman siswa/guru:
-         >= 1024px : 1fr | 38px | 170px -> search, reset, dan dropdown dalam satu baris.
+         >= 1024px : 1fr | 190px | 38px -> search, dropdown, dan reset dalam satu baris.
        ========================================================================== */
     .action-bar-section {
         display: flex;
@@ -127,8 +127,8 @@
     form.action-search-form {
         --kh-h: 38px;
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) var(--kh-h) 170px;
-        grid-template-areas: "search reset grade";
+        grid-template-columns: minmax(0, 1fr) 190px var(--kh-h);
+        grid-template-areas: "search grade reset";
         column-gap: 0.5rem;
         row-gap: 0.5rem;
         align-items: center;
@@ -145,8 +145,8 @@
         form.action-search-form {
             grid-template-columns: minmax(0, 1fr) var(--kh-h);
             grid-template-areas:
-                "search reset"
-                "grade  grade";
+                "search search"
+                "grade  reset";
         }
     }
 
@@ -235,7 +235,7 @@
         min-height: var(--kh-h) !important;
         width: 100% !important;
         padding-left: 12px;
-        padding-right: 40px;
+        padding-right: 32px;
         font-size: 0.85rem;
         letter-spacing: 0.03em;
         box-sizing: border-box;
@@ -528,11 +528,6 @@
                         </button>
                     </div>
 
-                    <!-- Tombol Reset: di samping kolom pencarian -->
-                    <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                    </a>
-
                     <div class="filter-box-wrap">
                         <select name="grade" id="classGradeFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal" aria-label="{{ __('Pilih tingkat kelas') }}">
                             <option value="">{{ __('Semua Tingkat') }}</option>
@@ -541,6 +536,11 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Tombol Reset: di samping kanan dropdown -->
+                    <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                    </a>
                 </form>
 
                 <div class="action-buttons-wrap">
