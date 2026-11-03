@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\RekapController as AdminRekapController;
+use App\Http\Controllers\Admin\RekapGuruController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\ScannerController as AdminScannerController;
 use App\Http\Controllers\Admin\SchoolClassController;
@@ -21,26 +22,6 @@ use Illuminate\Support\Facades\Route;
 // ============================================================================
 
 // Redirect root ke dashboard sesuai role (admin/guru/piket), atau ke login
-// Rekap Presensi Guru
-    // Rekap Guru - Data Endpoint
-    Route::get('rekap/guru/data', [AdminRekapController::class, 'teacherRekap'])->name('rekap.guru.data');
-
-    // Rekap Guru - PDF Export
-    Route::get('rekap/guru/pdf', [AdminRekapController::class, 'exportTeacherPdf'])->name('rekap.guru.pdf');
-
-    // Rekap Guru - Excel Export  
-    Route::get('rekap/guru/excel', [AdminRekapController::class, 'exportTeacherExcel'])->name('rekap.guru.excel');
-
-    // Rekap Siswa - Data Endpoint  
-    Route::get('rekap/siswa/data', [AdminRekapController::class, 'getSiswaRecapData'])->name('rekap.siswa.data');
-
-    // Rekap Siswa - PDF Export
-    Route::get('rekap/siswa/pdf', [AdminRekapController::class, 'exportSiswaPdf'])->name('rekap.siswa.pdf');
-
-    // Rekap Siswa - Excel Export  
-    Route::get('rekap/siswa/excel', [AdminRekapController::class, 'exportSiswaExcel'])->name('rekap.siswa.excel');
-
-    // Route statis Wajib di atas Route::resource('guru' supaya tidak tertangkap {teacher}.
 Route::get('/', [AuthController::class, 'redirectRoot'])->name('root');
 
 // Autentikasi
@@ -96,6 +77,10 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
     Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
+    // Rekap Guru (statis, harus di atas route berparameter)
+    Route::get('/rekap/guru', [RekapGuruController::class, 'index'])->name('rekap.guru');
+    Route::get('/rekap/guru/pdf', [RekapGuruController::class, 'exportPdf'])->name('rekap.guru.pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/guru/excel', [RekapGuruController::class, 'exportExcel'])->name('rekap.guru.excel')->middleware('throttle:10,1');
     Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
 
     // Scanner & Mode Gerbang / Kiosk Absensi

@@ -5,6 +5,16 @@
 
 @section('canvas_class', 'page-canvas-fixed')
 
+@section('page_header_right')
+    <a href="{{ route('admin.rekap.guru') }}"
+       class="btn btn-primary btn-sm"
+       style="transition: none !important;"
+       title="{{ __('Mode Guru') }}"
+       aria-label="{{ __('Mode Guru') }}">
+        {{ __('Mode Guru') }}
+    </a>
+@endsection
+
 @push('styles')
 <style>
     /* Header Bar Alignment on Mobile (< 768px) */
