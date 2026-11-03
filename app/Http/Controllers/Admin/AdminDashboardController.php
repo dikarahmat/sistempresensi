@@ -17,6 +17,13 @@ use Illuminate\View\View;
 class AdminDashboardController extends Controller
 {
     /**
+     * Status presensi yang dihitung "hadir di sekolah" untuk grafik per rombel.
+     * Siswa yang Terlambat tetap datang, jadi ikut dihitung. Kalau ingin
+     * grafik hanya menghitung status Hadir, ubah jadi ['Hadir'].
+     */
+    private const STATUS_HADIR_GRAFIK = ['Hadir', 'Terlambat'];
+
+    /**
      * Tanggal yang sedang dipilih user lewat date picker di header.
      * Fallback ke hari ini bila parameter kosong / tidak valid.
      */
@@ -50,7 +57,7 @@ class AdminDashboardController extends Controller
         $todayFormatted = $selectedDate->translatedFormat('l, d F Y');
         // Label kecil menyesuaikan isi: "Hari Ini" hanya sah bila memang hari ini.
         $dateLabel = $isToday ? 'Tanggal Hari Ini' : 'Tanggal Dipilih';
-        
+
         // $startOfWeek dan $endOfWeek ditahan untuk bagian "REKAP MINGGUAN PER
         // ROMBEL" (bukan grafik). Grafik kesehatan kini pakai rentang mandiri
         // dari todayJakarta supaya tidak terpengaruh tanggal yang dipilih user.
@@ -67,7 +74,7 @@ class AdminDashboardController extends Controller
         // global SoftDeletes otomatis mengecualikan siswa yang sudah dihapus
         // (masuk sampah). Query yang sama dipakai untuk roster rombel di bawah.
         $totalStudents = Student::count();
-        
+
         // Ambil data rombel lengkap beserta guru kelasnya dan jumlah siswa aktif dalam 1 query
         // (query dasar sama dengan SchoolClassController@index, jadi angka
         // "Rombongan Belajar" = total di halaman Data Kelas; yang di sampah
@@ -96,18 +103,33 @@ class AdminDashboardController extends Controller
         // dihapus (masuk sampah) tidak terhitung karena global scope SoftDeletes.
         $totalTeachers = Teacher::count();
 
-        // 2. Data Ketidakhadiran (Sakit, Izin, Alfa) untuk tanggal yang
-        //    sedang dipilih. Angkanya diambil dari DailyAttendanceSummary -
-        //    helper yang sama dipakai halaman Presensi (daftar kelas & detail
-        //    kelas), jadi "Alfa" di Dashboard sama persis dengan Alfa di
-        //    halaman presensi (termasuk Alfa hasil hitungan untuk tanggal
-        //    yang sudah lewat).
+        // 2. Data Kehadiran (Hadir, Terlambat, Sakit, Izin, Alfa) untuk tanggal
+        //    yang sedang dipilih.
+        //    - Sakit / Izin / Alfa diambil dari DailyAttendanceSummary - helper
+        //      yang sama dipakai halaman Presensi (daftar kelas & detail
+        //      kelas), jadi "Alfa" di Dashboard sama persis dengan Alfa di
+        //      halaman presensi (termasuk Alfa hasil hitungan untuk tanggal
+        //      yang sudah lewat).
+        //    - Hadir & Terlambat dihitung langsung dari tabel presensi pada
+        //      tanggal terpilih, hanya untuk siswa aktif yang belum dihapus.
         $kelasSummary = $dailyAttendanceSummary->summarize($classesList, $dateString);
 
         $countSakit = (int) $kelasSummary->sum('sakit');
         $countIzin  = (int) $kelasSummary->sum('izin');
         $countAlfa  = (int) $kelasSummary->sum('alpha');
         $totalKetidakhadiran = $countSakit + $countIzin + $countAlfa;
+
+        $statusHariIni = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+            ->where('students.status', 'Aktif')
+            ->whereNull('students.deleted_at')
+            ->whereDate('attendances.date', $dateString)
+            ->whereIn('attendances.status', ['Hadir', 'Terlambat'])
+            ->groupBy('attendances.status')
+            ->selectRaw('attendances.status as st, count(*) as total')
+            ->pluck('total', 'st');
+
+        $countHadir     = (int) ($statusHariIni->get('Hadir') ?? 0);
+        $countTerlambat = (int) ($statusHariIni->get('Terlambat') ?? 0);
 
         // 3. REKAP MINGGUAN PER ROMBEL - data pendukung dashboard. Tetap
         //    dihitung agar variabel $classesAttendance tidak hilang dari data
@@ -144,81 +166,56 @@ class AdminDashboardController extends Controller
         }
 
         // --------------------------------------------------------------------
-        // GRAFIK: satu sumber data per mode, semua pakai timezone Asia/Jakarta.
-        // - Harian  : hari ini saja (1 titik).
-        // - Mingguan: 7 hari terakhir termasuk hari ini (7 titik, per tanggal).
-        // - Bulanan : bulan berjalan saja (1 titik per tanggal dari 1 s.d. akhir
-        //             bulan), tanpa 12 bulan terakhir.
+        // GRAFIK: SATU GARIS, sumbu X = ROMBEL (7A, 7B, 7C, ...), tinggi titik =
+        // persen kehadiran rombel itu pada periode yang dipilih (akumulasi).
+        // - Harian  : hari ini.
+        // - Mingguan: 7 hari terakhir termasuk hari ini (diakumulasikan).
+        // - Bulanan : bulan berjalan (diakumulasikan).
+        // Persen rombel = total kehadiran siswa aktif rombel itu selama periode
+        //                 / (jumlah siswa aktif rombel x jumlah hari efektif).
+        // Hari efektif = jumlah tanggal pada periode yang punya catatan presensi
+        // (hari libur / akhir pekan tanpa presensi tidak ikut dihitung).
+        // Semua pakai timezone Asia/Jakarta.
         // --------------------------------------------------------------------
         $todayJakarta = Carbon::now('Asia/Jakarta');
-        $totalActiveStudents = (int) $classesList->sum('total_students');
-
-        $chartLabels = [];
-        $chartValues = [];
 
         if ($chartMode === 'harian') {
-            // HARI INI SAJA.
             $periodStart = $todayJakarta->copy()->startOfDay();
             $periodEnd   = $todayJakarta->copy()->endOfDay();
-
-            $dailyHadirCounts = Attendance::whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
-                ->where('status', 'Hadir')
-                ->selectRaw('date, count(*) as total')
-                ->groupBy('date')
-                ->pluck('total', 'date');
-
-            $hadir     = (int) ($dailyHadirCounts->get($periodStart->toDateString()) ?? 0);
-            $kapasitas = $totalActiveStudents;
-
-            $chartLabels[] = $periodStart->translatedFormat('d M Y');
-            $chartValues[] = $kapasitas > 0
-                ? min(100, round(($hadir / $kapasitas) * 100))
-                : 0;
         } elseif ($chartMode === 'mingguan') {
-            // 7 HARI TERAKHIR TERMASUK HARI INI (MON-SUN jika hari ini belum
-            // weekend, dst). Sumbu X = per tanggal/hari.
             $periodStart = $todayJakarta->copy()->subDays(6)->startOfDay();
             $periodEnd   = $todayJakarta->copy()->endOfDay();
-
-            $dailyHadirCounts = Attendance::whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
-                ->where('status', 'Hadir')
-                ->selectRaw('date, count(*) as total')
-                ->groupBy('date')
-                ->pluck('total', 'date');
-
-            for ($d = $periodStart->copy(); $d->lte($periodEnd); $d->addDay()) {
-                $key = $d->toDateString();
-                $hadir     = (int) ($dailyHadirCounts->get($key) ?? 0);
-                $kapasitas = $totalActiveStudents;
-
-                $chartLabels[] = $d->translatedFormat('d M');
-                $chartValues[] = $kapasitas > 0
-                    ? min(100, round(($hadir / $kapasitas) * 100))
-                    : 0;
-            }
         } else {
-            // BULANAN: bulan berjalan SAJA (1 s.d. akhir bulan), sumbu X per
-            // tanggal. 12 bulan terakhir TIDAK lagi ditampilkan.
             $periodStart = $todayJakarta->copy()->startOfMonth();
             $periodEnd   = $todayJakarta->copy()->endOfMonth();
-
-            $dailyHadirCounts = Attendance::whereBetween('date', [$periodStart->toDateString(), $periodEnd->toDateString()])
-                ->where('status', 'Hadir')
-                ->selectRaw('date, count(*) as total')
-                ->groupBy('date')
-                ->pluck('total', 'date');
-
-            for ($d = $periodStart->copy(); $d->lte($periodEnd); $d->addDay()) {
-                $key = $d->toDateString();
-                $hadir     = (int) ($dailyHadirCounts->get($key) ?? 0);
-                $kapasitas = $totalActiveStudents;
-
-                $chartLabels[] = $d->translatedFormat('d M');
-                $chartValues[] = $kapasitas > 0
-                    ? min(100, round(($hadir / $kapasitas) * 100))
-                    : 0;
-            }
         }
+
+        $rentangMulai = $periodStart->toDateString();
+        $rentangAkhir = $periodEnd->toDateString();
+
+        $hariEfektifGrafik = max(1, (int) Attendance::whereBetween('date', [$rentangMulai, $rentangAkhir])
+            ->distinct('date')
+            ->count('date'));
+
+        // Satu query untuk seluruh rombel: total kehadiran per rombel selama periode.
+        $hadirPerRombel = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+            ->where('students.status', 'Aktif')
+            ->whereNull('students.deleted_at')
+            ->whereBetween('attendances.date', [$rentangMulai, $rentangAkhir])
+            ->whereIn('attendances.status', self::STATUS_HADIR_GRAFIK)
+            ->groupBy('students.school_class_id')
+            ->selectRaw('students.school_class_id as class_id, count(*) as total')
+            ->pluck('total', 'class_id');
+
+        $chartLabels = $classesList->pluck('name')->values()->all();
+        $chartValues = $classesList->map(function ($cls) use ($hadirPerRombel, $hariEfektifGrafik) {
+            $kapasitasRombel = (int) ($cls->total_students ?? 0) * $hariEfektifGrafik;
+            $hadirRombel     = (int) ($hadirPerRombel->get($cls->id) ?? 0);
+
+            return $kapasitasRombel > 0
+                ? min(100, round(($hadirRombel / $kapasitasRombel) * 100))
+                : 0;
+        })->values()->all();
 
         $totalChartPoints = count($chartValues);
 
@@ -235,29 +232,28 @@ class AdminDashboardController extends Controller
         $chartHasData = Attendance::whereBetween('date', $periodeChart)->exists();
 
         // Teks pendukung (judul kartu, periode, total, kosong) disesuaikan
-        // dengan rentang yang baru.
+        // dengan rentang yang baru. "Total" sekarang = jumlah rombel (garis).
         $formatPeriod =
             app()->getLocale() === 'en'
                 ? fn(Carbon $c) => $c->locale('en')->translatedFormat('d M')
                 : fn(Carbon $c) => $c->translatedFormat('d M');
 
+        $chartTotalText = 'Total: ' . $totalClasses . ' Rombel';
+
         if ($chartMode === 'harian') {
             $chartTitle       = 'Grafik Garis Kehadiran Harian';
             $chartPeriodLabel = $todayJakarta->translatedFormat('d M Y');
-            $chartTotalText   = 'Total: ' . $totalChartPoints . ' Hari';
-            $chartScopeText   = 'Hari ini';
+            $chartScopeText   = 'Per rombel, hari ini';
             $chartEmptyText   = 'Belum ada data kehadiran hari ini.';
         } elseif ($chartMode === 'bulanan') {
             $chartTitle       = 'Grafik Garis Kehadiran Bulanan';
             $chartPeriodLabel = $todayJakarta->translatedFormat('M Y');
-            $chartTotalText   = 'Total: ' . $totalChartPoints . ' Hari';
-            $chartScopeText   = 'Per hari, bulan ' . $todayJakarta->translatedFormat('M') . ' ini';
+            $chartScopeText   = 'Per rombel, bulan ' . $todayJakarta->translatedFormat('M') . ' ini';
             $chartEmptyText   = 'Belum ada data kehadiran pada bulan ini.';
         } else {
             $chartTitle       = 'Grafik Garis Kehadiran Mingguan';
             $chartPeriodLabel = $formatPeriod($periodStart) . ' - ' . $formatPeriod($periodEnd);
-            $chartTotalText   = 'Total: ' . $totalChartPoints . ' Hari';
-            $chartScopeText   = 'Per hari, 7 hari terakhir';
+            $chartScopeText   = 'Per rombel, 7 hari terakhir';
             $chartEmptyText   = 'Belum ada data kehadiran pada 7 hari terakhir.';
         }
 
@@ -271,6 +267,7 @@ class AdminDashboardController extends Controller
             'checkInTime', 'lateLimitTime',
             'totalStudents', 'totalClasses', 'totalGuruKelas', 'totalTeachers',
             'classesList', 'guruKelasList',
+            'countHadir', 'countTerlambat',
             'countSakit', 'countIzin', 'countAlfa', 'totalKetidakhadiran',
             'classesAttendance',
             // Data grafik (sudah dihitung sesuai mode di atas)

@@ -62,8 +62,15 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::post('/absensi/override', [AttendanceController::class, 'override'])->name('absensi.override')->middleware('throttle:20,1');
     Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
 
-    // Kehadiran
+    // ------------------------------------------------------------------
+    // KEHADIRAN (dropdown sidebar: Kehadiran Siswa & Kehadiran Guru)
+    //   - Kehadiran Siswa : admin.kehadiran.siswa  (/admin/kehadiran/siswa)
+    //                       admin.kehadiran        (/admin/kehadiran, alias lama tetap hidup)
+    //   - Kehadiran Guru  : admin.kehadiran.guru   (/admin/kehadiran/guru)
+    // Route statis WAJIB di atas /kehadiran/{schoolClass}.
+    // ------------------------------------------------------------------
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa', [AttendanceController::class, 'kehadiran'])->name('kehadiran.siswa');
     Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
     Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
     Route::post('/kehadiran/guru/{teacher}/history/pdf', [AttendanceController::class, 'printGuruHistory'])->name('kehadiran.guru-history.pdf');
@@ -72,8 +79,14 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 
-    // Rekap
+    // ------------------------------------------------------------------
+    // REKAP (dropdown sidebar: Rekap Siswa & Rekap Guru)
+    //   - Rekap Siswa : admin.rekap.siswa (/admin/rekap/siswa)
+    //                   admin.rekap       (/admin/rekap, alias lama tetap hidup)
+    //   - Rekap Guru  : admin.rekap.guru  (/admin/rekap/guru)
+    // ------------------------------------------------------------------
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
+    Route::get('/rekap/siswa', [AdminRekapController::class, 'index'])->name('rekap.siswa');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
     Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
@@ -96,9 +109,15 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     Route::get('holidays', fn () => redirect()->route('admin.holidays.index', [], 301));
     Route::get('holidays/template', fn () => redirect()->route('admin.holidays.template', [], 301));
 
-    // Pengaturan Sistem + modul yang dikelola dari halaman Pengaturan.
+    // ------------------------------------------------------------------
+    // PENGATURAN (dropdown sidebar):
+    //   1. Informasi Sekolah : admin.settings.index         (/admin/settings)
+    //   2. Tahun Ajaran      : admin.academic-years.index   (/admin/settings/academic-years)
+    //   3. Hari Libur        : admin.holidays.index         (/admin/settings/hari-libur)
+    //   4. Tempat Sampah     : admin.trash.index            (/admin/settings/tempat-sampah)
     // Route statis (toggle-active, template) didaftarkan lebih dulu supaya tidak
     // tertangkap route resource yang berparameter.
+    // ------------------------------------------------------------------
     Route::prefix('settings')->group(function () {
         // Master Tahun Ajaran
         Route::post('academic-years/{academic_year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
@@ -114,9 +133,15 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
         Route::post('hari-libur/import', [HolidayController::class, 'import'])->name('holidays.import')->middleware('throttle:10,1');
         Route::delete('hari-libur/destroy-all', [HolidayController::class, 'destroyAll'])->name('holidays.destroy-all');
         Route::resource('hari-libur', HolidayController::class)->names('holidays')->except(['show', 'create', 'edit']);
+
+        // Tempat Sampah: pintu masuk dari dropdown Pengaturan.
+        // Sementara diarahkan ke Tempat Sampah Siswa (halaman trash siswa/guru/kelas
+        // tetap di URL masing-masing). Kalau nanti dibuat halaman gabungan, cukup
+        // ganti redirect ini dengan controller-nya; nama route tetap admin.trash.index.
+        Route::get('tempat-sampah', fn () => redirect()->route('admin.students.trash'))->name('trash.index');
     });
 
-    // Pengaturan Sistem Dinamis
+    // Pengaturan Sistem Dinamis (Informasi Sekolah + jadwal presensi)
     Route::get('/pengaturan/jadwal', [SettingController::class, 'index'])->name('pengaturan.jadwal');
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update')->middleware('throttle:10,1');
@@ -242,19 +267,25 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
     Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
-    // KEHADIRAN - identik admin tetapi READ-ONLY
+    // KEHADIRAN (dropdown: Siswa & Guru) - identik admin tetapi READ-ONLY
     // (route ubah status presensi / override sengaja tidak didaftarkan => 403)
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa', [AttendanceController::class, 'kehadiran'])->name('kehadiran.siswa');
     Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
     Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 
-    // REKAP - identik admin (filter + unduh Excel/PDF)
+    // REKAP (dropdown: Siswa & Guru) - identik admin (filter + unduh Excel/PDF)
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
+    Route::get('/rekap/siswa', [AdminRekapController::class, 'index'])->name('rekap.siswa');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
     Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
+    // Rekap Guru (statis)
+    Route::get('/rekap/guru', [RekapGuruController::class, 'index'])->name('rekap.guru');
+    Route::get('/rekap/guru/pdf', [RekapGuruController::class, 'exportPdf'])->name('rekap.guru.pdf')->middleware('throttle:10,1');
+    Route::get('/rekap/guru/excel', [RekapGuruController::class, 'exportExcel'])->name('rekap.guru.excel')->middleware('throttle:10,1');
     Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
 
     // SISWA - identik admin, READ-ONLY (detail + cetak kartu & unduh QR)
@@ -300,8 +331,9 @@ Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(functi
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
     Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
-    // KEHADIRAN - READ-ONLY (route override absensi sengaja tidak ada => 403)
+    // KEHADIRAN (dropdown: Siswa & Guru) - READ-ONLY (route override absensi sengaja tidak ada => 403)
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
+    Route::get('/kehadiran/siswa', [AttendanceController::class, 'kehadiran'])->name('kehadiran.siswa');
     Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
     Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');

@@ -115,40 +115,18 @@
             font-size: 1rem;
         }
     }
-/* ===== Tombol Pengelolaan Sistem: susunan ke BAWAH di mobile =====
-       Breakpoint sama dengan susunan tombol action bar Data Siswa / Data Guru
-       (max-width: 1023.98px = saat bottom navigation muncul), jadi benar-benar
-       sama persis dengan halaman-halaman itu dan desktop >= 1024px tidak
-       tersentuh. Yang berubah hanya ARAH dan LEBAR: tombol turun satu per
-       satu, lebar penuh, jarak antar tombol sama (0.5rem). Urutan, warna, dan
-       teks tombol tetap apa adanya. */
-    @media (max-width: 1023.98px) {
-        .pengaturan-modul-wrap {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.5rem !important;
-        }
-
-        .pengaturan-modul-wrap > .btn {
-            flex: 1 1 100% !important;
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-        }
-    }
 
     /* Header ke konten: hilangkan margin-bottom bawaan layout bersama khusus di Pengaturan,
-       agar jarak header -> tombol murni diatur oleh margin-top wrapper (38px),
-       sehingga presisi sama dengan margin-bottom tombol -> Identitas (38px). */
+       agar jarak header -> konten murni diatur oleh margin-top wrapper (38px). */
     body .content-scroll-wrapper > main.pengaturan-no-scrollbar .app-header-bar {
         margin-bottom: 0 !important;
     }
 
     /* ===== ALERT NOTIFIKASI DI PENGATURAN =====
-       Berada tepat di tengah vertikal antara deskripsi header dan baris tiga tombol:
+       Berada tepat di tengah vertikal antara deskripsi header dan konten:
        - Jarak atas notifikasi (dari deskripsi header): 22px (rentang 20-24px)
-       - Jarak bawah notifikasi (ke baris tiga tombol): 22px (rentang 20-24px)
-       - Saat TIDAK ada notifikasi, jarak header ke tiga tombol tetap 38px semula.
+       - Jarak bawah notifikasi (ke konten): 22px (rentang 20-24px)
+       - Saat TIDAK ada notifikasi, jarak header ke konten tetap 38px semula.
        - Rata kiri dan lebar penuh (width: 100%). */
     .pengaturan-alert {
         margin-top: 22px !important;
@@ -157,23 +135,19 @@
     }
 
     /* Saat ada notifikasi tepat sebelum .pengaturan-page-body, hilangkan margin-top
-       wrapper konten agar jarak bawah alert ke tombol murni ditentukan margin-bottom alert (22px) */
+       wrapper konten agar jarak bawah alert ke konten murni ditentukan margin-bottom alert (22px) */
     body .content-scroll-wrapper > main.pengaturan-no-scrollbar .pengaturan-alert + .pengaturan-page-body,
     body .content-scroll-wrapper > main.pengaturan-no-scrollbar:has(.pengaturan-alert) .pengaturan-page-body {
         margin-top: 0 !important;
     }
 
-    /* ===== POSISI TIGA TOMBOL DI TENGAH: Jarak atas & bawah identik 38px ===== */
+    /* ===== WRAPPER KONTEN: jarak atas 38px dari header ===== */
     .pengaturan-page-body {
         margin-top: 38px !important;
         width: 100% !important;
         max-width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
-    }
-
-    .pengaturan-modul-wrap {
-        margin-bottom: 38px !important;
     }
 
     /* ===== WADAH UTAMA FORM: Selebar penuh, flex kolom dengan gap seragam 28px ===== */
@@ -523,72 +497,6 @@
         display: block !important;
         text-align: right !important;
     }
-
-    /* ===== SATU CLASS BERSAMA buat ketiga tombol Pengelolaan Sistem =====
-       TAHUN AJARAN (btn-primary / biru), HARI LIBUR (btn-success / hijau) dan
-       TEMPAT SAMPAH (btn-danger / merah) semuanya memakai
-       .pengaturan-modul-btn ini, jadi ukurannya ditulis SATU KALI dan dijamin
-       seragam: tinggi, padding, radius, bobot font, lebar, perataan teks, dan
-       satu baris (tidak patah). SATU-SATUNYA yang membedakan ketiganya adalah
-       class warna di markup.
-
-       Angka di bawah adalah nilai yang SELAMA INI memang tampil
-       (btn-sm px-3 py-2 + radius 12px bawaan layout .btn), jadi TIDAK ada
-       perubahan ukuran/font - hanya dikonsolidasi ke satu class, ditambah
-       lebar diseragamkan lewat min-width supaya ketiganya sama lebar.
-
-       Yang sengaja TIDAK disentuh: font-size (tetap bawaan .btn-sm +
-       override mobile layout), font-family, letter-spacing, dan text-transform
-       (semuanya datang dari layout bersama) -> teks tombol tidak berubah. */
-    .pengaturan-modul-wrap .pengaturan-modul-btn {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-        white-space: nowrap !important;   /* satu baris, tidak patah */
-        padding: 0.5rem 1rem !important;  /* = px-3 py-2 (ketiganya sama) */
-        border-radius: var(--clean-radius) !important; /* token radius bersama (6px) */
-        font-weight: 600 !important;      /* = fw-semibold (ketiganya sama) */
-        min-width: 12rem !important;      /* 192px: muat "TEMPAT SAMPAH" */
-    }
-
-    /* ===== Ikon di dalam tombol Pengelolaan Sistem =====
-       Ikon tong sampah di tombol TEMPAT SAMPAH: ukuran 18px, rata tengah,
-       dengan margin-right 8px dari teks. */
-    .pengaturan-modul-wrap .pengaturan-modul-btn > svg {
-        display: inline-block !important;
-        vertical-align: middle !important;
-        flex-shrink: 0;
-        margin-right: 8px;
-    }
-
-    /* ===== WARNA "TAHUN AJARAN": biru primer yang sudah dipakai web ini =====
-       Tidak ada satu pun hex baru di sini. Warna diambil dari class
-       .btn-primary bawaan Bootstrap yang SUDAH dipakai aplikasi - antara lain
-       tombol "Simpan Pengaturan" di halaman ini sendiri, tombol "Tambah Tahun
-       Ajaran" di halaman Tahun Ajaran, tombol Dashboard, tombol Buka Scanner,
-       dan tombol form Simpan lainnya.
-
-       Nilai class itu (Bootstrap 5.3.3 CDN, token --bs-btn-*):
-         base  #0d6efd (--bs-btn-bg)
-         hover #0b5ed7 (--bs-btn-hover-bg)
-         active #0a58ca (--bs-btn-active-bg)
-         cincin fokus rgba(13, 110, 253, ...) (--bs-btn-focus-*)
-       Karena hover/active/focus ikut class yang sama, pola gelap-saat-hover
-       PERSIS sepadan dengan tombol "HARI LIBUR" (.btn-success) dan "TEMPAT
-       SAMPAH" (.btn-danger) di sebelahnya yang juga murni bawaan Bootstrap -
-       tanpa override warna sama sekali. Teks tetap putih; kontras putih di
-       atas #0d6efd sekitar 4.5:1 (lolos ambang terbaca).
-
-       Karena TIDAK ditulis satupun aturan override warna, tidak ada selector
-       yang bisa mengenai elemen lain: tombol "Simpan Pengaturan" di halaman
-       ini (btn-primary juga, tapi di luar card ini), tombol biru di halaman
-       lain, serta tombol hijau & merah di sebelahnya semuanya tetap persis
-       seperti sekarang. Warna ketiga tombol murni dari class masing-masing.
-
-       (Kalau suatu saat mau pakai biru tema --primary-blue #3b62f6 /
-       --primary-blue-hover #2563eb ala tombol "Lihat" Catatan Kehadiran,
-       cukup tambahkan override ter-scope di sini - tidak perlu ubah markup.) */
 </style>
 @endpush
 
@@ -635,45 +543,11 @@
     </div>
     @endif
 
-    <!-- WRAPPER KONTEN PENGATURAN: Menambah jarak vertikal dari header (44px) -->
+    <!-- WRAPPER KONTEN PENGATURAN: Menambah jarak vertikal dari header (38px) -->
     <div class="pengaturan-page-body">
-        <!-- PENGELOLAAN SISTEM: modul yang dikelola dari halaman Pengaturan.
-             Tombol memakai route() nama route yang SUDAH ADA (tidak route baru)
-             dan href/aksi tiap tombol tidak berubah.
-             Ukuran & perataan ketiga tombol dibawa SATU class bersama
-             .pengaturan-modul-btn (lihat CSS di atas); SATU-SATUNYA pembeda
-             adalah warna kelas Bootstrap:
-               Tahun Ajaran  -> btn-primary (biru primer)  TANPA ikon
-               Hari Libur    -> btn-success (hijau)        TANPA ikon
-               Tempat Sampah -> btn-danger  (merah)        TANPA ikon (ikon
-                               tong sampah sudah dihapus, tidak ada sisa margin)
-             Susunan dalam satu array $pengaturanModules supaya mudah ditambah
-             tombol lain tanpa mengubah struktur.
-
-             CATATAN: tombol "KELOLA AKUN" yang tadinya ada di baris ini SUDAH
-             DIHAPUS (21 Okt 2026) karena jalur masuknya dipindah ke item
-             "Kelola Akun" pada pop-up kartu akun di sidebar (sidebar.blade.php),
-             memakai route yang sama persis (admin.accounts.index). Route dan
-             halaman Kelola Akun (/admin/kelola-akun) TIDAK dihapus. -->
-        @php
-            $pengaturanModules = [
-                ['route' => 'admin.academic-years.index', 'class' => 'btn-primary', 'label' => __('TAHUN AJARAN')],
-                ['route' => 'admin.holidays.index', 'class' => 'btn-success', 'label' => __('HARI LIBUR')],
-                ['route' => 'admin.students.trash', 'class' => 'btn-danger', 'label' => __('TEMPAT SAMPAH')], // route yang SUDAH ADA; sekarang jadi halaman unified (tab Siswa | Guru | Kelas)
-            ];
-        @endphp
-        <div class="d-flex flex-wrap gap-2 pengaturan-modul-wrap">
-            @foreach($pengaturanModules as $modul)
-            {{-- Satu class bersama .pengaturan-modul-btn untuk ukuran ketiganya;
-                 TEMPAT SAMPAH memakai varian ikon saja (kotak 40px, ikon trash),
-                 dua lainnya tetap teks. Route/href tidak diubah. --}}
-            <a href="{{ route($modul['route']) }}"
-               class="btn btn-sm pengaturan-modul-btn {{ $modul['class'] }}"
-               title="{{ ucwords(strtolower($modul['label'])) }}" aria-label="{{ ucwords(strtolower($modul['label'])) }}">
-                {{ $modul['label'] }}
-            </a>
-            @endforeach
-        </div>
+        {{-- Tombol TAHUN AJARAN / HARI LIBUR / TEMPAT SAMPAH DIHAPUS dari halaman ini.
+             Akses ke ketiganya sudah ada di submenu Pengaturan pada sidebar.
+             Route dan halamannya TIDAK dihapus. --}}
 
         <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data" 
               class="settings-mobile-form settings-form-wrapper"

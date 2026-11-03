@@ -5,15 +5,8 @@
 
 @section('canvas_class', 'page-canvas-fixed')
 
-@section('page_header_right')
-    <a href="{{ route('admin.rekap.guru') }}"
-       class="btn btn-primary btn-sm"
-       style="transition: none !important;"
-       title="{{ __('Mode Guru') }}"
-       aria-label="{{ __('Mode Guru') }}">
-        {{ __('Mode Guru') }}
-    </a>
-@endsection
+{{-- Tombol "Mode Guru" di header DIHAPUS.
+     Pindah ke Rekap Guru sekarang lewat dropdown Rekap di sidebar. --}}
 
 @push('styles')
 <style>
@@ -67,6 +60,22 @@
     .btn-red-pdf { background-color: #ef4444; }
     .btn-green-excel:hover, .btn-green-excel:active, .btn-green-excel:focus, .btn-green-excel:focus-visible { background-color: #059669 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
     .btn-red-pdf:hover, .btn-red-pdf:active, .btn-red-pdf:focus, .btn-red-pdf:focus-visible { background-color: #ef4444 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
+
+    /* Tombol Reset: kotak 38x38 (sama tinggi dengan input filter), paling kanan */
+    .btn-reset-rekap {
+        display: inline-flex; align-items: center; justify-content: center;
+        box-sizing: border-box; flex-shrink: 0;
+        width: 38px; height: 38px; padding: 0;
+        background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--clean-radius, 6px);
+        color: #64748b; text-decoration: none; outline: none;
+        transition: none !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .btn-reset-rekap svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
+    .btn-reset-rekap:hover,
+    .btn-reset-rekap:focus-visible {
+        color: #2563eb; border-color: #2563eb; background: #f8fafc; text-decoration: none;
+    }
 
     .recap-mobile-actions .btn {
         transition: none !important;
@@ -520,12 +529,18 @@
                 @endif
                 <div class="d-flex flex-column" style="min-width: 200px; flex: 1;">
                     <label class="filter-label">{{ __('Kelas') }}</label>
-                    <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3">
-                        <option value="">{{ __('Semua Kelas') }}</option>
-                        @foreach($classes as $c)
-                            <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="d-flex align-items-center gap-2">
+                        <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3" style="flex: 1; min-width: 0;">
+                            <option value="">{{ __('Semua Kelas') }}</option>
+                            @foreach($classes as $c)
+                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                        {{-- Reset: di samping dropdown Kelas. Kembali ke filter bawaan, tab periode tetap. --}}
+                        <a href="{{ panel_route('rekap', ['type' => $type]) }}" class="btn-reset-rekap" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                        </a>
+                    </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto">
                     <button type="button" class="btn-red-pdf" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="pdf" title="{{ __('Cetak PDF') }}" aria-label="{{ __('Cetak PDF') }}">
@@ -1962,15 +1977,9 @@
             </form>
         </div>
     </div>
-@push('page_header_right')
-<div class='nav-siswa-guru'>
-    <button class='btn-nav-sg {{ panel_is('rekap') ? 'active' : '' }}' onclick='window.location=\'{{ panel_route('rekap') }}\' title='Rekap Presensi Siswa'>
-        <span>{{ __('Siswa') }}</span>
-    </button>
-    <button class='btn-nav-sg {{ panel_is('rekap.guru') ? 'active' : '' }}' onclick='window.location=\'{{ panel_route('rekap.guru') }}\' title='Rekap Presensi Guru'>
-        <span>{{ __('Guru') }}</span>
-    </button>
 </div>
-@endpush
+
+{{-- Toggle "Siswa | Guru" (@push('page_header_right')) DIHAPUS.
+     Pindah antara Rekap Siswa dan Rekap Guru lewat dropdown Rekap di sidebar. --}}
 
 @endsection

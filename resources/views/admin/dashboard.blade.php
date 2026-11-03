@@ -15,7 +15,7 @@
      yang memuat <input type="date"> (pola yang sudah dipakai di halaman lain).
      Memilih tanggal hanya submitting GET ke halaman dashboard yang sama dengan
      ?tanggal=YYYY-MM-DD, lalu controller menghitung ulang seluruh statistik,
-     grafik, dan ketidakhadiran. Tampilan (ikon, teks, ukuran, warna) TIDAK diubah. -->
+     grafik, dan kehadiran. Tampilan (ikon, teks, ukuran, warna) TIDAK diubah. -->
 <form method="GET" action="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard') }}" class="dashboard-date-form d-none d-lg-flex align-items-center gap-2.5 text-end">            {{-- Mode grafik & filter status ikut dipertahankan saat tanggal diganti --}}
             <input type="hidden" name="mode" value="{{ $chartMode ?? 'harian' }}">
             @if(request('status'))
@@ -26,7 +26,7 @@
         <span class="text-secondary fw-semibold d-block text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">{{ __($dateLabel ?? 'Tanggal Hari Ini') }}</span>
         <strong class="text-dark fw-bold d-block" style="font-size: 0.88rem;">
             {{-- Tanggal mengikuti bahasa aktif. Controller membungkus tanggal dengan
-                 Carbon locale 'id', jadi localediterapkan langsung ke instance
+                 Carbon locale 'id', jadi locale diterapkan langsung ke instance
                  di sini (tidak mengubah controller):
                  "Minggu, 18 Oktober 2026" (id) -> "Sunday, 18 October 2026" (en).
                  Format 'l, d F Y' TIDAK diubah supaya mode Bahasa Indonesia
@@ -57,7 +57,7 @@
 @push('styles')
 <style>
     /* ==================================================================
-       DASHBOARD ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â CLEAN LOOK (versi sebelum redesign terakhir)
+       DASHBOARD - CLEAN LOOK (versi sebelum redesign terakhir)
        Kanvas & wrapper TIDAK diubah (putih, lengkung, sama seperti halaman
        lain). Semua bagian tampil di atas putih: tanpa kartu abu, tanpa
        border, tanpa garis, tanpa shadow pada kontainer. Pemisah antar
@@ -80,8 +80,8 @@
     }
 
     /* Jarak seragam antar bagian = 32px.
-       - HP: jarakcomes dari gap area scroll di atas; untuk baris yang berisi
-         Grafik + Ketidakhadiran (satu blok), jarak internalnya 32px juga.
+       - HP: jarak datang dari gap area scroll di atas; untuk baris yang berisi
+         Grafik + Kehadiran (satu blok), jarak internalnya 32px juga.
        - Desktop: jarak dari margin-bottom tiap section. */
     @media (max-width: 640px) {
         body .dashboard-section.row:not(.dashboard-stat-row) {
@@ -114,7 +114,7 @@
         --dash-accent: #2563eb;
     }
 
-    /* Kotak Grafik / Ketidakhadiran / Monitoring / Jadwal: putih, tanpa
+    /* Kotak Grafik / Kehadiran / Monitoring / Jadwal: putih, tanpa
        garis, tanpa shadow, dan tanpa padding luar. ISI tidak diubah. */
     body .dashboard-section .dashboard-box,
     body .dashboard-section .dashboard-monitor-box {
@@ -132,7 +132,7 @@
     }
 
     /* ------------------------------------------------------------------
-       BAGIAN 1: STATISTIK ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â memakai grid yang SAMA PERSIS dengan grid
+       BAGIAN 1: STATISTIK - memakai grid yang SAMA PERSIS dengan grid
        Pintasan Cepat (jumlah kolom, lebar kolom, dan gap identik) dan
        konten tiap sel RATA TENGAH di kolomnya, sehingga titik tengah
        angka statistik lurus vertikal dengan titik tengah kolom ikon di
@@ -216,8 +216,8 @@
         margin-bottom: 0.25rem;     /* jarak rapat angka -> label (4px) */
     }
 
-    /* Palet warna angka dashboard — dipakai SAMA PERSIS di bagian "Data Sekolah"
-       dan "Ketidakhadiran Hari Ini" (satu biru, satu kuning, satu hijau, satu
+    /* Palet warna angka dashboard - dipakai SAMA PERSIS di bagian "Data Sekolah"
+       dan "Kehadiran Hari Ini" (satu biru, satu kuning, satu hijau, satu
        merah). Class KHUSUS elemen dashboard ini; definisi class bersama
        (text-danger, text-primary, text-purple, dll) tidak disentuh. */
     .dashboard-section .dash-stat-value.is-sidebar-blue,
@@ -228,8 +228,13 @@
     .dashboard-section .dash-att-value.is-yellow {
         color: #eab308 !important;   /* kuning */
     }
-    .dashboard-section .dash-stat-value.is-green {
+    .dashboard-section .dash-stat-value.is-green,
+    .dashboard-section .dash-att-value.is-green {
         color: #16a34a !important;   /* hijau */
+    }
+    .dashboard-section .dash-stat-value.is-orange,
+    .dashboard-section .dash-att-value.is-orange {
+        color: #ea580c !important;   /* oranye (Terlambat) */
     }
     .dashboard-section .dash-stat-value.is-red,
     .dashboard-section .dash-att-value.is-red {
@@ -284,7 +289,7 @@
     }
 
     /* ------------------------------------------------------------------
-       BAGIAN 2: PINTASAN CEPAT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â grid ikon 4 kolom (2 baris x 4 kolom).
+       BAGIAN 2: PINTASAN CEPAT - grid ikon 4 kolom (2 baris x 4 kolom).
        Tanpa kotak/border per item: hanya wadah ikon rounded-square dengan
        latar lembut + satu label pendek di bawahnya.
        ------------------------------------------------------------------ */
@@ -393,7 +398,7 @@
     }
 
     /* ------------------------------------------------------------------
-       BARIS KETIDAKHADIRAN & KOTAK JAM ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tanpa kartu: tanpa background,
+       BARIS KEHADIRAN & KOTAK JAM - tanpa kartu: tanpa background,
        border, outline, dan shadow. Yang membedakan hanya jarak kosong.
        ------------------------------------------------------------------ */
     .dashboard-section .dashboard-inner-card,
@@ -405,25 +410,21 @@
         box-shadow: none;
     }
 
-    /* Angka + label (Sakit/Izin/Alpha) sekarang TIDAK bisa diklik, jadi
+    /* Angka + label (Hadir/Sakit/Izin/Alfa) TIDAK bisa diklik, jadi
        tidak ada lagi pointer maupun efek hover di baris tersebut. */
     .absence-row-interactive {
         transition: background-color 0.15s ease;
     }
 
-    /* Catatan: ikon status (plester / amplop / tanda seru) di baris
-       Sakit, Izin, dan Alpha SUDAH DIHAPUS dari markup, jadi seluruh
-       styling ikon status di bawah ini tidak lagi dipakai. */
-
     .dashboard-section .absence-row-inner {
         gap: 0.75rem !important;
     }
 
-    /* Tiga item Sakit/Izin/Alpha: SEJAJAR 3 KOLOM di HP maupun desktop.
+    /* Lima item Hadir/Terlambat/Sakit/Izin/Alfa: SEJAJAR 5 KOLOM di HP maupun desktop.
        Isi tiap item vertikal, rapat, dan rata tengah. */
     .dashboard-section .dash-absence-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 0.75rem;
     }
     @media (min-width: 992px) {
@@ -432,13 +433,13 @@
         }
     }
 
-    /* Angka Ketidakhadiran Hari Ini: font tebal SAMA persis dengan angka Data Sekolah. */
+    /* Angka Kehadiran Hari Ini: font tebal SAMA persis dengan angka Data Sekolah. */
     .dashboard-section .dash-att-figure {
         margin-bottom: 0.25rem;
     }
 
     /* ==================================================================
-       BAGIAN BAWAH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â "Ketidakhadiran Hari Ini" (kiri) dan "Jadwal
+       BAGIAN BAWAH - "Kehadiran Hari Ini" (kiri) dan "Jadwal
        Operasional Sekolah" (kanan) jadi DUA KOLOM SEJAJAR di desktop
        (md ke atas) dan tetap BERTUMPUK di HP.
 
@@ -448,12 +449,12 @@
        min-w-0" pada .dash-col), sehingga:
          - HP (<768px) : 1 kolom, jarak antar bagian 32px (gap-y-8).
          - >=768px      : 2 kolom sama lebar, jarak 48px (gap-x-12).
-       Yang diatur DI BAWAH ini hanya detail yang tidak werde Tailwind:
+       Yang diatur DI BAWAH ini hanya detail yang tidak terjangkau Tailwind:
        judul sejajar, tombol, badge, dan jam.
 
        PENTING: semua selector di blok ini memakai
        "body .dashboard-section .<class>". Class .dashboard-section WAJIB
-       ada pada SEKOLAH/INDUK elemen (.dashboard-section > .dash-bottom-grid
+       ada pada INDUK elemen (.dashboard-section > .dash-bottom-grid
        > .dash-col > .card). Bila .dashboard-section diletakkan pada
        elemen yang sama, selector tidak akan pernah cocok.
 
@@ -543,7 +544,7 @@
     /* ==================================================================
        HANYA MOBILE (< 768px)
        3 statistik "Data Sekolah" SEJAJAR satu baris (3 kolom sama lebar)
-       dan 3 item "Ketidakhadiran Hari Ini" sejajar satu baris (3 kolom),
+       dan 5 item "Kehadiran Hari Ini" sejajar satu baris (5 kolom),
        dengan angka & label yang mengecil supaya muat di layar 320-500px
        tanpa scroll horizontal. Desktop (md ke atas) TIDAK tersentuh: nilai
        aslinya tetap dipakai lewat blok min-width 768px / 992px di atas.
@@ -551,7 +552,7 @@
        ================================================================== */
     @media (max-width: 767.98px) {
         /* Data Sekolah: 3 kolom sejajar rapat; align-items start supaya semua
-           angka berada pada satu garis despite label 2 baris. */
+           angka berada pada satu garis walau label 2 baris. */
         .dashboard-section .dash-stats-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
             column-gap: 0.25rem;
@@ -574,19 +575,19 @@
             overflow-wrap: break-word;
         }
 
-        /* Ketidakhadiran Hari Ini: 3 kolom sejajar, angka sama ukurannya dengan Data Sekolah. */
+        /* Kehadiran Hari Ini: 5 kolom sejajar, angka sama ukurannya dengan Data Sekolah. */
         .dashboard-section .dash-absence-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.5rem;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.25rem;
             align-items: start;
         }
-        /* Label (Sakit / Izin / Alpha) disamakan dengan label statistik HP. */
+        /* Label (Hadir / Terlambat / Sakit / Izin / Alfa) disamakan dengan label statistik HP. */
         .dashboard-section .dash-absence-grid .fw-bold {
-            font-size: 0.6875rem !important;  /* 11px */
+            font-size: 0.625rem !important;   /* 10px: muat "Terlambat" di 5 kolom */
         }
     }
 
-    /* Baris ketidakhadiran: TIDAK ada efek hover lagi (baris ini hanya
+    /* Baris kehadiran: TIDAK ada efek hover lagi (baris ini hanya
        teks, bukan tautan). Yang tersisa adalah penanda "sedang difilter"
        (.absence-row-active) - itu status, bukan efek klik. */
     .dashboard-section .absence-row-active {
@@ -597,15 +598,15 @@
         transform: none;
     }
 
-    /* ===== PENAKLUK BORDER DARI CSS LAYOUT (khusus 5 elemen) =====
+    /* ===== PENAKLUK BORDER DARI CSS LAYOUT (khusus 6 elemen) =====
        Definisi class di layouts/app.blade.php tidak diubah (dipakai bersama),
        dan <style> layout dimuat SESUDAH style push halaman, jadi aturannya
        tetap menang di browser:
          .operasional-card-interactive { border: 1px solid var(--clean-line) !important }
          .absence-row-interactive      { border: 1px solid var(--clean-line) !important }
          .card                         { box-shadow: 0 1px 2px rgba(15,23,42,.06) !important }
-       Class .dash-nobox hanya dipakai pada 5 elemen tersebut (baris
-       Sakit/Izin/Alpha + 2 kotak jam), jadi halaman lain tidak ikut berubah. */
+       Class .dash-nobox hanya dipakai pada 6 elemen tersebut (baris
+       Hadir/Sakit/Izin/Alfa + 2 kotak jam), jadi halaman lain tidak ikut berubah. */
     body .dashboard-section .dash-nobox,
     body .dashboard-section .dash-nobox:hover,
     body .dashboard-section .dash-nobox:focus,
@@ -690,7 +691,7 @@
            / .monitoring-* di bawah ini tidak lagi dipakai. */
 
         /* Jarak vertikal antar blok yang ditumpuk (grafik penuh lebar
-           di atas, Ketidakhadiran Hari Ini di bawahnya): 32px. */
+           di atas, Kehadiran Hari Ini di bawahnya): 32px. */
         .dashboard-section.row {
             row-gap: 2rem !important;
         }
@@ -730,7 +731,7 @@
             margin-top: 0.5rem !important;
         }
 
-        /* GRUP TAB Harian/Mingguan/Bulanan ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â satu-satunya elemen yang boleh
+        /* GRUP TAB Harian/Mingguan/Bulanan - satu-satunya elemen yang boleh
            berborder tipis. Tombol menempel, satu bingkai luar, pemisah 1px. */
         .dash-seg {
             display: inline-flex;
@@ -912,9 +913,9 @@
 @section('content')
 
     <!-- ========================================================================= -->
-    <!-- 1. STATISTIK ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â satu blok putih, grid 2 kolom x 2 baris, TANPA ikon,      -->
-    <!--    tanpa kotak, dan tanpa garis pemisah. Empat sel: label kecil, angka    -->
-    <!--    besar, keterangan kecil. Tautan & data dinamis tidak diubah.          -->
+    <!-- 1. STATISTIK - satu blok putih, grid 3 kolom, TANPA ikon, tanpa kotak,    -->
+    <!--    dan tanpa garis pemisah. Tiga sel: angka besar + label kecil.          -->
+    <!--    Tautan & data dinamis tidak diubah.                                    -->
     <!-- ========================================================================= -->
     <div class="dashboard-section">
         <div class="dash-card">
@@ -969,7 +970,7 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 2. PINTASAN CEPAT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â judul lalu grid ikon 4 KOLOM yang memanjang penuh     -->
+    <!-- 2. PINTASAN CEPAT - judul lalu grid ikon 4 KOLOM yang memanjang penuh     -->
     <!--     (2 baris x 4 kolom). Tanpa kotak/border per item: hanya wadah ikon    -->
     <!--     rounded-square berlatar lembut per warna ikon + satu label pendek.    -->
     <!--     Subjudul kartu lama dihapus; ikon & tautan tetap sama persis.         -->
@@ -982,7 +983,7 @@
 
                 <div class="dash-shortcut-grid">
 
-                <!-- 1. Presensi Hari Ini (ikon QR/Scan) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â langsung ke MODE GERBANG (kiosk).
+                <!-- 1. Presensi Hari Ini (ikon QR/Scan) - langsung ke MODE GERBANG (kiosk).
                      Kamera otomatis menyala saat halaman dibuka lewat pintasan ini; tidak
                      perlu lagi klik tombol Mode Gerbang.
                      URL dibangun ulang per role agar route guru/piket tetap valid
@@ -996,7 +997,7 @@
                     <span class="dash-sc-label">{{ __('Presensi Hari Ini') }}</span>
                 </a>
 
-                <!-- 2. Catatan Kehadiran (ikon List/Ceklis) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â HALAMAN KEHADIRAN -->
+                <!-- 2. Catatan Kehadiran (ikon List/Ceklis) - HALAMAN KEHADIRAN -->
                 <a href="{{ panel_route('kehadiran') }}"
                    class="dash-shortcut-item"
                    title="{{ __('Lihat Log Kehadiran & Presensi Harian') }}">
@@ -1077,9 +1078,12 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 3. SECTION TENGAH: GRAFIK GARIS KEHADIRAN (penuh lebar)                   -->
-    <!--    (mode: harian/mingguan/bulanan). Isi, tautan, dan JS grafik tidak      -->
-    <!--    diubah; "Ketidakhadiran Hari Ini" kini ada di grid 2 kolom di bawah.   -->
+    <!-- 3. SECTION TENGAH: GRAFIK GARIS KEHADIRAN PER ROMBEL (penuh lebar)        -->
+    <!--    (mode: harian/mingguan/bulanan). Satu garis = satu rombel (kelas).     -->
+    <!--    Data per rombel dibaca dari $chartDatasets (dari controller):          -->
+    <!--      [ ['label' => '7A', 'data' => [..persen per label sumbu X..]], ... ] -->
+    <!--    Bila $chartDatasets belum dikirim, grafik jatuh kembali ke satu garis  -->
+    <!--    total ($chartValues) seperti sebelumnya.                               -->
     <!-- ========================================================================= -->
     <div class="row g-3 dashboard-section">
 
@@ -1116,10 +1120,10 @@
                          (Harian / Mingguan / Bulanan), walaupun semua
                          nilainya 0 - garis tren tetap tergambar datar di 0%
                          dan label sumbu X tetap terbaca. Tinggi canvas
-                         dikunci (280px) supaya layout kartu tidak lompat
-                         saat pindah mode. -->
+                         dikunci (300px) supaya
+                         layout kartu tidak lompat saat pindah mode. -->
                     <div class="pt-1 pb-1">
-                        <div class="chart-canvas-wrap" style="position: relative; height: 280px; width: 100%;">
+                        <div class="chart-canvas-wrap" style="position: relative; height: 300px; width: 100%;">
                             <canvas id="attendanceLineChart"></canvas>
                         </div>
                     </div>
@@ -1144,19 +1148,12 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- 4. BAGIAN BAWAH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â DUA KOLOM: "Ketidakhadiran Hari Ini" (KIRI) dan         -->
-    <!--    "Jadwal Operasional Sekolah" (KANAN).                                    -->
-    <!--    Desktop (md ke atas) = 2 kolom sama lebar; HP = 1 kolom bertumpuk        -->
-    <!--    (Ketidakhadiran di atas, Jadwal di bawah). Tiap kolom flex-col dengan    -->
-    <!--    tombol mt-auto, sehingga kedua tombol selalu sejajar di bawah.           -->
-    <!--    Kontainer tetap polos: tanpa border, shadow, dan background abu-abu.     -->
-    <!-- ========================================================================= -->
-    <!-- 4. BAGIAN BAWAH ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â DUA KOLOM: "Ketidakhadiran Hari Ini" (KIRI) dan         -->
+    <!-- 4. BAGIAN BAWAH - DUA KOLOM: "Kehadiran Hari Ini" (KIRI) dan             -->
     <!--    "Jadwal Operasional Sekolah" (KANAN).                                    -->
     <!--    - .dashboard-section : pembungkus bagian. Class ini WAJIB ada di sini    -->
     <!--      supaya aturan CSS lama tetap berlaku, mis. .dashboard-section          -->
     <!--      .dash-nobox (penihil border kotak) dan .dashboard-section             -->
-    <!--      .dash-absence-grid (grid 3 kolom).                                    -->
+    <!--      .dash-absence-grid (grid 4 kolom).                                    -->
     <!--    - .dash-bottom-grid  : 1 kolom di HP (gap-y-8 = 32px) dan 2 kolom sama  -->
     <!--      lebar di >=768px (gap-x-12 = 48px, items-stretch).                    -->
     <!--    - .dash-col          : kolom flex (flex flex-col h-full min-w-0) dengan  -->
@@ -1167,25 +1164,44 @@
     <div class="dashboard-section">
         <div class="dash-bottom-grid grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 items-stretch align-content-start">
 
-        <!-- ===== KOLOM KIRI: KETIDAKHADIRAN HARI INI (Sakit / Izin / Alpha) ===== -->
+        <!-- ===== KOLOM KIRI: KEHADIRAN HARI INI (HTSIA) ===== -->
         <div class="dash-col flex flex-col h-full min-w-0">
             <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column dashboard-panel dashboard-box">
 
-                <!-- Judul (tanpa subjudul "Siswa yang berhalangan hadir").
+                <!-- Judul (tanpa subjudul).
                      min-height pada .dash-col-head tetap dipakai supaya judul
                      kolom ini tetap sejajar dengan judul kolom kanan. -->
                 <div class="d-flex items-start justify-between gap-2 clean-line-off dash-col-head">
                     <div class="min-w-0">
-                        <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">{{ __('Ketidakhadiran Hari Ini') }}</h6>
+                        <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">{{ __('Kehadiran Hari Ini') }}</h6>
                     </div>
                 </div>
 
-                <!-- 3 item Ketidakhadiran Hari Ini: 3 kolom sejajar 1 baris.
+                <!-- 5 item Kehadiran Hari Ini: 5 kolom sejajar 1 baris, urutan
+                     Hadir - Terlambat - Sakit - Izin - Alfa (HTSIA).
                      Angka + label saja (TIDAK bisa diklik): satu-satunya aksi di
-                     kartu ini adalah tombol "Buka Tabel Presensi Hari Ini". -->
-                <div class="dash-absence-grid grid grid-cols-3">
+                     kartu ini adalah tombol "Buka Tabel Presensi Hari Ini".
+                     $countHadir dan $countTerlambat dikirim dari controller (jumlah
+                     siswa berstatus Hadir / Terlambat pada tanggal terpilih). -->
+                <div class="dash-absence-grid grid grid-cols-5">
 
-                    <!-- 1. Sakit -->
+                    <!-- 1. Hadir -->
+                    <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Hadir' ? 'absence-row-active' : '' }}">
+                        <span class="d-block dash-att-figure">
+                            <strong class="dash-stat-value dash-att-value is-green">{{ $countHadir ?? 0 }}</strong>
+                        </span>
+                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Hadir') }} @if(request('status') === 'Hadir')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                    </div>
+
+                    <!-- 2. Terlambat -->
+                    <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Terlambat' ? 'absence-row-active' : '' }}">
+                        <span class="d-block dash-att-figure">
+                            <strong class="dash-stat-value dash-att-value is-orange">{{ $countTerlambat ?? 0 }}</strong>
+                        </span>
+                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Terlambat') }} @if(request('status') === 'Terlambat')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                    </div>
+
+                    <!-- 3. Sakit -->
                     <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Sakit' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-sidebar-blue">{{ $countSakit ?? 0 }}</strong>
@@ -1193,7 +1209,7 @@
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
-                    <!-- 2. Izin -->
+                    <!-- 4. Izin -->
                     <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Izin' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-yellow">{{ $countIzin ?? 0 }}</strong>
@@ -1201,7 +1217,7 @@
                         <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
-                    <!-- 3. Alpha -->
+                    <!-- 5. Alfa -->
                     <div class="dashboard-inner-card dash-nobox text-decoration-none d-flex flex-column align-items-center text-center min-w-0 {{ request('status') === 'Alfa' ? 'absence-row-active' : '' }}">
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-red">{{ $countAlfa ?? 0 }}</strong>
@@ -1240,7 +1256,7 @@
                 <!-- Dua kotak jam: 2 kolom sama lebar, isi rata tengah.
                      Jam + "WIB" sekarang SATU BARIS, dan nilainya tetap
                      diambil dari pengaturan yang sama ($checkInTime /
-                     $lateLimitTime) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tidak ada data yang di-hardcode. -->
+                     $lateLimitTime) - tidak ada data yang di-hardcode. -->
                 <div class="dash-clock-grid grid grid-cols-2 gap-3">
                     <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Jam masuk sekolah') }}">
                         <span class="text-uppercase fw-bold text-dark d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Jam Masuk') }}</span>
@@ -1287,8 +1303,8 @@
        - User memilih tanggal      -> form GET submit ke halaman dashboard
                                        yang sama dengan ?tanggal=YYYY-MM-DD,
                                        lalu controller hitung ulang semua data.
-       - showPicker() dipicu dari event klik (user gesture), sehingga tidak
-       tidak bergantung pada izin browser. */
+       - showPicker() dipicu dari event klik (user gesture), sehingga
+         tidak bergantung pada izin browser. */
     document.addEventListener('DOMContentLoaded', function () {
         var input = document.querySelector('.dashboard-date-input');
         var trigger = document.querySelector('.dashboard-date-trigger');
@@ -1349,8 +1365,17 @@
 
         // Label & data sudah dihitung server-side sesuai mode aktif
         // (harian / mingguan / bulanan) - lihat AdminDashboardController.
+        //  - chartLabels   : label sumbu X (jam/hari/tanggal)
+        //  - chartDatasets : satu entri per rombel: { label: '7A', data: [persen, ...] }
+        //  - chartData     : satu garis total (dipakai bila chartDatasets kosong)
         let chartLabels = {!! json_encode($chartLabels ?? []) !!};
         let chartData = {!! json_encode($chartValues ?? []) !!};
+        let rawDatasets = {!! json_encode($chartDatasets ?? []) !!};
+
+        function toNum(v) {
+            const n = Number(v);
+            return (v === null || v === undefined || isNaN(n)) ? 0 : n;
+        }
 
         // Data kosong / null / NaN diubah jadi 0 supaya garis tren SELALU
         // tergambar (datar di 0% saat belum ada data) dan tidak ada error
@@ -1361,10 +1386,14 @@
         if (!Array.isArray(chartData)) {
             chartData = [];
         }
-        chartData = chartData.map(function (v) {
-            const n = Number(v);
-            return (v === null || v === undefined || isNaN(n)) ? 0 : n;
-        });
+        // Controller bisa mengirim objek (assoc array) -> jadikan array.
+        if (rawDatasets && !Array.isArray(rawDatasets) && typeof rawDatasets === 'object') {
+            rawDatasets = Object.keys(rawDatasets).map(function (k) { return rawDatasets[k]; });
+        }
+        if (!Array.isArray(rawDatasets)) {
+            rawDatasets = [];
+        }
+        chartData = chartData.map(toNum);
         if (chartLabels.length === 0) {
             chartLabels = ['-'];
         }
@@ -1372,39 +1401,94 @@
             chartData = chartLabels.map(function () { return 0; });
         }
 
+        const isMulti = rawDatasets.length > 0;
+        // Hanya satu titik di sumbu X (mode harian): titik dibuat lebih besar
+        // supaya tiap rombel tetap terlihat walau tidak ada garis penghubung.
+        const singlePoint = chartLabels.length === 1;
         const canvasContext = ctx.getContext('2d');
-        const gradient = canvasContext.createLinearGradient(0, 0, 0, 220);
-        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.20)');
-        gradient.addColorStop(1, 'rgba(37, 99, 235, 0.01)');
+        let datasets;
+
+        if (isMulti) {
+            // Satu garis per rombel. Warna dibuat otomatis dengan sudut hue
+            // "golden angle" supaya 20+ rombel tetap mudah dibedakan.
+            datasets = rawDatasets.map(function (ds, i) {
+                ds = ds || {};
+                const color = ds.color || ('hsl(' + Math.round((i * 137.508) % 360) + ', 65%, 45%)');
+                let data = Array.isArray(ds.data) ? ds.data.map(toNum) : [];
+                if (data.length !== chartLabels.length) {
+                    data = chartLabels.map(function () { return 0; });
+                }
+                return {
+                    label: ds.label || ds.name || ({!! json_encode(__('Rombel')) !!} + ' ' + (i + 1)),
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: color,
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: color,
+                    pointBorderWidth: 1.5,
+                    pointRadius: singlePoint ? 5 : 2.5,
+                    pointHoverRadius: 6
+                };
+            });
+        } else {
+            // Cadangan: satu garis total (perilaku lama).
+            const gradient = canvasContext.createLinearGradient(0, 0, 0, 220);
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.20)');
+            gradient.addColorStop(1, 'rgba(37, 99, 235, 0.01)');
+            datasets = [{
+                label: {!! json_encode(__('Tingkat Kehadiran (%)')) !!},
+                data: chartData,
+                borderColor: '#2563eb',
+                borderWidth: 2.5,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#2563eb',
+                pointBorderWidth: 2.5,
+                pointRadius: 4.5,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: '#2563eb',
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 2
+            }];
+        }
 
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: chartLabels,
-                datasets: [{
-                    label: {!! json_encode(__('Tingkat Kehadiran (%)')) !!},
-                    data: chartData,
-                    borderColor: '#2563eb',
-                    borderWidth: 2.5,
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.35,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#2563eb',
-                    pointBorderWidth: 2.5,
-                    pointRadius: 4.5,
-                    pointHoverRadius: 7,
-                    pointHoverBackgroundColor: '#2563eb',
-                    pointHoverBorderColor: '#ffffff',
-                    pointHoverBorderWidth: 2
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     legend: {
-                        display: false
+                        // Legenda hanya perlu saat banyak garis (per rombel).
+                        // Klik nama rombel untuk menyembunyikan / menampilkan garisnya.
+                        display: isMulti,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: 8,
+                            boxHeight: 8,
+                            padding: 12,
+                            color: '#334155',
+                            font: {
+                                family: "'Plus Jakarta Sans', sans-serif",
+                                size: 11,
+                                weight: '600'
+                            }
+                        }
                     },
                     tooltip: {
                         backgroundColor: '#1e293b',
@@ -1412,10 +1496,20 @@
                         bodyColor: '#cbd5e1',
                         padding: 10,
                         cornerRadius: 8,
-                        displayColors: false,
+                        displayColors: isMulti,
+                        // Rombel dengan persen tertinggi tampil paling atas.
+                        itemSort: function (a, b) {
+                            return b.parsed.y - a.parsed.y;
+                        },
                         callbacks: {
                             label: function (context) {
-                                return {!! json_encode(__('Tingkat Kehadiran')) !!} + ': ' + context.parsed.y + '%';}} }
+                                if (isMulti) {
+                                    return context.dataset.label + ': ' + context.parsed.y + '%';
+                                }
+                                return {!! json_encode(__('Tingkat Kehadiran')) !!} + ': ' + context.parsed.y + '%';
+                            }
+                        }
+                    }
                 },
                 scales: {
                     x: {
@@ -1437,7 +1531,10 @@
                             },
                             /* Jarak label sumbu X dari area gambar, supaya
                                garis tren tidak pernah menyentuh labelnya. */
-                            padding: 12
+                            padding: 12,
+                            /* Sumbu X = nama rombel: semua rombel harus tampil. */
+                            autoSkip: false,
+                            maxRotation: 60
                         }
                     },
                     y: {
@@ -1462,8 +1559,12 @@
                             callback: function (val) {
                                 return val + '%';
                             },
-                            padding: 8}} }}});
-
+                            padding: 8
+                        }
+                    }
+                }
+            }
+        });
     });
 </script>
 @endpush

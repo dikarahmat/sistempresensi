@@ -1,9 +1,9 @@
 @php
     // ========================================================================
     // SIDEBAR BERSAMA ADMIN, GURU & GURU PIKET (single source of truth).
-    //   admin : Dashboard, Presensi, Kehadiran, Rekap, Siswa, Guru, Kelas, Pengaturan
-    //   guru  : Dashboard, Presensi, Kehadiran, Rekap, Siswa, Kelas
-    //   piket : Dashboard, Presensi, Kehadiran, Rekap
+    //   admin : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown), Siswa, Guru, Kelas, Pengaturan
+    //   guru  : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown), Siswa, Kelas
+    //   piket : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown)
     // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
     $isAdminPanel = ($userRole === 'admin');
@@ -15,11 +15,19 @@
     $absensiRoute = panel_route('absensi.index');
     $isAbsensiActive = panel_is('absensi*') || panel_is('presensi*');
 
-    $kehadiranRoute = panel_route('kehadiran');
-    $isKehadiranActive = panel_is('kehadiran*');
+    // KEHADIRAN (dropdown: Siswa & Guru)
+    $kehadiranSiswaRoute    = panel_route('kehadiran.siswa');
+    $kehadiranGuruRoute     = panel_route('kehadiran.guru');
+    $isKehadiranSiswaActive = panel_is('kehadiran.siswa*');
+    $isKehadiranGuruActive  = panel_is('kehadiran.guru*');
+    $isKehadiranActive      = $isKehadiranSiswaActive || $isKehadiranGuruActive || panel_is('kehadiran*');
 
-    $rekapRoute = panel_route('rekap');
-    $isRekapActive = panel_is('rekap*');
+    // REKAP (dropdown: Siswa & Guru)
+    $rekapSiswaRoute    = panel_route('rekap.siswa');
+    $rekapGuruRoute     = panel_route('rekap.guru');
+    $isRekapSiswaActive = panel_is('rekap.siswa*');
+    $isRekapGuruActive  = panel_is('rekap.guru*');
+    $isRekapActive      = $isRekapSiswaActive || $isRekapGuruActive || panel_is('rekap*');
 
     $siswaRoute = panel_route('students.index');
 
@@ -37,17 +45,20 @@
 
     $isGuruActive = (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage;
 
-    $isPengaturanActive = request()->routeIs(
-        'admin.settings.*',
-        'admin.academic-years.*',
-        'admin.holidays.*',
-        'admin.accounts.*',
-        'admin.students.trash',
-        'admin.teachers.trash',
-        'admin.classes.trash'
-    );
+    // PENGATURAN (dropdown: Identitas Sekolah, Tahun Ajaran, Hari Libur, Tempat Sampah)
+    $isIdentitasActive    = request()->routeIs('admin.settings.*');
+    $isTahunAjaranActive  = request()->routeIs('admin.academic-years.*');
+    $isHariLiburActive    = request()->routeIs('admin.holidays.*');
+    $isSampahActive       = $isTrashPage;
+    $isPengaturanActive   = $isIdentitasActive || $isTahunAjaranActive || $isHariLiburActive
+                            || $isSampahActive || request()->routeIs('admin.accounts.*');
 
-    $navStyle = 'margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.03em;';
+    // Sesuaikan kalau route halaman "Tempat Sampah" lu beda.
+    $sampahRoute = \Illuminate\Support\Facades\Route::has('admin.trash.index')
+        ? route('admin.trash.index')
+        : route('admin.students.trash');
+
+    $navStyle = 'margin: 0 0.75rem; padding: 0.6rem 0.75rem; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.03em;';
     $activeCls = 'active bg-white text-primary shadow-sm fw-medium';
 @endphp
 
@@ -113,27 +124,81 @@
             </li>
             @endif
 
-            {{-- KEHADIRAN: semua role --}}
-            @if($kehadiranRoute)
+            {{-- KEHADIRAN: dropdown Siswa & Guru (semua role) --}}
+            @if($kehadiranSiswaRoute || $kehadiranGuruRoute)
             <li class="nav-item">
-                <a href="{{ $kehadiranRoute }}"
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKehadiranActive ? $activeCls : '' }}"
+                <a href="#submenuKehadiran"
+                   class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isKehadiranActive ? $activeCls : '' }}"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="{{ $isKehadiranActive ? 'true' : 'false' }}"
+                   aria-controls="submenuKehadiran"
                    data-label="{{ __('Kehadiran') }}" style="{{ $navStyle }}">
                     <i class='bx bx-calendar-check fs-5 {{ $isKehadiranActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Kehadiran') }}</span>
+                    <i class='bx bx-chevron-down sidebar-dropdown-chevron ms-auto'></i>
                 </a>
+                <div class="collapse {{ $isKehadiranActive ? 'show' : '' }}" id="submenuKehadiran">
+                    <ul class="nav flex-column sidebar-submenu">
+                        @if($kehadiranSiswaRoute)
+                        <li class="nav-item">
+                            <a href="{{ $kehadiranSiswaRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isKehadiranSiswaActive ? 'is-active' : '' }}">
+                                <i class='bx bx-user'></i>
+                                <span class="sidebar-nav-label">{{ __('Kehadiran Siswa') }}</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if($kehadiranGuruRoute)
+                        <li class="nav-item">
+                            <a href="{{ $kehadiranGuruRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isKehadiranGuruActive ? 'is-active' : '' }}">
+                                <i class='bx bx-group'></i>
+                                <span class="sidebar-nav-label">{{ __('Kehadiran Guru') }}</span>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
+                </div>
             </li>
             @endif
 
-            {{-- REKAP: semua role --}}
-            @if($rekapRoute)
+            {{-- REKAP: dropdown Siswa & Guru (semua role) --}}
+            @if($rekapSiswaRoute || $rekapGuruRoute)
             <li class="nav-item">
-                <a href="{{ $rekapRoute }}"
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isRekapActive ? $activeCls : '' }}"
+                <a href="#submenuRekap"
+                   class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isRekapActive ? $activeCls : '' }}"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="{{ $isRekapActive ? 'true' : 'false' }}"
+                   aria-controls="submenuRekap"
                    data-label="{{ __('Rekap') }}" style="{{ $navStyle }}">
                     <i class='bx bx-folder-open fs-5 {{ $isRekapActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Rekap') }}</span>
+                    <i class='bx bx-chevron-down sidebar-dropdown-chevron ms-auto'></i>
                 </a>
+                <div class="collapse {{ $isRekapActive ? 'show' : '' }}" id="submenuRekap">
+                    <ul class="nav flex-column sidebar-submenu">
+                        @if($rekapSiswaRoute)
+                        <li class="nav-item">
+                            <a href="{{ $rekapSiswaRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isRekapSiswaActive ? 'is-active' : '' }}">
+                                <i class='bx bx-user'></i>
+                                <span class="sidebar-nav-label">{{ __('Rekap Siswa') }}</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if($rekapGuruRoute)
+                        <li class="nav-item">
+                            <a href="{{ $rekapGuruRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isRekapGuruActive ? 'is-active' : '' }}">
+                                <i class='bx bx-group'></i>
+                                <span class="sidebar-nav-label">{{ __('Rekap Guru') }}</span>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
+                </div>
             </li>
             @endif
 
@@ -173,15 +238,52 @@
             </li>
             @endif
 
-            {{-- PENGATURAN: admin saja. Juga menyala di Tahun Ajaran, Hari Libur, Kelola Akun, dan Tempat Sampah. --}}
+            {{-- PENGATURAN: admin saja. Dropdown: Identitas Sekolah, Tahun Ajaran, Hari Libur, Tempat Sampah. --}}
             @if($isAdminPanel)
             <li class="nav-item">
-                <a href="{{ route('admin.settings.index') }}"
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isPengaturanActive ? $activeCls : '' }}"
+                <a href="#submenuPengaturan"
+                   class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isPengaturanActive ? $activeCls : '' }}"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="{{ $isPengaturanActive ? 'true' : 'false' }}"
+                   aria-controls="submenuPengaturan"
                    data-label="{{ __('Pengaturan') }}" style="{{ $navStyle }}">
                     <i class='bx bx-cog fs-5 {{ $isPengaturanActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Pengaturan') }}</span>
+                    <i class='bx bx-chevron-down sidebar-dropdown-chevron ms-auto'></i>
                 </a>
+                <div class="collapse {{ $isPengaturanActive ? 'show' : '' }}" id="submenuPengaturan">
+                    <ul class="nav flex-column sidebar-submenu">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.settings.index') }}"
+                               class="nav-link sidebar-submenu-link {{ $isIdentitasActive ? 'is-active' : '' }}">
+                                <i class='bx bx-info-circle'></i>
+                                <span class="sidebar-nav-label">{{ __('Informasi Sekolah') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.academic-years.index') }}"
+                               class="nav-link sidebar-submenu-link {{ $isTahunAjaranActive ? 'is-active' : '' }}">
+                                <i class='bx bx-calendar'></i>
+                                <span class="sidebar-nav-label">{{ __('Tahun Ajaran') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.holidays.index') }}"
+                               class="nav-link sidebar-submenu-link {{ $isHariLiburActive ? 'is-active' : '' }}">
+                                <i class='bx bx-sun'></i>
+                                <span class="sidebar-nav-label">{{ __('Hari Libur') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ $sampahRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isSampahActive ? 'is-active' : '' }}">
+                                <i class='bx bx-trash'></i>
+                                <span class="sidebar-nav-label">{{ __('Tempat Sampah') }}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             @endif
 
@@ -278,3 +380,67 @@
         </div>
     </div>
 </aside>
+
+{{-- CSS dropdown Kehadiran & Rekap.
+     Boleh dipindah ke CSS sidebar / app.blade.php kalau mau lebih rapi. --}}
+<style>
+    /* Tanpa animasi sama sekali: dropdown buka/tutup langsung, nggak ada geser/transisi */
+    .sidebar-menu-scroll,
+    .sidebar-menu-scroll * { transition: none !important; animation: none !important; }
+    .sidebar-menu-scroll .collapsing { transition: none !important; height: auto !important; }
+
+    /* Font & ikon diam di tempat: berat font sama di semua kondisi (aktif/nggak aktif),
+       jadi teks nggak berubah lebar / geser saat diklik */
+    .sidebar-menu-scroll .nav-link,
+    .sidebar-menu-scroll .nav-link.active,
+    .sidebar-submenu-link,
+    .sidebar-submenu-link.is-active { font-weight: 600 !important; }
+    .sidebar-menu-scroll .nav-link i:not(.sidebar-dropdown-chevron),
+    .sidebar-submenu-link i { transform: none !important; }
+
+    /* Kunci lebar supaya sidebar nggak geser/melebar */
+    .sidebar-menu-scroll { overflow-x: hidden !important; }
+    .sidebar-menu-scroll .nav-pills,
+    .sidebar-menu-scroll .nav-item { min-width: 0; max-width: 100%; }
+    .sidebar-menu-scroll .collapse,
+    .sidebar-menu-scroll .collapsing { overflow: hidden; }
+
+    .sidebar-dropdown-chevron { font-size: 1.1rem; flex-shrink: 0; }
+    .sidebar-dropdown-toggle[aria-expanded="true"] .sidebar-dropdown-chevron { transform: rotate(180deg); }
+    .sidebar-dropdown-toggle.active .sidebar-dropdown-chevron { color: var(--bs-primary); }
+
+    .sidebar-submenu { margin: .25rem .75rem .25rem 1rem; gap: 2px; flex-wrap: nowrap; min-width: 0; }
+    .sidebar-submenu-link {
+        display: flex; align-items: center; gap: .6rem;
+        min-width: 0; white-space: nowrap; overflow: hidden;
+        padding: .45rem .6rem; border-radius: 10px;
+        color: rgba(255,255,255,.8); font-size: .72rem;
+        text-transform: uppercase; letter-spacing: .02em;
+    }
+    .sidebar-submenu-link i { flex-shrink: 0; }
+    .sidebar-submenu-link .sidebar-nav-label { overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-submenu-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .sidebar-submenu-link.is-active { background: rgba(255,255,255,.2); color: #fff; }
+
+    /* Warna submenu TETAP di semua kondisi (klik/fokus/aktif/visited), nggak jadi biru bawaan Bootstrap */
+    .sidebar-submenu-link,
+    .sidebar-submenu-link:visited,
+    .sidebar-submenu-link:focus,
+    .sidebar-submenu-link:focus-visible,
+    .sidebar-submenu-link:active { color: rgba(255,255,255,.8) !important; background: transparent; outline: none !important; box-shadow: none !important; }
+    .sidebar-submenu-link:hover { color: #fff !important; background: rgba(255,255,255,.12); }
+    .sidebar-submenu-link.is-active,
+    .sidebar-submenu-link.is-active:focus,
+    .sidebar-submenu-link.is-active:active,
+    .sidebar-submenu-link.is-active:hover { color: #fff !important; background: rgba(255,255,255,.2); }
+
+    /* Menu utama & toggle dropdown: nggak ada outline/shadow biru pas diklik */
+    .sidebar-menu-scroll .nav-link:focus,
+    .sidebar-menu-scroll .nav-link:focus-visible,
+    .sidebar-menu-scroll .nav-link:active { outline: none !important; box-shadow: none; }
+
+    /* Overlay loading (spinner + layar gelap) saat pindah halaman: dimatikan.
+       Nama class/ID ini tebakan umum; kalau overlay lu masih muncul, kirim app.blade.php-nya. */
+    #page-loader, #pageLoader, #loading-overlay, #loadingOverlay, #preloader,
+    .page-loader, .loading-overlay, .app-loader, .page-loading, .preloader { display: none !important; }
+</style>

@@ -25,12 +25,13 @@
     }
 
     /* ==========================================================================
-       FILTER BAR: [ kolom pencarian ] [ reset ] [ dropdown "Semua Kelas" ]
+       FILTER BAR: [ kolom pencarian ] [ dropdown "Semua Kelas" ] [ reset ]
 
        Memakai CSS GRID supaya lebarnya pasti:
-         >= 1024px : 1fr | 44px | 1fr  -> search dan dropdown SAMA LEBAR,
-                     reset tepat di tengah-tengah, semuanya satu baris.
-         <  1024px : baris 1 = search + reset, baris 2 = dropdown lebar penuh.
+         >= 1024px : 1fr | 1fr | 44px -> search dan dropdown SAMA LEBAR,
+                     reset di paling kanan, semuanya satu baris.
+         <  1024px : baris 1 = search + reset (kanan), baris 2 = dropdown lebar penuh.
+         Halaman guru (tanpa dropdown, class kh-no-kelas): search | reset.
 
        Tinggi ketiganya sama: --kh-h (44px). Ubah satu angka itu untuk
        mengecilkan / membesarkan semuanya sekaligus.
@@ -61,10 +62,17 @@
 
     @media (min-width: 1024px) {
         form#formFilterKehadiran.kehadiran-filter-form {
-            grid-template-columns: minmax(0, 1fr) var(--kh-h) minmax(0, 1fr);
-            grid-template-areas: "search reset kelas";
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--kh-h);
+            grid-template-areas: "search kelas reset";
             row-gap: 0;
         }
+    }
+
+    /* Halaman guru: tidak ada dropdown kelas -> hanya search + reset */
+    form#formFilterKehadiran.kehadiran-filter-form.kh-no-kelas {
+        grid-template-columns: minmax(0, 1fr) var(--kh-h);
+        grid-template-areas: "search reset";
+        row-gap: 0;
     }
 
     /* Penempatan tiap kolom + buang lebar lama dari layout bersama */
@@ -492,26 +500,19 @@
 </style>
 @endpush
 
-@section('page_header_right')
-    <a href="{{ $viewFor === 'guru' ? panel_route('kehadiran') : panel_route('kehadiran.guru') }}"
-       class="btn btn-primary btn-sm"
-       style="transition: none !important;"
-       title="{{ $viewFor === 'guru' ? __('Mode Siswa') : __('Mode Guru') }}"
-       aria-label="{{ $viewFor === 'guru' ? __('Mode Siswa') : __('Mode Guru') }}">
-        {{ $viewFor === 'guru' ? __('Mode Siswa') : __('Mode Guru') }}
-    </a>
-@endsection
+{{-- Tombol "Mode Guru / Mode Siswa" di header DIHAPUS.
+     Pindah antar halaman siswa/guru sekarang lewat dropdown Kehadiran di sidebar. --}}
 
 @section('content')
     {{-- SATU KARTU: toolbar filter + tabel (seperti Data Siswa).
-         Filter bar: [ pencarian ] [ reset ] [ dropdown kelas ], lihat CSS di atas.
+         Filter bar: [ pencarian ] [ dropdown kelas ] [ reset ], lihat CSS di atas.
          - dropdown kelas langsung memuat ulang data saat diganti,
          - pencarian jalan saat Enter atau klik ikon kaca pembesar,
-         - reset = link ke halaman kehadiran tanpa parameter. --}}
+         - reset = link ke halaman kehadiran tanpa parameter (paling kanan). --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kehadiran">
 
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
-            <form method="GET" action="{{ $viewFor === 'guru' ? panel_route('kehadiran.guru') : panel_route('kehadiran') }}" class="action-search-form kehadiran-filter-form" id="formFilterKehadiran">
+            <form method="GET" action="{{ $viewFor === 'guru' ? panel_route('kehadiran.guru') : panel_route('kehadiran') }}" class="action-search-form kehadiran-filter-form {{ $viewFor === 'guru' ? 'kh-no-kelas' : '' }}" id="formFilterKehadiran">
                 <!-- Kolom pencarian: input + ikon search satu kesatuan -->
                 <div class="input-group search-box-wrap">
                     <input type="text"
@@ -527,11 +528,6 @@
                         <i class='bx bx-search fs-6'></i>
                     </button>
                 </div>
-
-                <!-- Tombol Reset: di tengah antara pencarian dan dropdown -->
-                <a href="{{ $viewFor === 'guru' ? panel_route('kehadiran.guru') : panel_route('kehadiran') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                </a>
 
                 {{-- Dropdown Filter Kelas hanya tampil di halaman siswa --}}
                 @if($viewFor !== 'guru')
@@ -549,6 +545,11 @@
                     </select>
                 </div>
                 @endif
+
+                <!-- Tombol Reset: paling kanan, setelah dropdown kelas -->
+                <a href="{{ $viewFor === 'guru' ? panel_route('kehadiran.guru') : panel_route('kehadiran') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                </a>
             </form>
         </div>
 
