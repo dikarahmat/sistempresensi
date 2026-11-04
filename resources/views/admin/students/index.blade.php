@@ -59,7 +59,7 @@
     }
 
     /* ==========================================================================
-       FILTER BAR / ACTION BAR: Disamakan dengan struktur Data Guru
+       FILTER BAR / ACTION BAR
        ========================================================================== */
     .action-bar-section {
         display: flex;
@@ -73,7 +73,6 @@
         max-width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
-        flex: 1 1 260px !important;
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -83,10 +82,12 @@
         form.action-search-form {
             flex-direction: row;
             align-items: center;
+            flex: 1 1 auto !important;
             gap: 12px;
         }
     }
 
+    /* Pembungkus Search dan Tombol Reset (Khusus Mobile di samping search) */
     .search-and-reset-wrapper {
         display: flex !important;
         flex-direction: row !important;
@@ -131,8 +132,8 @@
         line-height: 1;
     }
 
-    /* Tombol Reset (Ukuran Proporsional Menyesuaikan Kolom Search: 38px) */
-    .search-and-reset-wrapper .btn-reset {
+    /* Tombol Reset (Ukuran Proporsional: 38px) */
+    .btn-reset {
         flex: 0 0 38px !important;
         width: 38px !important;
         height: 38px !important;
@@ -153,22 +154,22 @@
         transition: background-color .15s ease, border-color .15s ease;
     }
 
-    .search-and-reset-wrapper .btn-reset svg {
+    .btn-reset svg {
         width: 18px;
         height: 18px;
         stroke: currentColor;
         fill: none;
     }
 
-    .search-and-reset-wrapper .btn-reset:hover,
-    .search-and-reset-wrapper .btn-reset:focus-visible {
+    .btn-reset:hover,
+    .btn-reset:focus-visible {
         background: #475569 !important;
         border-color: #475569 !important;
         color: #ffffff !important;
         text-decoration: none;
     }
 
-    .search-and-reset-wrapper .btn-reset:focus-visible {
+    .btn-reset:focus-visible {
         box-shadow: 0 0 0 3px rgba(100, 116, 139, .3);
     }
 
@@ -180,8 +181,8 @@
 
     @media (min-width: 1024px) {
         .filter-box-wrap {
-            width: 220px !important;
-            flex: 0 0 220px !important;
+            width: 190px !important;
+            flex: 0 0 190px !important;
         }
     }
 
@@ -193,6 +194,28 @@
         padding-right: 32px;
         font-size: 0.85rem;
         box-sizing: border-box;
+    }
+
+    /* Pada Desktop (>= 1024px), sembunyikan tombol reset di dalam wrapper search dan tampilkan tombol reset khusus desktop di sebelah kanan dropdown kelas */
+    @media (min-width: 1024px) {
+        .search-and-reset-wrapper .btn-reset {
+            display: none !important;
+        }
+        .desktop-reset-btn {
+            display: flex !important;
+            flex: 0 0 38px !important;
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            max-width: 38px !important;
+        }
+    }
+
+    /* Pada Mobile (< 1024px), sembunyikan tombol reset desktop */
+    @media (max-width: 1023.98px) {
+        .desktop-reset-btn {
+            display: none !important;
+        }
     }
 
     /* Zebra Striping Khusus */
@@ -425,8 +448,9 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        justify-content: flex-end;
         gap: 0.5rem;
-        flex: 0 0 auto;
+        flex: 0 1 auto;
         margin-left: auto;
     }
 
@@ -647,8 +671,8 @@
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section d-flex flex-column flex-md-row justify-content-between">
                 <form method="GET" action="{{ panel_route('students.index') }}" class="action-search-form" id="studentSearchForm">
+                    <!-- Search & Tombol Reset (Tombol Reset di samping search khusus untuk tampilan mobile) -->
                     <div class="search-and-reset-wrapper">
-                        <!-- Kolom pencarian: input + ikon search satu kesatuan -->
                         <div class="input-group search-box-wrap">
                             <input type="text"
                                    name="search"
@@ -663,8 +687,8 @@
                             </button>
                         </div>
 
-                        <!-- Tombol Reset (Disamakan posisinya di sebelah search dengan struktur Data Guru) -->
-                        <a href="{{ panel_route('students.index') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <!-- Tombol Reset Mobile (Tampil di samping search hanya pada layar kecil) -->
+                        <a href="{{ panel_route('students.index') }}" class="btn-reset d-lg-none" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
                             </svg>
@@ -682,6 +706,13 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Tombol Reset Desktop (Tampil di sebelah kanan dropdown kelas khusus pada layar desktop) -->
+                    <a href="{{ panel_route('students.index') }}" class="btn-reset desktop-reset-btn" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
+                        </svg>
+                    </a>
                 </form>
 
                 <div class="action-buttons-wrap">

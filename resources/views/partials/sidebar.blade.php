@@ -3,7 +3,7 @@
     // SIDEBAR BERSAMA ADMIN, GURU & GURU PIKET (single source of truth).
     //   admin : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown), Siswa, Guru, Kelas, Pengaturan
     //   guru  : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown), Siswa, Kelas
-    //   piket : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown)
+    //   piket : Presensi, Kehadiran(dropdown) (Dashboard & Rekap disembunyikan)
     // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
     $isAdminPanel = ($userRole === 'admin');
@@ -102,7 +102,8 @@
     <div class="flex-grow-1 py-2 sidebar-menu-scroll sidebar-menu-wrapper menu-container">
         <ul class="nav nav-pills flex-column mb-auto" style="gap: 0;">
 
-            {{-- DASHBOARD: semua role --}}
+            {{-- DASHBOARD: admin & guru (bukan piket) --}}
+            @if(! $isPiketPanel)
             <li class="nav-item">
                 <a href="{{ $dashboardRoute }}"
                    class="nav-link text-white d-flex align-items-center gap-3 {{ $isDashboardActive ? $activeCls : '' }}"
@@ -111,6 +112,7 @@
                     <span class="sidebar-nav-label">{{ __('Dashboard') }}</span>
                 </a>
             </li>
+            @endif
 
             {{-- PRESENSI: semua role --}}
             @if($absensiRoute)
@@ -163,8 +165,8 @@
             </li>
             @endif
 
-            {{-- REKAP: dropdown Siswa & Guru (semua role) --}}
-            @if($rekapSiswaRoute || $rekapGuruRoute)
+            {{-- REKAP: dropdown Siswa & Guru (admin & guru, bukan piket) --}}
+            @if(! $isPiketPanel && ($rekapSiswaRoute || $rekapGuruRoute))
             <li class="nav-item">
                 <a href="#submenuRekap"
                    class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isRekapActive ? $activeCls : '' }}"
@@ -325,7 +327,7 @@
         </button>
 
         {{-- Pop-up akun: muncul di atas kartu (bottom-full + mb-2).
-             Isi: 1) Kelola Akun (admin saja), 2) Bahasa ID|EN, 3) garis + Logout. --}}
+             Isi: 1) Kelola Akun (admin saja), 2) garis + Logout. --}}
         <div class="sidebar-account-popup absolute bottom-full left-0 right-0 mb-2 z-50"
              id="sidebarAccountMenu"
              role="menu"
@@ -348,24 +350,6 @@
             </a>
             @endif
 
-            <div class="sidebar-account-item sidebar-locale-row" role="group" aria-label="{{ __('Bahasa') }}">
-                <i class='bx bx-globe' aria-hidden="true"></i>
-                <span class="sidebar-account-item-text">{{ __('Bahasa') }}</span>
-                <span class="sidebar-locale-seg">
-                    @foreach(['id' => 'ID', 'en' => 'EN'] as $localeCode => $localeShort)
-                        <form method="POST" action="{{ route('locale.set', ['lang' => $localeCode]) }}" class="sidebar-locale-form">
-                            @csrf
-                            <button type="submit"
-                                    class="sidebar-locale-btn {{ app()->getLocale() === $localeCode ? 'is-active' : '' }}"
-                                    lang="{{ $localeCode }}"
-                                    @click="accountOpen = false"
-                                    aria-label="{{ $localeCode === 'id' ? 'Bahasa Indonesia' : 'English' }}"
-                                    @if(app()->getLocale() === $localeCode) aria-current="true" @endif>{{ $localeShort }}</button>
-                        </form>
-                    @endforeach
-                </span>
-            </div>
-
             <div class="sidebar-account-sep" aria-hidden="true"></div>
 
             <button type="button"
@@ -381,16 +365,12 @@
     </div>
 </aside>
 
-{{-- CSS dropdown Kehadiran & Rekap.
-     Boleh dipindah ke CSS sidebar / app.blade.php kalau mau lebih rapi. --}}
+{{-- CSS dropdown Kehadiran & Rekap. --}}
 <style>
-    /* Tanpa animasi sama sekali: dropdown buka/tutup langsung, nggak ada geser/transisi */
     .sidebar-menu-scroll,
     .sidebar-menu-scroll * { transition: none !important; animation: none !important; }
     .sidebar-menu-scroll .collapsing { transition: none !important; height: auto !important; }
 
-    /* Font & ikon diam di tempat: berat font sama di semua kondisi (aktif/nggak aktif),
-       jadi teks nggak berubah lebar / geser saat diklik */
     .sidebar-menu-scroll .nav-link,
     .sidebar-menu-scroll .nav-link.active,
     .sidebar-submenu-link,
@@ -398,7 +378,6 @@
     .sidebar-menu-scroll .nav-link i:not(.sidebar-dropdown-chevron),
     .sidebar-submenu-link i { transform: none !important; }
 
-    /* Kunci lebar supaya sidebar nggak geser/melebar */
     .sidebar-menu-scroll { overflow-x: hidden !important; }
     .sidebar-menu-scroll .nav-pills,
     .sidebar-menu-scroll .nav-item { min-width: 0; max-width: 100%; }
@@ -422,7 +401,6 @@
     .sidebar-submenu-link:hover { background: rgba(255,255,255,.12); color: #fff; }
     .sidebar-submenu-link.is-active { background: rgba(255,255,255,.2); color: #fff; }
 
-    /* Warna submenu TETAP di semua kondisi (klik/fokus/aktif/visited), nggak jadi biru bawaan Bootstrap */
     .sidebar-submenu-link,
     .sidebar-submenu-link:visited,
     .sidebar-submenu-link:focus,
@@ -434,13 +412,142 @@
     .sidebar-submenu-link.is-active:active,
     .sidebar-submenu-link.is-active:hover { color: #fff !important; background: rgba(255,255,255,.2); }
 
-    /* Menu utama & toggle dropdown: nggak ada outline/shadow biru pas diklik */
     .sidebar-menu-scroll .nav-link:focus,
     .sidebar-menu-scroll .nav-link:focus-visible,
     .sidebar-menu-scroll .nav-link:active { outline: none !important; box-shadow: none; }
 
-    /* Overlay loading (spinner + layar gelap) saat pindah halaman: dimatikan.
-       Nama class/ID ini tebakan umum; kalau overlay lu masih muncul, kirim app.blade.php-nya. */
     #page-loader, #pageLoader, #loading-overlay, #loadingOverlay, #preloader,
     .page-loader, .loading-overlay, .app-loader, .page-loading, .preloader { display: none !important; }
 </style>
+
+{{-- ========================================================================
+     MODE SIDEBAR CIUT (rail ikon): panah dropdown diganti titik kecil,
+     submenu muncul sebagai flyout di kanan ikon (hover / klik).
+     Mode ciut dideteksi dari lebar <aside> (< 110px), jadi tidak bergantung
+     pada nama class tombol hamburger di layout.
+     ======================================================================== --}}
+<div id="sidebarFlyout" role="menu" aria-hidden="true"></div>
+
+<style>
+    .sidebar-container.is-rail .sidebar-dropdown-chevron { display: none !important; }
+    .sidebar-container.is-rail .sidebar-menu-scroll .collapse,
+    .sidebar-container.is-rail .sidebar-menu-scroll .collapsing { display: none !important; }
+    .sidebar-container.is-rail .sidebar-dropdown-toggle { position: relative; }
+    .sidebar-container.is-rail .sidebar-dropdown-toggle::after {
+        content: ""; position: absolute; left: 50%; bottom: 3px;
+        width: 4px; height: 4px; margin-left: -2px; border-radius: 50%;
+        background: rgba(255,255,255,.85);
+    }
+    .sidebar-container.is-rail .sidebar-dropdown-toggle.active::after { background: var(--bs-primary, #2f5bea); }
+
+    #sidebarFlyout {
+        position: fixed; z-index: 1080; display: none; min-width: 200px;
+        background: #fff; border-radius: 12px; padding: 6px;
+        box-shadow: 0 8px 24px rgba(15,23,42,.18), 0 2px 6px rgba(15,23,42,.10);
+        border: 1px solid rgba(15,23,42,.08);
+    }
+    #sidebarFlyout.is-open { display: block; }
+    #sidebarFlyout .sf-title {
+        font-size: .68rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+        color: #94a3b8; padding: 6px 10px 4px;
+    }
+    #sidebarFlyout .sf-link {
+        display: flex; align-items: center; gap: .6rem; padding: .5rem .65rem;
+        border-radius: 8px; font-size: .78rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: .02em; color: #1e293b; text-decoration: none; white-space: nowrap;
+    }
+    #sidebarFlyout .sf-link i { font-size: 1.05rem; color: #64748b; }
+    #sidebarFlyout .sf-link:hover { background: #f1f5f9; color: #0f172a; }
+    #sidebarFlyout .sf-link.is-active { background: rgba(47,91,234,.10); color: var(--bs-primary, #2f5bea); }
+    #sidebarFlyout .sf-link.is-active i { color: var(--bs-primary, #2f5bea); }
+</style>
+
+<script>
+(function () {
+    var aside = document.querySelector('aside.sidebar-container');
+    var fly = document.getElementById('sidebarFlyout');
+    if (!aside || !fly) return;
+
+    var hideTimer = null;
+
+    function isRail() { return aside.getBoundingClientRect().width < 110; }
+
+    function closeFly() {
+        fly.classList.remove('is-open');
+        fly.setAttribute('aria-hidden', 'true');
+    }
+
+    function sync() {
+        var rail = isRail();
+        aside.classList.toggle('is-rail', rail);
+        if (!rail) closeFly();
+    }
+
+    function openFly(toggle) {
+        var target = document.querySelector(toggle.getAttribute('href'));
+        var list = target ? target.querySelector('.sidebar-submenu') : null;
+        if (!list) return;
+
+        clearTimeout(hideTimer);
+        fly.innerHTML = '';
+
+        var title = document.createElement('div');
+        title.className = 'sf-title';
+        title.textContent = toggle.getAttribute('data-label') || '';
+        fly.appendChild(title);
+
+        list.querySelectorAll('a.sidebar-submenu-link').forEach(function (src) {
+            var a = document.createElement('a');
+            a.href = src.getAttribute('href');
+            a.className = 'sf-link' + (src.classList.contains('is-active') ? ' is-active' : '');
+            a.setAttribute('role', 'menuitem');
+            var srcIcon = src.querySelector('i');
+            if (srcIcon) {
+                var i = document.createElement('i');
+                i.className = srcIcon.className;
+                a.appendChild(i);
+            }
+            var span = document.createElement('span');
+            var label = src.querySelector('.sidebar-nav-label');
+            span.textContent = (label ? label.textContent : src.textContent).trim();
+            a.appendChild(span);
+            fly.appendChild(a);
+        });
+
+        var r = toggle.getBoundingClientRect();
+        fly.classList.add('is-open');
+        fly.setAttribute('aria-hidden', 'false');
+        fly.style.left = (r.right + 8) + 'px';
+        var top = Math.min(r.top, window.innerHeight - fly.offsetHeight - 8);
+        fly.style.top = Math.max(8, top) + 'px';
+    }
+
+    function scheduleClose() {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(closeFly, 150);
+    }
+
+    aside.querySelectorAll('.sidebar-dropdown-toggle').forEach(function (toggle) {
+        toggle.addEventListener('mouseenter', function () { if (isRail()) openFly(toggle); });
+        toggle.addEventListener('mouseleave', function () { if (isRail()) scheduleClose(); });
+        toggle.addEventListener('click', function (e) {
+            if (!isRail()) return;
+            e.preventDefault();
+            e.stopPropagation();
+            openFly(toggle);
+        });
+    });
+
+    fly.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+    fly.addEventListener('mouseleave', scheduleClose);
+
+    document.addEventListener('click', function (e) {
+        if (!fly.contains(e.target) && !aside.contains(e.target)) closeFly();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeFly(); });
+    window.addEventListener('resize', sync);
+
+    if (window.ResizeObserver) { new ResizeObserver(sync).observe(aside); }
+    sync();
+})();
+</script>

@@ -61,22 +61,6 @@
     .btn-green-excel:hover, .btn-green-excel:active, .btn-green-excel:focus, .btn-green-excel:focus-visible { background-color: #059669 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
     .btn-red-pdf:hover, .btn-red-pdf:active, .btn-red-pdf:focus, .btn-red-pdf:focus-visible { background-color: #ef4444 !important; color: #ffffff !important; transform: none !important; box-shadow: none !important; outline: none; }
 
-    /* Tombol Reset: kotak 38x38 (sama tinggi dengan input filter), paling kanan */
-    .btn-reset-rekap {
-        display: inline-flex; align-items: center; justify-content: center;
-        box-sizing: border-box; flex-shrink: 0;
-        width: 38px; height: 38px; padding: 0;
-        background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--clean-radius, 6px);
-        color: #64748b; text-decoration: none; outline: none;
-        transition: none !important;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .btn-reset-rekap svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
-    .btn-reset-rekap:hover,
-    .btn-reset-rekap:focus-visible {
-        color: #2563eb; border-color: #2563eb; background: #f8fafc; text-decoration: none;
-    }
-
     .recap-mobile-actions .btn {
         transition: none !important;
         transform: none !important;
@@ -529,18 +513,12 @@
                 @endif
                 <div class="d-flex flex-column" style="min-width: 200px; flex: 1;">
                     <label class="filter-label">{{ __('Kelas') }}</label>
-                    <div class="d-flex align-items-center gap-2">
-                        <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3" style="flex: 1; min-width: 0;">
-                            <option value="">{{ __('Semua Kelas') }}</option>
-                            @foreach($classes as $c)
-                                <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
-                            @endforeach
-                        </select>
-                        {{-- Reset: di samping dropdown Kelas. Kembali ke filter bawaan, tab periode tetap. --}}
-                        <a href="{{ panel_route('rekap', ['type' => $type]) }}" class="btn-reset-rekap" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
-                            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                        </a>
-                    </div>
+                    <select name="class_id" id="rekapClassId" onchange="debounceRekapFilterSubmit(this.form)" class="form-select form-select-sm filter-input rounded-3" style="width: 100%; min-width: 0;">
+                        <option value="">{{ __('Semua Kelas') }}</option>
+                        @foreach($classes as $c)
+                            <option value="{{ $c->id }}" {{ $classId == $c->id ? 'selected' : '' }}>{{ __('Kelas ') }}{{ $c->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto">
                     <button type="button" class="btn-red-pdf" data-bs-toggle="modal" data-bs-target="#printRekapModal" data-format="pdf" title="{{ __('Cetak PDF') }}" aria-label="{{ __('Cetak PDF') }}">
