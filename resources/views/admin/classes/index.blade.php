@@ -113,131 +113,139 @@
     }
 
     /* ==========================================================================
-       FILTER BAR / ACTION BAR: [ kolom pencarian ] [ dropdown tingkat ] [ reset ]
-       Menggunakan CSS GRID agar konsisten dengan halaman siswa/guru:
-         >= 1024px : 1fr | 190px | 38px -> search, dropdown, dan reset dalam satu baris.
+       FILTER BAR / ACTION BAR: Disamakan dengan struktur Data Guru
        ========================================================================== */
     .action-bar-section {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.6rem 1rem;
     }
 
     form.action-search-form {
-        --kh-h: 38px;
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) 190px var(--kh-h);
-        grid-template-areas: "search grade reset";
-        column-gap: 0.5rem;
-        row-gap: 0.5rem;
-        align-items: center;
         width: 100% !important;
-        flex: 1 1 auto !important;
-        height: auto;
-        min-height: 0;
-        min-width: 0;
-        margin: 0;
-        padding: 0;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 1 1 260px !important;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
-    @media (max-width: 1023.98px) {
+    @media (min-width: 1024px) {
         form.action-search-form {
-            grid-template-columns: minmax(0, 1fr) var(--kh-h);
-            grid-template-areas:
-                "search search"
-                "grade  reset";
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
         }
     }
 
-    form.action-search-form .search-box-wrap {
-        grid-area: search;
-        flex: none !important;
+    .search-and-reset-wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 8px !important;
         width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
-        margin: 0 !important;
-    }
-    form.action-search-form .btn-reset {
-        grid-area: reset;
-    }
-    form.action-search-form .filter-box-wrap {
-        grid-area: grade;
-        flex: none !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        margin: 0 !important;
     }
 
-    /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
-    form.action-search-form .input-group.search-box-wrap {
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        height: var(--kh-h) !important;
-        min-height: var(--kh-h) !important;
+    @media (min-width: 1024px) {
+        .search-and-reset-wrapper {
+            flex: 1 1 auto !important;
+            width: auto !important;
+        }
     }
-    form.action-search-form .input-group.search-box-wrap > .form-control,
-    form.action-search-form .input-group.search-box-wrap > .btn {
-        height: var(--kh-h) !important;
-        min-height: var(--kh-h) !important;
-        box-sizing: border-box;
+
+    .search-and-reset-wrapper .search-box-wrap {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
     }
-    form.action-search-form .input-group.search-box-wrap > .form-control {
-        min-width: 0;
+
+    .search-and-reset-wrapper .search-box-wrap .form-control {
+        height: 38px !important;
+        font-size: 0.85rem !important;
+        min-width: 0 !important;
     }
-    form.action-search-form .input-group.search-box-wrap > .btn {
-        flex: 0 0 auto;
+
+    .search-and-reset-wrapper .search-box-wrap .btn {
+        height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
     }
-    form.action-search-form .input-group.search-box-wrap > .btn i,
-    form.action-search-form .input-group.search-box-wrap > .btn .bx {
+
+    .search-and-reset-wrapper .search-box-wrap .btn i,
+    .search-and-reset-wrapper .search-box-wrap .btn .bx {
         font-size: 18px !important;
         line-height: 1;
     }
 
-    /* Tombol Reset: kotak 38x38, ikon abu-abu, biru saat hover/focus */
-    form.action-search-form .btn-reset {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        width: var(--kh-h);
-        height: var(--kh-h);
-        padding: 0;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        color: #64748b;
-        text-decoration: none;
-        cursor: pointer;
-        outline: none;
-        transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+    /* Tombol Reset (Ukuran Proporsional Menyesuaikan Kolom Search: 38px) */
+    .search-and-reset-wrapper .btn-reset {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        padding: 0 !important;
+        background: #64748b !important;
+        border: 1px solid #64748b !important;
+        border-radius: 6px !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        outline: none !important;
+        transition: background-color .15s ease, border-color .15s ease;
     }
-    form.action-search-form .btn-reset svg {
+
+    .search-and-reset-wrapper .btn-reset svg {
         width: 18px;
         height: 18px;
         stroke: currentColor;
         fill: none;
     }
-    form.action-search-form .btn-reset:hover,
-    form.action-search-form .btn-reset:focus-visible {
-        color: #2563eb;
-        border-color: #2563eb;
-        background: #f8fafc;
+
+    .search-and-reset-wrapper .btn-reset:hover,
+    .search-and-reset-wrapper .btn-reset:focus-visible {
+        background: #475569 !important;
+        border-color: #475569 !important;
+        color: #ffffff !important;
         text-decoration: none;
     }
-    form.action-search-form .btn-reset:focus-visible {
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
+
+    .search-and-reset-wrapper .btn-reset:focus-visible {
+        box-shadow: 0 0 0 3px rgba(100, 116, 139, .3);
     }
 
-    .action-bar-section .filter-box-wrap select.form-select {
-        height: var(--kh-h) !important;
-        min-height: var(--kh-h) !important;
+    /* Dropdown Filter Tingkat Kelas */
+    .filter-box-wrap {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    @media (min-width: 1024px) {
+        .filter-box-wrap {
+            width: 190px !important;
+            flex: 0 0 190px !important;
+        }
+    }
+
+    .filter-box-wrap select.form-select {
+        height: 38px !important;
+        min-height: 38px !important;
         width: 100% !important;
         padding-left: 12px;
         padding-right: 32px;
         font-size: 0.85rem;
-        letter-spacing: 0.03em;
         box-sizing: border-box;
     }
 
@@ -250,9 +258,6 @@
         gap: 0.5rem;
         flex: 0 1 auto;
         margin-left: auto;
-    }
-    .action-bar-section .action-buttons-wrap .btn-solid-pill {
-        flex: 0 0 auto;
     }
 
     /* Notifikasi Halaman Data Kelas */
@@ -510,22 +515,30 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-kelas">
 
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
-            <div class="action-bar-section">
+            <div class="action-bar-section d-flex flex-column flex-md-row justify-content-between">
 
-                <form method="GET" action="{{ url()->current() }}" class="action-search-form">
-                    <div class="input-group search-box-wrap">
-                        <input type="text"
-                               name="search"
-                               id="classSearchInput"
-                               class="form-control shadow-none"
-                               placeholder="{{ __('Cari nama kelas...') }}"
-                               value="{{ request('search') }}"
-                               aria-label="{{ __('Cari nama kelas') }}"
-                               autocomplete="off"
-                               style="font-size: 0.85rem; letter-spacing: 0.03em;">
-                        <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
-                            <i class='bx bx-search fs-6'></i>
-                        </button>
+                <form method="GET" action="{{ url()->current() }}" class="action-search-form" id="classSearchForm">
+                    <div class="search-and-reset-wrapper">
+                        <div class="input-group search-box-wrap">
+                            <input type="text"
+                                   name="search"
+                                   id="classSearchInput"
+                                   class="form-control shadow-none"
+                                   placeholder="{{ __('Cari nama kelas...') }}"
+                                   value="{{ request('search') }}"
+                                   aria-label="{{ __('Cari nama kelas') }}"
+                                   autocomplete="off">
+                            <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
+                                <i class='bx bx-search fs-6'></i>
+                            </button>
+                        </div>
+
+                        <!-- Tombol Reset: Disamakan posisinya di sebelah search dengan struktur Data Guru -->
+                        <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
+                            </svg>
+                        </a>
                     </div>
 
                     <div class="filter-box-wrap">
@@ -536,11 +549,6 @@
                             @endforeach
                         </select>
                     </div>
-
-                    <!-- Tombol Reset: di samping kanan dropdown -->
-                    <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                    </a>
                 </form>
 
                 <div class="action-buttons-wrap">

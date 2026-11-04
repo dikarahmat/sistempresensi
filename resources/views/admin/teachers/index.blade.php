@@ -185,27 +185,50 @@
             gap: 2px;
         }
 
-        .table-zebra-custom th.nip-col, .table-zebra-custom td.nip-col {
-            text-align: center !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-        }
-
-        .table-zebra-custom td.nip-col {
-            white-space: nowrap !important;
+        .table-zebra-custom {
+            table-layout: auto !important;
         }
 
         .table-zebra-custom th.no-col, .table-zebra-custom td.no-col {
+            width: 35px !important;
+            min-width: 35px !important;
             text-align: center !important;
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+        }
+
+        /* Header NIP center, isi data NIP left */
+        .table-zebra-custom th.nip-col {
+            text-align: center !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            width: 95px !important;
+            min-width: 95px !important;
+            white-space: nowrap !important;
+        }
+        .table-zebra-custom td.nip-col {
+            text-align: left !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            width: 95px !important;
+            min-width: 95px !important;
+            white-space: nowrap !important;
         }
 
         .table-zebra-custom th.nama-col, .table-zebra-custom td.nama-col {
             text-align: left !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            width: 140px !important;
+            min-width: 140px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
         }
 
         .table-zebra-custom th, .table-zebra-custom td {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            font-size: 11px !important;
         }
     }
 
@@ -239,103 +262,86 @@
     }
 
     /* ==========================================================================
-       FILTER BAR: [ kolom pencarian ] [ reset ]  (CSS grid, sama dengan halaman Siswa)
+       FILTER BAR: [ Kolom Pencarian & Reset Adaptif Responsive ]
        ========================================================================== */
     form.action-search-form {
-        --kh-h: 38px;
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) var(--kh-h);
-        grid-template-areas: "search reset";
-        column-gap: 0.5rem;
-        align-items: center;
         width: 100% !important;
-        flex: 1 1 380px !important;
-        height: auto;
-        min-height: 0;
-        min-width: 0;
-        margin: 0;
-        padding: 0;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 1 1 260px !important;
     }
 
-    form.action-search-form .search-box-wrap {
-        grid-area: search;
-        flex: none !important;
+    .search-and-reset-wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .search-and-reset-wrapper .search-box-wrap {
+        flex: 1 1 auto !important;
         width: 100% !important;
         min-width: 0 !important;
-        max-width: none !important;
         margin: 0 !important;
+        display: flex !important;
     }
 
-    form.action-search-form .btn-reset {
-        grid-area: reset;
+    .search-and-reset-wrapper .search-box-wrap .form-control {
+        height: 38px !important;
+        font-size: 0.85rem !important;
+        min-width: 0 !important;
     }
 
-    /* Kolom pencarian: input + ikon kaca pembesar satu kesatuan */
-    form.action-search-form .input-group.search-box-wrap {
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        height: var(--kh-h) !important;
-        min-height: var(--kh-h) !important;
+    .search-and-reset-wrapper .search-box-wrap .btn {
+        height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 auto !important;
     }
 
-    form.action-search-form .input-group.search-box-wrap > .form-control,
-    form.action-search-form .input-group.search-box-wrap > .btn {
-        height: var(--kh-h) !important;
-        min-height: var(--kh-h) !important;
-        box-sizing: border-box;
+    /* Tombol Reset Kotak Fleksibel Menyesuaikan Tinggi Input (38px) */
+    .search-and-reset-wrapper .btn-reset {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        padding: 0 !important;
+        background: #64748b !important;
+        border: 1px solid #64748b !important;
+        border-radius: 6px !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        outline: none !important;
+        transition: background-color .15s ease, border-color .15s ease;
     }
 
-    form.action-search-form .input-group.search-box-wrap > .form-control {
-        min-width: 0;
-    }
-
-    form.action-search-form .input-group.search-box-wrap > .btn {
-        flex: 0 0 auto;
-    }
-
-    form.action-search-form .input-group.search-box-wrap > .btn i,
-    form.action-search-form .input-group.search-box-wrap > .btn .bx {
-        font-size: 18px !important;
-        line-height: 1;
-    }
-
-    /* Tombol Reset: kotak 38x38, ikon abu-abu, biru saat hover/focus */
-    form.action-search-form .btn-reset {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        width: var(--kh-h);
-        height: var(--kh-h);
-        padding: 0;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        color: #64748b;
-        text-decoration: none;
-        cursor: pointer;
-        outline: none;
-        transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
-    }
-
-    form.action-search-form .btn-reset svg {
+    .search-and-reset-wrapper .btn-reset svg {
         width: 18px;
         height: 18px;
         stroke: currentColor;
         fill: none;
     }
 
-    form.action-search-form .btn-reset:hover,
-    form.action-search-form .btn-reset:focus-visible {
-        color: #2563eb;
-        border-color: #2563eb;
-        background: #f8fafc;
+    .search-and-reset-wrapper .btn-reset:hover,
+    .search-and-reset-wrapper .btn-reset:focus-visible {
+        background: #475569 !important;
+        border-color: #475569 !important;
+        color: #ffffff !important;
         text-decoration: none;
     }
 
-    form.action-search-form .btn-reset:focus-visible {
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
+    .search-and-reset-wrapper .btn-reset:focus-visible {
+        box-shadow: 0 0 0 3px rgba(100, 116, 139, .3);
     }
 
     .action-buttons-wrap {
@@ -428,7 +434,7 @@
     .btn-row-action.action-delete { color: #dc2626; }
     .btn-row-action.action-delete:hover { color: #b91c1c; }
 
-    /* Matikan Cetak Kartu saat data kosong (biru dipudarkan, bukan abu-abu) */
+    /* Matikan Cetak Kartu saat data kosong */
     .btn-cetak-kartu.is-disabled {
         background-color: #2563eb !important;
         color: #ffffff !important;
@@ -439,7 +445,6 @@
         box-shadow: none !important;
     }
 
-    /* Unggah & Import hijau pudar dan disabled sampai file dipilih */
     .btn-download-green:disabled {
         background-color: #059669 !important;
         color: #ffffff !important;
@@ -513,25 +518,28 @@
         <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
             <div class="action-bar-section d-flex flex-column flex-md-row justify-content-between">
                 <form method="GET" action="{{ url()->current() }}" class="action-search-form" id="teacherSearchForm">
-                    <div class="input-group search-box-wrap">
-                        <input type="text"
-                               name="search"
-                               id="teacherSearchInput"
-                               class="form-control shadow-none"
-                               placeholder="{{ __('Cari nama atau NIP...') }}"
-                               value="{{ request('search') }}"
-                               aria-label="{{ __('Cari nama atau NIP') }}"
-                               autocomplete="off"
-                               style="height: 38px; font-size: 0.85rem;">
-                        <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
-                            <i class='bx bx-search fs-6'></i>
-                        </button>
-                    </div>
+                    <div class="search-and-reset-wrapper">
+                        <div class="input-group search-box-wrap">
+                            <input type="text"
+                                   name="search"
+                                   id="teacherSearchInput"
+                                   class="form-control shadow-none"
+                                   placeholder="{{ __('Cari nama atau NIP...') }}"
+                                   value="{{ request('search') }}"
+                                   aria-label="{{ __('Cari nama atau NIP') }}"
+                                   autocomplete="off">
+                            <button class="btn shadow-none" type="submit" title="{{ __('Cari') }}" aria-label="{{ __('Cari') }}">
+                                <i class='bx bx-search fs-6'></i>
+                            </button>
+                        </div>
 
-                    <!-- Tombol Reset -->
-                    <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                    </a>
+                        <!-- Tombol Reset (Ukuran Proporsional Menyesuaikan Kolom Search) -->
+                        <a href="{{ url()->current() }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
+                            </svg>
+                        </a>
+                    </div>
                 </form>
 
                 @if(Auth::check() && Auth::user()->role === 'admin')
@@ -569,14 +577,15 @@
                 </colgroup>
                 <thead class="bg-slate-50 border-b border-gray-100 text-blue-500">
                     <tr class="align-middle text-blue-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 5%;">{{ __('No') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('NIP') }}</th>
-                        <th class="text-start indent-nama py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 25%;">{{ __('Nama Lengkap Guru') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 12%;">{{ __('Jenis Kelamin') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Tugas Kelas') }}</th>
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 15%;">{{ __('No. Telepon / WA') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 no-col" style="width: 5%;">{{ __('No') }}</th>
+                        <!-- Header NIP rata tengah -->
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 nip-col" style="width: 15%;">{{ __('NIP') }}</th>
+                        <th class="text-start py-3 text-nowrap px-3 pe-4 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 nama-col" style="width: 25%;">{{ __('Nama Lengkap Guru') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 jk-col" style="width: 12%;">{{ __('Jenis Kelamin') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 tugas-col" style="width: 14%;">{{ __('Tugas Kelas') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 phone-col" style="width: 15%;">{{ __('No. Telepon / WA') }}</th>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100" style="width: 14%;">{{ __('Aksi') }}</th>
+                        <th class="text-center py-3 text-nowrap px-3 text-blue-500 text-xs font-bold uppercase border-0 border-b border-gray-100 aksi-col" style="width: 14%;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -586,24 +595,25 @@
                         $assignedClass = $teacher->schoolClass ?? null;
                     @endphp
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
-                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3">{{ $teachers->firstItem() + $index }}</td>
-                        <td data-label="{{ __('NIP') }}" class="text-center text-nowrap px-3">{{ $teacher->nip ?? '-' }}</td>
-                        <td data-label="{{ __('Nama Guru') }}" class="text-start text-nowrap indent-nama fw-semibold text-dark px-3 pe-4">{{ $teacher->name }}</td>
-                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3 no-col">{{ $teachers->firstItem() + $index }}</td>
+                        <!-- Isi NIP rata kiri -->
+                        <td data-label="{{ __('NIP') }}" class="text-start text-nowrap px-3 nip-col">{{ $teacher->nip ?? '-' }}</td>
+                        <td data-label="{{ __('Nama Guru') }}" class="text-start text-nowrap fw-semibold text-dark px-3 pe-4 nama-col">{{ $teacher->name }}</td>
+                        <td data-label="{{ __('Jenis Kelamin') }}" class="text-center text-nowrap px-3 jk-col">
                             {{ ($teacher->gender == 'Perempuan' || $teacher->gender == 'P') ? __('Perempuan') : __('Laki-laki') }}
                         </td>
-                        <td data-label="{{ __('Tugas Kelas') }}" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Tugas Kelas') }}" class="text-center text-nowrap px-3 tugas-col">
                             @if($assignedClass)
                                 {{ __('Kelas ') }}{{ $assignedClass->name }}
                             @else
                                 {{ __('Guru Pengajar') }}
                             @endif
                         </td>
-                        <td data-label="{{ __('No. Telepon / WA') }}" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('No. Telepon / WA') }}" class="text-center text-nowrap px-3 phone-col">
                             {{ $teacher->phone_number ?? $teacher->phone ?? '-' }}
                         </td>
                         @if(Auth::check() && Auth::user()->role === 'admin')
-                        <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3">
+                        <td data-label="{{ __('Aksi') }}" class="text-center text-nowrap px-3 aksi-col">
                             <div class="crud-center-wrapper">
                                 <a href="{{ panel_route('guru.show', $teacher->id) }}" class="btn-row-action action-edit" title="{{ __('Lihat / Edit') }}" aria-label="{{ __('Lihat / Edit') }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:block"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
@@ -1053,7 +1063,6 @@ function escapeHtml(str) {
         });
     }
 
-    /* Jaga status tombol kalau script lain mengubah atribut/gaya/class-nya */
     if (btn && typeof MutationObserver !== 'undefined') {
         try {
             var lock = false;
