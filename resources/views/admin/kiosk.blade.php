@@ -90,82 +90,79 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
-            padding: 0 1rem 14px 1rem;
+            justify-content: center; /* Kamera persis di tengah vertikal */
+            padding: 0 1rem;
         }
 
         .kiosk-card-box {
-            /* Tanpa card, tanpa padding, tanpa shadow */
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
             padding: 0 !important;
             width: 100%;
-            max-width: 420px;
+            max-width: 540px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-        /* ===== TOMBOL POJOK ===== */
+        /* ===== TOMBOL POJOK (DENGAN TEKS DI SAMPING) ===== */
         .kiosk-corner-btn {
             position: fixed;
             z-index: 1050;
-            width: 48px;
-            height: 48px;
-            display: flex;
+            height: 44px;
+            padding: 0 16px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: transparent;
-            border: none;
-            outline: none;
-            box-shadow: none;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.55);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50rem;
             color: #ffffff;
-            font-size: 1.6rem;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            opacity: 0.92;
+            transition: all 0.2s ease;
             text-decoration: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
             -webkit-tap-highlight-color: transparent;
-            -webkit-text-stroke: 0.5px #ffffff;
         }
         .kiosk-corner-btn:hover {
-            opacity: 1;
-            transform: translateY(-2px) scale(1.02);
+            background: rgba(15, 23, 42, 0.8);
+            border-color: rgba(255, 255, 255, 0.45);
+            color: #ffffff;
+            transform: translateY(-2px);
         }
         .kiosk-corner-btn:active {
-            transform: translateY(0) scale(1);
-        }
-        .kiosk-corner-btn:focus-visible {
-            outline: 2px solid rgba(255, 255, 255, 0.8);
-            outline-offset: 3px;
-            border-radius: 50%;
+            transform: translateY(0);
         }
         .kiosk-corner-btn i {
-            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.55));
-            -webkit-text-stroke: 1px #ffffff;
+            font-size: 1.3rem;
             display: block;
+            -webkit-text-stroke: 0px;
         }
         .kiosk-exit-corner {
             top: auto;
-            bottom: 20px;
+            bottom: 24px;
             left: 24px;
         }
         .kiosk-fullscreen-corner {
             top: auto;
-            bottom: 20px;
+            bottom: 24px;
             right: 24px;
         }
 
-        /* ===== BESAR FULLSCREEN =====
-           Saat fullscreen, kotak kamera sedikit lebih besar (+~12%), tetap persegi
-           dan tetap muat di layar 1920x1080 tanpa memakan tulisan background. */
+        /* ===== BESAR FULLSCREEN ===== */
         :root:fullscreen {
-            --gerbang-camera-size: min(76vh, 520px);
+            --gerbang-camera-size: min(78vh, 580px);
         }
 
-        /* ===== JAM DIGITAL: kanan atas, tanpa background, text-shadow ===== */
+        /* ===== JAM DIGITAL ===== */
         .kiosk-clock {
             position: fixed;
             top: 1.5rem;
@@ -183,28 +180,25 @@
         }
 
         .kiosk-clock-time {
-    font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-    font-size: 2.5rem;
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-}
+            font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.02em;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+        }
 
-.kiosk-clock-date {
-    font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.3;
-    margin-top: 2px;
-    opacity: 0.9;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-}
+        .kiosk-clock-date {
+            font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-top: 2px;
+            opacity: 0.9;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+        }
 
-        /* ===== HEADER KHUSUS MOBILE (logo + nama sekolah) =====
-           Default display:none: TIDAK tampil & TIDAK mempengaruhi layout desktop.
-           Hanya diaktifkan di dalam @media (max-width: 767px) di bawah. */
         .kiosk-mobile-header {
             display: none;
         }
@@ -213,36 +207,33 @@
     {{-- ============ CSS KAMERA ============ --}}
     <style>
         /* ==========================================================================
-           KAMERA GERBANG (sama persis untuk /admin/scanner & /admin/absensi/kiosk)
-           Ubah ukuran kamera hanya di --gerbang-camera-size di bawah.
+           KAMERA GERBANG - UKURAN 520px SESUAI PERMINTAAN
            ========================================================================== */
         :root {
-            --gerbang-camera-size: 370px;   /* sisi kotak kamera (persegi 1:1) */
+            --gerbang-camera-size: 520px;   /* Ukuran 520px di tengah */
             --gerbang-camera-radius: 16px;
-            --gerbang-scan-ratio: 72%;     /* harus sama dengan GERBANG_SCAN_RATIO di JS */
-            --gerbang-card-max: 390px;
+            --gerbang-scan-ratio: 72%;
+            --gerbang-card-max: 540px;
         }
 
-        /* ===== KARTU KAMERA: PANEL KACA =====
-           Panel bening di atas foto sekolah; ukuran & radius diatur di blok utama. */
         .kiosk-card-box {
             text-align: center;
             position: relative;
         }
 
-        /* ===== SWITCHER PILL: kecil & transparan di bawah tengah ===== */
+        /* ===== SWITCHER PILL ===== */
         .kiosk-switcher {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
             padding: 4px;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.35);
             -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50rem;
-            margin-top: 1rem;
-            opacity: 0.6;
+            margin-bottom: 1rem;
+            opacity: 0.8;
             transition: opacity 0.2s ease;
         }
         .kiosk-switcher:hover {
@@ -256,7 +247,7 @@
             border: none;
             background: transparent;
             color: #ffffff;
-            font-weight: 600;
+            font-weight: 500;
             font-size: 0.85rem;
             width: 40px;
             height: 40px;
@@ -270,13 +261,11 @@
         }
 
         .kiosk-switch-btn.active {
-            background: rgba(37, 99, 235, 0.6);
+            background: rgba(37, 99, 235, 0.7);
             color: #ffffff;
         }
 
-        /* ===== VIEWPORT SCANNER =====
-           Ukuran dikunci di sini (bukan hanya saat .camera-active) supaya mode
-           "Alat Scanner" juga tetap persegi dan tidak melebar. Tanpa garis/latar pembatas. */
+        /* ===== VIEWPORT SCANNER ===== */
         .scanner-viewport-container {
             position: relative;
             width: min(100%, var(--gerbang-camera-size));
@@ -310,7 +299,8 @@
             min-height: 0 !important;
             max-height: none !important;
             overflow: hidden !important;
-        }#reader video {
+        }
+        #reader video {
             display: block;
             width: 100% !important;
             height: 100% !important;
@@ -319,28 +309,22 @@
             object-fit: cover !important;
             border-radius: 14px;
         }
-        /* iOS/Safari: sembunyikan kontrol media bawaan agar tidak "ngeframe" */
         #reader video::-webkit-media-controls,
         #reader video::-webkit-media-controls-enclosure,
         #reader video::-webkit-media-controls-panel {
             display: none !important;
         }
 
-        /* Canvas internal html5-qrcode tidak boleh tampil */
         #reader canvas { display: none !important; }
-
-        /* Area luar qrbox digelapkan library; shader putih bawaan disembunyikan
-           supaya tidak ada kotak putih menggantung di luar video. */
         #qr-shaded-region { pointer-events: none !important; }
         #qr-shaded-region > div { display: none !important; }
 
-        /* ===== BESAR FULLSCREEN =====
-           Saat fullscreen, kotak kamera sedikit lebih besar (+~12%), tetap persegi
-           dan tetap muat di layar 1920x1080 tanpa memakan tulisan background. */
+        /* ===== BESAR FULLSCREEN ===== */
         :root:fullscreen {
-            --gerbang-camera-size: min(76vh, 520px);
+            --gerbang-camera-size: min(78vh, 580px);
         }
-        /* ===== BRACKET 4 SUDUT (sejajar & simetris dengan qrbox proporsional) ===== */
+        
+        /* ===== BRACKET 4 SUDUT ===== */
         .kiosk-scan-frame {
             position: absolute;
             inset: 0;
@@ -359,8 +343,8 @@
 
         .kiosk-corner {
             position: absolute;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border: 4px solid #ffffff;
             border-radius: 0;
         }
@@ -369,7 +353,7 @@
         .kiosk-corner--bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
         .kiosk-corner--br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
-        /* ===== PLACEHOLDER KAMERA (pesan izin + tombol Coba Lagi) ===== */
+        /* ===== PLACEHOLDER KAMERA ===== */
         .kiosk-placeholder {
             position: absolute;
             inset: 0;
@@ -386,13 +370,13 @@
 
         .kiosk-placeholder-text {
             margin: 0.5rem 0 0;
-            font-size: 0.76rem;
+            font-size: 0.85rem;
             font-weight: 600;
             line-height: 1.35;
             color: #ffffff;
         }
 
-        /* ===== MODE ALAT SCANNER USB (minimalis, tanpa container) ===== */
+        /* ===== MODE ALAT SCANNER USB ===== */
         #hardwareView {
             width: 100%;
             height: 100%;
@@ -405,29 +389,23 @@
             border-radius: var(--gerbang-camera-radius);
         }
 
-        /* ===== MOBILE (<= 768px): Responsif ===== */
+        /* ===== MOBILE (<= 768px) ===== */
         @media (max-width: 768px) {
-            :root { --gerbang-camera-size: 300px; }
-            body::before {
-                background-position: center 32%;
-            }
+            :root { --gerbang-camera-size: 340px; }
+            body::before { background-position: center 32%; }
+            .kiosk-corner-btn span { display: none; }
+            .kiosk-corner-btn { width: 44px; padding: 0; }
         }
 
         @media (max-width: 480px) {
-            :root { --gerbang-camera-size: 272px; }
+            :root { --gerbang-camera-size: 290px; }
             .overlay-title { font-size: 0.92rem; }
             .overlay-sub { font-size: 0.72rem; }
-            .kiosk-corner { width: 24px; height: 24px; }
+            .kiosk-corner { width: 28px; height: 28px; }
         }
 
-        /* ==========================================================================
-           MOBILE KHUSUS (max-width: 767px)
-           Latar putih bersih, header (logo + nama + jam + tanggal) di atas,
-           kamera + toggle lock center di sisa ruang. SEMUA aturan di bawah ini
-           hanya berlaku di layar mobile — desktop (>= 768px) TIDAK terpengaruh.
-           ========================================================================== */
+        /* ===== MOBILE KHUSUS (max-width: 767px) ===== */
         @media (max-width: 767px) {
-            /* 1. Latar putih bersih: foto sekolah & overlay hitam dimatikan */
             html { background-color: #ffffff; }
             body {
                 min-height: 100vh;
@@ -435,15 +413,13 @@
                 background-color: #ffffff;
                 background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             }
-            body::before { display: none; } /* foto sekolah (desktop tetap tampil) */
-            body::after { display: none; }   /* overlay hitam tipis (desktop tetap tampil) */
+            body::before { display: none; }
+            body::after { display: none; }
 
-            /* 2. Header: logo + nama sekolah + subjudul, rata tengah, tanpa kartu/border
-                  (posisi atas diturunkan 1cm dari tepi atas layar) */
             .kiosk-main {
                 flex: 1 1 auto;
                 align-items: center;
-                justify-content: flex-start;
+                justify-content: center;
                 padding-top: 0;
             }
             .kiosk-mobile-logo {
@@ -451,15 +427,6 @@
                 width: clamp(56px, 17vw, 72px);
                 height: auto;
                 object-fit: contain;
-            }
-            .kiosk-mobile-name {
-                font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
-                font-size: 1.25rem;
-                font-weight: 700;
-                line-height: 1.25;
-                color: #0f172a;
-                text-wrap: balance;
-                margin-top: 0.1rem;
             }
             .kiosk-mobile-name {
                 font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
@@ -478,10 +445,6 @@
                 margin-top: 0.1rem;
             }
 
-            /* 3. Jam & tanggal: mengalir rata tengah di bawah header (bukan fixed
-                  kanan-atas), warna gelap & tanpa text-shadow di atas latar putih.
-                  Elemen jam/tanggal yang sudah ada (liveClock & liveDate) dipakai
-                  ulang oleh kode jam yang sama — TANPA duplikasi id. */
             .kiosk-clock {
                 position: static;
                 align-items: center;
@@ -503,34 +466,16 @@
                 text-shadow: none;
             }
 
-            /* 4. Area kamera: ambil sisa ruang, bottom-anchor & center-horizontal,
-                  tanpa top / margin-top yang mendorong ke atas. */
-            .kiosk-main {
-                flex: 1 1 auto;
-                align-items: center;
-                justify-content: flex-start;
-                padding-top: 0;
-            }
-            /* 5. Kotak kamera: ukuran pas, tidak diubah. */
             :root {
                 --gerbang-camera-size: min(86vw, 360px);
             }
-            /* Toggle menempel di atas kotak kamera, tidak dipaksa turun terpisah. */
             .kiosk-switcher {
-                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
                 opacity: 1;
             }
-
-            /* 7. Overlay hasil scan (5 kombinasi): TIDAK ADA aturan .scan-result-*
-                  di view ini. SATU SUMBER di presensi-tokens.css (REVISI 2) —
-                  nilai tetap px, sama untuk Gerbang & panel Scanner QR. */
         }
 
-        /* ==========================================================================
-           LAYAR PENDEK: (max-width: 767px) + (tinggi < 640px / landscape HP)
-           Header lebih rapat, logo & jam dikecilkan, kamera dibatasi dvh supaya
-           UTUH terlihat tanpa scroll — posisi tetap center.
-           ========================================================================== */
+        /* ===== LAYAR PENDEK ===== */
         @media (max-width: 767px) and (max-height: 639px) {
             .kiosk-mobile-header {
                 padding-top: max(0.25rem, env(safe-area-inset-top, 0px));
@@ -548,53 +493,50 @@
                 padding-top: 0.2rem;
                 padding-bottom: calc(3rem + env(safe-area-inset-bottom, 0px));
             }
-            .kiosk-switcher { margin-top: 0.375rem; }
+            .kiosk-switcher { margin-bottom: 0.375rem; }
             :root {
-                /* Batas dvh: header rapat + toggle + padding muat dalam tinggi layar */
                 --gerbang-camera-size: min(86vw, 360px, calc(100vh - 250px));
                 --gerbang-camera-size: min(86vw, 360px, calc(100dvh - 250px));
             }
             .kiosk-placeholder { padding: 0.5rem; }
             .kiosk-placeholder i { font-size: 1.7rem !important; }
             .kiosk-placeholder-text { font-size: 0.7rem; }
-            /* Overlay hasil scan: SATU SUMBER di presensi-tokens.css (REVISI 2).
-               Aturan @media layar pendek (max-height 639px) TIDAK diulang
-               di sini — sudah ada di file token dengan nilai tetap px. */
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Tombol Keluar Mode Gerbang: ikon kecil di pojok kiri atas -->
+    <!-- Tombol Keluar Mode Gerbang: Kiri Bawah dengan Teks -->
     <a href="{{ panel_route('absensi.index') }}" class="kiosk-corner-btn kiosk-exit-corner" title="Keluar Mode Gerbang" aria-label="Keluar Mode Gerbang">
         <i class='bx bx-log-out'></i>
+        <span>Keluar</span>
     </a>
 
-    <!-- Tombol Layar Penuh: ikon kecil di pojok kanan atas -->
+    <!-- Tombol Layar Penuh: Kanan Bawah dengan Teks -->
     <button type="button" class="kiosk-corner-btn kiosk-fullscreen-corner" onclick="toggleFullscreen()" title="Buka Layar Penuh" aria-label="Layar Penuh">
         <i class='bx bx-fullscreen'></i>
+        <span>Layar Penuh</span>
     </button>
 
-    <!-- Header khusus MOBILE (<=767px): logo + nama sekolah, rata tengah.
-         Default display:none sehingga tampilan desktop tidak berubah sama sekali. -->
+    <!-- Header khusus MOBILE (<=767px) -->
     <div class="kiosk-mobile-header">
         <img class="kiosk-mobile-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo Sekolah">
         <div class="kiosk-mobile-name">{{ $schoolName ?? \App\Models\Setting::getSchoolName() }}</div>
         <div class="kiosk-mobile-sub">Presensi Gerbang</div>
     </div>
 
-    <!-- Jam Digital: tengah atas, pill glass tipis -->
+    <!-- Jam Digital -->
     <div class="kiosk-clock" aria-label="Jam digital">
         <div class="kiosk-clock-time" id="liveClock">00:00:00</div>
         <div class="kiosk-clock-date" id="liveDate">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, j F Y') }}</div>
     </div>
 
-    <!-- KAMERA DI TENGAH (langsung di atas foto, tanpa card) -->
+    <!-- KAMERA DI TENGAH -->
     <main class="kiosk-main">
         <div class="kiosk-card-box">
 
-            <!-- Switcher Pill: kecil & transparan di bawah tengah -->
+            <!-- Switcher Pill: kecil & transparan di atas kamera -->
             <div class="kiosk-switcher" role="tablist" aria-label="Metode input presensi">
                 <button type="button" id="btnTabCamera" class="kiosk-switch-btn active" onclick="switchMode('camera')" role="tab" aria-selected="true">
                     <i class='bx bx-camera'></i>
@@ -604,17 +546,17 @@
                 </button>
             </div>
 
-            <!-- Scanner Box: persegi 1:1 (ukuran diatur --gerbang-camera-size) -->
+            <!-- Scanner Box -->
             <div id="scannerBox" class="scanner-viewport-container camera-active">
 
                 <!-- Mode Kamera -->
                 <div id="cameraView" class="w-100 h-100">
                     <div id="reader"></div>
                     <div id="cameraPlaceholder" class="kiosk-placeholder">
-                        <i class='bx bx-qr-scan' style="font-size: 2.4rem; color: #94a3b8;"></i>
+                        <i class='bx bx-qr-scan' style="font-size: 2.8rem; color: #94a3b8;"></i>
                         <p class="kiosk-placeholder-text">Tempelkan kartu QR ke kamera</p>
                     </div>
-                    <!-- Bracket 4 sudut, sejajar & simetris dengan qrbox proporsional -->
+                    <!-- Bracket 4 sudut -->
                     <div class="kiosk-scan-frame" aria-hidden="true">
                         <div class="kiosk-scan-box">
                             <span class="kiosk-corner kiosk-corner--tl"></span>
@@ -627,14 +569,14 @@
 
                 <!-- Mode Alat Scanner USB -->
                 <div id="hardwareView" class="d-none">
-                    <i class='bx bx-scan' style="font-size: 2.2rem; color: #2563eb;"></i>
+                    <i class='bx bx-scan' style="font-size: 2.6rem; color: #2563eb;"></i>
                     <p class="kiosk-placeholder-text">{{ __('Scan kartu dengan alat, atau ketik NIS/NIP lalu tekan Enter') }}</p>
                     <div class="w-100 mt-2 px-1">
                         <input type="text" id="hardwareInput" class="form-control form-control-sm text-center fw-semibold font-monospace py-2" placeholder="{{ __('Ketik NIS/NIP untuk Siswa/Guru') }}" autocomplete="off">
                     </div>
                 </div>
 
-                <!-- Overlay Hasil Scan Terpadu (5 Kombinasi: Lingkaran Hijau/Oranye/Merah + Ikon Centang/X/Tanda Seru) -->
+                <!-- Overlay Hasil Scan Terpadu -->
                 <div id="scanResultOverlay" class="scan-result-overlay d-none">
                     <div class="scan-result-content">
                         <svg class="scan-result-svg" viewBox="0 0 100 100" width="110" height="110">
@@ -719,21 +661,16 @@
     ], JSON_UNESCAPED_UNICODE) !!});</script>
     <script src="{{ asset('js/scanner.js') }}?v={{ file_exists(public_path('js/scanner.js')) ? filemtime(public_path('js/scanner.js')) : config('app.version', '1') }}" data-process-route="{{ panel_route('scanner.process') }}"></script>
     <script>
-        // Shortcut dari Dashboard: tiap kali user membuka halaman ini melalui
-        // pintasan "Presensi Hari Ini", kamera langsung aktif tanpa perlu
-        // klik tombol Mode Gerbang lagi.
         document.addEventListener('DOMContentLoaded', function () {
             var scannerBox = document.getElementById('scannerBox');
             if (!scannerBox) return;
 
-            // Aktifkan tab kamera (bila belum aktif)
             var cameraTab = document.getElementById('btnTabCamera');
             var hardwareTab = document.getElementById('btnTabHardware');
             if (cameraTab && hardwareTab && hardwareTab.classList.contains('active')) {
                 window.switchMode && window.switchMode('camera');
             }
 
-            // Jika kamera belum berjalan, mulaikan.
             if (!window.__kioskScanner.started) {
                 window.__kioskScanner.start && window.__kioskScanner.start();
             } else if (window.__kioskScanner.state === 'idle' && window.__kioskScanner.retryCamera) {

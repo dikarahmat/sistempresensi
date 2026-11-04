@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\MultiPeriodAttendanceExport;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\Holiday;
+use App\Models\Setting;
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,6 +24,11 @@ class RekapGuruController extends Controller
 
     public function index(Request $request): View
     {
+        // Halaman hanya punya tab Harian/Mingguan/Bulanan; semester & tahunan hanya untuk cetak.
+        if (in_array($request->query('type'), ['semester', 'tahunan'], true)) {
+            $request->query->set('type', 'bulanan');
+        }
+
         $ctx  = $this->context($request);
         $data = $this->buildData($ctx);
 
@@ -31,19 +39,104 @@ class RekapGuruController extends Controller
             'endDate'   => $ctx['end']->toDateString(),
             'month'     => $ctx['month'],
             'year'      => $ctx['year'],
+            // Data modal "Cetak Rekap Presensi Guru"
+            'popupDate'     => Carbon::now(self::TZ)->toDateString(),
+            'popupMonth'    => $ctx['month'],
+            'popupYear'     => $ctx['year'],
+            'academicYears' => AcademicYear::orderBy('start_date', 'desc')->get(),
+            'activeYear'    => AcademicYear::getActive(),
         ]));
+    }
+
+    /**
+     * Cetak lewat modal (POST). Mengubah isian modal menjadi parameter yang
+     * dipahami exportPdf / exportExcel, lalu memakai ulang keduanya.
+     */
+    public function printRekap(Request $request)
+    {
+        $data = $request->validate([
+            'format'               => 'required|in:pdf,excel',
+            'period_type'          => 'required|in:harian,mingguan,bulanan,semester,tahunan',
+            'period_date'          => 'nullable|date',
+            'period_month'         => 'nullable|integer|between:1,12',
+            'period_year'          => 'nullable|integer|min:2000|max:2100',
+            'period_semester'      => 'nullable|in:ganjil,genap',
+            'period_academic_year' => 'nullable|integer|exists:academic_years,id',
+        ]);
+
+        $tgl    = Carbon::parse($data['period_date'] ?? Carbon::now(self::TZ)->toDateString(), self::TZ);
+        $params = ['type' => $data['period_type']];
+
+        switch ($data['period_type']) {
+            case 'harian':
+                $params['date'] = $tgl->toDateString();
+                break;
+            case 'mingguan':
+                // Senin - Minggu dari tanggal yang dipilih
+                $params['start_date'] = $tgl->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+                $params['end_date']   = $tgl->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+                break;
+            case 'bulanan':
+                $params['month'] = $data['period_month'] ?? $tgl->month;
+                $params['year']  = $data['period_year'] ?? $tgl->year;
+                break;
+            default: // semester | tahunan
+                $params['period_semester']      = $data['period_semester'] ?? 'ganjil';
+                $params['period_academic_year'] = $data['period_academic_year'] ?? null;
+        }
+
+        $sub = Request::create('', 'GET', array_filter($params, fn ($v) => $v !== null));
+
+        return $data['format'] === 'excel'
+            ? $this->exportExcel($sub)
+            : $this->exportPdf($sub);
     }
 
     public function exportPdf(Request $request)
     {
+        ini_set('memory_limit', '512M');
+        Carbon::setLocale('id');
+
         $ctx  = $this->context($request);
         $data = $this->buildData($ctx);
 
+        $schoolName  = Setting::getSchoolName();
+        $tahunAjaran = AcademicYear::getActive()?->name ?? '-';
+
+        if ($ctx['type'] === 'harian') {
+            $periodText = 'Tanggal: ' . $ctx['start']->locale('id')->translatedFormat('l, d F Y');
+        } elseif ($ctx['type'] === 'mingguan') {
+            $periodText = 'Periode: ' . $ctx['start']->locale('id')->translatedFormat('d M Y')
+                . ' s/d ' . $ctx['end']->locale('id')->translatedFormat('d M Y');
+        } elseif ($ctx['type'] === 'bulanan') {
+            $periodText = 'Bulan: ' . $ctx['start']->locale('id')->translatedFormat('F Y');
+        } else {
+            $periodText = 'Periode: ' . $ctx['start']->locale('id')->translatedFormat('F Y')
+                . ' s/d ' . $ctx['end']->locale('id')->translatedFormat('F Y');
+        }
+
+        if ($ctx['type'] === 'semester') {
+            $heading = 'LAPORAN REKAPITULASI PRESENSI GURU SEMESTER ' . strtoupper($ctx['semester'] ?? 'ganjil');
+        } elseif ($ctx['type'] === 'tahunan') {
+            $heading = 'LAPORAN REKAPITULASI PRESENSI GURU TAHUNAN';
+        } else {
+            $heading = 'LAPORAN REKAPITULASI PRESENSI GURU ' . strtoupper($ctx['type']) . ' - ' . ($schoolName ?: '-');
+        }
+
         $pdf = Pdf::loadView('admin.attendances.pdf_rekap_guru', array_merge($data, [
-            'type'        => $ctx['type'],
-            'periodLabel' => $ctx['label'],
-            'printedAt'   => Carbon::now(self::TZ)->locale('id')->translatedFormat('d F Y'),
-        ]))->setPaper('a4', $ctx['type'] === 'harian' ? 'portrait' : 'landscape');
+            'type'           => $ctx['type'],
+            'periodLabel'    => $ctx['label'],
+            'heading'        => $heading,
+            'subtitle'       => $periodText . ' | Tahun Ajaran: ' . $tahunAjaran,
+            'title'          => 'Rekap Presensi Guru ' . $ctx['type'],
+            'schoolName'     => $schoolName,
+            'schoolAddress'  => Setting::getSchoolAddress(),
+            'activeYear'     => AcademicYear::getActive(),
+            'headmasterName' => Setting::getHeadmasterName(),
+            'headmasterNip'  => Setting::getHeadmasterNip(),
+            'printedAt'      => Carbon::now(self::TZ)->locale('id')->translatedFormat('d F Y, H:i'),
+            'signedAt'       => Carbon::now(self::TZ)->locale('id')->translatedFormat('d F Y'),
+        ]))->setPaper('a4', 'landscape');
 
         return $pdf->download('rekap-presensi-guru-' . $ctx['type'] . '-' . $ctx['start']->toDateString() . '.pdf');
     }
@@ -58,6 +151,21 @@ class RekapGuruController extends Controller
             $out = [];
             foreach ($data['dataRows'] as $i => $r) {
                 $out[] = [$i + 1, (string) $r['nip'], strtoupper($r['name']), $r['jk'], $r['check_in'], $r['late_text'], strtoupper($r['status'])];
+            }
+        } elseif (in_array($ctx['type'], ['semester', 'tahunan'], true)) {
+            $headings = ['NO', 'NIP', 'NAMA GURU', 'JK'];
+            foreach ($data['months'] as $m) {
+                $headings[] = $m['label'] . ' ' . $m['year'];
+            }
+            array_push($headings, 'H', 'T', 'S', 'I', 'A', '%');
+            $out = [];
+            foreach ($data['dataRows'] as $i => $r) {
+                $row = [$i + 1, (string) $r['nip'], strtoupper($r['name']), $r['jk']];
+                foreach ($data['months'] as $m) {
+                    $row[] = $r['monthly'][$m['key']] ?? '-';
+                }
+                array_push($row, $r['hadir'], $r['terlambat'], $r['sakit'], $r['izin'], $r['alfa'], $r['percentage'] . '%');
+                $out[] = $row;
             }
         } else {
             $headings = ['NO', 'NIP', 'NAMA GURU', 'JK'];
@@ -97,10 +205,11 @@ class RekapGuruController extends Controller
     {
         $now  = Carbon::now(self::TZ);
         $type = $request->query('type', $request->query('period', 'harian'));
-        $type = in_array($type, ['harian', 'mingguan', 'bulanan'], true) ? $type : 'harian';
+        $type = in_array($type, ['harian', 'mingguan', 'bulanan', 'semester', 'tahunan'], true) ? $type : 'harian';
 
         $month = max(1, min(12, (int) $request->query('month', $now->month)));
         $year  = (int) $request->query('year', $now->year);
+        $semester = null;
 
         if ($type === 'harian') {
             $start = Carbon::parse($request->query('date', $now->toDateString()), self::TZ)->startOfDay();
@@ -120,13 +229,26 @@ class RekapGuruController extends Controller
                 $end = $start->copy()->addDays(30)->endOfDay();
             }
             $label = 'MINGGUAN ' . $start->locale('id')->translatedFormat('d F Y') . ' - ' . $end->locale('id')->translatedFormat('d F Y');
-        } else {
+        } elseif ($type === 'bulanan') {
             $start = Carbon::createFromDate($year, $month, 1, self::TZ)->startOfDay();
             $end   = $start->copy()->endOfMonth();
             $label = 'BULANAN ' . $start->locale('id')->translatedFormat('F Y');
+        } else {
+            // Semester / Tahunan: rentang dihitung oleh helper yang sama dengan rekap siswa.
+            $semester = $request->query('period_semester') === 'genap' ? 'genap' : 'ganjil';
+            $inputs = [
+                'period_semester'      => $semester,
+                'period_academic_year' => $request->query('period_academic_year'),
+            ];
+            $activeYear = AcademicYear::getActive();
+            $range = MultiPeriodAttendanceExport::academicBounds($type, $inputs, $activeYear);
+            $start = Carbon::parse($range['start'], self::TZ)->startOfDay();
+            $end   = Carbon::parse($range['end'], self::TZ)->endOfDay();
+            $ay    = AcademicYear::find($inputs['period_academic_year'] ?: 0) ?: $activeYear;
+            $label = ($type === 'semester' ? 'SEMESTER ' . strtoupper($semester) : 'TAHUNAN') . ' ' . ($ay->name ?? '');
         }
 
-        return compact('type', 'month', 'year', 'start', 'end', 'label');
+        return compact('type', 'month', 'year', 'start', 'end', 'label', 'semester');
     }
 
     private function buildData(array $ctx): array
@@ -139,6 +261,7 @@ class RekapGuruController extends Controller
             ->map(fn ($g) => $g->keyBy(fn ($a) => Carbon::parse($a->date)->toDateString()));
 
         $today = Carbon::now(self::TZ)->toDateString();
+        $isMonthTable = in_array($ctx['type'], ['semester', 'tahunan'], true);
 
         $dateColumns = [];
         for ($c = $ctx['start']->copy(); $c->lte($ctx['end']); $c->addDay()) {
@@ -168,6 +291,10 @@ class RekapGuruController extends Controller
             }
         }
 
+        $months = $isMonthTable
+            ? MultiPeriodAttendanceExport::monthColumnsBetween($ctx['start']->toDateString(), $ctx['end']->toDateString())
+            : [];
+
         $effective = count(array_filter($dateColumns, fn ($c) => !$c['is_holiday']));
         $rows = [];
 
@@ -191,8 +318,14 @@ class RekapGuruController extends Controller
                 continue;
             }
 
-            $days = [];
-            $sum  = ['H' => 0, 'T' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+            $days    = [];
+            $sum     = ['H' => 0, 'T' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+            $monthly = [];
+            $hasData = [];
+            foreach ($months as $m) {
+                $monthly[$m['key']] = 0;
+                $hasData[$m['key']] = false;
+            }
 
             foreach ($dateColumns as $col) {
                 $a = $byDate->get($col['date']);
@@ -205,13 +338,27 @@ class RekapGuruController extends Controller
                 } else {
                     $code = '-';
                 }
-                $days[$col['date']] = $code;
+
                 if (isset($sum[$code])) {
                     $sum[$code]++;
                 }
+
+                if ($isMonthTable) {
+                    $mk = substr($col['date'], 0, 7);
+                    if (isset($monthly[$mk])) {
+                        if ($code !== '-' && $code !== 'L') {
+                            $hasData[$mk] = true;
+                        }
+                        if ($code === 'H' || $code === 'T') {
+                            $monthly[$mk]++;
+                        }
+                    }
+                } else {
+                    $days[$col['date']] = $code;
+                }
             }
 
-            $rows[] = [
+            $row = [
                 'nip'        => $t->nip,
                 'name'       => $t->name,
                 'jk'         => $jk,
@@ -223,11 +370,21 @@ class RekapGuruController extends Controller
                 'alfa'       => $sum['A'],
                 'percentage' => $effective > 0 ? (int) round((($sum['H'] + $sum['T']) / $effective) * 100) : 0,
             ];
+
+            if ($isMonthTable) {
+                $row['monthly'] = [];
+                foreach ($months as $m) {
+                    $row['monthly'][$m['key']] = $hasData[$m['key']] ? $monthly[$m['key']] : null;
+                }
+            }
+
+            $rows[] = $row;
         }
 
         return [
             'dataRows'    => $rows,
             'dateColumns' => $dateColumns,
+            'months'      => $months,
             'daysInMonth' => $ctx['type'] === 'bulanan' ? $ctx['start']->daysInMonth : count($dateColumns),
             'holidayMap'  => $holidayMap,
             'isHoliday'   => $isHoliday,
