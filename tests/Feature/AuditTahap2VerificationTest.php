@@ -6,7 +6,10 @@ use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\SchoolClass;
 use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\TeacherAttendance;
 use App\Models\User;
+use App\Services\TeacherCardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -257,6 +260,144 @@ class AuditTahap2VerificationTest extends TestCase
         $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
             'qr_token' => '1234567890',
         ])->assertStatus(404);
+    }
+
+    public function test_qr_siswa_nisn_valid_tetap_nisn_dan_fallback_memakai_nama_kelas(): void
+    {
+        $kelasA = $this->kelas('7A');
+        $kelasB = $this->kelas('7B');
+
+        $valid = Student::create([
+            'school_class_id' => $kelasA->id, 'name' => 'Siswa Nisn Valid',
+            'nisn' => '0081234501', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        $tanpaNisn = Student::create([
+            'school_class_id' => $kelasA->id, 'name' => 'Muhammad Dika Pratama',
+            'nisn' => null, 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        $duplikatA = Student::create([
+            'school_class_id' => $kelasA->id, 'name' => 'Siswa Duplikat Satu',
+            'nisn' => '0077777701', 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+        $duplikatB = Student::create([
+            'school_class_id' => $kelasB->id, 'name' => 'Siswa Duplikat Dua',
+            'nisn' => '0077777701', 'gender' => 'Perempuan', 'status' => 'Aktif',
+        ]);
+
+        $this->assertSame('0081234501', $valid->qrValue());
+        $this->assertSame('Muhammad_Dika_Pratama_7A', $tanpaNisn->qrValue());
+        $this->assertSame('Siswa_Duplikat_Satu_7A', $duplikatA->qrValue());
+        $this->assertSame('Siswa_Duplikat_Dua_7B', $duplikatB->qrValue());
+
+        // NISN valid tetap dipindai sebagai NISN.
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => $valid->nisn,
+        ])->assertStatus(200)->assertJsonPath('student.name', 'Siswa Nisn Valid');
+
+        // NISN kosong dipindai lewat Nama_Kelas, case-insensitive.
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => 'MUHAMMAD_DIKA_PRATAMA_7A',
+        ])->assertStatus(200)->assertJsonPath('student.name', 'Muhammad Dika Pratama');
+
+        // NISN ganda dipindai lewat Nama_Kelas.
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => 'siswa_duplikat_dua_7b',
+        ])->assertStatus(200)->assertJsonPath('student.name', 'Siswa Duplikat Dua');
+
+        // NISN ganda yang dipindai sebagai NISN tetap ditolak 409.
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => '0077777701',
+        ])->assertStatus(409);
+
+        // Token Nama_Kelas milik siswa ber-NISN valid tidak boleh dipakai.
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => 'Siswa_Nisn_Valid_7A',
+        ])->assertStatus(404);
+    }
+
+    public function test_qr_siswa_lama_uuid_ditolak(): void
+    {
+        $kelas = $this->kelas();
+        $student = Student::create([
+            'school_class_id' => $kelas->id, 'name' => 'Siswa Uuid Lama',
+            'nisn' => null, 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+
+        $this->assertNotEmpty($student->qr_token);
+
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => $student->qr_token,
+        ])->assertStatus(404);
+    }
+
+    public function test_qr_guru_nip_valid_tetap_nip_dan_fallback_memakai_nama_guru(): void
+    {
+        $nip = '198001012010011001';
+        $this->assertSame($nip, TeacherCardService::qrTokenFor($nip, 'Budi Santoso'));
+        $this->assertSame('Budi_Santoso_guru', TeacherCardService::qrTokenFor(null, 'Budi Santoso'));
+        $this->assertSame('Budi_Santoso_guru', TeacherCardService::qrTokenFor('123', 'Budi Santoso'));
+
+        $guruNip = Teacher::create([
+            'name' => 'Guru Nip Valid', 'nip' => $nip, 'gender' => 'Laki-laki',
+        ]);
+        $guruTanpaNip = Teacher::create([
+            'name' => 'Budi Santoso', 'nip' => null, 'gender' => 'Laki-laki',
+        ]);
+
+        $this->assertSame($nip, $guruNip->qrValue());
+        $this->assertSame('Budi_Santoso_guru', $guruTanpaNip->qrValue());
+
+        // Seed presensi hari ini agar scan hanya menguji pencocokan token,
+        // bukan proses insert presensi guru.
+        $today = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
+        foreach ([$guruNip, $guruTanpaNip] as $teacher) {
+            TeacherAttendance::forceCreate([
+                'teacher_id' => $teacher->id,
+                'academic_year_id' => $this->tahun->id,
+                'date' => $today,
+                'status' => 'Hadir',
+                'time_remark' => 'Tepat Waktu',
+            ]);
+        }
+
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => $nip,
+        ])->assertStatus(400)->assertJsonPath('teacher.name', 'Guru Nip Valid');
+
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => 'BUDI_SANTOSO_GURU',
+        ])->assertStatus(400)->assertJsonPath('teacher.name', 'Budi Santoso');
+    }
+
+    public function test_qr_guru_lama_id_dan_uuid_ditolak_serta_token_guru_bukan_siswa(): void
+    {
+        $guru = Teacher::create([
+            'name' => 'Guru Tanpa Nip', 'nip' => null, 'gender' => 'Laki-laki',
+        ]);
+
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => (string) $guru->id,
+        ])->assertStatus(404);
+
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => $guru->qr_token,
+        ])->assertStatus(404);
+
+        // Siswa yang kebetulan menghasilkan token berakhiran _guru tidak
+        // boleh dianggap sebagai siswa.
+        $kelasGuru = $this->kelas('Guru');
+        $student = Student::create([
+            'school_class_id' => $kelasGuru->id, 'name' => 'Budi Santoso',
+            'nisn' => null, 'gender' => 'Laki-laki', 'status' => 'Aktif',
+        ]);
+
+        $this->assertSame('Budi_Santoso_Guru', $student->qrValue());
+
+        $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => 'budi_santoso_guru',
+        ])->assertStatus(404);
+
+        $this->assertDatabaseMissing('attendances', ['student_id' => $student->id]);
     }
 
     public function test_import_siswa_hanya_mengenali_kolom_nisn(): void

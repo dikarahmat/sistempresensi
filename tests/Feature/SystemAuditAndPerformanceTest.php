@@ -188,7 +188,7 @@ class SystemAuditAndPerformanceTest extends TestCase
 
         // Scan 1: Check-in
         $response1 = $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
-            'qr_token' => 'QR-RIAN-3001',
+            'qr_token' => $student->nisn,
         ]);
 
         $response1->assertStatus(200);
@@ -199,7 +199,7 @@ class SystemAuditAndPerformanceTest extends TestCase
 
         // Scan 2: Immediate double tap within 2 minutes cooldown
         $response2 = $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
-            'qr_token' => 'QR-RIAN-3001',
+            'qr_token' => $student->nisn,
         ]);
 
         $response2->assertStatus(400);

@@ -88,7 +88,7 @@
             $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate($token);
             $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($svg);
         } catch (\Throwable $e) {
-            $qrSrc = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" . urlencode($token);
+            $qrSrc = null;
         }
     }
 @endphp
