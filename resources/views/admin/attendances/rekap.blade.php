@@ -570,6 +570,7 @@
                             <th style="width: 90px;">{{ __('Kelas') }}</th>
                             <th style="width: 60px;">{{ __('JK') }}</th>
                             <th style="width: 120px;">{{ __('Jam Masuk') }}</th>
+                            <th style="width: 120px;">{{ __('Jam Pulang') }}</th>
                             <th style="width: 160px;">{{ __('Keterlambatan') }}</th>
                             <th style="width: 120px;">{{ __('Status') }}</th>
                         </tr>
@@ -580,6 +581,7 @@
                             $st = is_array($item) ? ($item['student'] ?? null) : $item;
                             $status = is_array($item) ? ($item['status'] ?? '-') : 'Libur';
                             $checkIn = is_array($item) ? ($item['check_in'] ?? '-') : '-';
+                            $checkOut = is_array($item) ? ($item['check_out'] ?? '-') : '-';
                             $lateText = is_array($item) ? ($item['late_text'] ?? '-') : '-';
                             $rowNum = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator)
                                 ? ($dataRows->firstItem() + $loop->index)
@@ -597,6 +599,7 @@
                                 </span>
                             </td>
                             <td class="text-center">{{ $checkIn }}</td>
+                            <td class="text-center">{{ $checkOut }}</td>
                             <td class="text-center">
                                 @if($lateText === 'Tepat Waktu')
                                     <span class="text-success small">{{ __('Tepat Waktu') }}</span>
@@ -620,7 +623,7 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-secondary empty-state">
+                            <td colspan="9" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ __('Tidak ada data siswa atau presensi untuk tanggal dan filter yang dipilih.') }}
                             </td>

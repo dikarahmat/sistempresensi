@@ -325,12 +325,12 @@ class Attendance extends Model
      * - Scan setelah Batas Terlambat (>) = TERLAMBAT
      * Memakai zona waktu Asia/Jakarta dan perbandingan waktu yang presisi.
      */
-    public static function evaluateCheckInTime(string|\Carbon\Carbon $checkIn, ?string $lateLimit = null): array
+    public static function evaluateCheckInTime(string|\Carbon\Carbon $checkIn, ?string $lateLimit = null, ?string $checkInStart = null): array
     {
         $timezone = 'Asia/Jakarta';
         $todayStr = \Carbon\Carbon::now($timezone)->toDateString();
 
-        $checkInTimeStr = Setting::getCheckInTime(); // e.g. '06:45'
+        $checkInTimeStr = $checkInStart ?: Setting::getCheckInTime(); // e.g. '06:45'
         // Normalize: pastikan format H:i:s untuk perbandingan
         if (strlen($checkInTimeStr) === 5) {
             $checkInTimeStr .= ':00';
@@ -353,7 +353,7 @@ class Attendance extends Model
                 'db_status' => null,
                 'status' => Attendance::STATUS_ALFA,
                 'display_status' => Attendance::STATUS_ALFA,
-                'time_remark' => 'Presensi belum dibuka. Presensi dimulai pukul ' . Setting::getCheckInTime() . '.',
+                'time_remark' => 'Presensi belum dibuka. Presensi dimulai pukul ' . substr($checkInTimeStr, 0, 5) . '.',
                 'is_late' => false,
                 'late_minutes' => 0,
                 'display_remark' => 'Presensi belum dibuka',
@@ -499,6 +499,7 @@ class Attendance extends Model
         $att = $attendance;
         $status = self::STATUS_BELUM;
         $checkIn = null;
+        $checkOut = null;
         $notes = '-';
         $proofDoc = null;
         $lateText = '-';
@@ -509,6 +510,7 @@ class Attendance extends Model
             $notes = $att->notes ?? '-';
             $proofDoc = $att->proof_document;
             $checkIn = $att->check_in;
+            $checkOut = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
 
             if ($status === self::STATUS_HADIR || $status === self::STATUS_TERLAMBAT) {
                 $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
@@ -548,6 +550,7 @@ class Attendance extends Model
         return [
             'student' => null,
             'check_in' => $checkIn,
+            'check_out' => $checkOut ?? '-',
             'late_text' => $lateText,
             'late_minutes' => $lateMinutes,
             'status' => $status,
@@ -639,12 +642,14 @@ class Attendance extends Model
         $att = $attendance;
         $status = $dayStatus;
         $checkIn = '-';
+        $checkOut = '-';
         $lateText = '-';
         $notes = '-';
 
         if ($att) {
             $status = $att->effective_status;
             $notes = $att->notes ?? '-';
+            $checkOut = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
 
             if ($status === self::STATUS_HADIR || $status === self::STATUS_TERLAMBAT) {
                 $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
@@ -681,6 +686,7 @@ class Attendance extends Model
         return [
             'status' => $status,
             'check_in' => $checkIn,
+            'check_out' => $checkOut,
             'late_text' => $lateText,
             'late_minutes' => 0,
             'notes' => $notes,

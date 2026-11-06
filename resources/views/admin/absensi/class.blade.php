@@ -675,6 +675,9 @@
         <div class="status-badge-pill shadow-2xs dim-belum">
             <span style="text-transform: uppercase !important;">{{ $countBelumAbsen ?? 0 }} {{ __('Belum') }}</span>
         </div>
+        <div class="status-badge-pill shadow-2xs dim-hadir">
+            <span style="text-transform: uppercase !important;">{{ $countSudahPulang ?? 0 }} {{ __('Sudah Pulang') }}</span>
+        </div>
     </div>
 
     <!-- MAIN CONTENT LAYOUT -->
@@ -751,6 +754,7 @@
                 <!-- Jam Operasional di Bawah Kotak -->
                 <div class="text-secondary" style="font-size: 0.78rem;">
                     {{ __('Jam masuk') }} <span class="fw-semibold text-dark">{{ $formattedCheckIn ?? $jamMasuk ?? '07:00' }}</span>
+                    &middot; {{ __('Jam pulang') }} <span class="fw-semibold text-dark">{{ $formattedCheckOut ?? '14:00' }}</span>
                 </div>
 
             </div>
@@ -766,6 +770,7 @@
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('No') }}</th>
                                 <th class="py-3" style="white-space: nowrap; text-align: left !important; padding-left: 0.75rem;">{{ __('Nama Siswa') }}</th>
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Jam Masuk') }}</th>
+                                <th class="text-center py-3" style="white-space: nowrap;">{{ __('Jam Pulang') }}</th>
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Keterlambatan') }}</th>
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Status') }}</th>
                                 @if(is_admin())
@@ -784,6 +789,9 @@
                                 </td>
                                 <td class="text-center" style="font-weight: 400 !important; color: #111827 !important;">
                                     {{ $student->jam_masuk ?? '—' }}
+                                </td>
+                                <td class="text-center" style="font-weight: 400 !important; color: #111827 !important;">
+                                    {{ $student->jam_pulang ?? '—' }}
                                 </td>
                                 <td class="late-cell">
                                     @php
@@ -897,7 +905,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ is_admin() ? 6 : 5 }}" class="text-center py-4 text-secondary empty-state">
+                                <td colspan="{{ is_admin() ? 7 : 6 }}" class="text-center py-4 text-secondary empty-state">
                                     <i class='bx bx-error' aria-hidden='true'></i>
                                     {{ __('Belum ada data siswa di kelas ini.') }}
                                 </td>

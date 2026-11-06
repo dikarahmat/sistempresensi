@@ -228,6 +228,7 @@
                 <th style="width: 8%;">{!! __('Kelas') !!}</th>
                 <th style="width: 3%;">{!! __('JK') !!}</th>
                 <th style="width: 10%;">{!! __('Jam Masuk') !!}</th>
+                <th style="width: 10%;">{!! __('Jam Pulang') !!}</th>
                 <th style="width: 12%;">{!! __('Keterlambatan') !!}</th>
                 <th style="width: 8%;">{!! __('Status') !!}</th>
                 <th style="text-align: left; width: 26%;">{!! __('Catatan') !!}</th>
@@ -242,6 +243,7 @@
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 <td>{!! $row['check_in'] !!}</td>
+                <td>{!! $row['check_out'] ?? '-' !!}</td>
                 <td>{!! $row['late_text'] !!}</td>
                 <td>
                     @if($row['status'] === 'Hadir')
@@ -266,7 +268,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="9" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+                <td colspan="10" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>

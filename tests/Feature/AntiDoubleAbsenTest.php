@@ -88,6 +88,8 @@ class AntiDoubleAbsenTest extends TestCase
     /** (i) Scan sekali -> sukses & hanya satu baris. */
     public function test_scan_pertama_berhasil_dan_mencatat_tepat_satu_baris(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 10, 16, 7, 0, 0, 'Asia/Jakarta'));
+
         $res = $this->scan($this->admin);
 
         $res->assertStatus(200);
@@ -98,12 +100,14 @@ class AntiDoubleAbsenTest extends TestCase
     /** (ii) Scan berulang di jalur yang sama -> ditolak, tidak menambah baris. */
     public function test_scan_ulang_ditolak_tanpa_menambah_baris(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 10, 16, 7, 0, 0, 'Asia/Jakarta'));
+
         $this->scan($this->admin)->assertStatus(200);
 
         $kedua = $this->scan($this->admin);
         $kedua->assertStatus(400);
         $kedua->assertJsonPath('success', false);
-        $this->assertStringContainsString('sudah melakukan presensi', (string) $kedua->json('message'));
+        $this->assertStringContainsString('Belum waktunya presensi pulang', (string) $kedua->json('message'));
 
         $this->assertSame(1, $this->jumlahPresensi());
     }
@@ -111,6 +115,8 @@ class AntiDoubleAbsenTest extends TestCase
     /** (iii) Absen di guru lalu coba di piket -> ditolak. */
     public function test_absen_di_guru_lalu_di_piket_ditolak(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 10, 16, 7, 0, 0, 'Asia/Jakarta'));
+
         $this->scan($this->guru)->assertStatus(200);
 
         $this->scan($this->piket)->assertStatus(400);
@@ -120,6 +126,8 @@ class AntiDoubleAbsenTest extends TestCase
     /** (iv) Absen di piket lalu coba di admin -> ditolak. */
     public function test_absen_di_piket_lalu_di_admin_ditolak(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 10, 16, 7, 0, 0, 'Asia/Jakarta'));
+
         $this->scan($this->piket)->assertStatus(200);
 
         $this->scan($this->admin)->assertStatus(400);
@@ -132,22 +140,22 @@ class AntiDoubleAbsenTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 10, 16, 7, 0, 0, 'Asia/Jakarta'));
         $this->scan($this->admin)->assertStatus(200);
 
-        Carbon::setTestNow(Carbon::create(2026, 10, 17, 7, 0, 0, 'Asia/Jakarta'));
+        Carbon::setTestNow(Carbon::create(2026, 10, 19, 7, 0, 0, 'Asia/Jakarta'));
         $this->scan($this->admin)->assertStatus(200);
 
         $this->assertSame(2, $this->jumlahPresensi());
     }
 
-    /** (viii) Zona waktu Asia/Jakarta: 23:30 UTC = keesokan harinya di WIB. */
+    /** (viii) Zona waktu Asia/Jakarta: 23:50 UTC = keesokan harinya di WIB. */
     public function test_tanggal_presensi_mengikuti_zona_waktu_asia_jakarta(): void
     {
-        Carbon::setTestNow(Carbon::create(2026, 10, 16, 23, 30, 0, 'UTC'));
+        Carbon::setTestNow(Carbon::create(2026, 10, 15, 23, 50, 0, 'UTC'));
 
         $this->scan($this->admin)->assertStatus(200);
 
         $attendance = Attendance::where('student_id', $this->student->id)->first();
         $this->assertNotNull($attendance);
-        $this->assertSame('2026-10-17', $attendance->date->toDateString());
+        $this->assertSame('2026-10-16', $attendance->date->toDateString());
     }
 
     /** Lapis DATABASE: UNIQUE(student_id, date) menolak baris ganda. */

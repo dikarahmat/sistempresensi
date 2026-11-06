@@ -181,9 +181,9 @@ class Setting extends Model
     }
 
     /**
-     * Jam pulang (Check-Out) - HANYA untuk logika Scanner/Gerbang.
-     * TIDAK ditampilkan di form pengaturan, TIDAK disimpan via form.
-     * Dipakai oleh ScannerController::processScan() untuk logika check-out.
+     * Jam pulang (Check-Out) legacy. Nilai ini disinkronkan dari jadwal hari
+     * Senin, sedangkan jadwal operasional lengkap per hari dibaca melalui
+     * OperatingSchedule::timesForDate().
      */
     public static function getCheckOutTime(): string
     {

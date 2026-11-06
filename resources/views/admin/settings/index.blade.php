@@ -550,11 +550,7 @@
              Route dan halamannya TIDAK dihapus. --}}
 
         <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data" 
-              class="settings-mobile-form settings-form-wrapper"
-              x-data="{ 
-                  checkIn: '{{ old('check_in_time', $settings['check_in_time'] ?? '06:45') }}', 
-                  lateLimit: '{{ old('late_limit_time', $settings['late_limit_time'] ?? '07:15') }}' 
-              }">
+              class="settings-mobile-form settings-form-wrapper">
             @csrf
 
             <!-- Bagian 1: Identitas & Logo Sekolah -->
@@ -671,68 +667,73 @@
             <div class="settings-section">
                 <div class="section-header">
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Presensi & Toleransi Keterlambatan') }}</h5>
-                        <div class="small" style="color: #0f172a;">{{ __('Atur jam masuk dan batas waktu agar siswa dicatat tepat waktu atau terlambat.') }}</div>
+                        <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Operasional Presensi per Hari') }}</h5>
+                        <div class="small" style="color: #0f172a;">{{ __('Atur jam masuk, batas keterlambatan, jam pulang, dan batas waktu pulang untuk Senin sampai Jumat.') }}</div>
                     </div>
                 </div>
 
-                <!-- Dua Kartu Berdampingan (Gaya Dashboard Modern) -->
-                <div class="jadwal-cards-grid">
-                    <!-- Kartu JAM MASUK -->
-                    <div class="jadwal-card">
-                        <!-- Watermark Icon Besar di Sisi Kiri -->
-                        <i class='bx bx-log-in jadwal-card-watermark watermark-masuk' aria-hidden="true"></i>
-
-                        <!-- Isi Kartu: Kiri & Kanan -->
-                        <div class="jadwal-card-content">
-                            <div class="jadwal-card-left">
-                                <span class="text-uppercase fw-bold clock-card-label" style="font-size: 0.72rem; letter-spacing: 0.05em; color: #0f172a;">{{ __('JAM MASUK') }}</span>
-                            </div>
-                            <div class="jadwal-card-right d-flex align-items-baseline clock-time-wrap flex-wrap justify-content-end">
-                                <input type="time" name="check_in_time" id="check_in_time" x-model="checkIn" class="dashboard-time-input clock-time-masuk" value="{{ old('check_in_time', $settings['check_in_time'] ?? '') }}" required>
-                                <span class="clock-wib" style="font-size: 0.75rem; font-weight: 700; color: #0f172a; margin-left: 4px; letter-spacing: 0.02em;">WIB</span>
-                            </div>
-                        </div>
-                        @error('check_in_time')
-                        <div class="text-danger small mt-1 text-end position-relative" style="z-index: 1;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Kartu BATAS TERLAMBAT -->
-                    <div class="jadwal-card">
-                        <!-- Watermark Icon Besar di Sisi Kiri -->
-                        <i class='bx bx-alarm-exclamation jadwal-card-watermark watermark-terlambat' aria-hidden="true"></i>
-
-                        <!-- Isi Kartu: Kiri & Kanan -->
-                        <div class="jadwal-card-content">
-                            <div class="jadwal-card-left">
-                                <span class="text-uppercase fw-bold clock-card-label" style="font-size: 0.72rem; letter-spacing: 0.05em; color: #0f172a;">{{ __('BATAS TERLAMBAT') }}</span>
-                            </div>
-                            <div class="jadwal-card-right d-flex align-items-baseline clock-time-wrap flex-wrap justify-content-end">
-                                <input type="time" name="late_limit_time" id="late_limit_time" x-model="lateLimit" class="dashboard-time-input clock-time-terlambat" value="{{ old('late_limit_time', $settings['late_limit_time'] ?? '') }}" required>
-                                <span class="clock-wib" style="font-size: 0.75rem; font-weight: 700; color: #0f172a; margin-left: 4px; letter-spacing: 0.02em;">WIB</span>
-                            </div>
-                        </div>
-                        @error('late_limit_time')
-                        <div class="text-danger small mt-1 text-end position-relative" style="z-index: 1;">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="table-responsive rounded-3 border" style="border-color: #e2e8f0 !important;">
+                    <table class="table align-middle mb-0" id="scheduleTable">
+                        <thead style="background: #f1f5f9;">
+                            <tr>
+                                <th class="py-3" style="white-space: nowrap;">{{ __('Hari') }}</th>
+                                <th class="py-3" style="white-space: nowrap;">{{ __('Jam Masuk') }}</th>
+                                <th class="py-3" style="white-space: nowrap;">{{ __('Batas Keterlambatan') }}</th>
+                                <th class="py-3" style="white-space: nowrap;">{{ __('Jam Pulang') }}</th>
+                                <th class="py-3" style="white-space: nowrap;">{{ __('Batas Waktu Pulang') }}</th>
+                                <th class="py-3 text-end" style="white-space: nowrap;">{{ __('Aksi') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($schedules as $day => $schedule)
+                            <tr>
+                                <td class="fw-semibold" style="color: #0f172a;">{{ $schedule['label'] }}</td>
+                                <td style="min-width: 130px;">
+                                    <input type="time" name="schedules[{{ $day }}][check_in_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.check_in_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_in_time', $schedule['check_in_time']) }}" required>
+                                    @error('schedules.'.$day.'.check_in_time')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </td>
+                                <td style="min-width: 130px;">
+                                    <input type="time" name="schedules[{{ $day }}][late_limit_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.late_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.late_limit_time', $schedule['late_limit_time']) }}" required>
+                                    @error('schedules.'.$day.'.late_limit_time')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </td>
+                                <td style="min-width: 130px;">
+                                    <input type="time" name="schedules[{{ $day }}][check_out_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.check_out_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_time', $schedule['check_out_time']) }}" required>
+                                    @error('schedules.'.$day.'.check_out_time')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </td>
+                                <td style="min-width: 130px;">
+                                    <input type="time" name="schedules[{{ $day }}][check_out_limit_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.check_out_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_limit_time', $schedule['check_out_limit_time']) }}" required>
+                                    @error('schedules.'.$day.'.check_out_limit_time')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                </td>
+                                <td class="text-end" style="min-width: 150px;">
+                                    @if($loop->first)
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-semibold" id="copyScheduleToAll">
+                                        <i class='bx bx-copy me-1'></i>{{ __('Salin ke semua hari') }}
+                                    </button>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+
+                @error('schedules')
+                <div class="text-danger small mt-2">{{ $message }}</div>
+                @enderror
             </div>
 
             <!-- Bagian 3: Catatan Biru -->
             <div class="alert alert-info border-0 m-0 small w-100" style="display: flex; width: 100%; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: 8px; gap: 4px; line-height: 1.6; color: #0f172a;">
                 <i class='bx bx-info-circle text-primary me-1' style="font-size: 14px; vertical-align: -0.125em;"></i>
-                <span>{{ __('Siswa yang melakukan scan antara') }}</span>
-                <strong style="color: #166534; font-weight: 700;" x-text="checkIn">{{ $settings['check_in_time'] ?? '' }}</strong>
-                <span>{{ __('hingga') }}</span>
-                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
-                <span>{{ __('dicatat Tepat Waktu.') }}</span>
-                <span>{{ __('Scan di atas') }}</span>
-                <strong style="color: #c2410c; font-weight: 700;" x-text="lateLimit">{{ $settings['late_limit_time'] ?? '' }}</strong>
-                <span>{{ __('otomatis tercatat') }}</span>
-                <strong style="color: #c2410c; font-weight: 700;">{{ __('Terlambat') }}</strong>
-                <span>{{ __('lengkap dengan selisih menit keterlambatannya.') }}</span>
+                <span>{{ __('Scan dari Jam Masuk hingga Batas Keterlambatan dicatat Tepat Waktu. Scan setelah batas keterlambatan dicatat Terlambat. Presensi pulang hanya diterima mulai Jam Pulang sampai Batas Waktu Pulang; di luar rentang itu akan ditolak. Sabtu dan Minggu tidak ada presensi.') }}</span>
             </div>
 
             <!-- Bagian 4: Tombol Simpan -->
@@ -813,7 +814,32 @@
             });
         }
 
-        // 3. Validasi klien sebelum submit. Server tetap memvalidasi ulang;
+        // 3. Tombol "Salin ke semua hari": menyalin 4 jam dari baris Senin
+        //    ke seluruh baris hari lain. Nilai tetap bisa diubah manual.
+        var scheduleRows = Array.prototype.slice.call(document.querySelectorAll('#scheduleTable tbody tr'));
+        var scheduleFields = ['check_in_time', 'late_limit_time', 'check_out_time', 'check_out_limit_time'];
+        var copyScheduleBtn = document.getElementById('copyScheduleToAll');
+        if (copyScheduleBtn) {
+            copyScheduleBtn.addEventListener('click', function () {
+                var firstRow = scheduleRows[0];
+                if (!firstRow) return;
+                scheduleFields.forEach(function (field) {
+                    var source = firstRow.querySelector('input[name$="[' + field + ']"]');
+                    if (!source) return;
+                    scheduleRows.slice(1).forEach(function (row) {
+                        var target = row.querySelector('input[name$="[' + field + ']"]');
+                        if (target) target.value = source.value;
+                    });
+                });
+            });
+        }
+
+        function scheduleToMinutes(value) {
+            var parts = (value || '').split(':');
+            return parts.length === 2 ? (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10)) : NaN;
+        }
+
+        // 4. Validasi klien sebelum submit. Server tetap memvalidasi ulang;
         //    ini hanya agar pesan muncul tepat di bawah field yang salah.
         var form = document.querySelector('.settings-mobile-form');
         if (form) {
@@ -821,11 +847,9 @@
                 var nip = document.getElementById('headmaster_nip');
                 var phone = document.getElementById('school_phone');
                 var npsn = document.getElementById('school_npsn');
-                var checkIn = document.getElementById('check_in_time');
-                var lateLimit = document.getElementById('late_limit_time');
                 var ok = true;
 
-                [nip, phone, npsn, checkIn, lateLimit].forEach(function (el) {
+                [nip, phone, npsn].forEach(function (el) {
                     if (el) el.classList.remove('is-invalid');
                 });
                 var nipErr = document.getElementById('nipClientError');
@@ -834,6 +858,16 @@
                 if (nipErr) nipErr.style.display = 'none';
                 if (phoneErr) phoneErr.style.display = 'none';
                 if (npsnErr) npsnErr.style.display = 'none';
+
+                scheduleRows.forEach(function (row) {
+                    scheduleFields.forEach(function (field) {
+                        var el = row.querySelector('input[name$="[' + field + ']"]');
+                        if (el) el.classList.remove('is-invalid');
+                    });
+                    row.querySelectorAll('.time-client-error').forEach(function (el) {
+                        el.remove();
+                    });
+                });
 
                 function tandai(el) {
                     el.classList.add('is-invalid');
@@ -852,19 +886,30 @@
                     tandai(npsn);
                     if (npsnErr) npsnErr.style.display = '';
                 }
-                if (checkIn && lateLimit && checkIn.value && lateLimit.value && lateLimit.value <= checkIn.value) {
-                    tandai(lateLimit);
-                    if (lateLimit) {
-                        // Tampilkan error di bawah field batas terlambat
-                        var existingErr = lateLimit.parentNode.querySelector('.time-client-error');
-                        if (!existingErr) {
+
+                scheduleRows.forEach(function (row) {
+                    var values = {};
+                    scheduleFields.forEach(function (field) {
+                        var el = row.querySelector('input[name$="[' + field + ']"]');
+                        values[field] = el ? el.value : '';
+                    });
+
+                    var checkIn = scheduleToMinutes(values.check_in_time);
+                    var lateLimit = scheduleToMinutes(values.late_limit_time);
+                    var checkOut = scheduleToMinutes(values.check_out_time);
+                    var checkOutLimit = scheduleToMinutes(values.check_out_limit_time);
+
+                    if (!(checkIn < lateLimit && lateLimit < checkOut && checkOut <= checkOutLimit)) {
+                        var target = row.querySelector('input[name$="[check_out_time]"]');
+                        if (target) {
+                            tandai(target);
                             var errDiv = document.createElement('div');
                             errDiv.className = 'text-danger small mt-1 time-client-error';
-                            errDiv.textContent = {!! json_encode(__('Batas toleransi harus lebih besar dari jam buka masuk.')) !!};
-                            lateLimit.parentNode.appendChild(errDiv);
+                            errDiv.textContent = {!! json_encode(__('Urutan jam harus Masuk < Batas Keterlambatan < Jam Pulang <= Batas Waktu Pulang.')) !!};
+                            target.parentNode.appendChild(errDiv);
                         }
                     }
-                }
+                });
 
                 if (!ok) {
                     e.preventDefault();

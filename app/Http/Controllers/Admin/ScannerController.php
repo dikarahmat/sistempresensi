@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
+use App\Models\Holiday;
+use App\Models\OperatingSchedule;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -30,9 +32,10 @@ class ScannerController extends Controller
         $activeYear = AcademicYear::getActive();
 
         $schoolName = Setting::getSchoolName();
-        $checkInTime = Setting::getCheckInTime();
-        $lateLimitTime = Setting::getLateLimitTime();
-        $checkOutTime = Setting::getCheckOutTime();
+        $scheduleTimes = OperatingSchedule::timesForDate($today);
+        $checkInTime = $scheduleTimes['check_in_time'] ?? Setting::getCheckInTime();
+        $lateLimitTime = $scheduleTimes['late_limit_time'] ?? Setting::getLateLimitTime();
+        $checkOutTime = $scheduleTimes['check_out_time'] ?? Setting::getCheckOutTime();
 
         $recentScans = Attendance::with(['student.schoolClass'])
             ->where('date', $dateString)
@@ -62,9 +65,10 @@ class ScannerController extends Controller
 
         $activeYear = AcademicYear::getActive();
         $schoolName = Setting::getSchoolName();
-        $checkInTime = Setting::getCheckInTime();
-        $lateLimitTime = Setting::getLateLimitTime();
-        $checkOutTime = Setting::getCheckOutTime();
+        $scheduleTimes = OperatingSchedule::timesForDate($today);
+        $checkInTime = $scheduleTimes['check_in_time'] ?? Setting::getCheckInTime();
+        $lateLimitTime = $scheduleTimes['late_limit_time'] ?? Setting::getLateLimitTime();
+        $checkOutTime = $scheduleTimes['check_out_time'] ?? Setting::getCheckOutTime();
 
         $recentScans = Attendance::with(['student.schoolClass'])
             ->where('date', $dateString)
@@ -145,30 +149,39 @@ class ScannerController extends Controller
         $activeYear = AcademicYear::getActive();
         $academicYearId = $activeYear ? $activeYear->id : null;
 
-        $lateLimitTime = Setting::getLateLimitTime();
-        $checkOutThreshold = Setting::getCheckOutTime();
+        // Presensi hanya dibuka Senin-Jumat dan pada hari yang bukan libur.
+        $scheduleTimes = OperatingSchedule::timesForDate($now);
 
-        // Validasi ganda anti-double scan lintas role (Admin Gerbang & Guru Kelas) sebelum DB::transaction
-        $existingAttendance = Attendance::where('student_id', $student->id)
-            ->whereDate('date', $todayDate)
-            ->first();
-
-        if ($existingAttendance) {
+        if ($scheduleTimes === null) {
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Siswa atas nama ' . $student->name . ' sudah melakukan presensi hari ini.',
-                'student' => [
-                    'name' => $student->name,
-                    'nisn' => $student->nisn,
-                    'class' => $student->schoolClass ? $student->schoolClass->name : '-',
-                    'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
-                ],
+                'message' => 'Hari ini tidak ada jadwal presensi (Sabtu/Minggu).',
             ], 400);
         }
 
+        if (Holiday::isHoliday($todayDate)) {
+            $holidayDescription = Holiday::getHolidayDescription($todayDate);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Hari ini hari libur' . ($holidayDescription ? ': ' . $holidayDescription : '') . '. Presensi tidak dibuka.',
+            ], 400);
+        }
+
+        $lateLimitTime = $scheduleTimes['late_limit_time'];
+        $checkInStartTime = $scheduleTimes['check_in_time'];
+        $checkOutTime = $scheduleTimes['check_out_time'];
+        $checkOutLimitTime = $scheduleTimes['check_out_limit_time'];
+        $currentMinutes = $this->timeToMinutes($currentTime);
+
+        // Catatan: pengecekan "sudah presensi hari ini" TIDAK lagi menolak
+        // seluruh scan. Scan kedua pada hari yang sama adalah presensi pulang
+        // dan validasinya dilakukan di dalam transaksi di bawah.
         $result = DB::transaction(function () use (
-            $student, $todayDate, $currentTime, $academicYearId, $lateLimitTime, $checkOutThreshold
+            $student, $todayDate, $currentTime, $currentMinutes, $academicYearId,
+            $lateLimitTime, $checkInStartTime, $checkOutTime, $checkOutLimitTime
         ) {
             $attendance = Attendance::where('student_id', $student->id)
                 ->whereDate('date', $todayDate)
@@ -185,7 +198,6 @@ class ScannerController extends Controller
 
             // KASUS 1: Presensi Masuk (Check-In)
             if (empty($attendance->check_in)) {
-                $attendance->check_in = $currentTime;
                 /*
                  * Penentuan status terlambat memakai SATU sumber kebenaran:
                  * Attendance::evaluateCheckInTime() - fungsi yang sama dengan
@@ -195,8 +207,28 @@ class ScannerController extends Controller
                  * kehadiran (Dashboard, Rekap, Kehadiran) konsisten; status
                  * "Terlambat" dibaca lewat accessor effective_status.
                  */
-                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime);
+                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime, $checkInStartTime);
 
+                // Scan sebelum jam masuk per hari ditolak (db_status null).
+                if ($evaluasi['db_status'] === null) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => 'Presensi belum dibuka. Presensi dimulai pukul ' . substr($checkInStartTime, 0, 5) . ' WIB.',
+                            'student' => [
+                                'name' => $student->name,
+                                'nisn' => $student->nisn,
+                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                            ],
+                        ],
+                    ];
+                }
+
+                $attendance->check_in = $currentTime;
                 $attendance->status = Attendance::STATUS_HADIR;
                 $attendance->time_remark = $evaluasi['time_remark'];
                 $attendance->is_late = (bool) $evaluasi['is_late'];
@@ -258,6 +290,45 @@ class ScannerController extends Controller
             // KASUS 2: Presensi Pulang (Check-Out)
             // Jika sudah presensi masuk, tapi belum presensi pulang
             if (empty($attendance->check_out)) {
+                $checkOutMinutes = $this->timeToMinutes($checkOutTime);
+                $checkOutLimitMinutes = $this->timeToMinutes($checkOutLimitTime);
+
+                // Pulang hanya boleh mulai Jam Pulang per hari.
+                if ($currentMinutes < $checkOutMinutes) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'message' => 'Belum waktunya presensi pulang. Jam pulang pukul ' . substr($checkOutTime, 0, 5) . ' WIB.',
+                            'student' => [
+                                'name' => $student->name,
+                                'nisn' => $student->nisn,
+                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                            ],
+                        ],
+                    ];
+                }
+
+                // Setelah Batas Waktu Pulang, presensi pulang ditolak.
+                if ($currentMinutes > $checkOutLimitMinutes) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'message' => 'Batas waktu presensi pulang sudah lewat (batas pukul ' . substr($checkOutLimitTime, 0, 5) . ' WIB).',
+                            'student' => [
+                                'name' => $student->name,
+                                'nisn' => $student->nisn,
+                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                            ],
+                        ],
+                    ];
+                }
+
                 // Cek cooldown proteksi dobel tap dalam 2 menit
                 $checkInSeconds = strtotime($currentTime) - strtotime($attendance->check_in);
                 if ($checkInSeconds >= 0 && $checkInSeconds < 120) {
@@ -323,6 +394,14 @@ class ScannerController extends Controller
         });
 
         return response()->json($result['response'], $result['status_code'] ?? 200);
+    }
+
+    /**
+     * Ubah jam "HH:MM" atau "HH:MM:SS" menjadi menit sejak 00:00.
+     */
+    protected function timeToMinutes(string $time): int
+    {
+        return ((int) substr($time, 0, 2)) * 60 + (int) substr($time, 3, 2);
     }
 
     /**

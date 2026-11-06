@@ -33,7 +33,7 @@ class DownloadCacheService
      * Versi cache rekap. Naikkan nilainya setiap logika perhitungan rekap berubah
      * supaya file lama tidak pernah disajikan lagi.
      */
-    protected static string $rekapCacheVersion = 'v2';
+    protected static string $rekapCacheVersion = 'v3';
 
     /***
      * satu-satinya tempat ganti jenis kertas ('a4' atau 'a3').

@@ -7,6 +7,7 @@ use App\Services\DailyAttendanceSummary;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\Holiday;
+use App\Models\OperatingSchedule;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
@@ -45,12 +46,13 @@ class AttendanceController extends Controller
         $isHoliday = Holiday::isHoliday($tanggal) || $isWeekend;
         $holidayDescription = Holiday::getHolidayDescription($tanggal) ?? ($isWeekend ? 'Akhir Pekan (Sabtu/Minggu)' : null);
 
-        $jamMasuk = Setting::getCheckInTime();
-        $batasTerlambat = Setting::getLateLimitTime();
+        $scheduleTimes = OperatingSchedule::timesForDate($selectedDateObj);
+        $jamMasuk = $scheduleTimes['check_in_time'] ?? Setting::getCheckInTime();
+        $batasTerlambat = $scheduleTimes['late_limit_time'] ?? Setting::getLateLimitTime();
 
         $formattedJamMasuk = strlen($jamMasuk) === 5 ? $jamMasuk . ':00' : $jamMasuk;
-        // check_out_time masih ada di DB untuk logika Scanner, tapi tidak ditampilkan di UI
-        $formattedJamPulang = null;
+        $jamPulang = $scheduleTimes['check_out_time'] ?? Setting::getCheckOutTime();
+        $formattedJamPulang = strlen($jamPulang) === 5 ? $jamPulang . ':00' : $jamPulang;
 
         // Data profil sekolah & pengaturan operasional
         $schoolInfo = [
@@ -85,7 +87,7 @@ class AttendanceController extends Controller
         if ($classId || $request->filled('status')) {
             $querySiswa = Student::where('status', 'Aktif')->with([
                 'schoolClass',
-                'attendances' => fn($q) => $q->where('date', $tanggal),
+                'attendances' => fn($q) => $q->whereDate('date', $tanggal),
             ]);
             if ($classId) {
                 $querySiswa->where('school_class_id', $classId);
@@ -254,17 +256,18 @@ class AttendanceController extends Controller
         $isHoliday = Holiday::isHoliday($tanggal) || $isWeekend;
         $holidayDescription = Holiday::getHolidayDescription($tanggal) ?? ($isWeekend ? 'Akhir Pekan (Sabtu/Minggu)' : null);
 
-        $jamMasuk = Setting::getCheckInTime();
-        $batasTerlambat = Setting::getLateLimitTime();
+        $scheduleTimes = OperatingSchedule::timesForDate($selectedDateObj);
+        $jamMasuk = $scheduleTimes['check_in_time'] ?? Setting::getCheckInTime();
+        $batasTerlambat = $scheduleTimes['late_limit_time'] ?? Setting::getLateLimitTime();
 
         $formattedCheckIn = strlen($jamMasuk) === 5 ? $jamMasuk . ':00' : $jamMasuk;
-        // check_out_time masih ada di DB untuk logika Scanner, tapi tidak ditampilkan di UI
-        $formattedCheckOut = null;
+        $jamPulang = $scheduleTimes['check_out_time'] ?? Setting::getCheckOutTime();
+        $formattedCheckOut = strlen($jamPulang) === 5 ? $jamPulang . ':00' : $jamPulang;
 
         // Ambil seluruh siswa aktif di kelas ini
         $students = Student::where('school_class_id', $schoolClass->id)
             ->where('status', 'Aktif')
-            ->with(['attendances' => fn($q) => $q->where('date', $tanggal)])
+            ->with(['attendances' => fn($q) => $q->whereDate('date', $tanggal)])
             ->orderBy('name')
             ->get();
 
@@ -300,6 +303,7 @@ class AttendanceController extends Controller
         $countHadir = $countHadirTepat + $countTerlambat;
         $countSudahAbsen = (int) ($ringkasan['sudah_absen'] ?? ($countHadir + $countSakit + $countIzin + $countAlfa));
         $countBelumAbsen = (int) ($ringkasan['belum'] ?? max(0, $totalSiswa - $countSudahAbsen));
+        $countSudahPulang = $studentsList->filter(fn ($row) => !empty($row->raw_check_out))->count();
 
         $props = [
             'selectedClass' => $schoolClass,
@@ -321,6 +325,7 @@ class AttendanceController extends Controller
             'countAlfa' => $countAlfa,
             'countSudahAbsen' => $countSudahAbsen,
             'countBelumAbsen' => $countBelumAbsen,
+            'countSudahPulang' => $countSudahPulang,
             'studentsList' => $studentsList,
             'allClasses' => SchoolClass::orderBy('name')->get(),
         ];

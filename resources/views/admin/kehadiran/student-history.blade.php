@@ -339,6 +339,7 @@
                             <th style="width: {{ $wKelas }}%;">{{ __('Kelas') }}</th>
                             <th style="width: {{ $wJk }}%;">{{ __('JK') }}</th>
                             <th>{{ __('Jam Masuk') }}</th>
+                            <th>{{ __('Jam Pulang') }}</th>
                             <th>{{ __('Keterlambatan') }}</th>
                             <th>{{ __('Status') }}</th>
                         </tr>
@@ -424,6 +425,7 @@
                                     };
                                 @endphp
                                 <td style="text-transform: uppercase;">{{ $_h->jam_masuk ?? '-' }}</td>
+                                <td style="text-transform: uppercase;">{{ $_h->jam_pulang ?? '-' }}</td>
                                 <td style="text-transform: uppercase;">{{ $_lateText }}</td>
                                 <td style="color: {{ $_statusColor }} !important; text-transform: uppercase;">{{ $_statusNorm }}</td>
                             @elseif(in_array($currentPeriod, ['mingguan', 'bulanan'], true))

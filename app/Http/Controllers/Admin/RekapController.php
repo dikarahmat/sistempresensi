@@ -67,7 +67,7 @@ class RekapController extends Controller
             $isHoliday = Holiday::isHoliday($date) || $isWeekend;
             $holidayDesc = Holiday::getHolidayDescription($date) ?? ($isWeekend ? 'Akhir Pekan' : null);
 
-            $attendances = Attendance::where('date', $date)
+            $attendances = Attendance::whereDate('date', $date)
                 ->whereIn('student_id', $students->pluck('id'))
                 ->get()
                 ->keyBy('student_id');
@@ -105,6 +105,7 @@ class RekapController extends Controller
                 $dataRows[] = [
                     'student' => $student,
                     'check_in' => $row['check_in'],
+                    'check_out' => $row['check_out'],
                     'late_text' => $row['late_text'],
                     'late_minutes' => $row['late_minutes'],
                     'status' => $status,
@@ -1199,7 +1200,7 @@ class RekapController extends Controller
                 $rows[] = [
                     'tanggal_raw' => $recap['date'] ?? Carbon::now()->toDateString(),
                     'jam_masuk' => $data['check_in'] ?? '-',
-                    'jam_pulang' => '-',  // Excel export expects jam_pulang
+                    'jam_pulang' => $data['check_out'] ?? '-',
                     'status' => $data['status'] ?? '-',
                     'keterlambatan' => $data['late_text'] ?? '-',
                     'keterangan' => $data['notes'] ?? '-',

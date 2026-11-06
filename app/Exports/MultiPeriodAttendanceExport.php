@@ -481,7 +481,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $dataLines = [];
 
         if ($this->type === 'harian') {
-            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK', 'Jam Masuk', 'Keterlambatan', 'Status'];
+            $headerRow = ['No', 'NISN', 'Nama Siswa', 'Kelas', 'JK', 'Jam Masuk', 'Jam Pulang', 'Keterlambatan', 'Status'];
 
             foreach ($rows as $row) {
                 $student = $row['student'];
@@ -493,6 +493,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     $student->schoolClass ? $student->schoolClass->name : '-',
                     $student->gender === 'Laki-laki' ? 'L' : 'P',
                     $row['check_in'],
+                    $row['check_out'] ?? '-',
                     $row['late_text'],
                     $displayStatus,
                 ]);
@@ -790,7 +791,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         if ($this->type === 'harian') {
             $date = $this->params['date'] ?? $this->params['period_date'] ?? $now->toDateString();
 
-            $attendances = Attendance::where('date', $date)
+            $attendances = Attendance::whereDate('date', $date)
                 ->whereIn('student_id', $students->pluck('id'))
                 ->get()
                 ->keyBy('student_id');
@@ -804,6 +805,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                 $dayData = Attendance::makeDailyRow($att, $date, $lateLimitTime, $dayStatus, $student->school_class_id);
                 $status = $dayData['status'];
                 $checkIn = $dayData['check_in'];
+                $checkOut = $dayData['check_out'];
                 $lateText = $dayData['late_text'];
                 $notes = $dayData['notes'];
 
@@ -811,6 +813,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
                     'student' => $student,
                     'class_id' => $student->school_class_id,
                     'check_in' => $checkIn,
+                    'check_out' => $checkOut,
                     'late_text' => $lateText,
                     'status' => $status,
                     'notes' => $notes,
