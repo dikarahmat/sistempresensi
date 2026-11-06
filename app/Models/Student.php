@@ -124,4 +124,30 @@ class Student extends Model
     {
         $this->attributes['gender'] = $value;
     }
+
+    /**
+     * Nilai yang dienkripsi ke dalam QR kartu siswa.
+     *
+     * Aturan:
+     * - NISN terisi dan unik (tidak dipakai siswa lain)  →  isi QR = NISN.
+     * - NISN kosong atau dipakai lebih dari satu siswa   →  isi QR = qr_token (UUID).
+     * - Semua siswa wajib punya qr_token (hasil generating di {@see $creating} dan
+     *   backfill migrasi).
+     */
+    public function qrValue(): string
+    {
+        $nisn = trim((string) ($this->nisn ?? ''));
+
+        if ($nisn !== '') {
+            $digunakanSiswaLain = self::where('nisn', $nisn)
+                ->where('id', '!=', $this->id)
+                ->exists();
+
+            if (!$digunakanSiswaLain) {
+                return $nisn;
+            }
+        }
+
+        return $this->qr_token ?? (string) Str::uuid();
+    }
 }

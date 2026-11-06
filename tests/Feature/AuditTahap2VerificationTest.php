@@ -187,14 +187,15 @@ class AuditTahap2VerificationTest extends TestCase
 
     public function test_data_siswa_yang_dipakai_hanya_nisn_nama_kelas_jk(): void
     {
-        // Identitas siswa hanya NISN (wajib ada + unique).
+        // Identitas siswa: NISN tetap ada tapi TIDAK lagi unique (satu NISN
+        // boleh dipakai lebih dari satu siswa; nilai QR ditentukan oleh Student::qrValue()).
         $this->assertTrue(
             \Illuminate\Support\Facades\Schema::hasColumn('students', 'nisn'),
             'Kolom students.nisn harus tetap ada.'
         );
         $this->assertTrue(
-            \Illuminate\Support\Facades\Schema::hasIndex('students', 'students_nisn_unique'),
-            'students.nisn harus punya unique index.'
+            \Illuminate\Support\Facades\Schema::hasIndex('students', 'students_nisn_index'),
+            'students.nisn harus tetap berindex (non-unique) untuk pencarian.'
         );
 
         // Data siswa yang boleh dipakai aplikasi hanya 4 kolom ini. Kolom
@@ -262,27 +263,38 @@ class AuditTahap2VerificationTest extends TestCase
     {
         $this->kelas();
 
-        // 1) Kolom NISN kosong -> baris dilewati, nomor baris dilaporkan.
+        // 1) NISN kosong -> baris MASUK dengan nisn NULL.
+        //    Duplikasi untuk NISN kosong dicek berdasarkan nama + kelas.
         $importKosong = new \App\Imports\StudentsImport();
         $importKosong->collection(collect([
             ['nisn' => '', 'nama' => 'Tanpa NISN', 'kelas' => '7A'],
         ]));
-        $this->assertSame(0, $importKosong->getImportedCount());
-        $this->assertSame(1, $importKosong->getSkippedCount());
-        $this->assertStringContainsString('Baris 2', $importKosong->getErrors()[0]);
-        $this->assertStringContainsString('NISN', $importKosong->getErrors()[0]);
+        $this->assertSame(1, $importKosong->getImportedCount());
+        $this->assertSame(0, $importKosong->getSkippedCount());
+        $this->assertDatabaseHas('students', ['nisn' => null, 'name' => 'Tanpa NISN']);
 
-        // 2) Duplikat DI DALAM file -> hanya baris pertama yang diproses.
+        // 2) NISN sama tapi nama atau kelas beda -> KEDUANYA dimasukkan.
+        //    Yang dilewati hanya NISN + nama + kelas yang persis sama.
         $importDuplikat = new \App\Imports\StudentsImport();
         $importDuplikat->collection(collect([
             ['nisn' => '0077770001', 'nama' => 'Siswa Pertama', 'kelas' => '7A'],
             ['nisn' => '0077770001', 'nama' => 'Siswa Kembar', 'kelas' => '7A'],
         ]));
-        $this->assertSame(1, $importDuplikat->getImportedCount());
-        $this->assertSame(1, $importDuplikat->getSkippedCount());
-        $this->assertStringContainsString('Baris 3', $importDuplikat->getErrors()[0]);
+        $this->assertSame(2, $importDuplikat->getImportedCount());
+        $this->assertSame(0, $importDuplikat->getSkippedCount());
 
-        // 3) Duplikat di DATABASE -> dilewati, baris valid tetap diproses.
+        // 3) NISN + nama + kelas persis sama di dalam file -> baris kedua dilewati.
+        $importSama = new \App\Imports\StudentsImport();
+        $importSama->collection(collect([
+            ['nisn' => '0077770002', 'nama' => 'Duplikat', 'kelas' => '7A'],
+            ['nisn' => '0077770002', 'nama' => 'Duplikat', 'kelas' => '7A'],
+        ]));
+        $this->assertSame(1, $importSama->getImportedCount());
+        $this->assertSame(1, $importSama->getSkippedCount());
+        $this->assertStringContainsString('Baris 3', $importSama->getErrors()[0]);
+
+        // 4) NISN sudah ada di database tapi dengan nama/kelas yang berbeda
+        //    -> tidak dianggap duplikat (NISN tidak lagi unique).
         Student::create([
             'school_class_id' => $this->kelas('7B')->id, 'name' => 'Sudah Ada',
             'nisn' => '0077770009', 'gender' => 'Laki-laki', 'status' => 'Aktif',
@@ -292,9 +304,9 @@ class AuditTahap2VerificationTest extends TestCase
             ['nisn' => '0077770009', 'nama' => 'Kembar Database', 'kelas' => '7A'],
             ['nisn' => '0077770010', 'nama' => 'Siswa Baru', 'kelas' => '7A'],
         ]));
-        $this->assertSame(1, $importDatabase->getImportedCount());
-        $this->assertSame(1, $importDatabase->getSkippedCount());
-        $this->assertStringContainsString('Baris 2', $importDatabase->getErrors()[0]);
+        $this->assertSame(2, $importDatabase->getImportedCount());
+        $this->assertSame(0, $importDatabase->getSkippedCount());
+        $this->assertDatabaseHas('students', ['nisn' => '0077770010', 'name' => 'Siswa Baru']);
         $this->assertDatabaseHas('students', ['nisn' => '0077770010', 'name' => 'Siswa Baru']);
 
         // 4) Nol di depan hilang karena Excel -> dipad nol sampai 10 digit.

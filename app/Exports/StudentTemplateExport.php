@@ -14,6 +14,7 @@ class StudentTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
      * Template Excel siswa. Data siswa hanya 4 kolom, jadi template ini hanya
      * punya 4 header dan HARUS sama persis dengan yang dibaca StudentsImport
      * (heading 'nisn', 'nama', 'kelas', 'jenis_kelamin').
+     * Baris tanpa NISN diperbolehkan, kolom NISN boleh kosong.
      */
     public function headings(): array
     {
@@ -28,17 +29,19 @@ class StudentTemplateExport implements FromArray, WithHeadings, ShouldAutoSize, 
     public function array(): array
     {
         return [
+            // Baris dengan NISN terisi
             [
                 '0081234567',
                 'Ahmad Rizky Pratama',
                 '7A',
                 'Laki-laki',
             ],
+            // Baris tanpa NISN (opsional)
             [
-                '0081234568',
-                'Siti Nurhaliza',
+                '',
+                'Siswa Tanpa NISN',
                 '7A',
-                'Perempuan',
+                'Laki-laki',
             ],
         ];
     }

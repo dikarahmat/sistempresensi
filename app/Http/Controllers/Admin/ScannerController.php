@@ -103,14 +103,23 @@ class ScannerController extends Controller
 
         $cleanToken = trim($request->qr_token);
 
-        // Kartu QR memuat qr_token; kode angka yang dipindai dicari HANYA
-        // berdasarkan NISN (tanpa fallback ke kolom lain).
-        $student = Student::with('schoolClass')
-            ->where(function ($query) use ($cleanToken) {
-                $query->where('qr_token', $cleanToken)
-                      ->orWhere('nisn', $cleanToken);
-            })
-            ->first();
+        // Kartu QR memuat qr_token; kode angka (NISN) dipakai sebagai fallback
+        // dan hanya diterima jika cocok tepat satu siswa.
+        $student = Student::with('schoolClass')->where('qr_token', $cleanToken)->first();
+
+        if (!$student) {
+            // Fallback NISN (kartu angka lama): terima hanya jika cocok tepat satu siswa.
+            $nisnMatches = Student::with('schoolClass')->where('nisn', $cleanToken)->get();
+            if ($nisnMatches->count() === 1) {
+                $student = $nisnMatches->first();
+            } elseif ($nisnMatches->count() > 1) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'NISN dipakai lebih dari satu siswa, scan QR kartu.',
+                ], 409);
+            }
+        }
 
         if (!$student) {
             // Coba cari guru: kartu guru mengandung NIP (atau ID guru sebagai fallback),

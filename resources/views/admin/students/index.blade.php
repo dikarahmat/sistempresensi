@@ -995,6 +995,9 @@
                         <div class="mb-2">
                             {{ __('Format kolom file Excel:') }} <strong>{{ __('NISN, Nama Lengkap, Kelas, Jenis Kelamin') }}</strong> {{ __('(.xlsx atau .csv)') }}
                         </div>
+                        <div class="mb-2">
+                            {{ __('NISN boleh dikosongkan. Siswa tanpa NISN tetap mendapat QR Code.') }}
+                        </div>
                         <a href="{{ route('admin.students.template') }}" class="btn-download-green w-100" data-download data-no-download data-dl-progress>{{ __('Unduh Template Excel') }}</a>
                     </div>
                     <label class="form-label small fw-semibold">{{ __('Pilih File Excel') }}</label>

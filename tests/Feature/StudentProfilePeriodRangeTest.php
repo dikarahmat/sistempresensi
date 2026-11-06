@@ -12,20 +12,20 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
-/**
- * Rentang periode jalur CETAK PER SISWA.
- *
- * Bug yang ditutup test ini: modal popup "Cetak Rekap" mewarisi rentang
- * tanggal bawaan filter halaman Rekap (mis. 01 Okt - 31 Okt). Setelah memilih
- * MINGGUAN dan_generate_, PDF tetap berisi "Periode: 01 Okt 2026 s/d 31 Okt 2026"
- * (31 baris) karena popup mengirim start_date/end_date warisan halaman.
- *
- * Aturan baru (sumber tunggal: RekapController::resolveDateRange()):
- *  - harian  : 1 tanggal
- *  - mingguan: Senin s/d Minggu dari 1 tanggal acuan
- *  - bulanan : tanggal 1 s/d akhir bulan
- *  - semester: dari AcademicYear, fallback Ganjil 1 Jul-31 Des / Genap 1 Jan-30 Jun
- *  - tahunan : 1 tahun ajaran penuh
+/** 
+ * Rentang periode jalur CETAK PER SISWA. 
+ * 
+ * Bug yang ditutup test ini: modal popup "Cetak Rekap" mewarisi rentang 
+ * tanggal bawaan filter halaman Rekap (mis. 01 Okt - 31 Okt). Setelah memilih 
+ * MINGGUAN dan_generate_, PDF tetap berisi "Periode: 01 Okt 2026 s/d 31 Okt 2026" 
+ * (31 baris) karena popup mengirim start_date/end_date warisan halaman. 
+ * 
+ * Aturan baru (sumber tunggal: RekapController::resolveDateRange()): 
+ *  - harian  : 1 tanggal 
+ *  - mingguan: Senin s/d Minggu dari 1 tanggal acuan 
+ *  - bulanan : tanggal 1 s/d akhir bulan 
+ *  - semester: dari AcademicYear, fallback Ganjil 1 Jul-31 Des / Genap 1 Jan-30 Jun 
+ *  - tahunan : 1 tahun ajaran penuh 
  */
 class StudentProfilePeriodRangeTest extends TestCase
 {
@@ -66,10 +66,10 @@ class StudentProfilePeriodRangeTest extends TestCase
         ]);
     }
 
-    /**
-     * Panggil resolveDateRange() yang protected lewat reflection.
-     * $overrideActiveYear dipakai untuk menguji fallback kalender saat
-     * tidak ada satupun AcademicYear yang bisa dipakai.
+    /** 
+     * Panggil resolveDateRange() yang protected lewat reflection. 
+     * $overrideActiveYear dipakai untuk menguji fallback kalender saat 
+     * tidak ada satupun AcademicYear yang bisa dipakai. 
      */
     private function resolve(string $type, array $inputs, bool $forceNoActiveYear = false): array
     {
@@ -215,17 +215,16 @@ class StudentProfilePeriodRangeTest extends TestCase
     // 2. MEMORI: SEMESTER/TAHUNAN PINDAH KE ZIP
     // ==========================================================
 
-
     public function test_rentang_besar_tidak_lagi_dipecah_otomatis_ke_zip(): void
     {
         // ZIP sudah dihapus: satu request = satu file, berapa pun jumlah baris
         // dan siswa. Helper shouldUseStudentProfileZip() tidak boleh ada lagi.
         $this->assertFalse(
-            method_exists(\App\Http\Controllers\Admin\RekapController::class, 'shouldUseStudentProfileZip'),
+            method_exists(\App\Http\Controllers\Admin\RekapController::class, 'shouldUseStudentProfileZip'), 
             'Batas 50 siswa / auto-ZIP harus dihapus.'
         );
         $this->assertFalse(
-            method_exists(\App\Http\Controllers\Admin\RekapController::class, 'generateStudentProfileZip'),
+            method_exists(\App\Http\Controllers\Admin\RekapController::class, 'generateStudentProfileZip'), 
             'generateStudentProfileZip() harus dihapus.'
         );
 
@@ -327,5 +326,144 @@ class StudentProfilePeriodRangeTest extends TestCase
             ->diffInDays(\Carbon\Carbon::parse($resolved['end'])) + 1;
 
         $this->assertSame(7, $jumlahBaris, 'Mingguan harus 7 baris, bukan 31.');
+    }
+
+    /* ==========================================================
+      // BARU: TEST IMPORT SISWA DENGAN NISN KOSONG
+      // ==========================================================*/
+
+    /** Helper untuk membuat file Excel fake dengan baris data (CSV). */
+    private function fakeExcelWithRows(array $rows): \Illuminate\Http\UploadedFile
+    {
+        // Buat konten CSV sederhana
+        $header = 'nisn,nama,kelas,jenis_kelamin';
+        $lines = [$header];
+        foreach ($rows as $row) {
+            $lines[] = implode(',', array_map(function ($v) {
+                return str_replace(',', ' ', $v);
+            }, $row));
+        }
+        $content = implode("\n", $lines);
+
+        // Tulis ke file sementara
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
+        file_put_contents($tempFile, $content);
+
+        return new \Illuminate\Http\UploadedFile(
+            $tempFile,
+            'students.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+    }
+
+    public function test_import_nisn_kosong_sukses(): void
+    {
+        // Setup: buat kelas dan tahun ajaran
+        $k = $this->kelas('7A');
+        $tahun = AcademicYear::create([
+            'name' => '2025/2026', 'semester' => 'Ganjil',
+            'start_date' => '2025-07-01', 'end_date' => '2026-06-30', 'is_active' => true,
+        ]);
+        AcademicYear::clearActiveCache();
+
+        // Import file Excel dengan NISN kosong
+        $response = $this->actingAs($this->admin)->post(route('admin.students.import'), [
+            'file_excel' => $this->fakeExcelWithRows([
+                ['nisn' => '', 'nama' => 'Siswa Tanpa NISN', 'kelas' => '7A', 'jenis_kelamin' => 'Laki-laki'],
+            ]),
+        ]);
+
+        // Cek bahwa siswa berhasil dibuat dengan NISN NULL di database
+        $this->assertDatabaseHas('students', [
+            'name' => 'Siswa Tanpa NISN',
+            'school_class_id' => $k->id,
+            'nisn' => null,
+        ]);
+    }
+
+    public function test_dua_nisn_kosong_tidak_bentrok(): void
+    {
+        // Setup: buat kelas dan tahun ajaran
+        $k = $this->kelas('7A');
+        $tahun = AcademicYear::create([
+            'name' => '2025/2026', 'semester' => 'Ganjil',
+            'start_date' => '2025-07-01', 'end_date' => '2026-06-30', 'is_active' => true,
+        ]);
+        AcademicYear::clearActiveCache();
+
+        // Import dua baris dengan NISN kosong dan nama kelas yang sama
+        // Harus berhasil karena duplikat dicek berdasarkan nama + kelas, bukan NISN saja
+        $response = $this->actingAs($this->admin)->post(route('admin.students.import'), [
+            'file_excel' => $this->fakeExcelWithRows([
+                ['nisn' => '', 'nama' => 'Siswa A', 'kelas' => '7A', 'jenis_kelamin' => 'Laki-laki'],
+                ['nisn' => '', 'nama' => 'Siswa B', 'kelas' => '7A', 'jenis_kelamin' => 'Perempuan'],
+            ]),
+        ]);
+
+        // Cek database langsung (import mengembalikan redirect)
+        $this->assertDatabaseHas('students', [
+            'name' => 'Siswa A',
+            'school_class_id' => $k->id,
+            'nisn' => null,
+        ]);
+        $this->assertDatabaseHas('students', [
+            'name' => 'Siswa B',
+            'school_class_id' => $k->id,
+            'nisn' => null,
+        ]);
+    }
+
+    public function test_import_ulang_tidak_duplikat(): void
+    {
+        // Setup: buat kelas dan tahun ajaran
+        $k = $this->kelas('7A');
+        $tahun = AcademicYear::create([
+            'name' => '2025/2026', 'semester' => 'Ganjil',
+            'start_date' => '2025-07-01', 'end_date' => '2026-06-30', 'is_active' => true,
+        ]);
+        AcademicYear::clearActiveCache();
+
+        // Pertama import dengan NISN kosong
+        $this->actingAs($this->admin)->post(route('admin.students.import'), [
+            'file_excel' => $this->fakeExcelWithRows([
+                ['nisn' => '', 'nama' => 'Siswa C', 'kelas' => '7A', 'jenis_kelamin' => 'Laki-laki'],
+            ]),
+        ]);
+
+        // Import ulang dengan NISN kosong dan nama yang sama
+        // Harus dianggap duplikat dan tidak dibuat lagi
+        $response = $this->actingAs($this->admin)->post(route('admin.students.import'), [
+            'file_excel' => $this->fakeExcelWithRows([
+                ['nisn' => '', 'nama' => 'Siswa C', 'kelas' => '7A', 'jenis_kelamin' => 'Laki-laki'],
+            ]),
+        ]);
+
+        // Cek database langsung
+        $count = Student::where('name', 'Siswa C')->where('nisn', null)->count();
+        $this->assertEquals(1, $count);
+    }
+
+    public function test_tambah_siswa_manual_tanpa_nisn_ditolak(): void
+    {
+        // Test form tambah siswa manual (bukan import)
+        // NISN wajib di form manual, jadi harus diisi
+        $k = $this->kelas('7A');
+        // Setup: buat kelas dan tahun ajaran
+        $tahun = AcademicYear::create([
+            'name' => '2025/2026', 'semester' => 'Ganjil',
+            'start_date' => '2025-07-01', 'end_date' => '2026-06-30', 'is_active' => true,
+        ]);
+        AcademicYear::clearActiveCache();
+        // Super admin sudah dibuat di setUp, lanjutkan post
+        $response = $this->actingAs($this->admin)->post(route('admin.students.store'), [
+            'name' => 'Siswa Manual',
+            'nisn' => '',  // Kosongkan NISN
+            'school_class_id' => $k->id,
+            'gender' => 'Laki-laki',
+        ]);
+
+        $response->assertSessionHasErrors('nisn');
     }
 }

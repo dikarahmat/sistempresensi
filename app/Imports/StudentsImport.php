@@ -19,7 +19,10 @@ class StudentsImport implements ToCollection, WithHeadingRow
     /** @var array<string, true> */
     private array $seenNisnInFile = [];
     /** @var array<string, true> */
-    private array $existingNisn = [];
+    private array $seenEmptyNisn = [];
+
+    /** @var array<string, true> */
+    private array $existingDbKeys = [];
 
     /** @var array<string, string> */
     private array $errorsByRow = [];
@@ -66,7 +69,7 @@ class StudentsImport implements ToCollection, WithHeadingRow
         $value = trim((string) $raw);
 
         // Buang separator yang sering muncul dari Excel (. , spasi)
-        $value = str_replace([' ', '.', ',', "'"], '', $value);
+        $value = str_replace([' ', '.', ',', chr(34), chr(39)], '', $value);
 
         // scientific notation dari Excel (mis. 8,1234567E+8)
         if (stripos($value, 'e') !== false && is_numeric($value)) {
@@ -82,6 +85,16 @@ class StudentsImport implements ToCollection, WithHeadingRow
         }
 
         return str_pad($value, 10, '0', STR_PAD_LEFT);
+    }
+
+    private static function normalizeName(string $s): string
+    {
+        return mb_strtolower(preg_replace('/\s+/u', ' ', trim((string) $s)), 'UTF-8');
+    }
+
+    private function dupKey(?string $nisn, string $name, ?int $classId): string
+    {
+        return ((string) ($nisn ?? '')) . '|' . self::normalizeName($name) . '|' . ((string) ($classId ?? ''));
     }
 
     private function registerError(int $rowIndex, string $reason): void
@@ -148,15 +161,6 @@ class StudentsImport implements ToCollection, WithHeadingRow
             return;
         }
 
-        $this->existingNisn = Student::withTrashed()
-            ->get(['nisn'])
-            ->filter(fn ($s) => $s->nisn !== null && trim((string) $s->nisn) !== '')
-            ->map(fn ($s) => trim((string) $s->nisn))
-            ->reduce(function (array $carry, string $nisn) {
-                $carry[$nisn] = true;
-                return $carry;
-            }, []);
-
         $this->classMap = [];
         foreach (SchoolClass::all() as $class) {
             if ($class->name === null) {
@@ -165,59 +169,97 @@ class StudentsImport implements ToCollection, WithHeadingRow
             $this->classMap[self::normalizeClassName($class->name)] = $class;
         }
 
+        // Muat kunci duplikat yang sudah ada di database SEKALI (bukan query per baris),
+        // agar import cepat dan deteksi duplikasi lintas import akurat.
+        $this->existingDbKeys = [];
+        foreach (Student::withTrashed()->get(['nisn', 'name', 'school_class_id']) as $s) {
+            $this->existingDbKeys[$this->dupKey($s->nisn, $s->name, $s->school_class_id)] = true;
+        }
+
         $rowIndex = 1;
 
         foreach ($rows as $row) {
             $rowIndex++;
 
-            $nisn = $this->normalizeNisn($row['nisn'] ?? '');
+            $nisnInput = $row['nisn'] ?? '';
+            $nisn = $this->normalizeNisn($nisnInput);
             $name = trim((string) ($row['nama'] ?? $row['nama_siswa'] ?? $row['nama_lengkap'] ?? $row['name'] ?? ''));
 
             if ($nisn === '') {
-                $this->registerError($rowIndex, "Baris {$rowIndex}: Kolom NISN wajib diisi (kosong).");
+                // NISN kosong: simpan NULL ke database
+                if (empty($name)) {
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: Nama Siswa wajib diisi (kosong).");
+                    continue;
+                }
+
+                // Deteksi duplikat: kunci = nama + kelas (NISN kosong), case-insensitive,
+                // spasi dirapikan. Resolve kelas dulu agar kita tahu school_class_id.
+                $rawClass = trim((string) ($row['kelas'] ?? $row['class'] ?? $row['nama_kelas'] ?? ''));
+                $class = $this->resolveClassForRow($rawClass, $rowIndex);
+
+                if (!$class) {
+                    continue;
+                }
+
+                $classId = $class->id;
+
+                $key = $this->dupKey(null, $name, $classId);
+                if (isset($this->existingDbKeys[$key])) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: Siswa tanpa NISN dengan nama dan kelas sama sudah terdaftar di database. Baris dilewati.");
+                    continue;
+                }
+                if (isset($this->seenEmptyNisn[$key])) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex}: Duplikat di dalam file (nama: {$name}, kelas: {($rawClass ?: '-')}). Baris dilewati.");
+                    continue;
+                }
+
+                $this->seenEmptyNisn[$key] = $rowIndex;
+
+                // Lewati validasi NISN 10 digit ketika kosong, simpan NULL
+                $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
+                if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
+                    $gender = 'Perempuan';
+                } else {
+                    $gender = 'Laki-laki';
+                }
+
+                $rawClass = trim((string) ($row['kelas'] ?? $row['class'] ?? $row['nama_kelas'] ?? ''));
+                $class = $this->resolveClassForRow($rawClass, $rowIndex);
+
+                if (!$class) {
+                    continue;
+                }
+
+                $classId = $class->id;
+
+                try {
+                    Student::create([
+                        'nisn' => null,
+                        'name' => $name,
+                        'school_class_id' => $classId,
+                        'gender' => $gender,
+                        'status' => 'Aktif',
+                        'qr_token' => (string) Str::uuid(),
+                    ]);
+
+                    $this->importedCount++;
+                } catch (\Throwable $e) {
+                    $this->skippedCount++;
+                    $this->registerError($rowIndex, "Baris {$rowIndex} (NISN kosong): " . $e->getMessage());
+                }
                 continue;
             }
 
+            // NISN terisi: validasi 10 digit
             if (!preg_match('/^[0-9]{10}$/', $nisn)) {
+                $this->skippedCount++;
                 $this->registerError($rowIndex, "Baris {$rowIndex}: NISN harus 10 digit angka. Baris dilewati.");
                 continue;
             }
 
-            if (isset($this->seenNisnInFile[$nisn])) {
-                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN {$nisn} duplikat di dalam file (sudah dipakai baris {$this->seenNisnInFile[$nisn]}). Baris dilewati.");
-                continue;
-            }
-
-            if (isset($this->existingNisn[$nisn])) {
-                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN sudah terdaftar. Baris dilewati.");
-                continue;
-            }
-
-            if (empty($name)) {
-                $this->registerError($rowIndex, "Baris {$rowIndex} (NISN {$nisn}): Nama Siswa wajib diisi (kosong).");
-                continue;
-            }
-
-            if (!preg_match('/^[\pL\s.,\'\-]+$/u', $name)) {
-                $this->registerError($rowIndex, "Baris {$rowIndex} (NISN {$nisn}): Nama siswa hanya boleh berisi huruf, titik, dan koma.");
-                continue;
-            }
-
-            if (!preg_match('/^[0-9]{10}$/', $nisn)) {
-                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN hanya boleh berisi angka.");
-                continue;
-            }
-
-            $this->seenNisnInFile[$nisn] = $rowIndex;
-            $this->existingNisn[$nisn] = true;
-
-            $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
-            if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
-                $gender = 'Perempuan';
-            } else {
-                $gender = 'Laki-laki';
-            }
-
+            // Resolve kelas dulu agar kita tahu school_class_id untuk kunci duplikat.
             $rawClass = trim((string) ($row['kelas'] ?? $row['class'] ?? $row['nama_kelas'] ?? ''));
             $class = $this->resolveClassForRow($rawClass, $rowIndex);
 
@@ -226,6 +268,29 @@ class StudentsImport implements ToCollection, WithHeadingRow
             }
 
             $classId = $class->id;
+
+            // Duplikat hanya jika NISN + nama + kelas semuanya sama.
+            // NISN sama tapi nama atau kelas beda tetap diimpor.
+            $key = $this->dupKey($nisn, $name, $classId);
+            if (isset($this->existingDbKeys[$key])) {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: NISN {$nisn} dengan nama dan kelas sama sudah terdaftar di database. Baris dilewati.");
+                continue;
+            }
+            if (isset($this->seenNisnInFile[$key])) {
+                $this->skippedCount++;
+                $this->registerError($rowIndex, "Baris {$rowIndex}: Duplikat di dalam file (NISN {$nisn}, nama: {$name}, kelas: {($rawClass ?: '-')}). Baris dilewati.");
+                continue;
+            }
+
+            $this->seenNisnInFile[$key] = $rowIndex;
+
+            $rawGender = strtoupper(trim((string) ($row['jenis_kelamin'] ?? $row['gender'] ?? $row['jk'] ?? 'L')));
+            if (str_starts_with($rawGender, 'P') || str_contains($rawGender, 'PEREMPUAN') || str_contains($rawGender, 'WANITA')) {
+                $gender = 'Perempuan';
+            } else {
+                $gender = 'Laki-laki';
+            }
 
             try {
                 Student::create([

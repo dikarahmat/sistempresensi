@@ -136,7 +136,7 @@ class StudentController extends Controller
         $student->load('schoolClass');
 
         if ($request->expectsJson() || $request->ajax()) {
-            $token = $student->nisn ?: $student->qr_token;
+            $token = $student->qrValue();
             $qrSrc = null;
             if ($token) {
                 try {
@@ -207,7 +207,7 @@ class StudentController extends Controller
         $students = collect();
         $query->orderBy('school_class_id')->orderBy('name')->chunk(100, function ($chunk) use ($students) {
             foreach ($chunk as $student) {
-                $token = $student->nisn ?: $student->qr_token;
+                $token = $student->qrValue();
                 try {
                     $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate($token);
                     $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
@@ -265,7 +265,7 @@ class StudentController extends Controller
         }
 
         foreach ($students as $student) {
-            $token = $student->nisn ?: $student->qr_token;
+            $token = $student->qrValue();
             $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(140)->margin(0)->generate($token);
             $student->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
 

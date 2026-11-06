@@ -513,7 +513,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
         // Container top = 660 - 20px padding = 640
         $qrAreaTop = 640; // QR container top
 
-        $token = $student->nisn ?: $student->qr_token;
+        $token = $student->qrValue();
         $qrMatrix = \BaconQrCode\Encoder\Encoder::encode($token, \BaconQrCode\Common\ErrorCorrectionLevel::M())->getMatrix();
         $mW = $qrMatrix->getWidth();
         $mH = $qrMatrix->getHeight();
@@ -777,7 +777,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
             'third_line' => trim((string) ($student->schoolClass->name ?? '-')) ?: '-',
             'third_line_color' => [15, 23, 42],
             'scan_color' => [15, 23, 42],
-            'qr_token' => trim((string) ($student->nisn ?: ($student->qr_token ?? ''))),
+            'qr_token' => trim((string) $student->qrValue()),
         ], $outputPath);
     }
 
@@ -1357,7 +1357,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
     {
         self::initDirs();
 
-        $token = $student->nisn ?: $student->qr_token;
+        $token = $student->qrValue();
         $fileName = 'QR_' . $student->nisn . '_' . Str::slug($student->name) . '.png';
         $cacheFilePath = self::$baseDir . '/qrs/' . "qr_single_{$student->id}_" . md5($token) . '_500.png';
 

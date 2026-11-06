@@ -30,7 +30,7 @@
 
     $qrSrc = $qrSrc ?? ($qrBase64 ?? null);
     if (!$qrSrc && $studentItem) {
-        $__token = $studentItem->nisn ?: ($studentItem->qr_token ?? '');
+        $__token = $studentItem->qrValue();
         if ($__token !== '') {
             try {
                 $__svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->margin(0)->generate((string) $__token);

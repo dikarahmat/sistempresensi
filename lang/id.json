@@ -1,4 +1,4 @@
-﻿{
+{
     "Dashboard Admin": "Dashboard Admin",
     "Dashboard Guru": "Dashboard Guru",
     "Dashboard Administrator": "Dashboard Administrator",
@@ -293,7 +293,7 @@
     "tanggal_harus_dalam_rentang": "Tanggal harus berada dalam rentang tahun ajaran (1 Juli YYYY sampai 30 Juni YYYY+1).",
     "kombinasi_sudah_ada": "Kombinasi tahun ajaran dan semester sudah ada.",
     "tahun_ajaran_aktif_tidak_dapat_dimatikan": "Tahun ajaran aktif tidak dapat dimatikan. Nyalakan tahun ajaran lain untuk memindahkan status aktif.",
-    "tahun_ajaran_telah_dihapus_dari_sistem": "Tahun ajaran :name telah dihapus dari sistem."
+    "tahun_ajaran_telah_dihapus_dari_sistem": "Tahun ajaran :name telah dihapus dari sistem.",
     "di Pengaturan. Kelas yang masih memiliki siswa aktif akan dilewati.": "di Pengaturan. Kelas yang masih memiliki siswa aktif akan dilewati.",
     "di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.": "di Tempat Sampah akan dihapus permanen dan tidak bisa dikembalikan.",
     "kelas": "kelas",
