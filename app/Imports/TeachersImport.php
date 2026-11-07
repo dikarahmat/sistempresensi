@@ -217,7 +217,7 @@ class TeachersImport implements ToCollection, WithHeadingRow
                     'phone' => $phone,
                     'phone_number' => $phone,
                     'status' => 'Aktif',
-                    'qr_token' => (string) Str::uuid(),
+                    'qr_token' => NULL,
                 ]);
 
                 $this->importedCount++;

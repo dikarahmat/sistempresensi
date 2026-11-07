@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', __('Presensi Hari Ini'))
-@section('page_title', __('Presensi Hari Ini'))
+@section('title', __('PRESENSI SISWA HARI INI'))
+@section('page_title', __('PRESENSI SISWA HARI INI'))
 
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">
@@ -627,7 +627,7 @@
     }
 
     /* ==========================================================================
-       RAPIRAN TABEL PRESENSI HARI INI
+       RAPIRAN TABEL PRESENSI SISWA HARI INI
        Semua aturan di bawah HANYA berlaku di halaman ini (blok styles milik
        view ini), jadi halaman lain tidak ikut berubah.
 

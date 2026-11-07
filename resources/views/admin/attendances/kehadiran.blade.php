@@ -416,7 +416,6 @@
                         <th class="text-center py-3">{{ __('Kelas') }}</th>
                         @endif
                         <th class="text-center py-3"><span style="color:#059669 !important">{{ __('Hadir') }}</span></th>
-                        <th class="text-center py-3"><span style="color:#d97706 !important">{{ __('Terlambat') }}</span></th>
                         <th class="text-center py-3"><span style="color:#2563eb !important">{{ __('Sakit') }}</span></th>
                         <th class="text-center py-3"><span style="color:#7e22ce !important">{{ __('Izin') }}</span></th>
                         <th class="text-center py-3"><span style="color:#dc2626 !important">{{ __('Alfa') }}</span></th>
@@ -438,7 +437,6 @@
                         <td class="text-center fw-normal">{{ $item->class_name }}</td>
                         @endif
                         <td class="text-center fw-normal" style="color:#059669 !important"><span style="color:#059669 !important">{{ $item->hadir }}</span></td>
-                        <td class="text-center fw-normal" style="color:#d97706 !important"><span style="color:#d97706 !important">{{ $item->terlambat }}</span></td>
                         <td class="text-center fw-normal" style="color:#2563eb !important"><span style="color:#2563eb !important">{{ $item->sakit }}</span></td>
                         <td class="text-center fw-normal" style="color:#7e22ce !important"><span style="color:#7e22ce !important">{{ $item->izin }}</span></td>
                         <td class="text-center fw-normal" style="color:#dc2626 !important"><span style="color:#dc2626 !important">{{ $item->alfa }}</span></td>
@@ -454,7 +452,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $viewFor === 'guru' ? 9 : 10 }}" class="text-center py-5 text-muted fw-normal empty-state" style="white-space: normal !important;">
+                        <td colspan="{{ $viewFor === 'guru' ? 8 : 9 }}" class="text-center py-5 text-muted fw-normal empty-state" style="white-space: normal !important;">
                             <i class='bx bx-error' aria-hidden='true'></i>
                             @if(request('search') || request('class_filter'))
                                 {{ $viewFor === 'guru' ? __('TIDAK ADA DATA GURU YANG COCOK DENGAN PENCARIAN.') : __('TIDAK ADA DATA SISWA YANG COCOK DENGAN PENCARIAN/FILTER.') }}

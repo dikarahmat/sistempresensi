@@ -312,14 +312,14 @@ class RekapGuruController extends Controller
                     'name'      => $t->name,
                     'jk'        => $jk,
                     'check_in'  => $a && $a->created_at ? $a->created_at->timezone(self::TZ)->format('H:i') : '-',
-                    'late_text' => $a ? ($code === 'H' ? 'Tepat Waktu' : ($code === 'T' ? ($a->time_remark ?: 'Terlambat') : '-')) : '-',
+                    'late_text' => '-',
                     'status'    => $this->statusLabel($code),
                 ];
                 continue;
             }
 
             $days    = [];
-            $sum     = ['H' => 0, 'T' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+            $sum     = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
             $monthly = [];
             $hasData = [];
             foreach ($months as $m) {

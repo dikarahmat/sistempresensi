@@ -161,7 +161,6 @@
     }
     .table-history tbody td.text-left { text-align: left !important; }
     .badge-h { color: #059669 !important; font-weight: 400 !important; }
-    .badge-t { color: #d97706 !important; font-weight: 400 !important; }
     .badge-s { color: #2563eb !important; font-weight: 400 !important; }
     .badge-i { color: #7e22ce !important; font-weight: 400 !important; }
     .badge-a { color: #dc2626 !important; font-weight: 400 !important; }
@@ -187,10 +186,6 @@
                 <div class="stat-item">
                     <div class="stat-value" style="color: #16a34a;">{{ $stats['hadir'] }}</div>
                     <div class="stat-label" style="color: #16a34a;">{{ __('Hadir') }}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" style="color: #d97706;">{{ $stats['terlambat'] }}</div>
-                    <div class="stat-label" style="color: #d97706;">{{ __('Terlambat') }}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" style="color: #2563eb;">{{ $stats['sakit'] }}</div>

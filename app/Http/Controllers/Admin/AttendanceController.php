@@ -623,6 +623,24 @@ class AttendanceController extends Controller
         $teacherPaginator->setCollection($teacherHistories);
         $studentHistories = $teacherPaginator;
 
+        // Transform teacher histories into the format the class-guru view expects:
+        // id, name, jam_masuk (string HH:mm), current_status ('Hadir' | 'Sakit' | 'Izin' | 'Alfa' | null)
+        $teachersList = collect();
+        foreach ($teacherHistories as $teacher) {
+            $st = null;
+            if ($teacher->hadir) $st = 'Hadir';
+            elseif ($teacher->terlambat) $st = 'Hadir';
+            elseif ($teacher->sakit) $st = 'Sakit';
+            elseif ($teacher->izin)  $st = 'Izin';
+            elseif ($teacher->alfa)  $st = 'Alfa';
+            $teachersList->push((object) [
+                'id'        => $teacher->id,
+                'name'      => $teacher->name,
+                'jam_masuk' => null,  // belum terintegrasi dengan jam presensi guru
+                'current_status' => $st,
+            ]);
+        }
+
         $props = [
             'studentHistories' => $studentHistories,
             'classHistories' => collect(),
@@ -630,13 +648,71 @@ class AttendanceController extends Controller
             'activeYear' => $activeYear,
             'viewFor' => 'guru',
             'todayAttendances' => $todayAttendances,
+            'teachersList' => $teachersList,
         ];
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json($props);
         }
 
+        // Route presensi.guru (sidebar) -> class-guru view
+        // Route admin/kehadiran/guru, guru/kehadiran/guru, piket/kehadiran/guru -> kehadiran view
+        $route = $request->route();
+        $routeName = $route ? $route->getName() : '';
+        if ($routeName === 'presensi.guru') {
+            return view('admin.absensi.class-guru', array_merge($props, ['teachersList' => $teachersList]));
+        }
+
+        $props['viewFor'] = 'guru';
         return view('admin.attendances.kehadiran', $props);
+    }
+
+    /**
+     * Simpan status presensi guru harian.
+     * Input: teacher_id, date, status (Hadir/Sakit/Izin/Alfa).
+     * Hanya Senin sampai Jumat, bukan hari libur.
+     * Redirect kembali dengan flash success.
+     */
+    public function storeGuruPresensi(Request $request)
+    {
+        $teacherId = $request->input('teacher_id');
+        $date      = $request->input('date');
+        $status    = $request->input('status');
+
+        // Validasi hanya Senin sampai Jumat, bukan hari libur
+        $dayName = Carbon::parse($date)->locale('id')->dayName;
+        $validDays = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        if (! in_array($dayName, $validDays)) {
+            return back()->with('error', __('Presensi hanya boleh dilakukan Senin sampai Jumat.'));
+        }
+
+        // Cek apakah catatan presensi sudah ada untuk guru dan tanggal ini
+        $existing = TeacherAttendance::where('teacher_id', $teacherId)
+            ->where('date', $date)
+            ->first();
+
+        $now = Carbon::now('Asia/Jakarta');
+        $jamMasuk = null;
+
+        if ($existing) {
+            // Sudah ada, hanya update status dan jam masuk jika belum ada
+            $existing->status = $status;
+            if (! $existing->time_remark && $status === 'Hadir') {
+                $existing->time_remark = $now->format('H:i');
+            }
+            $existing->save();
+        } else {
+            // Baru buat catatan
+            $jamMasuk = $status === 'Hadir' ? $now->format('H:i') : null;
+            TeacherAttendance::create([
+                'teacher_id' => $teacherId,
+                'date' => $date,
+                'status' => $status,
+                'time_remark' => $jamMasuk,
+            ]);
+        }
+
+        return back()->with('success', __('Status presensi guru berhasil disimpan!'));
     }
 
     /**

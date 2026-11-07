@@ -365,3 +365,5 @@ Route::middleware(['role:admin'])->prefix('kelas')->name('classes.')->group(func
     Route::put('{class}', [SchoolClassController::class, 'update'])->name('update')->whereNumber('class');
     Route::delete('{class}', [SchoolClassController::class, 'destroy'])->name('destroy')->whereNumber('class');
 });
+Route::get('/presensi/guru', [AttendanceController::class, 'kehadiranGuru'])->name('presensi.guru');
+Route::post('/presensi/guru/store', [AttendanceController::class, 'storeGuruPresensi'])->name('presensi.guru.store');

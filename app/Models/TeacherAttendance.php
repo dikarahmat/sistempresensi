@@ -13,22 +13,22 @@ use Carbon\Carbon;
 class TeacherAttendance extends Model
 {
     public const STATUS_HADIR = 'Hadir';
-    public const STATUS_TERLAMBAT = 'Terlambat';
     public const STATUS_SAKIT = 'Sakit';
     public const STATUS_IZIN = 'Izin';
     public const STATUS_ALFA = 'Alfa';
+    public const STATUS_TERLAMBAT = 'Terlambat'; // <-- Ditambahkan di sini
+
     public const STATUS_BELUM = 'Belum';
 
     public const VALID_STATUSES = [
         self::STATUS_HADIR,
-        self::STATUS_TERLAMBAT,
         self::STATUS_SAKIT,
         self::STATUS_IZIN,
         self::STATUS_ALFA,
+        self::STATUS_TERLAMBAT, // <-- Ditambahkan ke array validasi juga
     ];
 
     public const REMARK_TEPAT_WAKTU = 'Tepat Waktu';
-    public const REMARK_TERLAMBAT = 'Terlambat';
 
     protected $fillable = [
         'teacher_id', 'date', 'check_in',
@@ -50,20 +50,15 @@ class TeacherAttendance extends Model
     }
 
     /**
-     * Status efektif untuk tampilan: Hadir + terlambat -> Terlambat.
+     * Status efektif untuk tampilan guru.
      */
     public function getEffectiveStatusAttribute(): string
     {
-        if ($this->status === self::STATUS_HADIR && $this->time_remark === self::REMARK_TERLAMBAT) {
-            return self::STATUS_TERLAMBAT;
-        }
-
         return $this->status ?: self::STATUS_HADIR;
     }
 
     /**
      * Ringkasan status kehadiran seorang guru untuk satu rentang tanggal.
-     * Aturan sama dengan Attendance::summarizeStudent.
      */
     public static function summarizeTeacher($attendances, int $schoolDays = 0, int $futureSchoolDays = 0): array
     {

@@ -1,9 +1,9 @@
 @php
     // ========================================================================
     // SIDEBAR BERSAMA ADMIN, GURU & GURU PIKET (single source of truth).
-    //   admin : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown), Siswa, Guru, Kelas, Pengaturan
-    //   guru  : Dashboard, Presensi, Kehadiran(dropdown), Rekap(dropdown), Siswa, Kelas
-    //   piket : Presensi, Kehadiran(dropdown) (Dashboard & Rekap disembunyikan)
+    //   admin : Dashboard, Presensi(dropdown), Kehadiran(dropdown), Rekap(dropdown), Siswa, Guru, Kelas, Pengaturan
+    //   guru  : Dashboard, Presensi(dropdown), Kehadiran(dropdown), Rekap(dropdown), Siswa, Kelas
+    //   piket : Presensi(dropdown), Kehadiran(dropdown) (Dashboard & Rekap disembunyikan)
     // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
     $isAdminPanel = ($userRole === 'admin');
@@ -12,8 +12,16 @@
     $dashboardRoute = panel_route('dashboard');
     $isDashboardActive = request()->routeIs('admin.dashboard', 'guru.dashboard', 'piket.dashboard');
 
-    $absensiRoute = panel_route('absensi.index');
-    $isAbsensiActive = panel_is('absensi*') || panel_is('presensi*');
+    // PRESENSI (dropdown: Siswa & Guru), logikanya sama dengan KEHADIRAN
+    $absensiRoute       = panel_route('absensi.index');
+    $presensiSiswaRoute = $absensiRoute;
+    $presensiGuruRoute  = \Illuminate\Support\Facades\Route::has('presensi.guru')
+        ? route('presensi.guru')
+        : (\Illuminate\Support\Facades\Route::has('admin.presensi.guru') ? route('admin.presensi.guru') : null);
+
+    $isPresensiGuruActive  = request()->routeIs('*presensi.guru*') || request()->is('presensi/guru*', '*/presensi/guru*');
+    $isPresensiSiswaActive = ! $isPresensiGuruActive && panel_is('absensi*');
+    $isAbsensiActive       = $isPresensiSiswaActive || $isPresensiGuruActive;
 
     // KEHADIRAN (dropdown: Siswa & Guru)
     $kehadiranSiswaRoute    = panel_route('kehadiran.siswa');
@@ -114,15 +122,42 @@
             </li>
             @endif
 
-            {{-- PRESENSI: semua role --}}
-            @if($absensiRoute)
+            {{-- PRESENSI: dropdown Siswa & Guru (semua role) --}}
+            @if($presensiSiswaRoute || $presensiGuruRoute)
             <li class="nav-item">
-                <a href="{{ $absensiRoute }}"
-                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isAbsensiActive ? $activeCls : '' }}"
+                <a href="#submenuPresensi"
+                   class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isAbsensiActive ? $activeCls : '' }}"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="{{ $isAbsensiActive ? 'true' : 'false' }}"
+                   aria-controls="submenuPresensi"
                    data-label="{{ __('Presensi') }}" style="{{ $navStyle }}">
                     <i class='bx bx-qr-scan fs-5 {{ $isAbsensiActive ? 'text-primary' : 'text-white' }}'></i>
                     <span class="sidebar-nav-label">{{ __('Presensi') }}</span>
+                    <i class='bx bx-chevron-down sidebar-dropdown-chevron ms-auto'></i>
                 </a>
+                <div class="collapse {{ $isAbsensiActive ? 'show' : '' }}" id="submenuPresensi">
+                    <ul class="nav flex-column sidebar-submenu">
+                        @if($presensiSiswaRoute)
+                        <li class="nav-item">
+                            <a href="{{ $presensiSiswaRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isPresensiSiswaActive ? 'is-active' : '' }}">
+                                <i class='bx bx-user'></i>
+                                <span class="sidebar-nav-label">{{ __('PRESENSI SISWA') }}</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if($presensiGuruRoute)
+                        <li class="nav-item">
+                            <a href="{{ $presensiGuruRoute }}"
+                               class="nav-link sidebar-submenu-link {{ $isPresensiGuruActive ? 'is-active' : '' }}">
+                                <i class='bx bx-group'></i>
+                                <span class="sidebar-nav-label">{{ __('PRESENSI GURU') }}</span>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
+                </div>
             </li>
             @endif
 
@@ -365,7 +400,7 @@
     </div>
 </aside>
 
-{{-- CSS dropdown Kehadiran & Rekap. --}}
+{{-- CSS dropdown Presensi, Kehadiran & Rekap. --}}
 <style>
     .sidebar-menu-scroll,
     .sidebar-menu-scroll * { transition: none !important; animation: none !important; }

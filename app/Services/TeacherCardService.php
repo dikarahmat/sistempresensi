@@ -78,6 +78,90 @@ class TeacherCardService
     }
 
     /**
+     * Kunci pembanding longgar untuk hasil scan / token:
+     * buang prefix "GURU-", buang spasi & tanda baca, huruf kecil semua.
+     */
+    private static function scanKey(?string $value): string
+    {
+        $value = trim((string) $value);
+        $value = preg_replace('/^GURU[\s:\-_]+/i', '', $value) ?? $value;
+
+        return strtolower(preg_replace('/[^A-Za-z0-9]/', '', $value) ?? '');
+    }
+
+    /**
+     * Cari guru dari hasil scan QR / input manual.
+     *
+     * Semua format token yang pernah ada di kartu diterima:
+     *  - NIP (valid 16/18 digit, atau NIP apa adanya)
+     *  - Nama_Lengkap_guru           (format qrTokenFor saat ini)
+     *  - <ID>_guru                   (kartu cetakan lama)
+     *  - GURU-<12 hex md5 nama>      (kartu cetakan lama)
+     *  - GURU-<12 hex md5 ID guru>   (kartu cetakan lama)
+     *  - Teacher::qrValue() dan qr_token (cadangan)
+     *
+     * Mengembalikan null bila tidak ada guru yang cocok.
+     */
+    public static function findTeacherByScan(?string $scanned): ?Teacher
+    {
+        $key = self::scanKey($scanned);
+
+        if ($key === '') {
+            return null;
+        }
+
+        $teachers = Teacher::query()->orderBy('id')->get();
+
+        // 1. Guru ber-NIP
+        foreach ($teachers as $teacher) {
+            $nip = self::normalizeNip($teacher->nip);
+
+            if ($nip === null) {
+                $rawNip = trim((string) $teacher->nip);
+                $nip = ($rawNip === '' || $rawNip === '-' || strcasecmp($rawNip, 'null') === 0)
+                    ? null
+                    : $rawNip;
+            }
+
+            if ($nip !== null && self::scanKey($nip) === $key) {
+                return $teacher;
+            }
+        }
+
+        // 2. Token berbasis nama / ID dan qrValue()
+        foreach ($teachers as $teacher) {
+            $tokens = [
+                self::qrTokenFor($teacher->nip, $teacher->name),
+                Student::sanitizeToken((string) $teacher->name) . '_guru',
+                $teacher->id . '_guru',
+                'GURU-' . strtoupper(substr(md5((string) $teacher->name), 0, 12)),
+                'GURU-' . strtoupper(substr(md5((string) $teacher->id), 0, 12)),
+            ];
+
+            try {
+                $tokens[] = (string) $teacher->qrValue();
+            } catch (\Throwable $e) {
+                // abaikan, token lain tetap dicek
+            }
+
+            foreach ($tokens as $token) {
+                if (self::scanKey($token) === $key) {
+                    return $teacher;
+                }
+            }
+        }
+
+        // 3. Cadangan: kolom qr_token (UUID) di tabel guru
+        foreach ($teachers as $teacher) {
+            if (filled($teacher->qr_token) && self::scanKey($teacher->qr_token) === $key) {
+                return $teacher;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Preview HTML kartu guru massal (GET), memakai desain yang sama dengan PDF.
      */
     public static function preview(): View

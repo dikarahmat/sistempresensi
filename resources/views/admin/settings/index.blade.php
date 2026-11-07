@@ -497,6 +497,68 @@
         display: block !important;
         text-align: right !important;
     }
+
+    /* ===== JADWAL PER HARI: clean, tanpa tabel dan garis ===== */
+    .schedule-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .schedule-head,
+    .schedule-row {
+        display: grid;
+        grid-template-columns: 110px repeat(4, minmax(0, 1fr));
+        column-gap: 16px;
+        align-items: center;
+        width: 100%;
+    }
+    .schedule-head span {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+    }
+    .schedule-day {
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .schedule-cell {
+        min-width: 0;
+    }
+    .schedule-cell-label {
+        display: none;
+    }
+    .schedule-input {
+        width: 100%;
+        height: 38px;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        color: #0f172a;
+    }
+    .schedule-error {
+        grid-column: 1 / -1;
+    }
+
+    /* HP dan tablet kecil: tiap hari jadi satu blok 2 kolom, label muncul di atas input */
+    @media (max-width: 767.98px) {
+        .schedule-head { display: none; }
+        .schedule-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            row-gap: 10px;
+            padding-bottom: 14px;
+        }
+        .schedule-day {
+            grid-column: 1 / -1;
+            font-size: 1rem;
+        }
+        .schedule-cell-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+    }
 </style>
 @endpush
 
@@ -549,7 +611,7 @@
              Akses ke ketiganya sudah ada di submenu Pengaturan pada sidebar.
              Route dan halamannya TIDAK dihapus. --}}
 
-        <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data" 
+        <form action="{{ panel_route('settings.update') }}" method="POST" enctype="multipart/form-data"
               class="settings-mobile-form settings-form-wrapper">
             @csrf
 
@@ -558,7 +620,6 @@
                 <div class="section-header">
                     <div>
                         <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Identitas & Logo Sekolah') }}</h5>
-                        <div class="small" style="color: #0f172a;">{{ __('Data ini muncul di halaman scan, kartu pelajar, dan laporan PDF.') }}</div>
                     </div>
                 </div>
 
@@ -656,73 +717,67 @@
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                                 <div id="logoClientError" class="text-danger small mt-1" style="display:none;"></div>
-                                
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bagian 2: Pengaturan Waktu Presensi -->
+            <!-- Bagian 2: Jadwal Operasional Presensi per Hari -->
             <div class="settings-section">
                 <div class="section-header">
                     <div>
                         <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Jadwal Operasional Presensi per Hari') }}</h5>
-                        <div class="small" style="color: #0f172a;">{{ __('Atur jam masuk, batas keterlambatan, jam pulang, dan batas waktu pulang untuk Senin sampai Jumat.') }}</div>
                     </div>
                 </div>
 
-                <div class="table-responsive rounded-3 border" style="border-color: #e2e8f0 !important;">
-                    <table class="table align-middle mb-0" id="scheduleTable">
-                        <thead style="background: #f1f5f9;">
-                            <tr>
-                                <th class="py-3" style="white-space: nowrap;">{{ __('Hari') }}</th>
-                                <th class="py-3" style="white-space: nowrap;">{{ __('Jam Masuk') }}</th>
-                                <th class="py-3" style="white-space: nowrap;">{{ __('Batas Keterlambatan') }}</th>
-                                <th class="py-3" style="white-space: nowrap;">{{ __('Jam Pulang') }}</th>
-                                <th class="py-3" style="white-space: nowrap;">{{ __('Batas Waktu Pulang') }}</th>
-                                <th class="py-3 text-end" style="white-space: nowrap;">{{ __('Aksi') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($schedules as $day => $schedule)
-                            <tr>
-                                <td class="fw-semibold" style="color: #0f172a;">{{ $schedule['label'] }}</td>
-                                <td style="min-width: 130px;">
-                                    <input type="time" name="schedules[{{ $day }}][check_in_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.check_in_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_in_time', $schedule['check_in_time']) }}" required>
-                                    @error('schedules.'.$day.'.check_in_time')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </td>
-                                <td style="min-width: 130px;">
-                                    <input type="time" name="schedules[{{ $day }}][late_limit_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.late_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.late_limit_time', $schedule['late_limit_time']) }}" required>
-                                    @error('schedules.'.$day.'.late_limit_time')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </td>
-                                <td style="min-width: 130px;">
-                                    <input type="time" name="schedules[{{ $day }}][check_out_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.check_out_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_time', $schedule['check_out_time']) }}" required>
-                                    @error('schedules.'.$day.'.check_out_time')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </td>
-                                <td style="min-width: 130px;">
-                                    <input type="time" name="schedules[{{ $day }}][check_out_limit_time]" class="form-control form-control-sm rounded-3 schedule-input @error('schedules.'.$day.'.check_out_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_limit_time', $schedule['check_out_limit_time']) }}" required>
-                                    @error('schedules.'.$day.'.check_out_limit_time')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </td>
-                                <td class="text-end" style="min-width: 150px;">
-                                    @if($loop->first)
-                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-semibold" id="copyScheduleToAll">
-                                        <i class='bx bx-copy me-1'></i>{{ __('Salin ke semua hari') }}
-                                    </button>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="schedule-list" id="scheduleList">
+                    <div class="schedule-head" aria-hidden="true">
+                        <span>{{ __('Hari') }}</span>
+                        <span>{{ __('Jam Masuk') }}</span>
+                        <span>{{ __('Batas Keterlambatan') }}</span>
+                        <span>{{ __('Jam Pulang') }}</span>
+                        <span>{{ __('Batas Waktu Pulang') }}</span>
+                    </div>
+
+                    @foreach($schedules as $day => $schedule)
+                    <div class="schedule-row">
+                        <div class="schedule-day">{{ $schedule['label'] }}</div>
+
+                        <div class="schedule-cell">
+                            <label class="schedule-cell-label" for="sch_{{ $day }}_in">{{ __('Jam Masuk') }}</label>
+                            <input type="time" id="sch_{{ $day }}_in" name="schedules[{{ $day }}][check_in_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_in_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_in_time', $schedule['check_in_time']) }}" required>
+                            @error('schedules.'.$day.'.check_in_time')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="schedule-cell">
+                            <label class="schedule-cell-label" for="sch_{{ $day }}_late">{{ __('Batas Keterlambatan') }}</label>
+                            <input type="time" id="sch_{{ $day }}_late" name="schedules[{{ $day }}][late_limit_time]" class="form-control schedule-input @error('schedules.'.$day.'.late_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.late_limit_time', $schedule['late_limit_time']) }}" required>
+                            @error('schedules.'.$day.'.late_limit_time')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="schedule-cell">
+                            <label class="schedule-cell-label" for="sch_{{ $day }}_out">{{ __('Jam Pulang') }}</label>
+                            <input type="time" id="sch_{{ $day }}_out" name="schedules[{{ $day }}][check_out_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_out_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_time', $schedule['check_out_time']) }}" required>
+                            @error('schedules.'.$day.'.check_out_time')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="schedule-cell">
+                            <label class="schedule-cell-label" for="sch_{{ $day }}_limit">{{ __('Batas Waktu Pulang') }}</label>
+                            <input type="time" id="sch_{{ $day }}_limit" name="schedules[{{ $day }}][check_out_limit_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_out_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_limit_time', $schedule['check_out_limit_time']) }}" required>
+                            @error('schedules.'.$day.'.check_out_limit_time')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
 
                 @error('schedules')
@@ -730,13 +785,7 @@
                 @enderror
             </div>
 
-            <!-- Bagian 3: Catatan Biru -->
-            <div class="alert alert-info border-0 m-0 small w-100" style="display: flex; width: 100%; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: 8px; gap: 4px; line-height: 1.6; color: #0f172a;">
-                <i class='bx bx-info-circle text-primary me-1' style="font-size: 14px; vertical-align: -0.125em;"></i>
-                <span>{{ __('Scan dari Jam Masuk hingga Batas Keterlambatan dicatat Tepat Waktu. Scan setelah batas keterlambatan dicatat Terlambat. Presensi pulang hanya diterima mulai Jam Pulang sampai Batas Waktu Pulang; di luar rentang itu akan ditolak. Sabtu dan Minggu tidak ada presensi.') }}</span>
-            </div>
-
-            <!-- Bagian 4: Tombol Simpan -->
+            <!-- Tombol Simpan -->
             <div class="w-100 m-0">
                 <!-- Tombol SIMPAN: selebar penuh wadah (width 100%), teks saja (tanpa ikon). -->
                 <button type="submit" class="btn btn-primary btn-sm w-100 py-2.5 rounded-3 fw-semibold shadow-xs d-flex align-items-center justify-content-center">
@@ -814,25 +863,9 @@
             });
         }
 
-        // 3. Tombol "Salin ke semua hari": menyalin 4 jam dari baris Senin
-        //    ke seluruh baris hari lain. Nilai tetap bisa diubah manual.
-        var scheduleRows = Array.prototype.slice.call(document.querySelectorAll('#scheduleTable tbody tr'));
+        // 3. Baris jadwal per hari (Senin sampai Jumat) dan 4 field jamnya.
+        var scheduleRows = Array.prototype.slice.call(document.querySelectorAll('#scheduleList .schedule-row'));
         var scheduleFields = ['check_in_time', 'late_limit_time', 'check_out_time', 'check_out_limit_time'];
-        var copyScheduleBtn = document.getElementById('copyScheduleToAll');
-        if (copyScheduleBtn) {
-            copyScheduleBtn.addEventListener('click', function () {
-                var firstRow = scheduleRows[0];
-                if (!firstRow) return;
-                scheduleFields.forEach(function (field) {
-                    var source = firstRow.querySelector('input[name$="[' + field + ']"]');
-                    if (!source) return;
-                    scheduleRows.slice(1).forEach(function (row) {
-                        var target = row.querySelector('input[name$="[' + field + ']"]');
-                        if (target) target.value = source.value;
-                    });
-                });
-            });
-        }
 
         function scheduleToMinutes(value) {
             var parts = (value || '').split(':');
@@ -840,7 +873,7 @@
         }
 
         // 4. Validasi klien sebelum submit. Server tetap memvalidasi ulang;
-        //    ini hanya agar pesan muncul tepat di bawah field yang salah.
+        //    ini hanya agar pesan muncul tepat di bawah baris hari yang salah.
         var form = document.querySelector('.settings-mobile-form');
         if (form) {
             form.addEventListener('submit', function (e) {
@@ -904,9 +937,9 @@
                         if (target) {
                             tandai(target);
                             var errDiv = document.createElement('div');
-                            errDiv.className = 'text-danger small mt-1 time-client-error';
+                            errDiv.className = 'text-danger small time-client-error schedule-error';
                             errDiv.textContent = {!! json_encode(__('Urutan jam harus Masuk < Batas Keterlambatan < Jam Pulang <= Batas Waktu Pulang.')) !!};
-                            target.parentNode.appendChild(errDiv);
+                            row.appendChild(errDiv);
                         }
                     }
                 });

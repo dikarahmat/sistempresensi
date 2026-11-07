@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
-use App\Models\Holiday;
-use App\Models\OperatingSchedule;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -17,10 +15,21 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class ScannerController extends Controller
 {
+    private const WEEKEND_MESSAGE = 'Hari ini tidak ada jadwal presensi (Sabtu/Minggu).';
+
+    /**
+     * Sabtu/Minggu (zona Asia/Jakarta) = tidak ada jadwal presensi.
+     */
+    private function isWeekend(string $date): bool
+    {
+        return Carbon::parse($date, 'Asia/Jakarta')->isWeekend();
+    }
+
     /**
      * Halaman Scanner Standar Admin.
      */
@@ -33,10 +42,9 @@ class ScannerController extends Controller
         $activeYear = AcademicYear::getActive();
 
         $schoolName = Setting::getSchoolName();
-        $scheduleTimes = OperatingSchedule::timesForDate($today);
-        $checkInTime = $scheduleTimes['check_in_time'] ?? Setting::getCheckInTime();
-        $lateLimitTime = $scheduleTimes['late_limit_time'] ?? Setting::getLateLimitTime();
-        $checkOutTime = $scheduleTimes['check_out_time'] ?? Setting::getCheckOutTime();
+        $checkInTime = Setting::getCheckInTime();
+        $lateLimitTime = Setting::getLateLimitTime();
+        $checkOutTime = Setting::getCheckOutTime();
 
         $recentScans = Attendance::with(['student.schoolClass'])
             ->where('date', $dateString)
@@ -66,10 +74,9 @@ class ScannerController extends Controller
 
         $activeYear = AcademicYear::getActive();
         $schoolName = Setting::getSchoolName();
-        $scheduleTimes = OperatingSchedule::timesForDate($today);
-        $checkInTime = $scheduleTimes['check_in_time'] ?? Setting::getCheckInTime();
-        $lateLimitTime = $scheduleTimes['late_limit_time'] ?? Setting::getLateLimitTime();
-        $checkOutTime = $scheduleTimes['check_out_time'] ?? Setting::getCheckOutTime();
+        $checkInTime = Setting::getCheckInTime();
+        $lateLimitTime = Setting::getLateLimitTime();
+        $checkOutTime = Setting::getCheckOutTime();
 
         $recentScans = Attendance::with(['student.schoolClass'])
             ->where('date', $dateString)
@@ -109,16 +116,21 @@ class ScannerController extends Controller
         $cleanToken = trim($request->qr_token);
         $lookupKey = Student::lookupKey($cleanToken);
 
+        // Token berawalan "GURU-" (GURU-<NIP> atau GURU-<kode> untuk guru tanpa NIP).
+        // Bila tidak ada guru yang cocok, lanjut ke pemeriksaan lain di bawah.
+        if (preg_match('/^GURU[\s:\-_]/i', $cleanToken)) {
+            $teacher = TeacherCardService::findTeacherByScan($cleanToken);
+
+            if ($teacher) {
+                $teacherResult = $this->processTeacherScan($request, $teacher, $cleanToken, $todayDate, $currentTime);
+                return response()->json($teacherResult['response'], $teacherResult['status_code'] ?? 200);
+            }
+        }
+
         // Token guru tanpa NIP valid selalu berakhiran "_guru". Token ini
         // diperiksa lebih dulu dan tidak pernah dianggap sebagai token siswa.
         if (str_ends_with($lookupKey, '_guru')) {
-            $teacher = Teacher::orderBy('id')->get()->first(function (Teacher $candidate) use ($lookupKey) {
-                if (TeacherCardService::normalizeNip($candidate->nip) !== null) {
-                    return false;
-                }
-
-                return Student::lookupKey($candidate->qrValue()) === $lookupKey;
-            });
+            $teacher = TeacherCardService::findTeacherByScan($cleanToken);
 
             if ($teacher) {
                 $teacherResult = $this->processTeacherScan($request, $teacher, $cleanToken, $todayDate, $currentTime);
@@ -148,6 +160,11 @@ class ScannerController extends Controller
             ], 409);
         }
 
+        // Kartu yang berisi qr_token (UUID) siswa.
+        if (!$student && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $cleanToken)) {
+            $student = Student::with('schoolClass')->where('qr_token', $cleanToken)->first();
+        }
+
         if (!$student) {
             // Token Nama_Kelas hanya berlaku untuk siswa jalur fallback:
             // NISN kosong atau NISN dipakai lebih dari satu siswa.
@@ -170,7 +187,8 @@ class ScannerController extends Controller
         }
 
         if (!$student) {
-            $teacher = Teacher::where('nip', $cleanToken)->orderBy('id')->first();
+            $teacher = Teacher::where('nip', $cleanToken)->orderBy('id')->first()
+                ?? TeacherCardService::findTeacherByScan($cleanToken);
 
             if ($teacher) {
                 $teacherResult = $this->processTeacherScan($request, $teacher, $cleanToken, $todayDate, $currentTime);
@@ -183,42 +201,48 @@ class ScannerController extends Controller
             ], 404);
         }
 
+        // Akhir pekan (Sabtu/Minggu) tidak ada jadwal presensi.
+        if ($this->isWeekend($todayDate)) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => self::WEEKEND_MESSAGE,
+                'student' => [
+                    'name' => $student->name,
+                    'nisn' => $student->nisn,
+                    'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                    'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                ],
+            ], 400);
+        }
+
         $activeYear = AcademicYear::getActive();
         $academicYearId = $activeYear ? $activeYear->id : null;
 
-        // Presensi hanya dibuka Senin-Jumat dan pada hari yang bukan libur.
-        $scheduleTimes = OperatingSchedule::timesForDate($now);
+        $lateLimitTime = Setting::getLateLimitTime();
+        $checkOutThreshold = Setting::getCheckOutTime();
 
-        if ($scheduleTimes === null) {
+        // Validasi ganda anti-double scan lintas role (Admin Gerbang & Guru Kelas) sebelum DB::transaction
+        $existingAttendance = Attendance::where('student_id', $student->id)
+            ->whereDate('date', $todayDate)
+            ->first();
+
+        if ($existingAttendance) {
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Hari ini tidak ada jadwal presensi (Sabtu/Minggu).',
+                'message' => 'Siswa atas nama ' . $student->name . ' sudah melakukan presensi hari ini.',
+                'student' => [
+                    'name' => $student->name,
+                    'nisn' => $student->nisn,
+                    'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                    'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                ],
             ], 400);
         }
 
-        if (Holiday::isHoliday($todayDate)) {
-            $holidayDescription = Holiday::getHolidayDescription($todayDate);
-
-            return response()->json([
-                'success' => false,
-                'status' => 'error',
-                'message' => 'Hari ini hari libur' . ($holidayDescription ? ': ' . $holidayDescription : '') . '. Presensi tidak dibuka.',
-            ], 400);
-        }
-
-        $lateLimitTime = $scheduleTimes['late_limit_time'];
-        $checkInStartTime = $scheduleTimes['check_in_time'];
-        $checkOutTime = $scheduleTimes['check_out_time'];
-        $checkOutLimitTime = $scheduleTimes['check_out_limit_time'];
-        $currentMinutes = $this->timeToMinutes($currentTime);
-
-        // Catatan: pengecekan "sudah presensi hari ini" TIDAK lagi menolak
-        // seluruh scan. Scan kedua pada hari yang sama adalah presensi pulang
-        // dan validasinya dilakukan di dalam transaksi di bawah.
         $result = DB::transaction(function () use (
-            $student, $todayDate, $currentTime, $currentMinutes, $academicYearId,
-            $lateLimitTime, $checkInStartTime, $checkOutTime, $checkOutLimitTime
+            $student, $todayDate, $currentTime, $academicYearId, $lateLimitTime, $checkOutThreshold
         ) {
             $attendance = Attendance::where('student_id', $student->id)
                 ->whereDate('date', $todayDate)
@@ -235,6 +259,7 @@ class ScannerController extends Controller
 
             // KASUS 1: Presensi Masuk (Check-In)
             if (empty($attendance->check_in)) {
+                $attendance->check_in = $currentTime;
                 /*
                  * Penentuan status terlambat memakai SATU sumber kebenaran:
                  * Attendance::evaluateCheckInTime() - fungsi yang sama dengan
@@ -244,28 +269,8 @@ class ScannerController extends Controller
                  * kehadiran (Dashboard, Rekap, Kehadiran) konsisten; status
                  * "Terlambat" dibaca lewat accessor effective_status.
                  */
-                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime, $checkInStartTime);
+                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime);
 
-                // Scan sebelum jam masuk per hari ditolak (db_status null).
-                if ($evaluasi['db_status'] === null) {
-                    return [
-                        'status_code' => 400,
-                        'should_notify_wa' => false,
-                        'response' => [
-                            'success' => false,
-                            'status' => 'error',
-                            'message' => 'Presensi belum dibuka. Presensi dimulai pukul ' . substr($checkInStartTime, 0, 5) . ' WIB.',
-                            'student' => [
-                                'name' => $student->name,
-                                'nisn' => $student->nisn,
-                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
-                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
-                            ],
-                        ],
-                    ];
-                }
-
-                $attendance->check_in = $currentTime;
                 $attendance->status = Attendance::STATUS_HADIR;
                 $attendance->time_remark = $evaluasi['time_remark'];
                 $attendance->is_late = (bool) $evaluasi['is_late'];
@@ -327,45 +332,6 @@ class ScannerController extends Controller
             // KASUS 2: Presensi Pulang (Check-Out)
             // Jika sudah presensi masuk, tapi belum presensi pulang
             if (empty($attendance->check_out)) {
-                $checkOutMinutes = $this->timeToMinutes($checkOutTime);
-                $checkOutLimitMinutes = $this->timeToMinutes($checkOutLimitTime);
-
-                // Pulang hanya boleh mulai Jam Pulang per hari.
-                if ($currentMinutes < $checkOutMinutes) {
-                    return [
-                        'status_code' => 400,
-                        'should_notify_wa' => false,
-                        'response' => [
-                            'success' => false,
-                            'message' => 'Belum waktunya presensi pulang. Jam pulang pukul ' . substr($checkOutTime, 0, 5) . ' WIB.',
-                            'student' => [
-                                'name' => $student->name,
-                                'nisn' => $student->nisn,
-                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
-                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
-                            ],
-                        ],
-                    ];
-                }
-
-                // Setelah Batas Waktu Pulang, presensi pulang ditolak.
-                if ($currentMinutes > $checkOutLimitMinutes) {
-                    return [
-                        'status_code' => 400,
-                        'should_notify_wa' => false,
-                        'response' => [
-                            'success' => false,
-                            'message' => 'Batas waktu presensi pulang sudah lewat (batas pukul ' . substr($checkOutLimitTime, 0, 5) . ' WIB).',
-                            'student' => [
-                                'name' => $student->name,
-                                'nisn' => $student->nisn,
-                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
-                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
-                            ],
-                        ],
-                    ];
-                }
-
                 // Cek cooldown proteksi dobel tap dalam 2 menit
                 $checkInSeconds = strtotime($currentTime) - strtotime($attendance->check_in);
                 if ($checkInSeconds >= 0 && $checkInSeconds < 120) {
@@ -434,14 +400,6 @@ class ScannerController extends Controller
     }
 
     /**
-     * Ubah jam "HH:MM" atau "HH:MM:SS" menjadi menit sejak 00:00.
-     */
-    protected function timeToMinutes(string $time): int
-    {
-        return ((int) substr($time, 0, 2)) * 60 + (int) substr($time, 3, 2);
-    }
-
-    /**
      * Proses pemindaian QR Kartu Guru (Check-in).
      * Format respons kompatibel dengan UI scanner siswa (body.student/teacher, time_short, is_late, late_minutes, dll.)
      * agar layar scanner/kiosk tidak perlu diubah.
@@ -455,6 +413,20 @@ class ScannerController extends Controller
      */
     protected function processTeacherScan(Request $request, Teacher $teacher, string $cleanToken, string $todayDate, string $currentTime): array
     {
+        // Akhir pekan (Sabtu/Minggu) tidak ada jadwal presensi.
+        if ($this->isWeekend($todayDate)) {
+            return [
+                'status_code' => 400,
+                'should_notify_wa' => false,
+                'response' => [
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => self::WEEKEND_MESSAGE,
+                    'teacher' => $this->teacherResponseArray($teacher),
+                ],
+            ];
+        }
+
         $activeYear = AcademicYear::getActive();
         if (!$activeYear) {
             return [
@@ -501,12 +473,27 @@ class ScannerController extends Controller
         $dbStatus = $eval['is_late'] ? Attendance::STATUS_TERLAMBAT : Attendance::STATUS_HADIR;
         $timeRemark = $eval['time_remark']; // 'Tepat Waktu' atau 'Terlambat'
 
-        $teacherAttendance = TeacherAttendance::create([
+        // Kolom wajib (selalu ada di tabel).
+        $attendanceData = [
             'teacher_id' => $teacher->id,
             'date' => $todayDate,
             'status' => $dbStatus,
             'time_remark' => $timeRemark,
-        ]);
+        ];
+
+        // Kolom opsional: hanya diisi bila tabel teacher_attendances memang punya kolomnya,
+        // supaya tidak error "Unknown column" di database yang skemanya berbeda.
+        $optionalColumns = [
+            'academic_year_id' => $activeYear->id,
+            'check_in' => $currentTime,
+        ];
+        foreach ($optionalColumns as $column => $value) {
+            if (Schema::hasColumn('teacher_attendances', $column)) {
+                $attendanceData[$column] = $value;
+            }
+        }
+
+        $teacherAttendance = TeacherAttendance::create($attendanceData);
 
         return [
             'status_code' => 200,
