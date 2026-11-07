@@ -269,27 +269,20 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');
     Route::post('/scanner/process', [AdminScannerController::class, 'processScan'])->name('scanner.process')->middleware('throttle:30,1');
 
-    // KEHADIRAN (dropdown: Siswa & Guru) - identik admin tetapi READ-ONLY
-    // (route ubah status presensi / override sengaja tidak didaftarkan => 403)
+    // KEHADIRAN SISWA - identik admin tetapi READ-ONLY.
+    // Menu guru (Kehadiran Guru) sengaja tidak didaftarkan untuk role guru.
     Route::get('/kehadiran', [AttendanceController::class, 'kehadiran'])->name('kehadiran');
     Route::get('/kehadiran/siswa', [AttendanceController::class, 'kehadiran'])->name('kehadiran.siswa');
-    Route::get('/kehadiran/guru', [AttendanceController::class, 'kehadiranGuru'])->name('kehadiran.guru');
-    Route::get('/kehadiran/guru/{teacher}/history', [AttendanceController::class, 'teacherHistory'])->name('kehadiran.guru-history');
     Route::get('/kehadiran/siswa/{student}/history', [AttendanceController::class, 'studentHistory'])->name('kehadiran.student-history');
     Route::get('/kehadiran/{schoolClass}', [AttendanceController::class, 'kehadiranDetail'])->name('kehadiran.detail');
 
-    // REKAP (dropdown: Siswa & Guru) - identik admin (filter + unduh Excel/PDF)
+    // REKAP SISWA - identik admin (filter + unduh Excel/PDF).
+    // Rekap Guru sengaja tidak didaftarkan untuk role guru.
     Route::get('/rekap', [AdminRekapController::class, 'index'])->name('rekap');
     Route::get('/rekap/siswa', [AdminRekapController::class, 'index'])->name('rekap.siswa');
     Route::get('/rekap/export-excel', [AdminRekapController::class, 'exportExcel'])->name('rekap.export-excel')->middleware('throttle:10,1');
     Route::get('/rekap/export-pdf', [AdminRekapController::class, 'exportPdf'])->name('rekap.export-pdf')->middleware('throttle:10,1');
     Route::get('/rekap/student-search', [AdminRekapController::class, 'studentSearch'])->name('rekap.student-search');
-    // Rekap Guru (statis)
-    Route::get('/rekap/guru', [RekapGuruController::class, 'index'])->name('rekap.guru');
-    Route::get('/rekap/guru/pdf', [RekapGuruController::class, 'exportPdf'])->name('rekap.guru.pdf')->middleware('throttle:10,1');
-    Route::get('/rekap/guru/excel', [RekapGuruController::class, 'exportExcel'])->name('rekap.guru.excel')->middleware('throttle:10,1');
-    // Cetak rekap guru lewat modal (POST) -> dilayani RekapGuruController@printRekap
-    Route::post('/rekap/guru/print', [RekapGuruController::class, 'printRekap'])->name('rekap.guru.print')->middleware('throttle:rekap-print');
     Route::post('/rekap/print', [AdminRekapController::class, 'printRekap'])->name('rekap.print')->middleware('throttle:rekap-print');
 
     // SISWA - identik admin, READ-ONLY (detail + cetak kartu & unduh QR)
@@ -313,22 +306,27 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
 // ============================================================================
 // 3. GROUP GURU PIKET
 // ============================================================================
-// Akses HANYA KE DUA MODUL: KEHADIRAN dan PRESENSI (scan QR / mode gerbang).
-// Route Dashboard, Rekap (termasuk export/cetak), Siswa, Guru, Kelas,
+// Akses HANYA KE TIGA MODUL: DASHBOARD, KEHADIRAN, dan PRESENSI (scan QR /
+// mode gerbang). Route Rekap (termasuk export/cetak), Siswa, Guru, Kelas,
 // Pengaturan, Tahun Ajaran, Hari Libur, Tempat Sampah, Kelola Akun, maupun
 // override absensi TIDAK didaftarkan di sini - sehingga piket otomatis
 // menerima HTTP 403 untuk SEMUA method (GET/POST/PUT/PATCH/DELETE) bila
 // URL diketik manual. View yang dipakai tetap view bersama admin/guru;
 // menu disesuaikan lewat partials/sidebar.blade.php & bottom nav.
-// Setelah login, piket diarahkan ke Presensi (lihat AuthController).
 // ============================================================================
 Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(function () {
+    // DASHBOARD - ringkasan kehadiran + pintasan Presensi & Catatan Kehadiran.
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
     // PRESENSI - identik admin/guru (absensi harian, detail kelas, scanner, kiosk)
     // Route statis WAJIB didaftarkan sebelum route berparameter dinamis,
     // supaya /piket/absensi/kiosk tidak ditangkap {schoolClass}.
     Route::get('/absensi', [AttendanceController::class, 'index'])->name('absensi.index');
     Route::get('/absensi-view', [AttendanceController::class, 'index'])->name('absensi');
     Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
+    // Presensi Guru: halaman & simpan status guru khusus panel piket.
+    Route::get('/presensi/guru', [AttendanceController::class, 'kehadiranGuru'])->name('presensi.guru');
+    Route::post('/presensi/guru/store', [AttendanceController::class, 'storeGuruPresensi'])->name('presensi.guru.store');
     Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
     Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
@@ -365,5 +363,14 @@ Route::middleware(['role:admin'])->prefix('kelas')->name('classes.')->group(func
     Route::put('{class}', [SchoolClassController::class, 'update'])->name('update')->whereNumber('class');
     Route::delete('{class}', [SchoolClassController::class, 'destroy'])->name('destroy')->whereNumber('class');
 });
-Route::get('/presensi/guru', [AttendanceController::class, 'kehadiranGuru'])->name('presensi.guru');
-Route::post('/presensi/guru/store', [AttendanceController::class, 'storeGuruPresensi'])->name('presensi.guru.store');
+// ============================================================================
+// 5. PRESENSI GURU (panel ADMIN)
+// ============================================================================
+// Piket memakai route sendiri di group piket (piket.presensi.guru), sedangkan
+// guru tidak lagi memiliki menu/akses Presensi Guru. Route global ini dikunci
+// agar hanya admin yang dapat membuka halaman presensi guru.
+// ============================================================================
+Route::middleware(['role:admin'])->group(function () {
+    Route::get('/presensi/guru', [AttendanceController::class, 'kehadiranGuru'])->name('presensi.guru');
+    Route::post('/presensi/guru/store', [AttendanceController::class, 'storeGuruPresensi'])->name('presensi.guru.store');
+});

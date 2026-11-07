@@ -46,6 +46,10 @@
         border-top: 3.5px solid #8b5cf6;
     }
 
+    .role-card-clean.highlight-piket {
+        border-top: 3.5px solid #0ea5e9;
+    }
+
     .role-icon-box {
         width: 42px;
         height: 42px;
@@ -168,12 +172,12 @@
 @section('content')
 
 <!-- ============================================================ -->
-<!-- 1. DUA ROLE UTAMA (ADMIN & GURU)                            -->
+<!-- 1. TIGA ROLE UTAMA (ADMIN, GURU & GURU PIKET)               -->
 <!-- ============================================================ -->
 <div class="row g-3 mb-4">
 
     <!-- Card 1: Administrator -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="role-card-clean highlight-admin">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="d-flex align-items-center gap-2.5">
@@ -222,7 +226,7 @@
         </div>
     </div>
     <!-- Card 2: Guru -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="role-card-clean highlight-guru">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="d-flex align-items-center gap-2.5">
@@ -271,6 +275,56 @@
         </div>
     </div>
 
+    <!-- Card 3: Guru Piket -->
+    <div class="col-lg-4">
+        <div class="role-card-clean highlight-piket">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="role-icon-box bg-cyan-50 text-cyan-600">
+                        <i class='bx bx-time-five'></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-slate-800" style="font-size: 1.05rem;">{{ __('Guru Piket') }}</h5>
+                        <span class="text-slate-400" style="font-size: 0.74rem;">{{ __(':count Akun Aktif', ['count' => $roleCounts['piket'] ?? 0]) }}</span>
+                    </div>
+                </div>
+                <span class="status-badge-clean status-rombel">
+                    {{ __('Operasional') }}
+                </span>
+            </div>
+
+            <p class="text-slate-500 mb-3" style="font-size: 0.8rem; line-height: 1.45;">
+                {{ __('Portal operasional presensi harian: ringkasan kehadiran, pemindaian QR, dan pencatatan kehadiran siswa/guru.') }}
+            </p>
+
+            <div class="border-top border-slate-100 pt-3 flex-grow-1">
+                <span class="text-slate-400 fw-bold d-block text-uppercase mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">{{ __('Cakupan Izin Akses:') }}</span>
+                <ul class="permission-simple-list">
+                    <li>
+                        <i class='bx bx-check-circle text-cyan-600'></i>
+                        <span>{{ __('Dashboard Piket: statistik kehadiran, grafik, & pintasan cepat') }}</span>
+                    </li>
+                    <li>
+                        <i class='bx bx-check-circle text-cyan-600'></i>
+                        <span>{{ __('Presensi Siswa & Presensi Guru') }}</span>
+                    </li>
+                    <li>
+                        <i class='bx bx-check-circle text-cyan-600'></i>
+                        <span>{{ __('Kehadiran Siswa & Kehadiran Guru (read-only)') }}</span>
+                    </li>
+                    <li>
+                        <i class='bx bx-check-circle text-cyan-600'></i>
+                        <span>{{ __('Scanner QR & mode gerbang (kiosk)') }}</span>
+                    </li>
+                    <li>
+                        <i class='bx bx-x-circle text-slate-400'></i>
+                        <span>{{ __('Rekap, master data, pengaturan, & override ditolak') }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- ============================================================ -->
@@ -289,10 +343,11 @@
         <table class="matrix-table">
             <thead>
                 <tr>
-                    <th style="width: 26%;">{{ __('Modul Sistem') }}</th>
-                    <th style="width: 44%;">{{ __('Cakupan Fungsi Fitur') }}</th>
-                    <th style="width: 15%; text-align: center;">Admin</th>
-                    <th style="width: 15%; text-align: center;">{{ __('Guru') }}</th>
+                    <th style="width: 24%;">{{ __('Modul Sistem') }}</th>
+                    <th style="width: 38%;">{{ __('Cakupan Fungsi Fitur') }}</th>
+                    <th style="width: 13%; text-align: center;">Admin</th>
+                    <th style="width: 13%; text-align: center;">{{ __('Guru') }}</th>
+                    <th style="width: 12%; text-align: center;">{{ __('Guru Piket') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -313,6 +368,9 @@
                     <td class="text-center">
                         <span class="status-badge-clean status-rombel">Full Read-Only</span>
                     </td>
+                    <td class="text-center">
+                        <span class="status-badge-clean status-rombel">{{ __('Ringkasan') }}</span>
+                    </td>
                 </tr>
 
                 <!-- Row 2: Presensi & Kehadiran -->
@@ -331,6 +389,9 @@
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-rombel">Scan &amp; Kiosk</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="status-badge-clean status-rombel">{{ __('Scan & Manual') }}</span>
                     </td>
                 </tr>
 
@@ -351,6 +412,9 @@
                     <td class="text-center">
                         <span class="status-badge-clean status-rombel">{{ __('Semua Kelas') }}</span>
                     </td>
+                    <td class="text-center">
+                        <span class="status-badge-clean status-no-access">{{ __('Tidak Ada') }}</span>
+                    </td>
                 </tr>
 
                 <!-- Row 4: Kalender Akademik & Master Data -->
@@ -370,6 +434,9 @@
                     <td class="text-center">
                         <span class="status-badge-clean status-rombel">{{ __('Lihat Data') }}</span>
                     </td>
+                    <td class="text-center">
+                        <span class="status-badge-clean status-no-access">{{ __('Tidak Ada') }}</span>
+                    </td>
                 </tr>
 
                 <!-- Row 5: Pengaturan Sistem -->
@@ -385,6 +452,9 @@
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-full-access">{{ __('Otoritas Penuh') }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="status-badge-clean status-no-access">{{ __('Tidak Ada') }}</span>
                     </td>
                     <td class="text-center">
                         <span class="status-badge-clean status-no-access">{{ __('Tidak Ada') }}</span>

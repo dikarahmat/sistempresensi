@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -109,55 +110,65 @@ class UserAccountController extends Controller
     }
 
     /**
-     * Perbarui akun (username dan/atau password).
+     * Perbarui akun (username, status, dan/atau password).
      *
-     * Role SENGAJA tidak bisa diubah lewat form: nilai role diambil dari
-     * akun yang ada (bukan dari input).
+     * Role TIDAK diubah lewat form Edit: satu akun per role adalah aturan
+     * bisnis, sehingga validasi unique role saat update bisa memblokir edit
+     * username/password biasa (terutama bila di database masih ada akun ganda
+     * lama dengan role yang sama). Nilai role selalu diambil dari akun.
      *
      * Nama SENGAJA tidak bisa diubah lewat form lagi: kolom `name` tidak lagi
      * dipakai untuk tampilan dan nilainya otomatis mengikuti username.
      *
-     * Hanya simpan password BARU jika password admin saat ini benar.
+     * Password hanya diubah jika kolom password diisi; nilai baru langsung
+     * di-hash sebelum disimpan.
      */
     public function update(Request $request, User $user)
     {
         $validated = $request->validate($this->rulesForUpdate($user->id), $this->messages());
 
         $username = strtolower(trim($validated['username']));
+        $newRole = $user->role;
+        $newStatus = $validated['status']
+            ?? ($user->isActive() ? User::STATUS_AKTIF : User::STATUS_NONAKTIF);
+
+        $staysActiveAdmin = $newRole === User::ROLE_ADMIN && $newStatus === User::STATUS_AKTIF;
+        if ($user->role === User::ROLE_ADMIN && $user->isActive() && ! $staysActiveAdmin
+            && User::countActiveAdmins() <= 1) {
+            $message = __('Minimal satu akun Admin harus tetap aktif.');
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+
+            return redirect()->route('admin.accounts.index')
+                ->withInput()
+                ->with('error', $message);
+        }
 
         $data = [
             // Kolom `name` tidak boleh ditimpa dengan null/kosong: nilainya
             // otomatis mengikuti username.
             'name' => $username,
             'username' => $username,
-            'role' => $user->role,
+            'role' => $newRole,
+            'status' => $newStatus,
         ];
 
         $passwordChanged = false;
         $hasEncryptedColumn = Schema::hasColumn('users', 'password_terenkripsi');
 
-        // Hanya perbarui password kalau field kosong / password baru diisi
-        // DAN password admin saat ini diverifikasi benar.
-        if (isset($validated['password_current'])) {
-            if (empty($validated['password']) || !Hash::check((string) $validated['password_current'], $user->password)) {
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Password admin saat ini salah. Password baru TIDAK disimpan.',
-                    ], 422);
-                }
-                return redirect()->route('admin.accounts.index')
-                    ->withInput()
-                    ->with('error', __('Password admin saat ini salah. Password baru TIDAK disimpan.'));
+        // Password hanya diubah bila kolom password diisi. Jika kosong,
+        // password lama di database tetap dipertahankan.
+        if (filled($validated['password'] ?? null)) {
+            $password = (string) $validated['password'];
+            $data['password'] = Hash::make($password);
+
+            if ($hasEncryptedColumn) {
+                $data['password_terenkripsi'] = Crypt::encryptString($password);
             }
 
-            if (!empty($validated['password'])) {
-                $data['password'] = $validated['password'];
-                if ($hasEncryptedColumn) {
-                    $data['password_terenkripsi'] = Crypt::encryptString($validated['password']);
-                }
-                $passwordChanged = true;
-            }
+            $passwordChanged = true;
         }
 
         try {
@@ -308,6 +319,14 @@ class UserAccountController extends Controller
                 // username lamanya tidak dianggap duplikat.
                 Rule::unique('users', 'username')->ignore($userId),
             ]),
+            // Role sengaja TIDAK divalidasi/diubah saat update. Aturan satu
+            // akun per role hanya berlaku saat membuat akun baru.
+            'status' => [
+                'sometimes',
+                'required',
+                'string',
+                Rule::in([User::STATUS_AKTIF, User::STATUS_NONAKTIF]),
+            ],
             'password' => ['nullable', 'string', 'min:8'],
         ];
     }
@@ -353,6 +372,8 @@ class UserAccountController extends Controller
             'username.unique' => 'Username sudah digunakan akun lain.',
             'role.required' => 'Role wajib dipilih.',
             'role.in' => 'Role yang dipilih tidak valid.',
+            'status.required' => 'Status wajib dipilih.',
+            'status.in' => 'Status yang dipilih tidak valid.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 8 karakter.',
         ];

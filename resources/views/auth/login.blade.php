@@ -536,8 +536,8 @@
         <div class="brand-inner">
             <img class="brand-logo" src="{{ \App\Models\Setting::getLogoUrl() }}" alt="Logo {{ $schoolName }}">
 
+            <h1 class="brand-title">{{ __('SISTEM PRESENSI DIGITAL') }}</h1>
             <h2 class="brand-school">{{ $schoolName }}</h2>
-            <h1 class="brand-title">{{ $appName }}</h1>
             <p class="brand-subtitle"><span class="sub-line">{{ __('Presensi digital yang') }}</span> <span class="sub-line">{{ __('mudah, cepat, dan akurat.') }}</span></p>
 
             <div class="brand-chips">

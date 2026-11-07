@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', is_admin() ? __('Dashboard Admin') : __('Dashboard Guru'))
-@section('page_title', is_admin() ? __('Dashboard Administrator') : __('DASHBOARD GURU'))
+@section('title', is_admin() ? __('Dashboard Admin') : (is_piket() ? __('Dashboard Guru Piket') : __('Dashboard Guru')))
+@section('page_title', is_admin() ? __('Dashboard Administrator') : (is_piket() ? __('DASHBOARD GURU PIKET') : __('DASHBOARD GURU')))
 
 
 {{-- Kanvas dikunci setinggi satu layar (sama seperti halaman acuan Presensi /
@@ -16,7 +16,7 @@
      Memilih tanggal hanya submitting GET ke halaman dashboard yang sama dengan
      ?tanggal=YYYY-MM-DD, lalu controller menghitung ulang seluruh statistik,
      grafik, dan kehadiran. Tampilan (ikon, teks, ukuran, warna) TIDAK diubah. -->
-<form method="GET" action="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard') }}" class="dashboard-date-form d-none d-lg-flex align-items-center gap-2.5 text-end">            {{-- Mode grafik & filter status ikut dipertahankan saat tanggal diganti --}}
+<form method="GET" action="{{ panel_route('dashboard') }}" class="dashboard-date-form d-none d-lg-flex align-items-center gap-2.5 text-end">            {{-- Mode grafik & filter status ikut dipertahankan saat tanggal diganti --}}
             <input type="hidden" name="mode" value="{{ $chartMode ?? 'harian' }}">
             @if(request('status'))
             <input type="hidden" name="status" value="{{ request('status') }}">
@@ -46,7 +46,7 @@
     </button>
 </form>
 
-{{-- Kembali ke Hari Ini: hanya tampil bila tanggal yang dipilih bukan hari ini --}}            @if(!($isToday ?? true))            <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['mode' => $chartMode ?? 'harian', 'status' => request('status')])) }}"
+{{-- Kembali ke Hari Ini: hanya tampil bila tanggal yang dipilih bukan hari ini --}}            @if(!($isToday ?? true))            <a href="{{ panel_route('dashboard', array_filter(['mode' => $chartMode ?? 'harian', 'status' => request('status')])) }}"
                    class="btn btn-light border text-dark fw-semibold rounded-2 px-2.5 py-1 d-none d-lg-inline-flex align-items-center gap-1 dashboard-reset-today"
                    style="font-size: 0.78rem;" title="{{ __('Kembali ke data hari ini') }}">
                     <i class='bx bx-undo'></i> {{ __('Hari Ini') }}
@@ -928,7 +928,14 @@
             <div class="dash-stats-grid">
 
                 <!-- 1. Siswa Aktif (angka memakai warna ikon "Data Siswa")
-                     Link ke halaman Data Siswa (route helper panel_route). -->
+                     Link ke halaman Data Siswa (route helper panel_route).
+                     Khusus Guru Piket: data sekolah read-only. -->
+                @if(is_piket())
+                <div class="dash-stat-cell" title="{{ __('Data sekolah hanya dapat dilihat') }}">
+                    <strong class="dash-stat-value is-sidebar-blue">{{ number_format($totalStudents ?? 0, 0, ',', '.') }}</strong>
+                    <span class="dash-stat-label">{{ __('Siswa Aktif') }}</span>
+                </div>
+                @else
                 <a href="{{ panel_route('students.index') }}"
                    class="dash-stat-cell"
                    aria-label="{{ __('Buka data siswa') }}"
@@ -936,9 +943,17 @@
                     <strong class="dash-stat-value is-sidebar-blue">{{ number_format($totalStudents ?? 0, 0, ',', '.') }}</strong>
                     <span class="dash-stat-label">{{ __('Siswa Aktif') }}</span>
                 </a>
+                @endif
 
                 <!-- 2. Rombongan Belajar (angka memakai warna ikon "Data Kelas")
-                     Link ke halaman Data Kelas. -->
+                     Link ke halaman Data Kelas.
+                     Khusus Guru Piket: data sekolah read-only. -->
+                @if(is_piket())
+                <div class="dash-stat-cell" title="{{ __('Data sekolah hanya dapat dilihat') }}">
+                    <strong class="dash-stat-value is-yellow">{{ number_format($totalClasses ?? 0, 0, ',', '.') }}</strong>
+                    <span class="dash-stat-label">{{ __('Rombongan Belajar') }}</span>
+                </div>
+                @else
                 <a href="{{ panel_route('classes.index') }}"
                    class="dash-stat-cell"
                    aria-label="{{ __('Buka data kelas') }}"
@@ -946,6 +961,7 @@
                     <strong class="dash-stat-value is-yellow">{{ number_format($totalClasses ?? 0, 0, ',', '.') }}</strong>
                     <span class="dash-stat-label">{{ __('Rombongan Belajar') }}</span>
                 </a>
+                @endif
 
                 <!-- 3. Guru Aktif (angka memakai warna ikon "Data Guru")
                      Halaman Data Guru hanya ada di panel ADMIN, jadi untuk role
@@ -1007,6 +1023,8 @@
                     <span class="dash-sc-label">{{ __('Catatan Kehadiran') }}</span>
                 </a>
 
+                {{-- Guru Piket hanya memakai dua pintasan operasional di atas. --}}
+                @if(!is_piket())
                 <!-- 3. Rekapitulasi Presensi (ikon PDF) -->
                 <a href="{{ panel_route('rekap') }}"
                    class="dash-shortcut-item"
@@ -1072,6 +1090,7 @@
                     <span class="dash-sc-label">{{ __('Pengaturan') }}</span>
                 </a>
                 @endif
+                @endif
 
             </div>
         </div>
@@ -1102,7 +1121,7 @@
                                  jadi tidak ada endpoint atau JS tambahan. --}}
                             <div class="chart-mode-toggle dash-seg" role="group" aria-label="{{ __('Mode grafik kehadiran') }}">
                                 @foreach(['harian' => __('Harian'), 'mingguan' => __('Mingguan'), 'bulanan' => __('Bulanan')] as $modeKey => $modeLabel)
-                                    <a href="{{ route(panel_role() === 'guru' ? 'guru.dashboard' : 'admin.dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $modeKey, 'status' => request('status')])) }}"                                                class="chart-mode-btn dash-seg__btn {{ ($chartMode ?? 'harian') === $modeKey ? 'active dash-seg__btn--solid' : '' }}"
+                                    <a href="{{ panel_route('dashboard', array_filter(['tanggal' => ($isToday ?? true) ? null : ($dateString ?? null), 'mode' => $modeKey, 'status' => request('status')])) }}"                                                class="chart-mode-btn dash-seg__btn {{ ($chartMode ?? 'harian') === $modeKey ? 'active dash-seg__btn--solid' : '' }}"
                                        title="{{ ['harian' => __('Tampilkan grafik harian'), 'mingguan' => __('Tampilkan grafik mingguan'), 'bulanan' => __('Tampilkan grafik bulanan')][$modeKey] }}">{{ $modeLabel }}</a>
                                 @endforeach
                             </div>

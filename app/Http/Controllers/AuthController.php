@@ -21,7 +21,7 @@ class AuthController extends Controller
             return match (Auth::user()->role) {
                 'admin' => redirect()->route('admin.dashboard'),
                 'guru' => redirect()->route('guru.dashboard'),
-                'piket' => redirect()->route('piket.absensi.index'),
+                'piket' => redirect()->route('piket.dashboard'),
                 default => redirect()->route('login'),
             };
         }
@@ -174,8 +174,8 @@ class AuthController extends Controller
         return match ($user->role) {
             'admin' => redirect()->intended(route('admin.dashboard')),
             'guru' => redirect()->intended(route('guru.dashboard')),
-            // Guru Piket langsung masuk ke halaman Presensi (scan QR) -
-            // tidak punya Dashboard dan aksesnya dibatasi Kehadiran+Presensi.
+            // Guru Piket langsung masuk ke Dashboard Piket (ringkasan kehadiran
+            // + pintasan Presensi & Catatan Kehadiran).
             'piket' => redirect()->intended(route('piket.dashboard')),
             default => redirect()->route('login')->withErrors([
                 'login' => __('Role pengguna tidak dikenali atau tidak memiliki hak akses.'),

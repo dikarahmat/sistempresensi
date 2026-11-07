@@ -5720,7 +5720,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 @php
     $navUserRole = Auth::user()->role ?? 'admin';
     $isNavAdmin = ($navUserRole === 'admin');
-    // GURU PIKET: bottom nav hanya menampilkan Kehadiran & Presensi.
+    // GURU PIKET: bottom nav menampilkan Dashboard, Kehadiran & Presensi.
     $isNavPiket = ($navUserRole === 'piket');
 
     // 1. Dashboard
@@ -5747,10 +5747,9 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 @endphp
 
 <nav class="mobile-bottom-nav lg:hidden" aria-label="{{ __('Menu Navigasi Bawah') }}">
-    <div class="mobile-nav-grid" @if($isNavPiket) style="grid-template-columns: repeat(2, minmax(0,1fr)) !important;" @endif>
+    <div class="mobile-nav-grid" @if($isNavPiket) style="grid-template-columns: repeat(3, minmax(0,1fr)) !important;" @endif>
         
-        <!-- 1. Dashboard (bx bxs-dashboard) - TIDAK tampil untuk Guru Piket -->
-        @if(!$isNavPiket)
+        <!-- 1. Dashboard (bx bxs-dashboard) - tampil untuk semua role -->
         <a href="{{ $navDashboardUrl }}" 
            class="mobile-nav-item {{ $isNavDashboardActive ? 'active' : '' }}"
            title="{{ __('Dashboard') }}">
@@ -5761,7 +5760,6 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             <i class='bx bxs-dashboard mobile-nav-icon'></i>
             <span class="mobile-nav-label">{{ __('Dashboard') }}</span>
         </a>
-        @endif
 
         <!-- 2. Kehadiran (bx bx-calendar-check) -->
         <a href="{{ $navKehadiranUrl }}" 

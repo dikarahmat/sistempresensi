@@ -655,11 +655,11 @@ class AttendanceController extends Controller
             return response()->json($props);
         }
 
-        // Route presensi.guru (sidebar) -> class-guru view
+        // Route presensi.guru (admin) / piket.presensi.guru (piket) -> class-guru view
         // Route admin/kehadiran/guru, guru/kehadiran/guru, piket/kehadiran/guru -> kehadiran view
         $route = $request->route();
         $routeName = $route ? $route->getName() : '';
-        if ($routeName === 'presensi.guru') {
+        if (in_array($routeName, ['presensi.guru', 'piket.presensi.guru'], true)) {
             return view('admin.absensi.class-guru', array_merge($props, ['teachersList' => $teachersList]));
         }
 

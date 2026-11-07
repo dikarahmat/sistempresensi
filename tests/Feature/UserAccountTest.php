@@ -234,16 +234,97 @@ class UserAccountTest extends TestCase
         $this->assertTrue(Hash::check('oldpass', $user->fresh()->password));
     }
 
-    public function test_update_ignores_role_change(): void
+    public function test_update_ignores_role_sent_in_request(): void
     {
         $user = User::factory()->create(['role' => User::ROLE_GURU, 'username' => 'guru_role']);
 
         $this->put(route('admin.accounts.update', $user), [
             'username' => $user->username,
+            'role' => User::ROLE_PIKET,
+        ])->assertRedirect(route('admin.accounts.index'))
+          ->assertSessionHasNoErrors();
+
+        // Role tidak diubah lewat form Edit.
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'role' => User::ROLE_GURU]);
+    }
+
+    public function test_update_changes_status(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'username' => 'guru_status',
+            'status' => User::STATUS_AKTIF,
+        ]);
+
+        $this->put(route('admin.accounts.update', $user), [
+            'username' => $user->username,
+            'status' => User::STATUS_NONAKTIF,
+        ])->assertRedirect(route('admin.accounts.index'));
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'status' => User::STATUS_NONAKTIF]);
+    }
+
+    public function test_update_succeeds_even_if_another_account_has_same_role(): void
+    {
+        // Data lama bisa memiliki akun ganda dengan role yang sama. Validasi
+        // unique role saat update tidak boleh memblokir perubahan username
+        // atau password akun yang sedang diedit.
+        User::factory()->create(['role' => User::ROLE_ADMIN, 'username' => 'admin_duplikat', 'email' => 'dupe_admin@test.com']);
+
+        $user = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'username' => 'admin_lama',
+            'email' => 'admin_lama@test.com',
+            'password' => bcrypt('oldpass'),
+            'status' => User::STATUS_AKTIF,
+        ]);
+
+        $this->put(route('admin.accounts.update', $user), [
+            'username' => 'admin123',
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_AKTIF,
+            'password' => 'adminPGRI',
+        ])->assertRedirect(route('admin.accounts.index'))
+          ->assertSessionHasNoErrors()
+          ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'username' => 'admin123',
             'role' => User::ROLE_ADMIN,
         ]);
 
-        $this->assertDatabaseHas('users', ['id' => $user->id, 'role' => User::ROLE_GURU]);
+        $this->assertTrue(Hash::check('adminPGRI', $user->fresh()->password));
+    }
+
+    public function test_update_username_admin123_and_password_adminPGRI(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'username' => 'guru_lama',
+            'password' => bcrypt('oldpass'),
+            'status' => User::STATUS_AKTIF,
+        ]);
+
+        $this->put(route('admin.accounts.update', $user), [
+            'username' => 'admin123',
+            'status' => User::STATUS_AKTIF,
+            'password' => 'adminPGRI',
+        ])->assertRedirect(route('admin.accounts.index'))
+          ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'username' => 'admin123',
+            'name' => 'admin123',
+            'role' => User::ROLE_GURU,
+            'status' => User::STATUS_AKTIF,
+        ]);
+
+        $this->assertTrue(Hash::check('adminPGRI', $user->fresh()->password));
+
+        $this->post(route('login'), ['login' => 'admin123', 'password' => 'adminPGRI'])
+            ->assertRedirect(route('guru.dashboard'));
     }
 
     public function test_destroy_deletes_guru_piket(): void

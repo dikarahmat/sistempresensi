@@ -2,42 +2,52 @@
     // ========================================================================
     // SIDEBAR BERSAMA ADMIN, GURU & GURU PIKET (single source of truth).
     //   admin : Dashboard, Presensi(dropdown), Kehadiran(dropdown), Rekap(dropdown), Siswa, Guru, Kelas, Pengaturan
-    //   guru  : Dashboard, Presensi(dropdown), Kehadiran(dropdown), Rekap(dropdown), Siswa, Kelas
-    //   piket : Presensi(dropdown), Kehadiran(dropdown) (Dashboard & Rekap disembunyikan)
+    //   guru  : Dashboard, Presensi Siswa, Kehadiran Siswa, Rekap Siswa, Data Siswa, Data Kelas (tanpa dropdown)
+    //   piket : Dashboard, Presensi(dropdown Siswa & Guru), Kehadiran(dropdown Siswa & Guru)
     // ========================================================================
     $userRole = Auth::user()->role ?? 'admin';
     $isAdminPanel = ($userRole === 'admin');
+    $isGuruPanel = ($userRole === 'guru');
     $isPiketPanel = ($userRole === 'piket');
 
     $dashboardRoute = panel_route('dashboard');
     $isDashboardActive = request()->routeIs('admin.dashboard', 'guru.dashboard', 'piket.dashboard');
 
-    // PRESENSI (dropdown: Siswa & Guru), logikanya sama dengan KEHADIRAN
+    // PRESENSI (dropdown: Siswa & Guru untuk admin/piket; link langsung untuk guru)
     $absensiRoute       = panel_route('absensi.index');
     $presensiSiswaRoute = $absensiRoute;
-    $presensiGuruRoute  = \Illuminate\Support\Facades\Route::has('presensi.guru')
-        ? route('presensi.guru')
-        : (\Illuminate\Support\Facades\Route::has('admin.presensi.guru') ? route('admin.presensi.guru') : null);
+    $presensiGuruRoute  = $isGuruPanel ? null : panel_route('presensi.guru');
+    if ($presensiGuruRoute === '#') {
+        $presensiGuruRoute = null;
+    }
 
-    $isPresensiGuruActive  = request()->routeIs('*presensi.guru*') || request()->is('presensi/guru*', '*/presensi/guru*');
+    $isPresensiGuruActive  = $presensiGuruRoute !== null
+        && (request()->routeIs('*presensi.guru*') || request()->is('presensi/guru*', '*/presensi/guru*'));
     $isPresensiSiswaActive = ! $isPresensiGuruActive && panel_is('absensi*');
     $isAbsensiActive       = $isPresensiSiswaActive || $isPresensiGuruActive;
 
-    // KEHADIRAN (dropdown: Siswa & Guru)
+    // KEHADIRAN (dropdown: Siswa & Guru untuk admin/piket; link langsung untuk guru)
     $kehadiranSiswaRoute    = panel_route('kehadiran.siswa');
-    $kehadiranGuruRoute     = panel_route('kehadiran.guru');
+    $kehadiranGuruRoute     = $isGuruPanel ? null : panel_route('kehadiran.guru');
+    if ($kehadiranGuruRoute === '#') {
+        $kehadiranGuruRoute = null;
+    }
     $isKehadiranSiswaActive = panel_is('kehadiran.siswa*');
-    $isKehadiranGuruActive  = panel_is('kehadiran.guru*');
+    $isKehadiranGuruActive  = $kehadiranGuruRoute !== null && panel_is('kehadiran.guru*');
     $isKehadiranActive      = $isKehadiranSiswaActive || $isKehadiranGuruActive || panel_is('kehadiran*');
 
-    // REKAP (dropdown: Siswa & Guru)
+    // REKAP (dropdown: Siswa & Guru untuk admin; link langsung untuk guru)
     $rekapSiswaRoute    = panel_route('rekap.siswa');
-    $rekapGuruRoute     = panel_route('rekap.guru');
+    $rekapGuruRoute     = $isGuruPanel ? null : panel_route('rekap.guru');
+    if ($rekapGuruRoute === '#') {
+        $rekapGuruRoute = null;
+    }
     $isRekapSiswaActive = panel_is('rekap.siswa*');
-    $isRekapGuruActive  = panel_is('rekap.guru*');
+    $isRekapGuruActive  = $rekapGuruRoute !== null && panel_is('rekap.guru*');
     $isRekapActive      = $isRekapSiswaActive || $isRekapGuruActive || panel_is('rekap*');
 
     $siswaRoute = panel_route('students.index');
+    $siswaLabel = __('Siswa');
 
     // Halaman TEMPAT SAMPAH kini modul di bawah PENGATURAN, bukan di bawah
     // SISWA/GURU/KELAS, jadi dikeluarkan dari syarat aktif modul masing-masing.
@@ -49,6 +59,7 @@
     $isSiswaActive = panel_is('students*') && ! $isTrashPage;
 
     $kelasRoute = panel_route('classes.index');
+    $kelasLabel = __('Kelas');
     $isKelasActive = (panel_is('classes*') || panel_is('kelas*')) && ! $isTrashPage;
 
     $isGuruActive = (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage;
@@ -110,8 +121,7 @@
     <div class="flex-grow-1 py-2 sidebar-menu-scroll sidebar-menu-wrapper menu-container">
         <ul class="nav nav-pills flex-column mb-auto" style="gap: 0;">
 
-            {{-- DASHBOARD: admin & guru (bukan piket) --}}
-            @if(! $isPiketPanel)
+            {{-- DASHBOARD: semua role (admin, guru, piket) --}}
             <li class="nav-item">
                 <a href="{{ $dashboardRoute }}"
                    class="nav-link text-white d-flex align-items-center gap-3 {{ $isDashboardActive ? $activeCls : '' }}"
@@ -120,10 +130,18 @@
                     <span class="sidebar-nav-label">{{ __('Dashboard') }}</span>
                 </a>
             </li>
-            @endif
 
-            {{-- PRESENSI: dropdown Siswa & Guru (semua role) --}}
-            @if($presensiSiswaRoute || $presensiGuruRoute)
+            {{-- PRESENSI: guru memakai link langsung; admin & piket memakai dropdown --}}
+            @if($isGuruPanel && $presensiSiswaRoute)
+            <li class="nav-item">
+                <a href="{{ $presensiSiswaRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isPresensiSiswaActive ? $activeCls : '' }}"
+                   data-label="{{ __('Presensi') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-qr-scan fs-5 {{ $isPresensiSiswaActive ? 'text-primary' : 'text-white' }}'></i>
+                    <span class="sidebar-nav-label">{{ __('Presensi') }}</span>
+                </a>
+            </li>
+            @elseif($presensiSiswaRoute || $presensiGuruRoute)
             <li class="nav-item">
                 <a href="#submenuPresensi"
                    class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isAbsensiActive ? $activeCls : '' }}"
@@ -161,8 +179,17 @@
             </li>
             @endif
 
-            {{-- KEHADIRAN: dropdown Siswa & Guru (semua role) --}}
-            @if($kehadiranSiswaRoute || $kehadiranGuruRoute)
+            {{-- KEHADIRAN: guru memakai link langsung; admin & piket memakai dropdown --}}
+            @if($isGuruPanel && $kehadiranSiswaRoute)
+            <li class="nav-item">
+                <a href="{{ $kehadiranSiswaRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isKehadiranSiswaActive ? $activeCls : '' }}"
+                   data-label="{{ __('Kehadiran') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-calendar-check fs-5 {{ $isKehadiranSiswaActive ? 'text-primary' : 'text-white' }}'></i>
+                    <span class="sidebar-nav-label">{{ __('Kehadiran') }}</span>
+                </a>
+            </li>
+            @elseif($kehadiranSiswaRoute || $kehadiranGuruRoute)
             <li class="nav-item">
                 <a href="#submenuKehadiran"
                    class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isKehadiranActive ? $activeCls : '' }}"
@@ -200,8 +227,17 @@
             </li>
             @endif
 
-            {{-- REKAP: dropdown Siswa & Guru (admin & guru, bukan piket) --}}
-            @if(! $isPiketPanel && ($rekapSiswaRoute || $rekapGuruRoute))
+            {{-- REKAP: guru memakai link langsung; admin memakai dropdown; piket tidak punya Rekap --}}
+            @if($isGuruPanel && $rekapSiswaRoute)
+            <li class="nav-item">
+                <a href="{{ $rekapSiswaRoute }}"
+                   class="nav-link text-white d-flex align-items-center gap-3 {{ $isRekapSiswaActive ? $activeCls : '' }}"
+                   data-label="{{ __('Rekap') }}" style="{{ $navStyle }}">
+                    <i class='bx bx-folder-open fs-5 {{ $isRekapSiswaActive ? 'text-primary' : 'text-white' }}'></i>
+                    <span class="sidebar-nav-label">{{ __('Rekap') }}</span>
+                </a>
+            </li>
+            @elseif(! $isPiketPanel && ($rekapSiswaRoute || $rekapGuruRoute))
             <li class="nav-item">
                 <a href="#submenuRekap"
                    class="nav-link text-white d-flex align-items-center gap-3 sidebar-dropdown-toggle {{ $isRekapActive ? $activeCls : '' }}"
@@ -244,9 +280,9 @@
             <li class="nav-item">
                 <a href="{{ $siswaRoute }}"
                    class="nav-link text-white d-flex align-items-center gap-3 {{ $isSiswaActive ? $activeCls : '' }}"
-                   data-label="{{ __('Siswa') }}" style="{{ $navStyle }}">
+                   data-label="{{ $siswaLabel }}" style="{{ $navStyle }}">
                     <i class='bx bx-user fs-5 {{ $isSiswaActive ? 'text-primary' : 'text-white' }}'></i>
-                    <span class="sidebar-nav-label">{{ __('Siswa') }}</span>
+                    <span class="sidebar-nav-label">{{ $siswaLabel }}</span>
                 </a>
             </li>
             @endif
@@ -268,9 +304,9 @@
             <li class="nav-item">
                 <a href="{{ $kelasRoute }}"
                    class="nav-link text-white d-flex align-items-center gap-3 {{ $isKelasActive ? $activeCls : '' }}"
-                   data-label="{{ __('Kelas') }}" style="{{ $navStyle }}">
+                   data-label="{{ $kelasLabel }}" style="{{ $navStyle }}">
                     <i class='bx bx-buildings fs-5 {{ $isKelasActive ? 'text-primary' : 'text-white' }}'></i>
-                    <span class="sidebar-nav-label">{{ __('Kelas') }}</span>
+                    <span class="sidebar-nav-label">{{ $kelasLabel }}</span>
                 </a>
             </li>
             @endif

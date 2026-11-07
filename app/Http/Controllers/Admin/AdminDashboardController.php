@@ -261,7 +261,7 @@ class AdminDashboardController extends Controller
         $checkInTime = Setting::getCheckInTime();
         $lateLimitTime = Setting::getLateLimitTime();
 
-        return view('admin.dashboard', compact(
+        return view(panel_role() === 'piket' ? 'piket.dashboard' : 'admin.dashboard', compact(
             'today', 'todayFormatted', 'dateString', 'startOfWeek', 'endOfWeek',
             'isToday', 'dateLabel', 'selectedDate',
             'checkInTime', 'lateLimitTime',

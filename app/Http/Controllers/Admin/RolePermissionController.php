@@ -147,6 +147,13 @@ class RolePermissionController extends Controller
                 'master.students',
                 'settings.documentation',
             ],
+            'piket' => [
+                'dashboard.view',
+                'dashboard.realtime',
+                'absensi.scan',
+                'absensi.kiosk',
+                'absensi.manual',
+            ],
             default => [],
         };
     }
@@ -177,15 +184,17 @@ class RolePermissionController extends Controller
         $roleCounts = [
             'admin' => User::where('role', 'admin')->count(),
             'guru' => User::where('role', 'guru')->count(),
+            'piket' => User::where('role', 'piket')->count(),
         ];
 
         $rolePermissions = [
             'admin' => self::getRolePermissions('admin'),
             'guru' => self::getRolePermissions('guru'),
+            'piket' => self::getRolePermissions('piket'),
         ];
 
         $activeRole = $request->query('role', 'admin');
-        if (!in_array($activeRole, ['admin', 'guru'], true)) {
+        if (!in_array($activeRole, ['admin', 'guru', 'piket'], true)) {
             $activeRole = 'admin';
         }
 
@@ -205,7 +214,7 @@ class RolePermissionController extends Controller
     public function update(Request $request)
     {
         $role = $request->input('role');
-        if (!in_array($role, ['admin', 'guru'], true)) {
+        if (!in_array($role, ['admin', 'guru', 'piket'], true)) {
             return back()->with('error', __('Role pengguna tidak valid.'));
         }
 
@@ -224,6 +233,7 @@ class RolePermissionController extends Controller
         $roleLabel = match ($role) {
             'admin' => 'Administrator',
             'guru' => 'Guru',
+            'piket' => 'Guru Piket',
             default => $role,
         };
 
