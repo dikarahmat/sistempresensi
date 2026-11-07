@@ -119,7 +119,7 @@ class TeacherController extends Controller
         $teacher->load('schoolClass');
 
         if ($request->expectsJson() || $request->ajax()) {
-            $token = TeacherCardService::qrTokenFor($teacher->nip, (string) $teacher->id);
+            $token = TeacherCardService::qrTokenFor($teacher->nip, $teacher->name);
             $qrSrc = null;
             if ($token) {
                 try {

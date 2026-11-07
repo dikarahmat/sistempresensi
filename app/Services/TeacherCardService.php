@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Models\Student;
 use App\Models\Teacher;
 use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;
@@ -49,11 +50,9 @@ class TeacherCardService
     }
 
     /**
-     * Token QR guru: NIP valid bila tersedia; jika tidak, pakai ID guru
-     * agar setiap guru tanpa NIP tetap punya QR unik, bukan "-" yang sama
-     * untuk semua orang.
+     * Token QR guru: NIP valid bila tersedia; jika tidak, pakai Nama_Lengkap_guru.
      */
-    public static function qrTokenFor(?string $nip, ?string $fallback = null): string
+    public static function qrTokenFor(?string $nip, ?string $name = null): string
     {
         $normalizedNip = self::normalizeNip($nip);
 
@@ -61,9 +60,7 @@ class TeacherCardService
             return $normalizedNip;
         }
 
-        $fallback = trim((string) $fallback);
-
-        return $fallback !== '' ? $fallback : '-';
+        return Student::sanitizeToken((string) $name) . '_guru';
     }
 
     /**
@@ -288,7 +285,7 @@ class TeacherCardService
         $teacher->nip_display = self::displayNip($teacher->nip);
 
         try {
-            $teacher->qr_base64 = self::qrPngDataUri(self::qrTokenFor($teacher->nip, (string) $teacher->id));
+            $teacher->qr_base64 = self::qrPngDataUri($teacher->qrValue());
         } catch (\Throwable $e) {
             Log::warning('Gagal membuat QR kartu guru: '.$e->getMessage(), [
                 'teacher_id' => $teacher->id,
@@ -307,6 +304,7 @@ class TeacherCardService
             'id' => $teacher->id,
             'nip' => $teacher->nip,
             'qr_token' => $teacher->qr_token,
+            'qr' => $teacher->qrValue(),
             'name' => $teacher->name,
             'updated_at' => optional($teacher->updated_at)->timestamp ?? 0,
         ])->all();
@@ -318,7 +316,7 @@ class TeacherCardService
             'design' => self::designStamp(),
         ]));
 
-        return 'teacher_cards_v5_'.$key.'.zip';
+        return 'teacher_cards_v6_'.$key.'.zip';
     }
 
     private static function singleCardCacheKey(Teacher $teacher): string
@@ -330,6 +328,7 @@ class TeacherCardService
                 'id' => $teacher->id,
                 'nip' => $teacher->nip,
                 'qr_token' => $teacher->qr_token,
+                'qr' => $teacher->qrValue(),
                 'name' => $teacher->name,
                 'updated_at' => optional($teacher->updated_at)->timestamp ?? 0,
             ],
@@ -338,7 +337,7 @@ class TeacherCardService
             'design' => self::designStamp(),
         ]));
 
-        return 'teacher_card_single_v3_'.$key.'.jpg';
+        return 'teacher_card_single_v4_'.$key.'.jpg';
     }
 
     private static function designStamp(): string

@@ -47,6 +47,11 @@ class Teacher extends Model
         });
     }
 
+    public function qrValue(): string
+    {
+        return \App\Services\TeacherCardService::qrTokenFor($this->nip, $this->name);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

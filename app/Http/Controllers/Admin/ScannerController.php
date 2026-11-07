@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
+use App\Services\TeacherCardService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -106,34 +107,70 @@ class ScannerController extends Controller
         $currentTime = $now->toTimeString();
 
         $cleanToken = trim($request->qr_token);
+        $lookupKey = Student::lookupKey($cleanToken);
 
-        // Kartu QR memuat qr_token; kode angka (NISN) dipakai sebagai fallback
-        // dan hanya diterima jika cocok tepat satu siswa.
-        $student = Student::with('schoolClass')->where('qr_token', $cleanToken)->first();
+        // Token guru tanpa NIP valid selalu berakhiran "_guru". Token ini
+        // diperiksa lebih dulu dan tidak pernah dianggap sebagai token siswa.
+        if (str_ends_with($lookupKey, '_guru')) {
+            $teacher = Teacher::orderBy('id')->get()->first(function (Teacher $candidate) use ($lookupKey) {
+                if (TeacherCardService::normalizeNip($candidate->nip) !== null) {
+                    return false;
+                }
 
-        if (!$student) {
-            // Fallback NISN (kartu angka lama): terima hanya jika cocok tepat satu siswa.
-            $nisnMatches = Student::with('schoolClass')->where('nisn', $cleanToken)->get();
-            if ($nisnMatches->count() === 1) {
-                $student = $nisnMatches->first();
-            } elseif ($nisnMatches->count() > 1) {
-                return response()->json([
-                    'success' => false,
-                    'status' => 'error',
-                    'message' => 'NISN dipakai lebih dari satu siswa, scan QR kartu.',
-                ], 409);
+                return Student::lookupKey($candidate->qrValue()) === $lookupKey;
+            });
+
+            if ($teacher) {
+                $teacherResult = $this->processTeacherScan($request, $teacher, $cleanToken, $todayDate, $currentTime);
+                return response()->json($teacherResult['response'], $teacherResult['status_code'] ?? 200);
             }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Kartu tidak dikenali atau data siswa/guru tidak ditemukan!',
+            ], 404);
+        }
+
+        // NISN tetap dicocokkan persis; NISN ganda tetap ditolak.
+        $nisnMatches = Student::with('schoolClass')
+            ->where('nisn', $cleanToken)
+            ->orderBy('id')
+            ->get();
+
+        $student = null;
+        if ($nisnMatches->count() === 1) {
+            $student = $nisnMatches->first();
+        } elseif ($nisnMatches->count() > 1) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'NISN dipakai lebih dari satu siswa, scan QR kartu.',
+            ], 409);
         }
 
         if (!$student) {
-            // Coba cari guru: kartu guru mengandung NIP (atau ID guru sebagai fallback),
-            // bukan NISN. Cek qr_token, nip, dan id agar semua kartu guru tetap dikenali
-            // meski sudah dicetak dengan format lama/baru.
-            $teacher = Teacher::where(function ($query) use ($cleanToken) {
-                $query->where('qr_token', $cleanToken)
-                      ->orWhere('nip', $cleanToken)
-                      ->orWhere('id', $cleanToken);
-            })->first();
+            // Token Nama_Kelas hanya berlaku untuk siswa jalur fallback:
+            // NISN kosong atau NISN dipakai lebih dari satu siswa.
+            $duplicateNisn = Student::query()
+                ->select('nisn')
+                ->whereNotNull('nisn')
+                ->where('nisn', '!=', '')
+                ->groupBy('nisn')
+                ->havingRaw('COUNT(*) > 1');
+
+            $student = Student::with('schoolClass')
+                ->where(function ($query) use ($duplicateNisn) {
+                    $query->whereNull('nisn')
+                        ->orWhere('nisn', '')
+                        ->orWhereIn('nisn', $duplicateNisn);
+                })
+                ->orderBy('id')
+                ->get()
+                ->first(fn (Student $candidate) => Student::lookupKey($candidate->qrValue()) === $lookupKey);
+        }
+
+        if (!$student) {
+            $teacher = Teacher::where('nip', $cleanToken)->orderBy('id')->first();
 
             if ($teacher) {
                 $teacherResult = $this->processTeacherScan($request, $teacher, $cleanToken, $todayDate, $currentTime);

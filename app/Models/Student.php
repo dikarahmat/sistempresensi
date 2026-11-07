@@ -126,13 +126,35 @@ class Student extends Model
     }
 
     /**
+     * Bersihkan token berbasis nama: transliterasi ASCII, spasi menjadi
+     * underscore, buang karakter selain huruf/angka/underscore, rapikan
+     * underscore ganda, lalu batasi 255 karakter.
+     */
+    public static function sanitizeToken(string $value): string
+    {
+        $value = trim(Str::ascii($value));
+        $value = preg_replace('/\s+/u', '_', $value) ?? '';
+        $value = preg_replace('/[^A-Za-z0-9_]/u', '', $value) ?? '';
+        $value = preg_replace('/_+/u', '_', $value) ?? '';
+        $value = trim($value, '_');
+
+        return mb_substr($value, 0, 255);
+    }
+
+    /**
+     * Kunci pembanding token: trim + lowercase.
+     */
+    public static function lookupKey(string $value): string
+    {
+        return Str::lower(trim($value));
+    }
+
+    /**
      * Nilai yang dienkripsi ke dalam QR kartu siswa.
      *
      * Aturan:
      * - NISN terisi dan unik (tidak dipakai siswa lain)  →  isi QR = NISN.
-     * - NISN kosong atau dipakai lebih dari satu siswa   →  isi QR = qr_token (UUID).
-     * - Semua siswa wajib punya qr_token (hasil generating di {@see $creating} dan
-     *   backfill migrasi).
+     * - NISN kosong atau dipakai lebih dari satu siswa   →  isi QR = Nama_Kelas.
      */
     public function qrValue(): string
     {
@@ -148,6 +170,9 @@ class Student extends Model
             }
         }
 
-        return $this->qr_token ?? (string) Str::uuid();
+        $nameToken = self::sanitizeToken((string) ($this->name ?? ''));
+        $classToken = self::sanitizeToken((string) ($this->schoolClass?->name ?? ''));
+
+        return implode('_', array_filter([$nameToken, $classToken], fn ($part) => $part !== ''));
     }
 }

@@ -176,6 +176,31 @@ class AntiDoubleAbsenTest extends TestCase
         ]);
     }
 
+    /** Siswa tanpa NISN memakai token Nama_Kelas (case-insensitive saat scan). */
+    public function test_scan_siswa_tanpa_nisn_memakai_nama_kelas(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 10, 16, 7, 0, 0, 'Asia/Jakarta'));
+
+        $student = Student::create([
+            'school_class_id' => $this->student->school_class_id,
+            'name' => 'Siswa Tanpa Nisn',
+            'nisn' => null,
+            'gender' => 'Perempuan',
+            'status' => 'Aktif',
+        ]);
+
+        $this->assertSame('Siswa_Tanpa_Nisn_7A', $student->qrValue());
+
+        $response = $this->actingAs($this->admin)->postJson(route('admin.scanner.process'), [
+            'qr_token' => 'SISWA_TANPA_NISN_7A',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('student.name', 'Siswa Tanpa Nisn');
+        $this->assertSame(1, Attendance::where('student_id', $student->id)->count());
+    }
+
     /** Hak akses: piket tidak boleh mengubah (override) presensi. */
     public function test_piket_tidak_bisa_override_presensi(): void
     {

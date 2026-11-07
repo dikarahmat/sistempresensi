@@ -169,11 +169,13 @@ class DownloadCacheService
             $student->loadMissing('schoolClass');
             $settingStamp = self::getSettingStamp();
             $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
+            $qrStamp = md5($student->qrValue());
             $designStamp = self::getDesignStamp();
-            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.png";
+            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$qrStamp}_{$settingStamp}_{$designStamp}.png";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-            $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.png';
+            $identifier = $student->nisn ?: $student->id;
+            $downloadFileName = 'kartu-presensi-' . $identifier . '-' . Str::slug($student->name) . '.png';
 
             // Bersihkan file cache jika ada file 0-byte atau rusak
             if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
@@ -253,9 +255,10 @@ class DownloadCacheService
     private static function studentCardJpgCachePath(Student $student, string $settingStamp, string $designStamp): string
     {
         $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
+        $qrStamp = md5($student->qrValue());
 
         return self::$baseDir . '/cards/'
-            . "card_single_jpg_v5_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.jpg";
+            . "card_single_jpg_v6_{$student->id}_{$studentStamp}_{$qrStamp}_{$settingStamp}_{$designStamp}.jpg";
     }
 
     private static function ensureStudentCardJpgCache(Student $student, string $settingStamp, string $designStamp): string
@@ -617,7 +620,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
 
     $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
     $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-    $cacheFileName = "cards_mass_jpg_v8_{$scopeKey}_{$designStamp}.zip";
+    $cacheFileName = "cards_mass_jpg_v9_{$scopeKey}_{$designStamp}.zip";
     $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
     $targetClassName = 'Semua_Siswa';
@@ -795,7 +798,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
             'third_line' => 'GURU',
             'third_line_color' => [20, 83, 45],
             'scan_color' => [20, 83, 45],
-            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, (string) $teacher->id),
+            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, $teacher->name),
             'subtitle_top' => 134,
             'scan_top' => 1312,
             'footer_top' => 1640,
