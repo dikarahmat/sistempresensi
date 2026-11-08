@@ -413,8 +413,7 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
     {
         return [
             'KETERANGAN:',
-            'H = Hadir, T = Terlambat, S = Sakit, I = Izin, A = Alfa, L = Libur, - = Belum',
-            'Format Keterlambatan: kurang dari 60 menit ditulis "15 MNT", 60 menit atau lebih ditulis "1 JAM 5 MNT".',
+            'H = Hadir, S = Sakit, I = Izin, A = Alfa, L = Libur, - = Belum',
         ];
     }
 

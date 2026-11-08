@@ -159,11 +159,22 @@
     .table-matrix .col-pct { width: 64px; }
     .table-matrix thead th.th-sum,
     .table-matrix tbody td.td-sum { padding-left: 0.15rem; padding-right: 0.15rem; text-align: center; font-weight: 700; }
-    .table-matrix tbody td.td-pct { text-align: center; font-weight: 700; font-size: 0.95rem; color: #212529; }
+    .table-matrix tbody td.td-pct { text-align: center; font-weight: 700; font-size: 0.95rem; color: #212529; overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important; }
+
+    /* ===== WARNA KOLOM RINGKASAN (header + angka) =====
+       Pakai ID + !important supaya tidak kalah dari CSS global yang
+       memaksa warna thead th. Class dipasang di <th> DAN <span> di dalamnya. */
+    #daftar-rekap .table-matrix .clr-h { color: #16a34a !important; }
+    #daftar-rekap .table-matrix .clr-s { color: #2563eb !important; }
+    #daftar-rekap .table-matrix .clr-i { color: #7e22ce !important; }
+    #daftar-rekap .table-matrix .clr-a { color: #ef4444 !important; }
+    #daftar-rekap .table-matrix .clr-pct { color: #212529 !important; }
+    #daftar-rekap .table-matrix thead th.th-sum > span { font-weight: 700; }
+    #daftar-rekap .table-matrix thead th.th-sum.clr-pct,
+    #daftar-rekap .table-matrix thead th.th-sum.clr-pct > span { font-size: 0.95rem; }
 
     /* Status Colors */
     .cell-present { color: #16a34a !important; font-weight: 700; }
-    .cell-late { color: #d97706 !important; font-weight: 700; }
     .cell-sick { color: #2563eb !important; font-weight: 700; }
     .cell-permission { color: #7e22ce !important; font-weight: 700; }
     .cell-alpha { color: #ef4444 !important; font-weight: 700; }
@@ -228,6 +239,50 @@
         background-color: var(--bs-btn-bg, #f8f9fa);
         border-color: var(--bs-btn-border-color, #dee2e6);
         color: var(--bs-btn-color, #212529);
+    }
+
+    /* Banner hari libur - kompak */
+    .holiday-banner { padding: 0.5rem 0.85rem !important; margin-bottom: 0.75rem !important; font-size: 0.8rem; }
+    .holiday-banner .text-warning { font-size: 1.15rem !important; }
+    .holiday-banner .small { font-size: 0.78rem; line-height: 1.35; }
+    .holiday-banner .text-muted.text-xs { font-size: 0.72rem; line-height: 1.3; }
+
+    /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal, NO+NAMA sticky ===== */
+    @media (max-width: 767.98px) {
+        #daftar-rekap .table-responsive {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+        #daftar-rekap .table-responsive > table {
+            min-width: 1050px !important;
+            width: auto !important;
+        }
+        #daftar-rekap .table-matrix tbody td,
+        #daftar-rekap .table-matrix thead th {
+            white-space: nowrap !important;
+            padding: 0.6rem 0.7rem !important;
+            font-size: 0.78rem !important;
+        }
+        /* Kolom NO sticky di kiri */
+        #daftar-rekap .table-matrix tbody td:nth-child(1),
+        #daftar-rekap .table-matrix thead th:nth-child(1) {
+            position: sticky !important;
+            left: 0 !important;
+            z-index: 2 !important;
+            background: #ffffff !important;
+        }
+        /* Kolom NAMA Guru sticky (setelah NO+NIP = 36+110=146px) */
+        #daftar-rekap .table-matrix tbody td:nth-child(3),
+        #daftar-rekap .table-matrix thead th:nth-child(3) {
+            position: sticky !important;
+            left: 146px !important;
+            z-index: 2 !important;
+            background: #ffffff !important;
+        }
+        .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
+        .presence-summary .item { white-space: nowrap; }
     }
 </style>
 @endpush
@@ -386,11 +441,11 @@
     </div>
 
     @if($type === 'harian' && ($isHoliday ?? false))
-    <div class="alert alert-warning border-0 rounded-4 p-3 mb-3 d-flex align-items-center gap-3 shadow-xs">
-        <i class='bx bx-calendar-exclamation fs-3 text-warning'></i>
+    <div class="holiday-banner alert alert-warning border-0 rounded-3 mb-2 p-2 py-1 d-flex align-items-center gap-2">
+        <i class='bx bx-calendar-exclamation text-warning' style="font-size: 1.15rem;"></i>
         <div>
-            <h6 class="fw-bold mb-0">{{ __('Hari Ini Merupakan Hari Libur:') }} {{ $holidayDesc ?? '' }}</h6>
-            <small class="text-muted">{{ __('Presensi tidak diwajibkan untuk tanggal ini.') }}</small>
+            <div class="fw-bold text-dark text-nowrap small">{{ __('Hari Ini Merupakan Hari Libur:') }} {{ $holidayDesc ?? '' }}</div>
+            <div class="text-muted text-xs">{{ __('Presensi tidak diwajibkan untuk tanggal ini.') }}</div>
         </div>
     </div>
     @endif
@@ -400,7 +455,6 @@
         <span class="rekap-legend-label">{{ __('Keterangan') }}:</span>
         <div class="rekap-legend-items">
             <span class="rekap-legend-item"><strong class="text-success">H</strong> {{ __('Hadir') }}</span>
-            <span class="rekap-legend-item"><strong style="color: #d97706;">T</strong> {{ __('Terlambat') }}</span>
             <span class="rekap-legend-item"><strong class="text-primary">S</strong> {{ __('Sakit') }}</span>
             <span class="rekap-legend-item"><strong style="color: #7e22ce;">I</strong> {{ __('Izin') }}</span>
             <span class="rekap-legend-item"><strong style="color: #ef4444;">A</strong> {{ __('Alfa') }}</span>
@@ -414,16 +468,15 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%;">
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 50px;">{{ __('No') }}</th>
-                            <th style="width: 170px;">{{ __('NIP') }}</th>
-                            <th class="text-start">{{ __('Nama Guru') }}</th>
-                            <th style="width: 60px;">{{ __('JK') }}</th>
-                            <th style="width: 120px;">{{ __('Jam Masuk') }}</th>
-                            <th style="width: 160px;">{{ __('Keterlambatan') }}</th>
-                            <th style="width: 120px;">{{ __('Status') }}</th>
+                            <th class="text-center" style="width: 6%;">{{ __('No') }}</th>
+                            <th class="text-center" style="width: 18%;">{{ __('NIP') }}</th>
+                            <th class="text-start" style="width: 34%;">{{ __('Nama Guru') }}</th>
+                            <th class="text-center" style="width: 8%;">{{ __('JK') }}</th>
+                            <th class="text-center" style="width: 16%;">{{ __('Jam Masuk') }}</th>
+                            <th class="text-center" style="width: 18%;">{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -432,7 +485,6 @@
                             $gr = $resolveGuru($item);
                             $status = is_array($item) ? ($item['status'] ?? '-') : 'Libur';
                             $checkIn = is_array($item) ? ($item['check_in'] ?? $item['jam_masuk'] ?? '-') : '-';
-                            $lateText = is_array($item) ? ($item['late_text'] ?? $item['keterlambatan'] ?? '-') : '-';
                             $rowNum = ($dataRows instanceof \Illuminate\Pagination\LengthAwarePaginator)
                                 ? ($dataRows->firstItem() + $loop->index)
                                 : ($loop->iteration);
@@ -440,7 +492,7 @@
                         @if($gr)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ ($gr->nip ?? null) ?: '-' }}</td>
+                            <td class="text-center">{{ ($gr->nip ?? null) ?: '-' }}</td>
                             <td class="text-start" title="{{ $gr->name }}">{{ $gr->name }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ str_starts_with(strtoupper((string) ($gr->gender ?? $gr->jk ?? '')), 'P') ? 'is-perempuan' : 'is-laki' }}">
@@ -449,17 +501,7 @@
                             </td>
                             <td class="text-center">{{ $checkIn }}</td>
                             <td class="text-center">
-                                @if($lateText === 'Tepat Waktu')
-                                    <span class="text-success small">{{ __('Tepat Waktu') }}</span>
-                                @elseif($status === 'Terlambat')
-                                    <span class="text-warning-emphasis small fw-semibold">{{ $lateText }}</span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
                                 @if($status === 'Hadir') <span class="cell-present">{{ __('Hadir') }}</span>
-                                @elseif($status === 'Terlambat') <span class="cell-late">{{ __('Terlambat') }}</span>
                                 @elseif($status === 'Sakit') <span class="cell-sick">{{ __('Sakit') }}</span>
                                 @elseif($status === 'Izin') <span class="cell-permission">{{ __('Izin') }}</span>
                                 @elseif($status === 'Alfa') <span class="cell-alpha">{{ __('Alfa') }}</span>
@@ -471,7 +513,7 @@
                         @endif
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-secondary empty-state">
+                            <td colspan="6" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ __('Tidak ada data guru atau presensi untuk tanggal yang dipilih.') }}
                             </td>
@@ -484,32 +526,35 @@
                 @php
                     $isMingguan = $type === 'mingguan';
                     $jumlahHari = count($dateColumns);
+                    $dateColWidth = $isMingguan ? '72px' : '28px';
                 @endphp
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" @if(!$isMingguan) style="min-width: 1400px;" @endif>
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <colgroup>
-                        <col style="width: 45px;">
-                        <col style="width: 150px;">
-                        <col style="width: 260px;">
+                        <col style="width: 36px;">
+                        <col style="width: 110px;">
+                        <col style="width: 240px;">
+                        <col style="width: 36px;">
+                        @for($dg = 0; $dg < $jumlahHari; $dg++) <col style="min-width: {{ $dateColWidth }};"> @endfor
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
                         <col style="width: 48px;">
-                        <col style="width: auto;" span="{{ $jumlahHari }}">
-                        <col class="col-sum" span="5">
-                        <col class="col-pct">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th>{{ __('No') }}</th>
-                            <th>{{ __('NIP') }}</th>
+                            <th class="text-center">{{ __('No') }}</th>
+                            <th class="text-center">{{ __('NIP') }}</th>
                             <th class="text-start">{{ __('Nama Guru') }}</th>
-                            <th>{{ __('JK') }}</th>
+                            <th class="text-center">{{ __('JK') }}</th>
                             @foreach($dateColumns as $col)
-                                <th class="{{ $col['is_holiday'] ? 'th-holiday' : '' }}">{{ $col['label'] }}</th>
+                                <th class="text-center {{ $col['is_holiday'] ? 'th-holiday' : '' }}">{{ $col['label'] }}</th>
                             @endforeach
-                            <th class="th-sum" style="color: #198754;">H</th>
-                            <th class="th-sum" style="color: #d97706;">T</th>
-                            <th class="th-sum" style="color: #0d6efd;">S</th>
-                            <th class="th-sum" style="color: #7e22ce;">I</th>
-                            <th class="th-sum" style="color: #ef4444;">A</th>
-                            <th class="th-sum" style="color: #212529; font-size: 0.95rem;">%</th>
+                            <th class="th-sum text-center clr-h"><span class="clr-h">H</span></th>
+                            <th class="th-sum text-center clr-s"><span class="clr-s">S</span></th>
+                            <th class="th-sum text-center clr-i"><span class="clr-i">I</span></th>
+                            <th class="th-sum text-center clr-a"><span class="clr-a">A</span></th>
+                            <th class="th-sum text-center clr-pct"><span class="clr-pct">%</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -524,7 +569,7 @@
                         @if($guru)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ ($guru->nip ?? null) ?: '-' }}</td>
+                            <td class="text-center">{{ ($guru->nip ?? null) ?: '-' }}</td>
                             <td class="text-start" title="{{ $guru->name }}">{{ $guru->name }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ str_starts_with(strtoupper((string) ($guru->gender ?? $guru->jk ?? '')), 'P') ? 'is-perempuan' : 'is-laki' }}">
@@ -533,9 +578,8 @@
                             </td>
                             @foreach($dateColumns as $col)
                                 @php $code = $days[$col['date']] ?? '-'; @endphp
-                                    <td>
+                                    <td class="text-center">
                                         @if($code === 'H') <span class="cell-present">H</span>
-                                        @elseif($code === 'T') <span class="cell-late">T</span>
                                         @elseif($code === 'S') <span class="cell-sick">S</span>
                                         @elseif($code === 'I') <span class="cell-permission">I</span>
                                         @elseif($code === 'A') <span class="cell-alpha">A</span>
@@ -543,17 +587,16 @@
                                         @else <span class="cell-future">-</span> @endif
                                     </td>
                                 @endforeach
-                            <td class="td-sum" style="color: #198754;">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #d97706;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #0d6efd;">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #7e22ce;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #ef4444;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
-                            <td class="td-pct">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
+                            <td class="td-sum text-center clr-h">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-s">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-i">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-a">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
+                            <td class="td-pct text-center">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
                         </tr>
                         @endif
                         @empty
                         <tr>
-                            <td colspan="{{ 4 + $jumlahHari + 6 }}" class="text-center py-5 text-secondary empty-state">
+                            <td colspan="{{ 4 + $jumlahHari + 5 }}" class="text-center py-5 text-secondary empty-state">
                                 <i class='bx bx-error' aria-hidden='true'></i>
                                 {{ $isMingguan
                                     ? __('Tidak ada data guru untuk rentang tanggal yang dipilih.')

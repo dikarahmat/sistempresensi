@@ -36,24 +36,6 @@
 
 @push('styles')
 <style>
-    /* Ringkasan atas: tiga item kecil sejajar */
-    .guru-summary {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 1.25rem;
-        margin: 0.25rem 0 0.9rem;
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-    }
-    .guru-summary .item { display: inline-flex; align-items: center; gap: 0.3rem; }
-    .guru-summary .item i { font-size: 0.95rem; }
-    .guru-summary .sudah { color: #059669; }
-    .guru-summary .belum { color: #dc2626; }
-    .guru-summary .total { color: #2563eb; }
-
     /* Tabel */
     .table-responsive { -webkit-overflow-scrolling: touch; overflow-x: auto; }
     .table-guru { min-width: 720px; }
@@ -70,8 +52,11 @@
         vertical-align: middle !important;
         text-align: center !important;
     }
-    .table-guru thead tr > th:first-child { border-top-left-radius: 8px !important; }
-    .table-guru thead tr > th:last-child  { border-top-right-radius: 8px !important; }
+    .table-guru thead tr > th:first-child {
+        border-top-left-radius: 0 !important;
+        background-color: #2563eb !important;
+    }
+    .table-guru thead tr > th:last-child  { border-top-right-radius: 8px !important; background-color: #2563eb !important; }
     .table-guru thead tr > th.th-nama { text-align: left !important; padding-left: 0.75rem; }
 
     .table-guru tbody td {
@@ -89,11 +74,12 @@
     .table-guru tbody td.td-nama { text-align: left; padding-left: 0.75rem; }
     .table-guru tbody tr:hover > td { background-color: #e2e8f0 !important; }
 
-    /* Warna angka status: hanya angka 1 yang berwarna */
-    .num-cell.is-on.hadir { color: #059669 !important; }
-    .num-cell.is-on.sakit { color: #2563eb !important; }
-    .num-cell.is-on.izin  { color: #7e22ce !important; }
-    .num-cell.is-on.alfa  { color: #dc2626 !important; }
+    /* Warna huruf status: sama dengan Rekap Presensi (font-weight 700) */
+    .num-cell.is-on.hadir { color: #16a34a !important; font-weight: 700 !important; }   /* hijau */
+    .num-cell.is-on.sakit { color: #2563eb !important; font-weight: 700 !important; }   /* biru */
+    .num-cell.is-on.izin  { color: #7e22ce !important; font-weight: 700 !important; }   /* ungu */
+    .num-cell.is-on.alfa  { color: #ef4444 !important; font-weight: 700 !important; }   /* merah */
+    .num-cell.is-off      { color: #64748b !important; font-weight: 400 !important; }   /* abu untuk "-" */
 
     /* Aksi: dropdown + tombol centang */
     .aksi-form {
@@ -148,6 +134,41 @@
     }
     .btn-save-quick i { font-size: 13px !important; color: #ffffff !important; }
     .btn-save-quick:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+    /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal ===== */
+    @media (max-width: 767.98px) {
+        .table-guru ~ .table-responsive, .table-responsive > .table-guru {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+        .table-guru { min-width: 700px !important; width: auto !important; }
+        .table-guru tbody td,
+        .table-guru thead th {
+            white-space: nowrap !important;
+            padding: 0.55rem 0.9rem !important;
+            font-size: 0.78rem !important;
+        }
+        .table-guru tbody td.td-nama {
+            white-space: nowrap !important;
+            padding-left: 0.75rem;
+        }
+        .table-guru tbody td:nth-child(1),
+        .table-guru thead th:nth-child(1) {
+            position: sticky !important;
+            left: 0 !important;
+            z-index: 2 !important;
+        }
+        .table-guru tbody td:nth-child(1) {
+            background: #ffffff !important;
+        }
+        .table-guru thead th:nth-child(1) {
+            background-color: #2563eb !important;
+        }
+        .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
+        .presence-summary .item { white-space: nowrap; }
+    }
 </style>
 @endpush
 
@@ -195,12 +216,31 @@
     </div>
     @endif
 
+    @php
+        $isHolidayGuru = $isHoliday ?? false;
+        $holidayDescGuru = $holidayDescription ?? '';
+        if (!$isHolidayGuru && $tanggal) {
+            $selectedDateObj = \Carbon\Carbon::parse($tanggal);
+            $isWeekend = $selectedDateObj->isWeekend();
+            if ($isWeekend || \App\Models\Holiday::isHoliday($tanggal)) {
+                $isHolidayGuru = true;
+                $holidayDescGuru = \App\Models\Holiday::getHolidayDescription($tanggal) ?? ($isWeekend ? 'Akhir Pekan (Sabtu/Minggu)' : null);
+            }
+        }
+    @endphp
+
+    @include('components.holiday-banner', [
+        'isHoliday' => $isHolidayGuru,
+        'holidayDescription' => $holidayDescGuru,
+    ])
+
     {{-- RINGKASAN --}}
-    <div class="guru-summary">
-        <span class="item sudah"><i class='bx bx-check'></i> {{ $countSudah }} {{ __('Sudah Presensi') }}</span>
-        <span class="item belum"><i class='bx bx-x'></i> {{ $countBelum }} {{ __('Belum Presensi') }}</span>
-        <span class="item total"><i class='bx bx-user'></i> {{ $countTotal }} {{ __('Total Guru') }}</span>
-    </div>
+    @include('components.presence-summary', [
+        'sudah' => $countSudah,
+        'belum' => $countBelum,
+        'total' => $countTotal,
+        'label' => 'GURU',
+    ])
 
     {{-- TABEL --}}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
@@ -225,22 +265,29 @@
                     @php
                         $st       = $normalize($teacher->current_status ?? '');
                         $recorded = in_array($st, $validStatus, true);
-                        // Guru tanpa catatan hari ini dihitung Alfa (kolom ALFA = 1)
                         $val = [
-                            'hadir' => $st === 'Hadir' ? 1 : 0,
-                            'sakit' => $st === 'Sakit' ? 1 : 0,
-                            'izin'  => $st === 'Izin'  ? 1 : 0,
-                            'alfa'  => (! $recorded || $st === 'Alfa') ? 1 : 0,
+                            'hadir' => $st === 'Hadir' ? 'H' : '-',
+                            'sakit' => $st === 'Sakit' ? 'S' : '-',
+                            'izin'  => $st === 'Izin'  ? 'I' : '-',
+                            'alfa'  => $st === 'Alfa' ? 'A' : '-',
                         ];
                     @endphp
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td class="td-nama">{{ $teacher->name ?? '-' }}</td>
                         <td>{{ $teacher->jam_masuk ?: '—' }}</td>
-                        <td class="num-cell hadir {{ $val['hadir'] ? 'is-on' : '' }}">{{ $val['hadir'] }}</td>
-                        <td class="num-cell sakit {{ $val['sakit'] ? 'is-on' : '' }}">{{ $val['sakit'] }}</td>
-                        <td class="num-cell izin {{ $val['izin'] ? 'is-on' : '' }}">{{ $val['izin'] }}</td>
-                        <td class="num-cell alfa {{ $val['alfa'] ? 'is-on' : '' }}">{{ $val['alfa'] }}</td>
+                        <td class="text-center">
+                            <span class="num-cell fw-bold {{ $val['hadir'] === 'H' ? 'is-on hadir' : 'is-off' }}">{{ $val['hadir'] }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="num-cell fw-bold {{ $val['sakit'] === 'S' ? 'is-on sakit' : 'is-off' }}">{{ $val['sakit'] }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="num-cell fw-bold {{ $val['izin'] === 'I' ? 'is-on izin' : 'is-off' }}">{{ $val['izin'] }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="num-cell fw-bold {{ $val['alfa'] === 'A' ? 'is-on alfa' : 'is-off' }}">{{ $val['alfa'] }}</span>
+                        </td>
                         @if($canEdit)
                         <td>
                             <form action="{{ $formAction }}" method="POST" class="aksi-form">
@@ -249,7 +296,7 @@
                                 <input type="hidden" name="date" value="{{ $tanggal }}">
 
                                 <select name="status" class="select-quick-status" data-status-select
-                                        aria-label="{{ __('Pilih status presensi') }} {{ $teacher->name ?? '' }}">
+                                        aria-label="{{ __('Pilih status presensi') }} {{ $teacher->name ?? '' }}" {{ $isHolidayGuru ? 'disabled' : '' }}>
                                     <option value="" {{ $recorded ? '' : 'selected' }}>{{ __('Pilih Status') }}</option>
                                     @foreach($validStatus as $opt)
                                     <option value="{{ $opt }}" {{ $st === $opt ? 'selected' : '' }}>{{ __($opt) }}</option>
@@ -259,7 +306,7 @@
                                 <button type="submit" class="btn-save-quick" data-save-btn
                                         title="{{ __('Simpan Status') }}"
                                         aria-label="{{ __('Simpan status presensi') }} {{ $teacher->name ?? '' }}"
-                                        {{ $recorded ? '' : 'disabled' }}>
+                                        {{ $isHolidayGuru ? 'disabled' : ($recorded ? '' : 'disabled') }}>
                                     <i class='bx bx-check'></i>
                                 </button>
                             </form>

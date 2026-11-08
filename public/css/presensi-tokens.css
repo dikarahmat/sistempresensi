@@ -1206,6 +1206,7 @@
     body .dashboard-box-title {
         font-size: var(--dash-title-size) !important;
         font-weight: 700;
+        margin-top: 0 !important;
         margin-bottom: 0 !important;
         /* Judul grafik panjang TIDAK boleh terpotong: boleh turun baris */
         white-space: normal !important;
@@ -1417,12 +1418,11 @@
         box-shadow: none !important;
     }
     body .dashboard-clock .clock-label {
-        font-size: 0.65rem !important;
         letter-spacing: 0.04em;
     }
     body .dashboard-clock .clock-value {
-        font-size: 1.4rem !important;
-        margin-top: 0.15rem !important;
+        font-size: 1.375rem !important;
+        margin-top: 0.25rem !important;
     }
     body .dashboard-clock .clock-unit { font-size: 0.65rem !important; }
     /* Tombol "Ubah Pengaturan Jadwal": standar kontrol mobile, warna tetap.

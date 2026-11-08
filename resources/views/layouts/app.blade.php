@@ -829,21 +829,20 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             right: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
-            min-height: var(--bottom-nav-h) !important;
+            height: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+            min-height: 72px !important;
             margin: 0 !important;
-            padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px) !important;
+            padding: env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px) 0 !important;
             background-color: #ffffff !important;
-            border-radius: 0 !important; /* Lurus mentok penuh kiri-kanan */
+            border-radius: 28px 28px 0 0 !important;
             border: none !important;
-            border-top: 1px solid #e2e8f0 !important;
-            box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06) !important;
+            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.12) !important;
             z-index: 1030 !important;
             transform: translateZ(0) !important;
             -webkit-transform: translateZ(0) !important;
             will-change: transform !important;
             box-sizing: border-box !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             display: block !important;
         }
 
@@ -857,7 +856,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
         .mobile-nav-grid {
             display: grid !important;
             grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-            height: var(--bottom-nav-h) !important;
+            height: 72px !important;
             width: 100% !important;
             max-width: 600px !important;
             margin: 0 auto !important;
@@ -867,20 +866,21 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             box-sizing: border-box !important;
         }
 
-        .mobile-nav-item {
+.mobile-nav-item {
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
             height: 100% !important;
+            width: auto !important;
             position: relative !important;
             text-decoration: none !important;
-            color: #64748b !important;
+            color: #9ca3af !important;
             transition: color 0.15s ease, transform 0.12s ease !important;
             -webkit-tap-highlight-color: transparent !important;
-            overflow: hidden !important;
             border-radius: 8px !important;
-            padding: 4px 0 !important;
+            padding: 0 !important;
+            min-width: 0 !important;
         }
 
         .mobile-nav-item:active {
@@ -901,51 +901,8 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             color: #2563eb !important;
         }
 
-        /* Indikator Bar Atas Menu Aktif */
-        .mobile-nav-indicator {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 28px;
-            height: 3px;
-            background: #2563eb;
-            border-radius: 0 0 3px 3px;
-            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
-            z-index: 3;
-        }
-
-        /* Efek Spotlight Halus & Elegan */
-        .mobile-nav-spotlight {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.02) 60%, transparent 100%);
-            clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
-        }
-
-        .mobile-nav-icon {
-            font-size: 1.4rem;
-            line-height: 1;
-            margin-bottom: 2px;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
-            position: relative;
-            z-index: 2;
-        }
-
-        .mobile-nav-label {
-            font-size: 10.5px;
-            font-weight: 500;
-            letter-spacing: -0.01em;
-            line-height: 1;
-            position: relative;
-            z-index: 2;
-            transition: font-weight 0.15s ease, color 0.15s ease;
+        .mobile-nav-item.active .mobile-nav-icon {
+            color: #2563eb !important;
         }
 
         .mobile-nav-item.active .mobile-nav-label {
@@ -953,9 +910,97 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
             color: #2563eb !important;
         }
 
-        .mobile-nav-item.active .mobile-nav-icon {
-            color: #2563eb !important;
-            transform: translateY(0);
+        /* Efek lampu menyorot ke bawah pada item aktif (dua lapis) */
+        .mobile-nav-item.active::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 36px !important;
+            height: 3px !important;
+            background: #2563eb !important;
+            border-radius: 1.5px !important;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.6) !important;
+            pointer-events: none !important;
+            z-index: 3 !important;
+            opacity: 1 !important;
+            transition: opacity 200ms ease !important;
+        }
+        .mobile-nav-item.active::after {
+            content: '' !important;
+            position: absolute !important;
+            top: 3px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 64px !important;
+            height: 52px !important;
+            background: linear-gradient(to bottom, rgba(37, 99, 235, 0.22), transparent) !important;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%) !important;
+            filter: blur(2px) !important;
+            pointer-events: none !important;
+            z-index: 1 !important;
+            opacity: 1 !important;
+            transition: opacity 200ms ease !important;
+        }
+
+        .mobile-nav-icon {
+            font-size: 24px !important;
+            line-height: 1 !important;
+            margin-bottom: 4px !important;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        .mobile-nav-label {
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            letter-spacing: -0.01em !important;
+            line-height: 1 !important;
+            position: relative !important;
+            z-index: 2 !important;
+            white-space: nowrap !important;
+            transition: font-weight 0.15s ease, color 0.15s ease !important;
+        }
+
+        .mobile-nav-label-center {
+            display: none !important; /* disembunyikan, ditutupi FAB */
+        }
+
+        /* Floating Presensi FAB (center, floating above bar) */
+        .mobile-nav-fab {
+            position: absolute !important;
+            top: -26px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 66px !important;
+            height: 66px !important;
+            min-width: 66px !important;
+            min-height: 66px !important;
+            background-color: #2563eb !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-decoration: none !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+            z-index: 10 !important;
+            transition: transform 0.15s ease !important;
+        }
+
+        .mobile-nav-fab:active {
+            transform: translateX(-50%) scale(0.93) !important;
+        }
+
+        .mobile-nav-fab.active {
+            background-color: #1d4ed8 !important;
+        }
+
+        .mobile-nav-fab-icon {
+            color: #ffffff !important;
+            font-size: 28px !important;
+            line-height: 1 !important;
         }
 
         /* --------------------------------------------------------------------------
@@ -1067,9 +1112,10 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
                 margin: 0 !important;
                 /* padding-top sengaja 0: header sticky yang memegang area notch/status bar,
                    supaya tidak ada celah putih yang bisa "bocor" di atas header.
-                   padding-bottom: tinggi bottom nav (--bottom-nav-h) + ruang napas 1rem (16px) + safe area inset
-                   supaya tombol paling bawah (Detail Siswa, Pengaturan, dll.) tidak terpotong saat di-scroll mentok. */
-                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(var(--bottom-nav-h) + 1rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
+                   padding-bottom: tinggi bottom nav (72px) + setengah tinggi FAB (26px =
+                   1.625rem) + ruang napas 1rem (16px) + safe area inset, supaya konten
+                   paling bawah tidak tertutup tombol Presensi floating di tengah. */
+                padding: 0 calc(16px + env(safe-area-inset-right, 0px)) calc(72px + 1.625rem + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px)) !important;
             }
 
             /* Override presensi-tokens.css @media (max-width: 640px) yang memaksa
@@ -5747,16 +5793,18 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 @endphp
 
 <nav class="mobile-bottom-nav lg:hidden" aria-label="{{ __('Menu Navigasi Bawah') }}">
-    <div class="mobile-nav-grid" @if($isNavPiket) style="grid-template-columns: repeat(3, minmax(0,1fr)) !important;" @endif>
-        
+    <!-- Floating Presensi Button (center, floating above bar) -->
+    <a href="{{ $navAbsensiUrl }}" 
+       class="mobile-nav-fab {{ $isNavAbsensiActive ? 'active' : '' }}"
+       title="{{ __('Presensi') }}">
+        <i class='bx bx-qr-scan mobile-nav-fab-icon'></i>
+    </a>
+
+    <div class="mobile-nav-grid">
         <!-- 1. Dashboard (bx bxs-dashboard) - tampil untuk semua role -->
         <a href="{{ $navDashboardUrl }}" 
            class="mobile-nav-item {{ $isNavDashboardActive ? 'active' : '' }}"
            title="{{ __('Dashboard') }}">
-            @if($isNavDashboardActive)
-                <span class="mobile-nav-indicator"></span>
-                <span class="mobile-nav-spotlight"></span>
-            @endif
             <i class='bx bxs-dashboard mobile-nav-icon'></i>
             <span class="mobile-nav-label">{{ __('Dashboard') }}</span>
         </a>
@@ -5765,38 +5813,24 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
         <a href="{{ $navKehadiranUrl }}" 
            class="mobile-nav-item {{ $isNavKehadiranActive ? 'active' : '' }}"
            title="{{ __('Kehadiran') }}">
-            @if($isNavKehadiranActive)
-                <span class="mobile-nav-indicator"></span>
-                <span class="mobile-nav-spotlight"></span>
-            @endif
             <i class='bx bx-calendar-check mobile-nav-icon'></i>
             <span class="mobile-nav-label">{{ __('Kehadiran') }}</span>
         </a>
 
-        <!-- 3. Presensi (QR Code: bx bx-qr-scan) -->
-        <a href="{{ $navAbsensiUrl }}" 
-           class="mobile-nav-item {{ $isNavAbsensiActive ? 'active' : '' }}"
-           title="{{ __('Presensi') }}">
-            @if($isNavAbsensiActive)
-                <span class="mobile-nav-indicator"></span>
-                <span class="mobile-nav-spotlight"></span>
-            @endif
-            <i class='bx bx-qr-scan mobile-nav-icon'></i>
-            <span class="mobile-nav-label">{{ __('Presensi') }}</span>
-        </a>
+        <!-- 3. Presensi (slot tengah - hanya tombol FAB di atas bar, tidak ada ikon di sini) -->
+        <div class="mobile-nav-item mobile-nav-empty">
+            <!-- Slot kosong sebagai ruang untuk tombol FAB Presensi di tengah -->
+        </div>
 
         <!-- 4. Rekap (bx bx-folder-open) - TIDAK tampil untuk Guru Piket -->
         @if(!$isNavPiket)
         <a href="{{ $navRekapUrl }}" 
            class="mobile-nav-item {{ $isNavRekapActive ? 'active' : '' }}"
            title="{{ __('Rekap') }}">
-            @if($isNavRekapActive)
-                <span class="mobile-nav-indicator"></span>
-                <span class="mobile-nav-spotlight"></span>
-            @endif
             <i class='bx bx-folder-open mobile-nav-icon'></i>
             <span class="mobile-nav-label">{{ __('Rekap') }}</span>
         </a>
+        @endif
 
         <!-- 5. Pengaturan (admin) / Kelas (guru) -->
         @php
@@ -5806,15 +5840,9 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
         <a href="{{ $navPengaturanUrl }}" 
            class="mobile-nav-item {{ $isNavPengaturanActive ? 'active' : '' }}"
            title="{{ __($nav5Title) }}">
-            @if($isNavPengaturanActive)
-                <span class="mobile-nav-indicator"></span>
-                <span class="mobile-nav-spotlight"></span>
-            @endif
             <i class='{{ $nav5Icon }} mobile-nav-icon'></i>
             <span class="mobile-nav-label">{{ __($nav5Title) }}</span>
         </a>
-        @endif {{-- penutup @if(!$isNavPiket): Rekap & item-5 tidak tampil untuk piket --}}
-
     </div>
 </nav>
 
@@ -6286,13 +6314,23 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
     function alignBrandLines() {
         // Hanya jalankan di desktop dan saat sidebar tidak collapsed
         if (!isDesktop()) {
-            // Reset di mobile/collapsed
+            // Reset di mobile/collapsed: kedua baris dikembalikan ke gawa bawa
+            // markup agar identik (tidak ada stretch/transform/bedakan font).
             var line1 = document.getElementById('sidebar-brand-line1');
+            var line2 = document.getElementById('sidebar-brand-line2');
             if (line1) {
                 line1.style.letterSpacing = '0';
                 line1.style.transform = 'none';
+                line1.style.transformOrigin = '';
                 line1.style.fontWeight = '';
                 line1.style.whiteSpace = '';
+            }
+            if (line2) {
+                line2.style.letterSpacing = '0';
+                line2.style.transform = 'none';
+                line2.style.transformOrigin = '';
+                line2.style.fontWeight = '';
+                line2.style.whiteSpace = '';
             }
             return;
         }
@@ -6306,51 +6344,21 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
             return;
         }
 
-        // Pastikan text tidak wrap dan baseline konsisten
+        // Kedua baris nama sekolah ditampilkan identik: font, ukuran, ketebalan,
+        // spasi, dan transform sama persis. Tidak ada stretching, scaleX, atau
+        // font-weight khusus pada baris pertama saja.
         line1.style.whiteSpace = 'nowrap';
         line2.style.whiteSpace = 'nowrap';
-
-        // Reset style sebelum mengukur
         line1.style.letterSpacing = '0';
+        line2.style.letterSpacing = '0';
         line1.style.transform = 'none';
-        line1.style.transformOrigin = 'left center';
+        line2.style.transform = 'none';
+        line1.style.transformOrigin = '';
+        line2.style.transformOrigin = '';
+        line1.style.fontWeight = '';
+        line2.style.fontWeight = '';
         line1.style.display = 'inline-block';
-        line1.style.fontWeight = '800'; // ExtraBold untuk lebar lebih
-
-        // Ukur lebar alami (tanpa stretching)
-        var w1 = line1.getBoundingClientRect().width;
-        var w2 = line2.getBoundingClientRect().width;
-
-        // Jika baris 1 sudah sama lebar atau lebih lebar, tidak perlu stretching
-        if (w1 >= w2 - 1) {
-            return;
-        }
-
-        var diff = w2 - w1;
-        var maxLetterSpacingEm = 0.18;
-        var fontSize = parseFloat(getComputedStyle(line1).fontSize);
-        var maxLetterSpacingPx = maxLetterSpacingEm * fontSize;
-        var letterSpacingPx = Math.min(diff, maxLetterSpacingPx);
-
-        // Terapkan letter-spacing
-        if (letterSpacingPx > 0) {
-            line1.style.letterSpacing = letterSpacingPx + 'px';
-        }
-
-        // Ukur ulang setelah letter-spacing
-        var w1AfterLS = line1.getBoundingClientRect().width;
-        var remainingDiff = w2 - w1AfterLS;
-
-        // Tahap 2: scaleX untuk sisa selisih (max ratio 2.0 untuk menghindari kepipihan berlebihan)
-        if (remainingDiff > 1) {
-            var ratio = w2 / w1AfterLS;
-            var maxRatio = 2.0;
-            if (ratio > maxRatio) {
-                ratio = maxRatio;
-            }
-            line1.style.transform = 'scaleX(' + ratio + ')';
-            line1.style.transformOrigin = 'left center';
-        }
+        line2.style.display = 'inline-block';
     }
 
     // Jalankan setelah font siap dan DOM siap

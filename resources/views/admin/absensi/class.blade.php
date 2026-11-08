@@ -10,28 +10,6 @@
         color: #475569;
     }
     
-    /* Badge Ringkasan Minimalis: pill kecil seperti tombol */
-    .status-badge-pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-        padding: 0.4rem 0.7rem;
-        border-radius: 9999px !important;
-        font-size: 0.78rem;
-        font-weight: 600;
-        background-color: #ffffff;
-        border: none;
-        color: #1e293b;
-        line-height: 1.2;
-    }
-    .icon-hadir { color: #10b981; }
-    .icon-terlambat { color: #f59e0b; }
-    .icon-sakit { color: #3b82f6; }
-    .icon-izin { color: #8b5cf6; }
-    .icon-alfa { color: #ef4444; }
-    .icon-belum { color: #64748b; }
-
     /* Badge Status Tabel Solid Jelas */
     .badge-status-solid {
         padding: 0.35rem 0.75rem;
@@ -366,13 +344,6 @@
        PERBAIKAN MOBILE: Toolbar, Ringkasan Status, dan Kotak Scanner
        ========================================================================== */
 
-    /* --- 1. Ringkasan status: grid kecil-kecil, 3 kolom di mobile --- */
-    .status-summary-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
-    }
-
     /* Scanner QR tetap full width, tidak ikut terpotong grid */
     .status-summary-grid .class-attendance-scan {
         grid-column: 1 / -1;
@@ -385,36 +356,9 @@
        beserta fungsi JS toggleInlineScanner tetap dipertahankan untuk
        kompatibilitas.) */
 
-    .status-summary-grid .status-badge-pill {
-        width: 100%;
-        min-width: 0;
-        padding: 0.35rem 0.45rem;
-        gap: 0.25rem;
-        font-size: 0.72rem;
-        line-height: 1.2;
-        border-radius: 8px !important;
-        justify-content: center;
-        display: flex;
-        align-items: center;
-    }
-
-    .status-summary-grid .status-badge-pill span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    @media (min-width: 576px) {
-        .status-summary-grid {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .status-summary-grid .status-badge-pill {
-            padding: 0.4rem 0.5rem;
-            font-size: 0.75rem;
-        }
-    }
+    /* (Tombol BUKA SCANNER QR dihapus dari halaman ini — scanner inline
+       beserta fungsi JS toggleInlineScanner tetap dipertahankan untuk
+       kompatibilitas.) */
 
     /* --- 2. Toolbar Kembali / Tanggal / Buka Scanner: satu baris, no wrap ---- */
     @media (max-width: 575.98px) {
@@ -503,19 +447,7 @@
        GELAP supaya kontrasnya tetap terbaca di proyektor / layar terang.
        ========================================================================== */
 
-    /* Ringkasan Status: angka & teks label kontras per kategori */
-    .status-summary-grid .dim-hadir strong,
-    .status-summary-grid .dim-hadir span:not(strong) { color: #059669 !important; } /* hijau */
-    .status-summary-grid .dim-terlambat strong,
-    .status-summary-grid .dim-terlambat span:not(strong) { color: #d97706 !important; } /* oranye */
-    .status-summary-grid .dim-sakit strong,
-    .status-summary-grid .dim-sakit span:not(strong) { color: #2563eb !important; } /* biru */
-    .status-summary-grid .dim-izin strong,
-    .status-summary-grid .dim-izin span:not(strong) { color: #7e22ce !important; } /* ungu */
-    .status-summary-grid .dim-alfa strong,
-    .status-summary-grid .dim-alfa span:not(strong) { color: #dc2626 !important; } /* merah */
-    .status-summary-grid .dim-belum strong,
-    .status-summary-grid .dim-belum span:not(strong) { color: #475569 !important; } /* abu-abu gelap/slate */
+
 
     /* --- 1. KOLOM NAMA SISWA --------------------------------------------- */
     /* Nama tidak bold, satu baris, uppercase. Label kelas ("7A") dihapus dari
@@ -606,6 +538,37 @@
         max-height: none !important;
         overflow-y: visible !important;
     }
+
+    /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal ===== */
+    @media (max-width: 767.98px) {
+        #tableColumn .table-responsive {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+        #tableColumn .table-responsive > table {
+            min-width: 640px !important;
+            width: auto !important;
+        }
+        #tableColumn .table-enterprise tbody td,
+        #tableColumn .table-enterprise thead th,
+        #tableColumn .table-zebra-custom tbody td,
+        #tableColumn .table-zebra-custom thead th {
+            white-space: nowrap !important;
+            padding: 0.55rem 0.7rem !important;
+            font-size: 0.78rem !important;
+        }
+        #tableColumn .table-enterprise tbody td:nth-child(1),
+        #tableColumn .table-enterprise thead th:nth-child(1) {
+            position: sticky !important;
+            left: 0 !important;
+            z-index: 2 !important;
+            background: #ffffff !important;
+        }
+        .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
+        .presence-summary .item { white-space: nowrap; }
+    }
 </style>
 @endpush
 
@@ -655,30 +618,17 @@
     </div>
     @endif
 
-    <!-- RINGKASAN STATUS -->
-    <div class="status-summary-grid mb-3">
-        <div class="status-badge-pill shadow-2xs dim-hadir">
-            <span style="text-transform: uppercase !important;">{{ $countHadir ?? 0 }} {{ __('Hadir') }}</span>
-        </div>
-        <div class="status-badge-pill shadow-2xs dim-terlambat">
-            <span style="text-transform: uppercase !important;">{{ $countTerlambat ?? 0 }} {{ __('Terlambat') }}</span>
-        </div>
-        <div class="status-badge-pill shadow-2xs dim-sakit">
-            <span style="text-transform: uppercase !important;">{{ $countSakit ?? 0 }} {{ __('Sakit') }}</span>
-        </div>
-        <div class="status-badge-pill shadow-2xs dim-izin">
-            <span style="text-transform: uppercase !important;">{{ $countIzin ?? 0 }} {{ __('Izin') }}</span>
-        </div>
-        <div class="status-badge-pill shadow-2xs dim-alfa">
-            <span style="text-transform: uppercase !important;">{{ $countAlfa ?? 0 }} {{ __('Alfa') }}</span>
-        </div>
-        <div class="status-badge-pill shadow-2xs dim-belum">
-            <span style="text-transform: uppercase !important;">{{ $countBelumAbsen ?? 0 }} {{ __('Belum') }}</span>
-        </div>
-        <div class="status-badge-pill shadow-2xs dim-hadir">
-            <span style="text-transform: uppercase !important;">{{ $countSudahPulang ?? 0 }} {{ __('Sudah Pulang') }}</span>
-        </div>
-    </div>
+    @include('components.holiday-banner', [
+        'isHoliday' => $isHoliday ?? false,
+        'holidayDescription' => $holidayDescription ?? '',
+    ])
+
+    @include('components.presence-summary', [
+        'sudah' => $countSudahAbsen,
+        'belum' => $countBelumAbsen,
+        'total' => $totalSiswa,
+        'label' => 'SISWA',
+    ])
 
     <!-- MAIN CONTENT LAYOUT -->
     <div class="row g-3 align-items-start">
@@ -830,7 +780,7 @@
                                             <input type="hidden" name="class_id" value="{{ $selectedClass->id ?? '' }}">
                                             <input type="hidden" name="date" value="{{ $tanggal ?? date('Y-m-d') }}">
 
-                                            <select name="status" class="select-quick-status" data-status-select aria-label="{{ __('Pilih status presensi') }} {{ $student->name ?? '' }}">
+                                            <select name="status" class="select-quick-status" data-status-select aria-label="{{ __('Pilih status presensi') }} {{ $student->name ?? '' }}" {{ $isHoliday ? 'disabled' : '' }}>
                                                 <option value="" selected>{{ __('Pilih Status') }}</option>
                                                 <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
                                                 <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
@@ -839,7 +789,7 @@
                                                 <option value="Alfa" {{ $st === 'Alfa' ? 'selected' : '' }}>{{ __('Alfa') }}</option>
                                             </select>
 
-                                            <button type="submit" class="btn-save-quick" data-save-btn title="{{ __('Simpan Status') }}" aria-label="{{ __('Simpan status presensi') }} {{ $student->name ?? '' }}" {{ in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa']) ? '' : 'disabled' }}>
+                                            <button type="submit" class="btn-save-quick" data-save-btn title="{{ __('Simpan Status') }}" aria-label="{{ __('Simpan status presensi') }} {{ $student->name ?? '' }}" {{ $isHoliday ? 'disabled' : (in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa']) ? '' : 'disabled') }}>
                                                 <i class='bx bx-check'></i>
                                             </button>
                                         </form>
@@ -866,7 +816,7 @@
                                                     <div class="modal-body p-4 text-start">
                                                         <div class="mb-3">
                                                             <label class="form-label small fw-semibold text-secondary" for="overrideStatus{{ $student->id }}">{{ __('Status Kehadiran') }} <span class="text-danger">*</span></label>
-                                                            <select name="status" id="overrideStatus{{ $student->id }}" class="form-select rounded-3" required aria-label="{{ __('Status kehadiran') }} {{ $student->name ?? '' }}">
+                                                            <select name="status" id="overrideStatus{{ $student->id }}" class="form-select rounded-3" required aria-label="{{ __('Status kehadiran') }} {{ $student->name ?? '' }}" {{ $isHoliday ? 'disabled' : '' }}>
                                                                 <option value="" {{ in_array($st, ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa'], true) ? '' : 'selected' }}>{{ __('Pilih status') }}</option>
                                                                 <option value="Hadir" {{ $st === 'Hadir' ? 'selected' : '' }}>{{ __('Hadir (Tepat Waktu)') }}</option>
                                                                 <option value="Terlambat" {{ $st === 'Terlambat' ? 'selected' : '' }}>{{ __('Hadir (Terlambat)') }}</option>
@@ -893,7 +843,7 @@
                                                     </div>
                                                     <div class="modal-footer bg-light px-4 py-3 border-top">
                                                         <button type="button" class="btn btn-light border px-3 rounded-3" data-bs-dismiss="modal">{{ __('Batal') }}</button>
-                                                        <button type="submit" class="btn btn-presensi-primary px-4 fw-semibold rounded-3">{{ __('Simpan Status') }}</button>
+                                                         <button type="submit" class="btn btn-presensi-primary px-4 fw-semibold rounded-3" {{ $isHoliday ? 'disabled' : '' }}>{{ __('Simpan Status') }}</button>
                                                     </div>
                                                 </form>
                                             </div>

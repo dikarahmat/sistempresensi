@@ -80,7 +80,6 @@
         .text-left { text-align: left !important; }
         .text-center { text-align: center !important; }
         .badge-h { color: #059669; font-weight: bold; }
-        .badge-t { color: #d97706; font-weight: bold; }
         .badge-s { color: #2563eb; font-weight: bold; }
         .badge-i { color: #7e22ce; font-weight: bold; }
         .badge-a { color: #e11d48; font-weight: bold; }
@@ -93,7 +92,6 @@
         th { color: inherit !important; font-weight: inherit !important; }
         th { color: #ffffff !important; font-weight: bold !important; }
         .badge-h { color: #059669 !important; font-weight: bold !important; }
-        .badge-t { color: #d97706 !important; font-weight: bold !important; }
         .badge-s { color: #2563eb !important; font-weight: bold !important; }
         .badge-i { color: #7e22ce !important; font-weight: bold !important; }
         .badge-a { color: #e11d48 !important; font-weight: bold !important; }
@@ -201,7 +199,6 @@
                 <th style="text-align: left; width: 20%;">{!! __('Nama Guru') !!}</th>
                 <th style="width: 3%;">{!! __('JK') !!}</th>
                 <th style="width: 10%;">{!! __('Jam Masuk') !!}</th>
-                <th style="width: 12%;">{!! __('Keterlambatan') !!}</th>
                 <th style="width: 8%;">{!! __('Status') !!}</th>
             </tr>
         </thead>
@@ -213,12 +210,9 @@
                 <td class="text-left"><strong>{{ mb_strtoupper($row['name'] ?? '', 'UTF-8') }}</strong></td>
                 <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki' ? 'L' : 'P' }}</td>
                 <td>{!! $row['check_in'] !!}</td>
-                <td>{!! $row['late_text'] !!}</td>
                 <td>
                     @if($row['status'] === 'Hadir')
                         <span class="badge-h">{!! __('Hadir') !!}</span>
-                    @elseif($row['status'] === 'Terlambat')
-                        <span class="badge-t">{!! __('Terlambat') !!}</span>
                     @elseif($row['status'] === 'Sakit')
                         <span class="badge-s">{!! __('Sakit') !!}</span>
                     @elseif($row['status'] === 'Izin')
@@ -236,7 +230,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+                <td colspan="6" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>
@@ -272,14 +266,13 @@
                         $code = $row['days'][$d['date']] ?? '-';
                         $cls = match($code) {
                             'H' => 'badge-h',
-                            'T' => 'badge-t',
                             'S' => 'badge-s',
                             'I' => 'badge-i',
                             'A' => 'badge-a',
                             'L' => 'badge-l',
                             default => 'badge-l'
                         };
-                        $val = in_array($code, ['H','T','S','I','A','L']) ? $code : '-';
+                        $val = in_array($code, ['H','S','I','A','L']) ? $code : '-';
                     @endphp
                     <td class="{{ $cls }}">{{ $val }}</td>
                 @endforeach
@@ -292,7 +285,7 @@
         </tbody>
     </table>
 
-    @elseif(in_array($type, ['semester', 'tahunan', 'semua'], true))
+    @elseif(in_array($type, ['semester', 'tahunan'], true))
     @php
         $wNo = 4; $wNip = 9; $wNama = 20; $wJk = 3;
         $wBulanTetap = $wNo + $wNip + $wNama + $wJk;
@@ -357,7 +350,7 @@
                 <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     @php $code = $row['days'][$d] ?? '-'; @endphp
-                    <td class="{{ match($code) { 'H' => 'badge-h', 'T' => 'badge-t', 'S' => 'badge-s', 'I' => 'badge-i', 'A' => 'badge-a', 'L' => 'badge-l', default => 'badge-l' } }}" style="padding: 2px 1px; font-size: 7pt;">{{ $code }}</td>
+                    <td class="{{ match($code) { 'H' => 'badge-h', 'S' => 'badge-s', 'I' => 'badge-i', 'A' => 'badge-a', 'L' => 'badge-l', default => 'badge-l' } }}" style="padding: 2px 1px; font-size: 7pt;">{{ $code }}</td>
                 @endfor
             </tr>
             @empty

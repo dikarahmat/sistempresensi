@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Services\DailyAttendanceSummary;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
+use App\Models\OperatingSchedule;
 use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -257,14 +259,17 @@ class AdminDashboardController extends Controller
             $chartEmptyText   = 'Belum ada data kehadiran pada 7 hari terakhir.';
         }
 
-        // 4. Pengaturan Jadwal Operasional dari Cache Teroptimasi
-        $checkInTime = Setting::getCheckInTime();
-        $lateLimitTime = Setting::getLateLimitTime();
+        // 4. Pengaturan Jadwal Operasional per hari (Cache 1 jam, dibersihkan
+        // saat jadwal disimpan di SettingController::update).
+        $scheduleDate = Carbon::now('Asia/Jakarta');
+        $scheduleTimes = Cache::remember('operating_schedule_today', 3600, function () use ($scheduleDate) {
+            return OperatingSchedule::timesForDate($scheduleDate);
+        });
 
         return view(panel_role() === 'piket' ? 'piket.dashboard' : 'admin.dashboard', compact(
             'today', 'todayFormatted', 'dateString', 'startOfWeek', 'endOfWeek',
             'isToday', 'dateLabel', 'selectedDate',
-            'checkInTime', 'lateLimitTime',
+            'scheduleTimes', 'scheduleDate',
             'totalStudents', 'totalClasses', 'totalGuruKelas', 'totalTeachers',
             'classesList', 'guruKelasList',
             'countHadir', 'countTerlambat',

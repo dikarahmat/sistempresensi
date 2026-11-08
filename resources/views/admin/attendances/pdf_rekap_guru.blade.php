@@ -25,7 +25,6 @@
         .text-left { text-align: left !important; }
 
         .badge-h { color: #059669; font-weight: bold; }
-        .badge-t { color: #d97706; font-weight: bold; }
         .badge-s { color: #2563eb; font-weight: bold; }
         .badge-i { color: #7e22ce; font-weight: bold; }
         .badge-a { color: #e11d48; font-weight: bold; }
@@ -36,7 +35,6 @@
         td, td * { color: #000 !important; font-weight: 400 !important; }
         th { color: #ffffff !important; font-weight: bold !important; }
         .badge-h { color: #059669 !important; font-weight: bold !important; }
-        .badge-t { color: #d97706 !important; font-weight: bold !important; }
         .badge-s { color: #2563eb !important; font-weight: bold !important; }
         .badge-i { color: #7e22ce !important; font-weight: bold !important; }
         .badge-a { color: #e11d48 !important; font-weight: bold !important; }
@@ -109,7 +107,6 @@
             <th style="text-align: left; width: 34%;">{!! __('Nama Guru') !!}</th>
             <th style="width: 4%;">{!! __('JK') !!}</th>
             <th style="width: 12%;">{!! __('Jam Masuk') !!}</th>
-            <th style="width: 18%;">{!! __('Keterlambatan') !!}</th>
             <th style="width: 12%;">{!! __('Status') !!}</th>
         </tr>
     </thead>
@@ -121,11 +118,9 @@
             <td class="text-left"><strong>{{ mb_strtoupper($row['name'] ?? '', 'UTF-8') }}</strong></td>
             <td class="{{ ($row['jk'] ?? 'L') === 'P' ? 'jk-p' : 'jk-l' }}">{{ $row['jk'] ?? 'L' }}</td>
             <td>{{ $row['check_in'] }}</td>
-            <td>{{ $row['late_text'] }}</td>
             <td>
                 @php $st = $row['status']; @endphp
                 @if($st === 'Hadir') <span class="badge-h">{!! __('Hadir') !!}</span>
-                @elseif($st === 'Terlambat') <span class="badge-t">{!! __('Terlambat') !!}</span>
                 @elseif($st === 'Sakit') <span class="badge-s">{!! __('Sakit') !!}</span>
                 @elseif($st === 'Izin') <span class="badge-i">{!! __('Izin') !!}</span>
                 @elseif($st === 'Alfa') <span class="badge-a">{!! __('Alfa') !!}</span>
@@ -135,7 +130,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="7" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            <td colspan="6" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
         </tr>
         @endforelse
     </tbody>
@@ -161,7 +156,6 @@
                 </th>
             @endforeach
             <th style="width: 2.6%; background-color: #059669;">H</th>
-            <th style="width: 2.6%; background-color: #d97706;">T</th>
             <th style="width: 2.6%; background-color: #2563eb;">S</th>
             <th style="width: 2.6%; background-color: #7e22ce;">I</th>
             <th style="width: 2.6%; background-color: #e11d48;">A</th>
@@ -180,7 +174,6 @@
                 <td>{{ $cell === null ? '-' : $cell }}</td>
             @endforeach
             <td class="badge-h">{{ $row['hadir'] ?? 0 }}</td>
-            <td class="badge-t">{{ $row['terlambat'] ?? 0 }}</td>
             <td class="badge-s">{{ $row['sakit'] ?? 0 }}</td>
             <td class="badge-i">{{ $row['izin'] ?? 0 }}</td>
             <td class="badge-a">{{ $row['alfa'] ?? 0 }}</td>
@@ -188,7 +181,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="{{ count($months) + 10 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            <td colspan="{{ count($months) + 9 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
         </tr>
         @endforelse
     </tbody>
@@ -212,7 +205,6 @@
                 <th style="padding: 2px 1px; width: {{ $wTanggal }}%;">{{ $d['label'] }}</th>
             @endforeach
             <th style="width: 2.6%; background-color: #059669;">H</th>
-            <th style="width: 2.6%; background-color: #d97706;">T</th>
             <th style="width: 2.6%; background-color: #2563eb;">S</th>
             <th style="width: 2.6%; background-color: #7e22ce;">I</th>
             <th style="width: 2.6%; background-color: #e11d48;">A</th>
@@ -230,14 +222,13 @@
                 @php
                     $code = $row['days'][$d['date']] ?? '-';
                     $cls = match($code) {
-                        'H' => 'badge-h', 'T' => 'badge-t', 'S' => 'badge-s',
+                        'H' => 'badge-h', 'S' => 'badge-s',
                         'I' => 'badge-i', 'A' => 'badge-a', default => 'badge-l',
                     };
                 @endphp
                 <td class="{{ $cls }}" style="padding: 2px 1px; @if($isBulanan) font-size: 7pt; @endif">{{ $code }}</td>
             @endforeach
             <td class="badge-h">{{ $row['hadir'] ?? 0 }}</td>
-            <td class="badge-t">{{ $row['terlambat'] ?? 0 }}</td>
             <td class="badge-s">{{ $row['sakit'] ?? 0 }}</td>
             <td class="badge-i">{{ $row['izin'] ?? 0 }}</td>
             <td class="badge-a">{{ $row['alfa'] ?? 0 }}</td>
@@ -245,7 +236,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="{{ count($dateColumns) + 10 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+            <td colspan="{{ count($dateColumns) + 9 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
         </tr>
         @endforelse
     </tbody>

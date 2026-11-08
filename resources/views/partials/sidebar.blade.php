@@ -42,7 +42,12 @@
     if ($rekapGuruRoute === '#') {
         $rekapGuruRoute = null;
     }
-    $isRekapSiswaActive = panel_is('rekap.siswa*');
+    // panel_is('rekap') covers alias URL /admin/rekap (route name 'rekap',
+    // yang sama halaman dengan /admin/rekap/siswa). Hati-hati: /admin/rekap
+    // adalah prefix dari /admin/rekap/guru, jadi 'rekap*' tidak boleh
+    // dipakai untuk menentukan siswa vs guru — hanya 'rekap' dan
+    // 'rekap.siswa*' untuk siswa, 'rekap.guru*' untuk guru.
+    $isRekapSiswaActive = panel_is('rekap.siswa*') || panel_is('rekap');
     $isRekapGuruActive  = $rekapGuruRoute !== null && panel_is('rekap.guru*');
     $isRekapActive      = $isRekapSiswaActive || $isRekapGuruActive || panel_is('rekap*');
 
@@ -489,6 +494,24 @@
 
     #page-loader, #pageLoader, #loading-overlay, #loadingOverlay, #preloader,
     .page-loader, .loading-overlay, .app-loader, .page-loading, .preloader { display: none !important; }
+</style>
+
+<style>
+    /* Pengaman: kedua baris nama sekolah TIDAK boleh dibedakan JS/apapun.
+       Font, ukuran, ketebalan, spasi, tinggi baris, dan transform identik
+       antara line1 dan line2, pada semua mode (desktop, rail, mobile). */
+    #sidebar-brand-line1, #sidebar-brand-line2 {
+        font-family: inherit !important;
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0 !important;
+        line-height: 1.2 !important;
+        transform: none !important;
+        transform-origin: unset !important;
+        zoom: 1 !important;
+        white-space: nowrap !important;
+        display: inline-block !important;
+    }
 </style>
 
 {{-- ========================================================================

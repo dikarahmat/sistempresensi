@@ -141,8 +141,8 @@
         color: #ffffff !important;
         border-color: #16a34a;
         box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
+        -webkit-tap-highlight-color: transparent !important;
     }
-    .btn-portal-gate:hover,
     .btn-portal-gate:active,
     .btn-portal-gate:focus {
         background-color: #16a34a !important;
@@ -151,6 +151,15 @@
         transform: none !important;
         box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2) !important;
     }
+    @media (hover: hover) {
+        .btn-portal-gate:hover {
+            background-color: #16a34a !important;
+            border-color: #16a34a !important;
+            color: #ffffff !important;
+            transform: none !important;
+            box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2) !important;
+        }
+    }
 
     /* Buka Scanner Button (Royal Blue Primary) - STATIS, tidak ada hover/active perubahan */
     .btn-portal-scanner {
@@ -158,8 +167,8 @@
         color: #ffffff !important;
         border-color: #3b62f6;
         box-shadow: 0 1px 3px rgba(59, 98, 246, 0.25);
+        -webkit-tap-highlight-color: transparent !important;
     }
-    .btn-portal-scanner:hover,
     .btn-portal-scanner:active,
     .btn-portal-scanner:focus {
         background-color: #3b62f6 !important;
@@ -167,6 +176,15 @@
         color: #ffffff !important;
         transform: none !important;
         box-shadow: 0 1px 3px rgba(59, 98, 246, 0.25) !important;
+    }
+    @media (hover: hover) {
+        .btn-portal-scanner:hover {
+            background-color: #3b62f6 !important;
+            border-color: #3b62f6 !important;
+            color: #ffffff !important;
+            transform: none !important;
+            box-shadow: 0 1px 3px rgba(59, 98, 246, 0.25) !important;
+        }
     }
     .btn-portal-scanner.scanner-active {
         background-color: #ef4444 !important;
@@ -178,119 +196,6 @@
         background-color: #dc2626 !important;
         border-color: #dc2626 !important;
         box-shadow: 0 4px 8px rgba(239, 68, 68, 0.35);
-    }
-
-    /* Wadah Bar Statistik Responsif: Horizontal Scroll di Mobile, Bar di Desktop */
-    .badges-scroll-container {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none !important; /* Firefox */
-        -ms-overflow-style: none !important; /* IE/Edge */
-        padding-bottom: 2px;
-    }
-    .badges-scroll-container::-webkit-scrollbar {
-        display: none !important; /* Chrome/Safari */
-        width: 0 !important;
-        height: 0 !important;
-    }
-    @media (max-width: 767.98px) {
-        /* Hapus total bar statistik pada tampilan mobile */
-        .badges-scroll-container {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-        }
-    }
-    @media (min-width: 768px) {
-        .badges-scroll-container {
-            display: block !important;
-            overflow-x: visible;
-            margin-bottom: 0.85rem;
-        }
-    }
-
-    /* ==========================================================================
-       BAR STATISTIK (sudah / belum / total) - SATU bar panjang berbingkai.
-       - Satu bingkai luar: background putih, border 1px #e2e8f0 (warna yang
-         sama dengan chip sebelumnya), radius 8px (sama dengan chip sebelumnya).
-       - Tiga bagian berjajar tanpa gap, dipisah SEKAT vertikal 1px; tidak ada
-         border/radius sendiri per bagian.
-       - Padding, font, ketebalan, line-height, dan tinggi diambil dari chip
-         lama, jadi tinggi bar tetap sama dengan tinggi chip sebelumnya.
-       - Lebar ikut isi (inline-flex), bukan full width.
-       - Wadahnya tetap yang sama (d-none d-md-block, overflow visible), jadi
-         jarak vertikal ke judul & ke tabel tidak berubah dan HP tidak tersentuh.
-       ========================================================================== */
-    @media (min-width: 641px) {
-        .stats-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 18px;
-            padding: 0;
-            background: none;
-            border: 0;
-            box-shadow: none;
-        }
-        .stats-bar__item {
-            border: 0;
-            background: none;
-            padding: 0;
-            box-shadow: none;
-        }
-        .stat-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 1;
-            text-transform: capitalize;
-        }
-        .stat-chip strong {
-            font-size: 14px;
-            font-weight: 700;
-        }
-        .stat-ico {
-            width: 15px;
-            height: 15px;
-            flex: none;
-            background: none;
-            border: 0;
-            border-radius: 0;
-            padding: 0;
-            display: block;
-        }
-        .stat-ico--ok {
-            color: #16a34a;
-        }
-        .stat-ico--no {
-            color: #dc2626;
-        }
-        .stat-ico--all {
-            color: #2563eb;
-        }
-    }
-
-    /* ==========================================================================
-       BAR STATISTIK: tepi kirinya sejajar dengan ikon HAMBURGER (garis tiga).
-       Tombol hamburger (.mobile-top-hamburger) berada di dalam main yang sama
-       dengan konten halaman, dan tombol itu TIDAK memakai padding internal
-       (padding: 0 dikunci layout, baik < 1024px maupun >= 1024px). Karena itu:
-         x ikon garis tiga = x tombol hamburger = x tepi kiri container konten
-       sehingga bar tidak lagi memakai offset ke judul. Nilai padding tombol
-       diambil lewat variabel di bawah supaya kompensasinya mengikuti struktur:
-       bila suatu saat tombol itu diberi padding, cukup ubah satu nilai ini.
-       ========================================================================== */
-    @media (min-width: 641px) {
-        .stats-bar {
-            --presensi-hamburger-pad: 0px;   /* = padding .mobile-top-hamburger */
-            margin-left: calc(-1 * var(--presensi-hamburger-pad));
-        }
     }
 
     /* Tabel Enterprise Standar & Roomy */
@@ -382,16 +287,16 @@
         /* Kolom Kelas Proporsional */
         .table-enterprise thead th.col-th-kelas,
         .table-enterprise tbody td.col-td-kelas {
-            width: 14% !important;
+            width: 13% !important;
             padding-left: 0.45rem !important;
             padding-right: 0.35rem !important;
             text-align: center !important;
         }
 
-        /* Kolom Angka (Total, Hadir, Sakit, Izin, Alpha) - Lebar Seimbang & Jarak Seragam */
+        /* Kolom Angka (Total, Hadir, Terlambat, Sakit, Izin, Alpha) - Lebar Seimbang & Jarak Seragam */
         .table-enterprise thead th.col-th-stat,
         .table-enterprise tbody td.col-td-stat {
-            width: 9.5% !important;
+            width: 8% !important;
             padding-left: 0.3rem !important;
             padding-right: 0.3rem !important;
             text-align: center !important;
@@ -400,13 +305,13 @@
         /* Kolom Kehadiran & Aksi di Mobile */
         .table-enterprise thead th.col-th-kehadiran,
         .table-enterprise tbody td.col-td-kehadiran {
-            width: 21.5% !important;
+            width: 20% !important;
             padding: 0.55rem 0.35rem !important;
             text-align: center !important;
         }
         .table-enterprise thead th.col-th-aksi,
         .table-enterprise tbody td.col-td-aksi {
-            width: 17% !important;
+            width: 16% !important;
             padding: 0.55rem 0.35rem !important;
             text-align: center !important;
         }
@@ -745,20 +650,31 @@
                         <i class='bx bx-scan'></i>
                         <span class="text-nowrap" style="font-size: 0.8rem;">{{ __('Mode Gerbang') }}</span>
                     </a>
+                    </div>
                 </div>
             </div>
         </div>
+
+    <!-- Statistik ringkasan khusus mobile (tombol scanner -> statistik -> tabel) -->
+    <div class="d-block d-md-none mt-3 mb-3">
+        @include('components.presence-summary', [
+            'sudah' => $sumSudah,
+            'belum' => $sumBelum,
+            'total' => $sumTotal,
+            'label' => 'SISWA',
+        ])
     </div>
 
     <!-- ========================================================================= -->
     <!-- 2. KONTEN KHUSUS DESKTOP (>= 768px): BADGE RINGKASAN STATUS HARIAN        -->
     <!-- ========================================================================= -->
-    <div class="badges-scroll-container mb-3 no-scrollbar d-none d-md-block" style="scrollbar-width: none; -ms-overflow-style: none;">
-        <div class="stats-bar">
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg><strong>{{ $totalSudahAbsen ?? $sumSudah }}</strong> {!! __('Sudah Presensi') !!}</span></div>
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 5.5 18.5 18.5M18.5 5.5 5.5 18.5"/></svg><strong>{{ $totalBelumAbsen ?? $sumBelum }}</strong> {!! __('Belum Presensi') !!}</span></div>
-<div class="stats-bar__item"><span class="stat-chip"><svg class="stat-ico stat-ico--all" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7" r="3.6"/><path d="M5.5 21v-2.2a6.5 6.5 0 0 1 13 0V21z"/><circle cx="4.6" cy="9.2" r="2.4" opacity=".75"/><path d="M0 19.5v-1.3a4.6 4.6 0 0 1 4.6-4.6c.7 0 1.3.1 1.9.4A8 8 0 0 0 4.4 19.5z" opacity=".75"/><circle cx="19.4" cy="9.2" r="2.4" opacity=".75"/><path d="M24 19.5v-1.3a4.6 4.6 0 0 0-4.6-4.6c-.7 0-1.3.1-1.9.4a8 8 0 0 1 2.1 5.5z" opacity=".75"/></svg><strong>{{ $totalSiswaSeluruhnya ?? $sumTotal }}</strong> {!! __('Total Siswa') !!}</span></div>
-        </div>
+    <div class="d-none d-md-block">
+    @include('components.presence-summary', [
+        'sudah' => $sumSudah,
+        'belum' => $sumBelum,
+        'total' => $sumTotal,
+        'label' => 'SISWA',
+    ])
     </div>
 
     <!-- MAIN CONTENT LAYOUT -->
@@ -928,14 +844,15 @@
                     <table class="table table-hover table-enterprise table-zebra-custom align-middle mb-0 text-nowrap">
                         <thead class="bg-light text-nowrap">
                             <tr class="text-nowrap">
-                                <th class="text-center align-middle col-th-kelas text-nowrap" style="width: 16%;">{!! __('Kelas') !!}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Total') !!}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Hadir') !!}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Sakit') !!}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Izin') !!}</th>
-                                <th class="text-center align-middle col-th-stat text-nowrap" style="width: 9%;">{!! __('Alfa') !!}</th>
-                                <th class="text-center align-middle col-th-kehadiran text-nowrap" style="width: 22%;">{!! __('Kehadiran') !!}</th>
-                                <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 17%;">{!! __('Aksi') !!}</th>
+                                <th class="text-center align-middle col-th-kelas text-nowrap" style="min-width: 56px; width: 56px;">{!! __('Kelas') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="min-width: 64px; width: 64px;">{!! __('Total') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="min-width: 64px; width: 64px;">{!! __('Hadir') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="min-width: 96px; width: 96px;">{!! __('Terlambat') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="min-width: 72px; width: 72px;">{!! __('Sakit') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="min-width: 64px; width: 64px;">{!! __('Izin') !!}</th>
+                                <th class="text-center align-middle col-th-stat text-nowrap" style="min-width: 64px; width: 64px;">{!! __('Alfa') !!}</th>
+                                <th class="text-center align-middle col-th-kehadiran text-nowrap" style="min-width: 96px; width: 96px;">{!! __('Kehadiran') !!}</th>
+                                <th class="text-center align-middle col-th-aksi text-nowrap" style="width: 16%;">{!! __('Aksi') !!}</th>
                             </tr>
                         </thead>
                         <tbody class="text-nowrap">
@@ -979,6 +896,11 @@
                                 </td>
                                 <td class="text-center align-middle col-td-stat text-nowrap">
                                     <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
+                                        <span class="text-slate-900 text-nowrap" style="color: #0f172a !important; font-size: 0.875rem; font-weight: 400;">{{ $terlambat }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center align-middle col-td-stat text-nowrap">
+                                    <div class="d-flex align-items-center justify-content-center w-100 text-nowrap">
                                         <span class="text-slate-900 text-nowrap" style="color: #0f172a !important; font-size: 0.875rem; font-weight: 400;">{{ $sakit }}</span>
                                     </div>
                                 </td>
@@ -1009,7 +931,7 @@
                             </tr>
                             @empty
                             <tr class="text-nowrap">
-                                <td colspan="8" class="text-center py-3 text-secondary text-nowrap empty-state">
+                                <td colspan="9" class="text-center py-3 text-secondary text-nowrap empty-state">
                                     <i class='bx bx-error' aria-hidden='true'></i>
                                     {!! __('Belum ada data kelas tersedia.') !!}
                                 </td>

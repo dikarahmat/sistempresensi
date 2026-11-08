@@ -147,24 +147,24 @@ class RekapGuruController extends Controller
         $data = $this->buildData($ctx);
 
         if ($ctx['type'] === 'harian') {
-            $headings = ['NO', 'NIP', 'NAMA GURU', 'JK', 'JAM MASUK', 'KETERLAMBATAN', 'STATUS'];
+            $headings = ['NO', 'NIP', 'NAMA GURU', 'JK', 'JAM MASUK', 'STATUS'];
             $out = [];
             foreach ($data['dataRows'] as $i => $r) {
-                $out[] = [$i + 1, (string) $r['nip'], strtoupper($r['name']), $r['jk'], $r['check_in'], $r['late_text'], strtoupper($r['status'])];
+                $out[] = [$i + 1, (string) $r['nip'], strtoupper($r['name']), $r['jk'], $r['check_in'], strtoupper($r['status'])];
             }
         } elseif (in_array($ctx['type'], ['semester', 'tahunan'], true)) {
             $headings = ['NO', 'NIP', 'NAMA GURU', 'JK'];
             foreach ($data['months'] as $m) {
                 $headings[] = $m['label'] . ' ' . $m['year'];
             }
-            array_push($headings, 'H', 'T', 'S', 'I', 'A', '%');
+            array_push($headings, 'H', 'S', 'I', 'A', '%');
             $out = [];
             foreach ($data['dataRows'] as $i => $r) {
                 $row = [$i + 1, (string) $r['nip'], strtoupper($r['name']), $r['jk']];
                 foreach ($data['months'] as $m) {
                     $row[] = $r['monthly'][$m['key']] ?? '-';
                 }
-                array_push($row, $r['hadir'], $r['terlambat'], $r['sakit'], $r['izin'], $r['alfa'], $r['percentage'] . '%');
+                array_push($row, $r['hadir'], $r['sakit'], $r['izin'], $r['alfa'], $r['percentage'] . '%');
                 $out[] = $row;
             }
         } else {
@@ -172,14 +172,14 @@ class RekapGuruController extends Controller
             foreach ($data['dateColumns'] as $c) {
                 $headings[] = $c['label'];
             }
-            array_push($headings, 'H', 'T', 'S', 'I', 'A', '%');
+            array_push($headings, 'H', 'S', 'I', 'A', '%');
             $out = [];
             foreach ($data['dataRows'] as $i => $r) {
                 $row = [$i + 1, (string) $r['nip'], strtoupper($r['name']), $r['jk']];
                 foreach ($data['dateColumns'] as $c) {
                     $row[] = $r['days'][$c['date']] ?? '-';
                 }
-                array_push($row, $r['hadir'], $r['terlambat'], $r['sakit'], $r['izin'], $r['alfa'], $r['percentage'] . '%');
+                array_push($row, $r['hadir'], $r['sakit'], $r['izin'], $r['alfa'], $r['percentage'] . '%');
                 $out[] = $row;
             }
         }
@@ -269,7 +269,7 @@ class RekapGuruController extends Controller
             $hol = $c->isWeekend() || Holiday::isHoliday($ds);
             $dateColumns[] = [
                 'date'       => $ds,
-                'label'      => $ctx['type'] === 'bulanan' ? (string) $c->day : $c->copy()->locale('id')->translatedFormat('D d'),
+                'label'      => $ctx['type'] === 'bulanan' ? (string) $c->day : $c->copy()->locale('id')->translatedFormat('D, d/m'),
                 'is_holiday' => $hol,
                 'desc'       => $hol ? (Holiday::getHolidayDescription($ds) ?? ($c->isWeekend() ? 'Akhir Pekan' : 'Libur')) : null,
             ];
@@ -312,7 +312,6 @@ class RekapGuruController extends Controller
                     'name'      => $t->name,
                     'jk'        => $jk,
                     'check_in'  => $a && $a->created_at ? $a->created_at->timezone(self::TZ)->format('H:i') : '-',
-                    'late_text' => '-',
                     'status'    => $this->statusLabel($code),
                 ];
                 continue;
@@ -349,7 +348,7 @@ class RekapGuruController extends Controller
                         if ($code !== '-' && $code !== 'L') {
                             $hasData[$mk] = true;
                         }
-                        if ($code === 'H' || $code === 'T') {
+                        if ($code === 'H') {
                             $monthly[$mk]++;
                         }
                     }
@@ -364,11 +363,10 @@ class RekapGuruController extends Controller
                 'jk'         => $jk,
                 'days'       => $days,
                 'hadir'      => $sum['H'],
-                'terlambat'  => $sum['T'],
                 'sakit'      => $sum['S'],
                 'izin'       => $sum['I'],
                 'alfa'       => $sum['A'],
-                'percentage' => $effective > 0 ? (int) round((($sum['H'] + $sum['T']) / $effective) * 100) : 0,
+                'percentage' => $effective > 0 ? (int) round(($sum['H'] / $effective) * 100) : 0,
             ];
 
             if ($isMonthTable) {
@@ -405,14 +403,12 @@ class RekapGuruController extends Controller
         if (str_contains($s, 'alpa') || str_contains($s, 'alfa')) {
             return 'A';
         }
-        if (str_contains($s, 'terlambat') || str_contains($s, 'telat')) {
-            return 'T';
-        }
         if (str_contains($s, 'hadir')) {
-            $r = strtolower((string) $a->time_remark);
-            if ($r !== '' && !str_contains($r, 'tepat') && preg_match('/mnt|menit|jam/', $r)) {
-                return 'T';
-            }
+            return 'H';
+        }
+        // Guru tidak mengenal status Terlambat: siswa/guru yang terlambat
+        // tetap dihitung dan ditampilkan sebagai Hadir (H).
+        if (str_contains($s, 'terlambat')) {
             return 'H';
         }
 
@@ -423,7 +419,6 @@ class RekapGuruController extends Controller
     {
         return match ($code) {
             'H' => 'Hadir',
-            'T' => 'Terlambat',
             'S' => 'Sakit',
             'I' => 'Izin',
             'A' => 'Alfa',

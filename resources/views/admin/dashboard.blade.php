@@ -112,6 +112,7 @@
         --dash-inner-stroke: #e2e8f0;       /* garis tipis elemen kecil   */
         --dash-line: #e5e9f0;
         --dash-accent: #2563eb;
+        --dash-title-weight: 700;           /* judul section selalu bold */
     }
 
     /* Kotak Grafik / Kehadiran / Monitoring / Jadwal: putih, tanpa
@@ -122,6 +123,16 @@
         border: 0;
         box-shadow: none;
         outline: 0;
+    }
+
+    /* Judul kotak sejajar kiri-kanan: sama font, tebal, margin-top,
+       padding-top di desktop dan mobile. */
+    .dashboard-section .dashboard-box-title {
+        font-size: var(--dash-title-size) !important;
+        font-weight: var(--dash-title-weight) !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-top: 0 !important;
     }
 
     /* Kartu pembungkus Statistik & Pintasan Cepat (tanpa garis/shadow) */
@@ -220,25 +231,50 @@
        dan "Kehadiran Hari Ini" (satu biru, satu kuning, satu hijau, satu
        merah). Class KHUSUS elemen dashboard ini; definisi class bersama
        (text-danger, text-primary, text-purple, dll) tidak disentuh. */
+    /* Sumber warna status seragam dengan Rekap Siswa (cell-present/late/sick/permission/alpha).
+       Digunakan oleh Data Sekolah dan Kehadiran Hari Ini. */
     .dashboard-section .dash-stat-value.is-sidebar-blue,
     .dashboard-section .dash-att-value.is-sidebar-blue {
-        color: #3b62f6 !important;   /* biru, sama dgn background sidebar */
+        color: #2563eb !important;   /* biru = Sakit (sama dengan cell-sick di Rekap) */
     }
     .dashboard-section .dash-stat-value.is-yellow,
     .dashboard-section .dash-att-value.is-yellow {
-        color: #eab308 !important;   /* kuning */
+        color: #7e22ce !important;   /* ungu = Izin (sama dengan cell-permission di Rekap) */
     }
     .dashboard-section .dash-stat-value.is-green,
     .dashboard-section .dash-att-value.is-green {
-        color: #16a34a !important;   /* hijau */
+        color: #16a34a !important;   /* hijau = Hadir (sama dengan cell-present di Rekap) */
     }
     .dashboard-section .dash-stat-value.is-orange,
     .dashboard-section .dash-att-value.is-orange {
-        color: #ea580c !important;   /* oranye (Terlambat) */
+        color: #d97706 !important;   /* oranye = Terlambat (sama dengan cell-late di Rekap) */
     }
     .dashboard-section .dash-stat-value.is-red,
     .dashboard-section .dash-att-value.is-red {
-        color: #dc3545 !important;   /* merah */
+        color: #ef4444 !important;   /* merah = Alfa */
+    }
+
+    /* Label Kehadiran Hari Ini: warna sinkron dengan angka status di atas. */
+    .dashboard-section .absence-label-hadir   { color: #16a34a !important; }   /* hijau */
+    .dashboard-section .absence-label-terlambat { color: #d97706 !important; } /* oranye */
+    .dashboard-section .absence-label-sakit   { color: #2563eb !important; }   /* biru */
+    .dashboard-section .absence-label-izin    { color: #7e22ce !important; }   /* ungu */
+    .dashboard-section .absence-label-alfa    { color: #ef4444 !important; }   /* merah */
+
+
+    /* Jam sealang dengan angka statistik: label & nilai sama ukuran & bobot. */
+    .dashboard-section .dashboard-clock .clock-label {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.05em !important;
+        text-transform: uppercase !important;
+    }
+    .dashboard-section .dashboard-clock .clock-value {
+        font-size: 1.75rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.02em !important;
+        margin-top: 0.25rem !important;
     }
 
     @media (min-width: 768px) {
@@ -522,27 +558,12 @@
     }
 
     /* Di 2 kolom (>=768px) tiap kolom hanya setengah lebar konten, jadi
-       angka jam ikut menyesuaikan (tidak ikut melebar atau terpotong). */
+       angka jam sama ukurannya dengan angka statistik (tidak lebih besar). */
     @media (min-width: 768px) {
         body .dashboard-section .dashboard-clock .clock-value {
-            font-size: clamp(1.2rem, 1.8vw, 1.65rem) !important;
+            font-size: 2rem !important;
         }
     }
-
-    /* HP (s.d. 640px): angka jam sedikit dikecilkan dan padding kotak jam
-       dirapatkan supaya "06:45 WIB" tetap satu baris di layar 320px
-       tanpa scroll horizontal. Ukuran "WIB" tetap mengikuti jamnya (em). */
-    @media (max-width: 640px) {
-        body .dashboard-section .dashboard-clock {
-            padding: 0.5rem 0.35rem !important;
-        }
-        body .dashboard-section .dashboard-clock .clock-value {
-            font-size: 1.15rem !important;
-        }
-    }
-
-    /* ==================================================================
-       HANYA MOBILE (< 768px)
        3 statistik "Data Sekolah" SEJAJAR satu baris (3 kolom sama lebar)
        dan 5 item "Kehadiran Hari Ini" sejajar satu baris (5 kolom),
        dengan angka & label yang mengecil supaya muat di layar 320-500px
@@ -584,6 +605,14 @@
         /* Label (Hadir / Terlambat / Sakit / Izin / Alfa) disamakan dengan label statistik HP. */
         .dashboard-section .dash-absence-grid .fw-bold {
             font-size: 0.625rem !important;   /* 10px: muat "Terlambat" di 5 kolom */
+        }
+
+        /* Jam HP: sama ukuran dengan statistik HP. */
+        .dashboard-section .dashboard-clock .clock-label {
+            font-size: 0.5625rem !important;
+        }
+        .dashboard-section .dashboard-clock .clock-value {
+            font-size: 1.375rem !important;
         }
     }
 
@@ -1192,7 +1221,7 @@
                      kolom ini tetap sejajar dengan judul kolom kanan. -->
                 <div class="d-flex items-start justify-between gap-2 clean-line-off dash-col-head">
                     <div class="min-w-0">
-                        <h6 class="fw-bold text-dark mb-0.5 dashboard-box-title">{{ __('Kehadiran Hari Ini') }}</h6>
+                        <span class="d-block fw-bold text-dark dashboard-box-title">{{ __('Kehadiran Hari Ini') }}</span>
                     </div>
                 </div>
 
@@ -1209,7 +1238,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-green">{{ $countHadir ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Hadir') }} @if(request('status') === 'Hadir')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-hadir d-block mb-0" style="font-size: 0.9rem;">{{ __('Hadir') }} @if(request('status') === 'Hadir')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 2. Terlambat -->
@@ -1217,7 +1246,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-orange">{{ $countTerlambat ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Terlambat') }} @if(request('status') === 'Terlambat')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-terlambat d-block mb-0" style="font-size: 0.9rem;">{{ __('Terlambat') }} @if(request('status') === 'Terlambat')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 3. Sakit -->
@@ -1225,7 +1254,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-sidebar-blue">{{ $countSakit ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-sakit d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 4. Izin -->
@@ -1233,7 +1262,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-yellow">{{ $countIzin ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-izin d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 5. Alfa -->
@@ -1241,7 +1270,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-red">{{ $countAlfa ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold text-dark d-block mb-0" style="font-size: 0.9rem;">{{ __('Alfa') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-alfa d-block mb-0" style="font-size: 0.9rem;">{{ __('Alfa') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                 </div>
@@ -1260,50 +1289,22 @@
 
         <!-- ===== KOLOM KANAN: JADWAL OPERASIONAL SEKOLAH ===== -->
         <div class="dash-col flex flex-col h-full min-w-0">
-            <div class="card border-0 rounded-4 p-3 p-md-4 h-100 d-flex flex-column dashboard-panel dashboard-box">
+            @include('components.dashboard-schedule-card', [
+                'times' => $scheduleTimes ?? null,
+                'date'  => $scheduleDate ?? null,
+            ])
 
-                <!-- Judul saja: badge pill "Aktif" di pojok kanan sudah dihapus.
-                     `d-block` dipakai supaya judul kolom kanan menjadi kotak
-                     blok seperti <h6> kolom kiri, sehingga keduanya tepat
-                     pada satu garis atas. -->
-                <div class="d-flex items-start justify-between gap-2 dashboard-divider-off dash-col-head">
-                    <div class="min-w-0">
-                        <span class="d-block fw-bold text-dark dashboard-box-title">{{ __('Jadwal Operasional Sekolah') }}</span>
-                    </div>
-                </div>
-
-                <!-- Dua kotak jam: 2 kolom sama lebar, isi rata tengah.
-                     Jam + "WIB" sekarang SATU BARIS, dan nilainya tetap
-                     diambil dari pengaturan yang sama ($checkInTime /
-                     $lateLimitTime) - tidak ada data yang di-hardcode. -->
-                <div class="dash-clock-grid grid grid-cols-2 gap-3">
-                    <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Jam masuk sekolah') }}">
-                        <span class="text-uppercase fw-bold text-dark d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Jam Masuk') }}</span>
-                        <strong class="text-dark mt-1.5 d-block clock-value">
-                            {{ $checkInTime }}<span class="clock-wib">WIB</span>
-                        </strong>
-                    </div>
-
-                    <div class="card border-0 rounded-3 p-3 text-center d-block text-decoration-none h-100 operasional-card-interactive dashboard-inner-card dashboard-clock dash-nobox min-w-0" title="{{ __('Batas keterlambatan sekolah') }}">
-                        <span class="text-uppercase fw-bold text-dark d-block clock-label" style="font-size: 0.7rem; letter-spacing: 0.04em;">{{ __('Batas Terlambat') }}</span>
-                        <strong class="text-amber-600 mt-1.5 d-block clock-value">
-                            {{ $lateLimitTime }}<span class="clock-wib">WIB</span>
-                        </strong>
-                    </div>
-                </div>
-
-                @if(is_admin())
-                <!-- Tombol Ubah Pengaturan Jadwal (khusus admin): pembungkus
-                     sama persis dengan kolom kiri (mt-auto pt-6) supaya
-                     kedua tombol selalu sejajar dan tidak menempel ke isi. -->
-                <div class="mt-auto pt-6">
-                    <a href="{{ route('admin.pengaturan.jadwal') }}"
-                       class="btn btn-primary shadow-sm w-100 fw-bold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth dashboard-schedule-btn dash-col-btn">
-                        <span>{{ __('Ubah Pengaturan Jadwal') }}</span>
-                    </a>
-                </div>
-                @endif
+            @if(is_admin())
+            <!-- Satu tombol Ubah Pengaturan Jadwal (khusus admin) di bagian
+                 bawah kolom kanan: mt-auto pt-6 sama persis dengan kolom kiri
+                 supaya kedua tombol sejajar di bawah dan tinggi sama. -->
+            <div class="mt-auto pt-6">
+                <a href="{{ route('admin.settings.index') }}"
+                   class="btn btn-primary shadow-sm w-100 fw-bold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-2 btn-modern-smooth dashboard-schedule-btn dash-col-btn">
+                    <span>{{ __('Ubah Pengaturan Jadwal') }}</span>
+                </a>
             </div>
+            @endif
         </div>
 
         </div>

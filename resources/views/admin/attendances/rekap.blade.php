@@ -132,6 +132,12 @@
     .filter-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15); }
     .filter-btn { height: 38px; font-size: 0.82rem; border-radius: var(--clean-radius); display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; font-weight: 600; }
 
+    /* Banner hari libur - kompak */
+    .holiday-banner { padding: 0.5rem 0.85rem !important; margin-bottom: 0.75rem !important; font-size: 0.8rem; }
+    .holiday-banner .text-warning { font-size: 1.15rem !important; }
+    .holiday-banner .small { font-size: 0.78rem; line-height: 1.35; }
+    .holiday-banner .text-muted.text-xs { font-size: 0.72rem; line-height: 1.3; }
+
     /* Tables */
     .table-responsive { -webkit-overflow-scrolling: touch; overflow-x: auto; width: 100%; }
     .table-matrix { margin-bottom: 0; width: 100%; border-collapse: collapse; font-size: 0.82rem; }
@@ -168,6 +174,19 @@
         font-size: 0.95rem;
         color: #212529;
     }
+
+    /* ===== WARNA KOLOM RINGKASAN (header + angka) =====
+       Pakai ID + !important supaya tidak kalah dari CSS global yang
+       memaksa warna thead th. Class dipasang di <th> DAN <span> di dalamnya. */
+    #daftar-rekap .table-matrix .clr-h { color: #16a34a !important; }
+    #daftar-rekap .table-matrix .clr-t { color: #d97706 !important; }
+    #daftar-rekap .table-matrix .clr-s { color: #2563eb !important; }
+    #daftar-rekap .table-matrix .clr-i { color: #7e22ce !important; }
+    #daftar-rekap .table-matrix .clr-a { color: #ef4444 !important; }
+    #daftar-rekap .table-matrix .clr-pct { color: #212529 !important; }
+    #daftar-rekap .table-matrix thead th.th-sum > span { font-weight: 700; }
+    #daftar-rekap .table-matrix thead th.th-sum.clr-pct,
+    #daftar-rekap .table-matrix thead th.th-sum.clr-pct > span { font-size: 0.95rem; }
 
     /* Status Colors */
     .cell-present { color: #16a34a !important; font-weight: 700; }
@@ -351,6 +370,45 @@
         border-color: var(--bs-btn-border-color, #dee2e6);
         color: var(--bs-btn-color, #212529);
     }
+
+    /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal, NO+NAMA sticky ===== */
+    @media (max-width: 767.98px) {
+        #daftar-rekap .table-responsive {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+        #daftar-rekap .table-responsive > table {
+            min-width: 1100px !important;
+            width: auto !important;
+        }
+        #daftar-rekap .table-matrix tbody td,
+        #daftar-rekap .table-matrix thead th {
+            white-space: nowrap !important;
+            padding: 0.6rem 0.7rem !important;
+            font-size: 0.78rem !important;
+        }
+        /* Kolom NO sticky di kiri */
+        #daftar-rekap .table-matrix tbody td:nth-child(1),
+        #daftar-rekap .table-matrix thead th:nth-child(1) {
+            position: sticky !important;
+            left: 0 !important;
+            z-index: 2 !important;
+            background: #ffffff !important;
+        }
+        /* Kolom NAMA Siswa sticky (setelah NO+NISN = 36+110=146px) */
+        #daftar-rekap .table-matrix tbody td:nth-child(3),
+        #daftar-rekap .table-matrix thead th:nth-child(3) {
+            position: sticky !important;
+            left: 146px !important;
+            z-index: 2 !important;
+            background: #ffffff !important;
+        }
+        /* Item ringkasan boleh wrap antar item, tapi satu item tidak pecah */
+        .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
+        .presence-summary .item { white-space: nowrap; }
+    }
 </style>
 @endpush
 
@@ -533,11 +591,11 @@
     </div>
 
     @if($type === 'harian' && $isHoliday)
-    <div class="alert alert-warning border-0 rounded-4 p-3 mb-3 d-flex align-items-center gap-3 shadow-xs">
-        <i class='bx bx-calendar-exclamation fs-3 text-warning'></i>
+    <div class="holiday-banner alert alert-warning border-0 rounded-3 mb-2 p-2 py-1 d-flex align-items-center gap-2">
+        <i class='bx bx-calendar-exclamation text-warning' style="font-size: 1.15rem;"></i>
         <div>
-            <h6 class="fw-bold mb-0">{{ __('Hari Ini Merupakan Hari Libur:') }} {{ $holidayDesc }}</h6>
-            <small class="text-muted">{{ __('Presensi tidak diwajibkan untuk tanggal ini.') }}</small>
+            <div class="fw-bold text-dark text-nowrap small">{{ __('Hari Ini Merupakan Hari Libur:') }} {{ $holidayDesc }}</div>
+            <div class="text-muted text-xs">{{ __('Presensi tidak diwajibkan untuk tanggal ini.') }}</div>
         </div>
     </div>
     @endif
@@ -561,18 +619,18 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%;">
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <thead>
                         <tr class="align-middle">
-                            <th style="width: 50px;">{{ __('No') }}</th>
-                            <th style="width: 130px;">{{ __('NISN') }}</th>
-                            <th class="text-start">{{ __('Nama Siswa') }}</th>
-                            <th style="width: 90px;">{{ __('Kelas') }}</th>
-                            <th style="width: 60px;">{{ __('JK') }}</th>
-                            <th style="width: 120px;">{{ __('Jam Masuk') }}</th>
-                            <th style="width: 120px;">{{ __('Jam Pulang') }}</th>
-                            <th style="width: 160px;">{{ __('Keterlambatan') }}</th>
-                            <th style="width: 120px;">{{ __('Status') }}</th>
+                            <th class="text-center" style="width: 5%;">{{ __('No') }}</th>
+                            <th class="text-center" style="width: 12%;">{{ __('NISN') }}</th>
+                            <th class="text-start" style="width: 28%;">{{ __('Nama Siswa') }}</th>
+                            <th class="text-center" style="width: 8%;">{{ __('Kelas') }}</th>
+                            <th class="text-center" style="width: 6%;">{{ __('JK') }}</th>
+                            <th class="text-center" style="width: 11%;">{{ __('Jam Masuk') }}</th>
+                            <th class="text-center" style="width: 11%;">{{ __('Jam Pulang') }}</th>
+                            <th class="text-center" style="width: 11%;">{{ __('Keterlambatan') }}</th>
+                            <th class="text-center" style="width: 8%;">{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -590,9 +648,9 @@
                         @if($st)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ $st->nisn ?: '-' }}</td>
+                            <td class="text-center">{{ $st->nisn ?: '-' }}</td>
                             <td class="text-start" title="{{ $st->name }}">{{ $st->name }}</td>
-                            <td>{{ $st->schoolClass ? $st->schoolClass->name : '-' }}</td>
+                            <td class="text-center">{{ $st->schoolClass ? $st->schoolClass->name : '-' }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ optional($st)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
                                     {{ optional($st)->gender == 'Perempuan' ? 'P' : 'L' }}
@@ -633,33 +691,37 @@
                 </table>
 
             @elseif($type === 'mingguan')
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap">
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <colgroup>
-                        <col style="width: 45px;">
-                        <col style="width: 120px;">
+                        <col style="width: 36px;">
+                        <col style="width: 110px;">
                         <col style="width: 240px;">
-                        <col style="width: 64px;">
                         <col style="width: 48px;">
-                        <col style="width: auto;" span="{{ count($dateColumns) }}">
-                        <col class="col-sum" span="5">
-                        <col class="col-pct">
+                        <col style="width: 36px;">
+                        @for($ds = 0; $ds < count($dateColumns); $ds++) <col style="min-width: 72px;"> @endfor
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 48px;">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th>{{ __('No') }}</th>
-                            <th>{{ __('NISN') }}</th>
+                            <th class="text-center">{{ __('No') }}</th>
+                            <th class="text-center">{{ __('NISN') }}</th>
                             <th class="text-start">{{ __('Nama Siswa') }}</th>
-                            <th>{{ __('Kelas') }}</th>
-                            <th>{{ __('JK') }}</th>
+                            <th class="text-center">{{ __('Kelas') }}</th>
+                            <th class="text-center">{{ __('JK') }}</th>
                             @foreach($dateColumns as $col)
-                                <th class="{{ $col['is_holiday'] ? 'th-holiday' : '' }}">{{ $col['label'] }}</th>
+                                <th class="text-center {{ $col['is_holiday'] ? 'th-holiday' : '' }}">{{ $col['label'] }}</th>
                             @endforeach
-                            <th class="th-sum" style="color: #198754;">H</th>
-                            <th class="th-sum" style="color: #d97706;">T</th>
-                            <th class="th-sum" style="color: #0d6efd;">S</th>
-                            <th class="th-sum" style="color: #7e22ce;">I</th>
-                            <th class="th-sum" style="color: #ef4444;">A</th>
-                            <th class="th-sum" style="color: #212529; font-size: 0.95rem;">%</th>
+                            <th class="th-sum text-center clr-h"><span class="clr-h">H</span></th>
+                            <th class="th-sum text-center clr-t"><span class="clr-t">T</span></th>
+                            <th class="th-sum text-center clr-s"><span class="clr-s">S</span></th>
+                            <th class="th-sum text-center clr-i"><span class="clr-i">I</span></th>
+                            <th class="th-sum text-center clr-a"><span class="clr-a">A</span></th>
+                            <th class="th-sum text-center clr-pct"><span class="clr-pct">%</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -674,9 +736,9 @@
                         @if($student)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ $student->nisn ?: '-' }}</td>
+                            <td class="text-center">{{ $student->nisn ?: '-' }}</td>
                             <td class="text-start" title="{{ $student->name }}">{{ $student->name }}</td>
-                            <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
+                            <td class="text-center">{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
                                     {{ optional($student)->gender == 'Perempuan' ? 'P' : 'L' }}
@@ -684,7 +746,7 @@
                             </td>
                             @foreach($dateColumns as $col)
                                 @php $code = $days[$col['date']] ?? '-'; @endphp
-                                <td>
+                                <td class="text-center">
                                     @if($code === 'H') <span class="cell-present">H</span>
                                     @elseif($code === 'T') <span class="cell-late">T</span>
                                     @elseif($code === 'S') <span class="cell-sick">S</span>
@@ -694,12 +756,12 @@
                                     @else <span class="cell-future">-</span> @endif
                                 </td>
                             @endforeach
-                            <td class="td-sum" style="color: #198754;">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #d97706;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #0d6efd;">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #7e22ce;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #ef4444;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
-                            <td class="td-pct">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
+                            <td class="td-sum text-center clr-h">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-t">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-s">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-i">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-a">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
+                            <td class="td-pct text-center">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
                         </tr>
                         @endif
                         @empty
@@ -714,34 +776,38 @@
                 </table>
 
             @else
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="min-width: 1400px;">
+                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <colgroup>
-                        <col style="width: 45px;">
-                        <col style="width: 120px;">
+                        <col style="width: 36px;">
+                        <col style="width: 110px;">
                         <col style="width: 240px;">
-                        <col style="width: 64px;">
                         <col style="width: 48px;">
-                        <col style="width: auto;" span="{{ $daysInMonth }}">
-                        <col class="col-sum" span="5">
-                        <col class="col-pct">
+                        <col style="width: 36px;">
+                        @for($dsb = 0; $dsb < $daysInMonth; $dsb++) <col style="min-width: 28px;"> @endfor
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 32px;">
+                        <col style="width: 48px;">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th>{{ __('No') }}</th>
-                            <th>{{ __('NISN') }}</th>
+                            <th class="text-center">{{ __('No') }}</th>
+                            <th class="text-center">{{ __('NISN') }}</th>
                             <th class="text-start">{{ __('Nama Siswa') }}</th>
-                            <th>{{ __('Kelas') }}</th>
-                            <th>{{ __('JK') }}</th>
+                            <th class="text-center">{{ __('Kelas') }}</th>
+                            <th class="text-center">{{ __('JK') }}</th>
                             @for($d = 1; $d <= $daysInMonth; $d++)
                                 @php $isHol = isset($holidayMap[$d]); @endphp
-                                <th class="{{ $isHol ? 'th-holiday' : '' }}">{{ $d }}</th>
+                                <th class="text-center {{ $isHol ? 'th-holiday' : '' }}">{{ $d }}</th>
                             @endfor
-                            <th class="th-sum" style="color: #198754;">H</th>
-                            <th class="th-sum" style="color: #d97706;">T</th>
-                            <th class="th-sum" style="color: #0d6efd;">S</th>
-                            <th class="th-sum" style="color: #7e22ce;">I</th>
-                            <th class="th-sum" style="color: #ef4444;">A</th>
-                            <th class="th-sum" style="color: #212529; font-size: 0.95rem;">%</th>
+                            <th class="th-sum text-center clr-h"><span class="clr-h">H</span></th>
+                            <th class="th-sum text-center clr-t"><span class="clr-t">T</span></th>
+                            <th class="th-sum text-center clr-s"><span class="clr-s">S</span></th>
+                            <th class="th-sum text-center clr-i"><span class="clr-i">I</span></th>
+                            <th class="th-sum text-center clr-a"><span class="clr-a">A</span></th>
+                            <th class="th-sum text-center clr-pct"><span class="clr-pct">%</span></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -756,9 +822,9 @@
                         @if($student)
                         <tr class="{{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                             <td class="text-center text-secondary">{{ $rowNum }}</td>
-                            <td>{{ $student->nisn ?: '-' }}</td>
+                            <td class="text-center">{{ $student->nisn ?: '-' }}</td>
                             <td class="text-start" title="{{ $student->name }}">{{ $student->name }}</td>
-                            <td>{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
+                            <td class="text-center">{{ $student->schoolClass ? $student->schoolClass->name : '-' }}</td>
                             <td class="text-center">
                                 <span class="rekap-jk {{ optional($student)->gender == 'Perempuan' ? 'is-perempuan' : 'is-laki' }}">
                                     {{ optional($student)->gender == 'Perempuan' ? 'P' : 'L' }}
@@ -766,7 +832,7 @@
                             </td>
                             @for($d = 1; $d <= $daysInMonth; $d++)
                                 @php $code = $days[$d] ?? '-'; @endphp
-                                <td>
+                                <td class="text-center">
                                     @if($code === 'H') <span class="cell-present">H</span>
                                     @elseif($code === 'T') <span class="cell-late">T</span>
                                     @elseif($code === 'S') <span class="cell-sick">S</span>
@@ -776,12 +842,12 @@
                                     @else <span class="cell-future">-</span> @endif
                                 </td>
                             @endfor
-                            <td class="td-sum" style="color: #198754;">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #d97706;">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #0d6efd;">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #7e22ce;">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
-                            <td class="td-sum" style="color: #ef4444;">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
-                            <td class="td-pct">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
+                            <td class="td-sum text-center clr-h">{{ is_array($item) ? ($item['hadir'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-t">{{ is_array($item) ? ($item['terlambat'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-s">{{ is_array($item) ? ($item['sakit'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-i">{{ is_array($item) ? ($item['izin'] ?? 0) : 0 }}</td>
+                            <td class="td-sum text-center clr-a">{{ is_array($item) ? ($item['alfa'] ?? 0) : 0 }}</td>
+                            <td class="td-pct text-center">{{ is_array($item) ? ($item['percentage'] ?? 0) : 0 }}%</td>
                         </tr>
                         @endif
                         @empty

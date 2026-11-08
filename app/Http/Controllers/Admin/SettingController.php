@@ -8,6 +8,7 @@ use App\Models\OperatingSchedule;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -208,6 +209,7 @@ class SettingController extends Controller
             }
 
             Setting::clearCache();
+            Cache::forget('operating_schedule_today');
         } catch (\Throwable $e) {
             report($e);
 
