@@ -162,6 +162,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // supaya tidak tertangkap parameter {class}. classes.destroy-all di atas
     // tetap utuh untuk aksi "Hapus Semua" di halaman Data Kelas.
     Route::delete('classes/trash-destroy-all', [SchoolClassController::class, 'destroyAllTrashed'])->name('classes.trash-destroy-all');
+    Route::post('classes/trash-restore-all', [SchoolClassController::class, 'restoreAllTrashed'])->name('classes.trash-restore-all');
     Route::get('classes/trash', [SchoolClassController::class, 'trash'])->name('classes.trash');
     Route::post('classes/{id}/restore', [SchoolClassController::class, 'restore'])->name('classes.restore');
     Route::delete('classes/{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('classes.force-delete');
@@ -180,6 +181,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // soft delete (destroyAllActive = pindahkan ke sampah; destroyAllTrashed =
     // hapus permanen isi sampah). Diberikan konfirmasi di view trash.
     Route::delete('students/trash-destroy-all', [AdminStudentController::class, 'destroyAllTrashed'])->name('students.trash-destroy-all');
+    Route::post('students/trash-restore-all', [AdminStudentController::class, 'restoreAllTrashed'])->name('students.trash-restore-all');
     Route::match(['get', 'post'], 'students/print-cards', [AdminStudentController::class, 'printCards'])->name('students.print-cards');
     Route::get('students/template', [AdminStudentController::class, 'downloadTemplate'])->name('students.template');
     Route::post('students/import', [AdminStudentController::class, 'import'])->name('students.import')->middleware('throttle:10,1');
@@ -200,6 +202,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // Route statis WAJIB di atas Route::resource('guru') supaya tidak tertangkap {teacher}.
     Route::delete('guru/destroy-all', [TeacherController::class, 'destroyAllActive'])->name('guru.destroy-all');
     Route::delete('guru/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('guru.trash-destroy-all');
+    Route::post('guru/trash-restore-all', [TeacherController::class, 'restoreAllTrashed'])->name('guru.trash-restore-all');
     Route::match(['get', 'post'], 'guru/print-cards', [TeacherController::class, 'printCards'])->name('guru.print-cards');
     Route::get('guru/template', [TeacherController::class, 'downloadTemplate'])->name('guru.template');
     Route::post('guru/import', [TeacherController::class, 'import'])->name('guru.import')->middleware('throttle:10,1');
@@ -214,6 +217,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin'])->group(functi
     // WAJIB didaftarkan sebelum Route::resource('teachers') di bawah supaya tidak
     // tertangkap parameter {teacher} pada route DELETE teachers/{teacher}.
     Route::delete('teachers/trash-destroy-all', [TeacherController::class, 'destroyAllTrashed'])->name('teachers.trash-destroy-all');
+    Route::post('teachers/trash-restore-all', [TeacherController::class, 'restoreAllTrashed'])->name('teachers.trash-restore-all');
 
     Route::resource('teachers', TeacherController::class)->only(['index', 'store', 'update', 'destroy']);
 

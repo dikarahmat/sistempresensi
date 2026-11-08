@@ -281,37 +281,83 @@
 
     @media (max-width: 639.98px) {
         .table-enterprise {
-            min-width: 600px !important;
+            width: auto !important;
+            min-width: 820px !important;
         }
 
-        /* Kolom Kelas Proporsional */
+        /* Lebar minimum per kolom supaya header & isi tidak saling menimpa:
+           KELAS ~56px, TOTAL ~64px, HADIR ~64px, TERLAMBAT ~104px, SAKIT ~72px,
+           IZIN ~64px, ALFA ~64px, KEHADIRAN ~104px. Aksi di kanan lebar otomatis. */
+        .table-enterprise thead th:nth-child(1),
+        .table-enterprise tbody td:nth-child(1) {
+            width: 56px !important;   /* Kelas */
+        }
+        .table-enterprise thead th:nth-child(2),
+        .table-enterprise tbody td:nth-child(2) {
+            width: 64px !important;   /* Total */
+        }
+        .table-enterprise thead th:nth-child(3),
+        .table-enterprise tbody td:nth-child(3) {
+            width: 64px !important;   /* Hadir */
+        }
+        .table-enterprise thead th:nth-child(4),
+        .table-enterprise tbody td:nth-child(4) {
+            width: 104px !important;  /* Terlambat */
+        }
+        .table-enterprise thead th:nth-child(5),
+        .table-enterprise tbody td:nth-child(5) {
+            width: 72px !important;   /* Sakit */
+        }
+        .table-enterprise thead th:nth-child(6),
+        .table-enterprise tbody td:nth-child(6) {
+            width: 64px !important;   /* Izin */
+        }
+        .table-enterprise thead th:nth-child(7),
+        .table-enterprise tbody td:nth-child(7) {
+            width: 64px !important;   /* Alfa */
+        }
+        .table-enterprise thead th:nth-child(8),
+        .table-enterprise tbody td:nth-child(8) {
+            width: 104px !important;  /* Kehadiran */
+        }
+        .table-enterprise thead th:nth-child(9),
+        .table-enterprise tbody td:nth-child(9) {
+            width: auto !important;   /* Aksi */
+        }
+
+        /* Sel & header: nowrap, padding horizontal seragam, rata tengah. */
+        .table-enterprise thead th,
+        .table-enterprise tbody td {
+            white-space: nowrap !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            text-align: center !important;
+        }
+
+        /* Kolom Nama Kelas rata kiri agar nama panjang tidak terpotong. */
         .table-enterprise thead th.col-th-kelas,
         .table-enterprise tbody td.col-td-kelas {
-            width: 13% !important;
-            padding-left: 0.45rem !important;
-            padding-right: 0.35rem !important;
-            text-align: center !important;
+            text-align: left !important;
+            padding-left: 0.85rem !important;
         }
 
-        /* Kolom Angka (Total, Hadir, Terlambat, Sakit, Izin, Alpha) - Lebar Seimbang & Jarak Seragam */
+        /* Kolom angka (Total, Hadir, dst) dibatasi lebar, tidak perlu lebar penuh. */
         .table-enterprise thead th.col-th-stat,
         .table-enterprise tbody td.col-td-stat {
-            width: 8% !important;
-            padding-left: 0.3rem !important;
-            padding-right: 0.3rem !important;
-            text-align: center !important;
+            width: auto !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }
 
-        /* Kolom Kehadiran & Aksi di Mobile */
+        /* Kolom Kehadiran & Aksi di Mobile. */
         .table-enterprise thead th.col-th-kehadiran,
         .table-enterprise tbody td.col-td-kehadiran {
-            width: 20% !important;
             padding: 0.55rem 0.35rem !important;
             text-align: center !important;
         }
         .table-enterprise thead th.col-th-aksi,
         .table-enterprise tbody td.col-td-aksi {
-            width: 16% !important;
+            width: auto !important;
             padding: 0.55rem 0.35rem !important;
             text-align: center !important;
         }

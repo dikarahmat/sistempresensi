@@ -152,19 +152,7 @@
         }
         .table-guru tbody td.td-nama {
             white-space: nowrap !important;
-            padding-left: 0.75rem;
-        }
-        .table-guru tbody td:nth-child(1),
-        .table-guru thead th:nth-child(1) {
-            position: sticky !important;
-            left: 0 !important;
-            z-index: 2 !important;
-        }
-        .table-guru tbody td:nth-child(1) {
-            background: #ffffff !important;
-        }
-        .table-guru thead th:nth-child(1) {
-            background-color: #2563eb !important;
+            padding-left: 1.25rem;
         }
         .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
         .presence-summary .item { white-space: nowrap; }

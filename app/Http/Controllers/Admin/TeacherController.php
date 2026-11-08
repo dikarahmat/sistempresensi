@@ -404,4 +404,31 @@ class TeacherController extends Controller
                 ->with('error', __('Gagal menghapus permanen data guru dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
         }
     }
+
+    /** Pulihkan SELURUH data guru di Tempat Sampah sekaligus (mass restore). */
+    public function restoreAllTrashed(): RedirectResponse
+    {
+        $trashed = Teacher::onlyTrashed();
+        $total = $trashed->count();
+
+        if ($total === 0) {
+            return redirect()->route('admin.teachers.trash')
+                ->with('info', __('Tempat sampah guru sudah kosong.'));
+        }
+
+        DB::beginTransaction();
+        try {
+            $restored = $trashed->restore();
+            DB::commit();
+
+            return redirect()->route('admin.teachers.trash')
+                ->with('success', __(':restored dari :total data guru berhasil dipulihkan.', ['restored' => $restored, 'total' => $total]));
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return redirect()->route('admin.teachers.trash')
+                ->with('error', __('Gagal memulihkan data guru dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
+        }
+    }
 }

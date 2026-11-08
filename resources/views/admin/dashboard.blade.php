@@ -596,15 +596,62 @@
             overflow-wrap: break-word;
         }
 
-        /* Kehadiran Hari Ini: 5 kolom sejajar, angka sama ukurannya dengan Data Sekolah. */
+        /* Kehadiran Hari Ini: 5 kolom sama lebar, gap rapat 4px, label satu baris tanpa pecah. */
         .dashboard-section .dash-absence-grid {
             grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 0.25rem;
             align-items: start;
         }
-        /* Label (Hadir / Terlambat / Sakit / Izin / Alfa) disamakan dengan label statistik HP. */
+        /* Kurangi padding horizontal tiap item agar label lebih longgar di kolom sempit. */
+        .dashboard-section .dash-absence-grid > .dashboard-inner-card {
+            padding-left: 0.125rem !important;
+            padding-right: 0.125rem !important;
+        }
+        /* Angka: 20px di mobile. */
+        .dashboard-section .dash-absence-grid .dash-att-value {
+            font-size: 1.25rem !important;   /* 20px */
+            line-height: 1.1;
+        }
+        /* Label: 11px di mobile, nowrap untuk mencegah "Terlambat" pecah baris.
+           Target class spesifik absence-label-* agar inline style tidak bisa override. */
+        .dashboard-section .dash-absence-grid [class^="absence-label-"],
+        .dashboard-section .dash-absence-grid [class*=" absence-label-"] {
+            font-size: 0.6875rem !important;   /* 11px */
+            font-weight: 700 !important;
+            letter-spacing: 0 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            min-height: 1.2em !important;
+            display: block !important;
+        }
+        /* Fallback: target fw-bold langsung di dalam absence-grid. */
         .dashboard-section .dash-absence-grid .fw-bold {
-            font-size: 0.625rem !important;   /* 10px: muat "Terlambat" di 5 kolom */
+            font-size: 0.6875rem !important;   /* 11px */
+            white-space: nowrap !important;
+        }
+
+        /* Jadwal Operasional: judul + tanggal pendek SEBARIS di mobile,
+           keduanya bold, ukuran sama, dipisah tanda strip, tanpa wrap. */
+        .dashboard-section .schedule-title {
+            display: inline !important;
+            font-size: 0.875rem !important;   /* 14px */
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+        }
+        .dashboard-section .schedule-date {
+            display: inline !important;
+            font-size: 0.875rem !important;   /* 14px, sama dengan judul */
+            font-weight: 700 !important;       /* bold, samakan dengan judul */
+            color: #0f172a !important;         /* gelap, sama dengan judul */
+            line-height: 1.2 !important;
+            margin-top: 0 !important;          /* satu baris dengan judul */
+            white-space: nowrap !important;
+        }
+        /* Jarak rapi antara baris judul/tanggal dan blok jam di bawahnya. */
+        .dashboard-section .dash-clock-grid {
+            margin-top: 0.5rem !important;   /* 8px */
         }
 
         /* Jam HP: sama ukuran dengan statistik HP. */
@@ -613,6 +660,32 @@
         }
         .dashboard-section .dashboard-clock .clock-value {
             font-size: 1.375rem !important;
+        }
+    }
+
+    /* Layar sangat sempit (~360px): label kehadiran diperkecil jadi 10px. */
+    @media (max-width: 375px) {
+        .dashboard-section .dash-absence-grid [class^="absence-label-"],
+        .dashboard-section .dash-absence-grid [class*=" absence-label-"] {
+            font-size: 0.625rem !important;  /* 10px */
+        }
+        .dashboard-section .dash-absence-grid .fw-bold {
+            font-size: 0.625rem !important;
+        }
+        .dashboard-section .schedule-title,
+        .dashboard-section .schedule-date {
+            font-size: 0.8rem !important;  /* ~13px */
+        }
+    }
+
+    /* Desktop (>=768px): hanya judul Jadwal Operasional yang tampil, tanggal disembunyikan
+       (sudah ditampilkan di header pojok kanan atas). */
+    @media (min-width: 768px) {
+        .dashboard-section .schedule-title {
+            display: inline !important;
+        }
+        .dashboard-section .schedule-date {
+            display: none !important;
         }
     }
 
@@ -1238,7 +1311,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-green">{{ $countHadir ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold absence-label-hadir d-block mb-0" style="font-size: 0.9rem;">{{ __('Hadir') }} @if(request('status') === 'Hadir')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-hadir d-block mb-0 text-nowrap">{{ __('Hadir') }} @if(request('status') === 'Hadir')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 2. Terlambat -->
@@ -1246,7 +1319,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-orange">{{ $countTerlambat ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold absence-label-terlambat d-block mb-0" style="font-size: 0.9rem;">{{ __('Terlambat') }} @if(request('status') === 'Terlambat')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-terlambat d-block mb-0 text-nowrap">{{ __('Terlambat') }} @if(request('status') === 'Terlambat')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 3. Sakit -->
@@ -1254,7 +1327,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-sidebar-blue">{{ $countSakit ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold absence-label-sakit d-block mb-0" style="font-size: 0.9rem;">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-sakit d-block mb-0 text-nowrap">{{ __('Sakit') }} @if(request('status') === 'Sakit')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 4. Izin -->
@@ -1262,7 +1335,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-yellow">{{ $countIzin ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold absence-label-izin d-block mb-0" style="font-size: 0.9rem;">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-izin d-block mb-0 text-nowrap">{{ __('Izin') }} @if(request('status') === 'Izin')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                     <!-- 5. Alfa -->
@@ -1270,7 +1343,7 @@
                         <span class="d-block dash-att-figure">
                             <strong class="dash-stat-value dash-att-value is-red">{{ $countAlfa ?? 0 }}</strong>
                         </span>
-                        <span class="fw-bold absence-label-alfa d-block mb-0" style="font-size: 0.9rem;">{{ __('Alfa') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
+                        <span class="fw-bold absence-label-alfa d-block mb-0 text-nowrap">{{ __('Alfa') }} @if(request('status') === 'Alfa')<span class="absence-row-active-badge">{{ __('Aktif') }}</span>@endif</span>
                     </div>
 
                 </div>

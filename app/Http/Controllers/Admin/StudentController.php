@@ -425,6 +425,33 @@ class StudentController extends Controller
         }
     }
 
+    /** Pulihkan SELURUH data siswa di Tempat Sampah sekaligus (mass restore). */
+    public function restoreAllTrashed(Request $request): RedirectResponse
+    {
+        $trashed = Student::onlyTrashed();
+        $total = $trashed->count();
+
+        if ($total === 0) {
+            return redirect()->route('admin.students.trash')
+                ->with('info', __('Tempat sampah siswa sudah kosong.'));
+        }
+
+        DB::beginTransaction();
+        try {
+            $restored = $trashed->restore();
+            DB::commit();
+
+            return redirect()->route('admin.students.trash')
+                ->with('success', __(':restored dari :total data siswa berhasil dipulihkan.', ['restored' => $restored, 'total' => $total]));
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+
+            return redirect()->route('admin.students.trash')
+                ->with('error', __('Gagal memulihkan data siswa dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
+        }
+    }
+
     /**
      * Import data siswa dari file Excel.
      * Balas JSON {status, message} untuk request AJAX; redirect untuk request biasa.

@@ -451,6 +451,32 @@ class SchoolClassController extends Controller
         }
     }
 
+    /** Pulihkan SELURUH data kelas di Tempat Sampah sekaligus (mass restore). */
+    public function restoreAllTrashed(): RedirectResponse
+    {
+        $trashed = SchoolClass::onlyTrashed();
+        $total = $trashed->count();
+
+        if ($total === 0) {
+            return redirect()->route('admin.classes.trash')
+                ->with('info', __('Tempat Sampah Kelas sudah kosong.'));
+        }
+
+        DB::beginTransaction();
+        try {
+            $restored = $trashed->restore();
+            DB::commit();
+
+            return redirect()->route('admin.classes.trash')
+                ->with('success', __(':restored dari :total data kelas berhasil dipulihkan.', ['restored' => $restored, 'total' => $total]));
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return redirect()->route('admin.classes.trash')
+                ->with('error', __('Gagal memulihkan data kelas dari Tempat Sampah. Silakan coba lagi atau hubungi admin.'));
+        }
+    }
+
     public function downloadTemplate()
     {
         return Excel::download(

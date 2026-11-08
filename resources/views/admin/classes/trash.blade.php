@@ -163,6 +163,15 @@
         border-color: #b91c1c;
         color: #ffffff;
     }
+    .danger-zone-btn.restore-all {
+        background-color: #059669;
+        border-color: #059669;
+    }
+    .danger-zone-btn.restore-all:hover {
+        background-color: #047857;
+        border-color: #047857;
+        color: #ffffff;
+    }
     @media (max-width: 639.98px) {
         .danger-zone-card {
             flex-direction: column;
@@ -170,6 +179,12 @@
             gap: 14px;
         }
         .danger-zone-btn {
+            width: 100%;
+        }
+        .danger-zone-card .btn-group-all {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             width: 100%;
         }
     }
@@ -411,22 +426,67 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
                 <div>
-                    <div class="danger-zone-title">{{ __('Hapus semua data kelas') }}</div>
-                    <div class="danger-zone-desc">{{ __('Menghapus permanen :total data. Tidak bisa dikembalikan.', ['total' => $trashedCount]) }}</div>
+                    <div class="danger-zone-title">{{ __('Kelola semua data kelas') }}</div>
+                    <div class="danger-zone-desc">{{ __('Pulihkan semua data ke daftar kelas, atau hapus permanen. Penghapusan tidak bisa dikembalikan.') }}</div>
+                    <div class="danger-zone-desc mt-1">{{ __(':total data tersimpan di Tempat Sampah.', ['total' => $trashedCount]) }}</div>
                 </div>
             </div>
 
-            <button type="button"
-                    id="btnDeleteAllClassArchive"
-                    class="danger-zone-btn"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deleteAllConfirmModal"
-                    title="{{ __('Hapus semua data kelas') }}">
-                {{ __('Hapus semua') }}
-            </button>
+            <div class="btn-group-all d-flex gap-2">
+                <button type="button"
+                        id="btnRestoreAllClassArchive"
+                        class="danger-zone-btn restore-all"
+                        data-bs-toggle="modal"
+                        data-bs-target="#restoreAllConfirmModal"
+                        title="{{ __('Pulihkan semua data kelas') }}">
+                    {{ __('Pulihkan semua') }}
+                </button>
+                <button type="button"
+                        id="btnDeleteAllClassArchive"
+                        class="danger-zone-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteAllConfirmModal"
+                        title="{{ __('Hapus semua data kelas') }}">
+                    {{ __('Hapus semua') }}
+                </button>
+            </div>
         </div>
         @endif
     </div>
+
+    <!-- Form tersembunyi untuk PULIHKAN SEMUA isi Tempat Sampah Kelas -->
+    <form action="{{ route('admin.classes.trash-restore-all') }}" method="POST" id="restoreAllClassArchiveForm" class="d-none">
+        @csrf
+    </form>
+
+    <!-- Modal Konfirmasi PULIHKAN SEMUA (Kelas) -->
+    @if(Auth::check() && Auth::user()->role === 'admin' && $trashedCount > 0)
+    <div class="modal fade" id="restoreAllConfirmModal" tabindex="-1" aria-labelledby="restoreAllConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="fw-bold mb-0 text-dark" id="restoreAllConfirmModalLabel">
+                        {{ __('Pulihkan semua data kelas dari tempat sampah?') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Tutup') }}"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p class="text-secondary small mb-3">
+                        {{ __('Semua data kelas di Tempat Sampah akan dikembalikan ke daftar kelas aktif. :total data akan dipulihkan.', ['total' => $trashedCount]) }}
+                    </p>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-3 px-3 fw-semibold" data-bs-dismiss="modal">
+                        {{ __('Batal') }}
+                    </button>
+                    <button type="button" id="btnConfirmRestoreAllModal" class="btn btn-success rounded-3 px-3 fw-semibold">
+                        {{ __('Ya, pulihkan semua') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Modal Konfirmasi Ketik HAPUS (Kelas) -->
     @if(Auth::check() && Auth::user()->role === 'admin' && $trashedCount > 0)
@@ -489,13 +549,13 @@
     @method('DELETE')
 </form>
 
-{{-- Form tersembunyi untuk HAPUS SEMUA isi Tempat Sampah Kelas. --}}
-<form action="{{ route('admin.classes.trash-destroy-all') }}" method="POST" id="deleteAllClassArchiveForm" class="d-none">
-    @csrf
-    @method('DELETE')
-</form>
+    {{-- Form tersembunyi untuk HAPUS SEMUA isi Tempat Sampah Kelas. --}}
+    <form action="{{ route('admin.classes.trash-destroy-all') }}" method="POST" id="deleteAllClassArchiveForm" class="d-none">
+        @csrf
+        @method('DELETE')
+    </form>
 
-@endsection
+    @endsection
 
 @push('scripts')
 <script>
@@ -578,6 +638,31 @@
                 }
             });
         }
+
+        if (confirmBtn && form) {
+            confirmBtn.addEventListener('click', function () {
+                if (confirmBtn.disabled) return;
+                confirmBtn.disabled = true;
+                form.submit();
+            });
+        }
+    });
+
+    /**
+     * Modal Konfirmasi PULIHKAN SEMUA isi Tempat Sampah Kelas.
+     */
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('restoreAllConfirmModal');
+        if (!modalEl) return;
+
+        const confirmBtn = document.getElementById('btnConfirmRestoreAllModal');
+        const form = document.getElementById('restoreAllClassArchiveForm');
+
+        modalEl.addEventListener('show.bs.modal', function () {
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+            }
+        });
 
         if (confirmBtn && form) {
             confirmBtn.addEventListener('click', function () {

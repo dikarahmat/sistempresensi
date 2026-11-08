@@ -249,37 +249,48 @@
 
     /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal, NO+NAMA sticky ===== */
     @media (max-width: 767.98px) {
+        /* Card tidak boleh memotong isi tabel yang di-scroll horizontal. */
+        #daftar-rekap {
+            overflow: visible !important;
+        }
         #daftar-rekap .table-responsive {
             overflow-x: auto !important;
             overflow-y: visible !important;
             -webkit-overflow-scrolling: touch;
             max-width: 100%;
+            /* Ruang bawah supaya baris terakhir tidak tertutup nav bawah & tombol tengah. */
+            padding-bottom: 1rem !important;
         }
         #daftar-rekap .table-responsive > table {
-            min-width: 1050px !important;
+            min-width: 1400px !important;
             width: auto !important;
         }
         #daftar-rekap .table-matrix tbody td,
         #daftar-rekap .table-matrix thead th {
             white-space: nowrap !important;
-            padding: 0.6rem 0.7rem !important;
+            padding: 0.6rem 0.8rem !important;
             font-size: 0.78rem !important;
         }
-        /* Kolom NO sticky di kiri */
+        /* Kolom NO: lebar minimum 48px, rata tengah. Tidak sticky agar ikut bergeser. */
         #daftar-rekap .table-matrix tbody td:nth-child(1),
         #daftar-rekap .table-matrix thead th:nth-child(1) {
-            position: sticky !important;
-            left: 0 !important;
-            z-index: 2 !important;
-            background: #ffffff !important;
+            min-width: 48px !important;
+            width: 48px !important;
+            text-align: center !important;
         }
-        /* Kolom NAMA Guru sticky (setelah NO+NIP = 36+110=146px) */
+        /* Kolom NAMA Guru: padding kiri lebih lebar agar nama tidak terpotong, tidak sticky. */
         #daftar-rekap .table-matrix tbody td:nth-child(3),
         #daftar-rekap .table-matrix thead th:nth-child(3) {
-            position: sticky !important;
-            left: 146px !important;
-            z-index: 2 !important;
-            background: #ffffff !important;
+            padding-left: 1.25rem !important;
+        }
+        /* Highlight satu baris penuh saat sentuh/hover (semua kolom bergerak bersama). */
+        #daftar-rekap .table-matrix tbody tr:hover > td {
+            background-color: #e2e8f0 !important;
+        }
+        /* Padding kanan terakhir agar kolom terakhir tidak mepet tepi layar saat digeser. */
+        #daftar-rekap .table-responsive > table > tbody > tr > td:last-child,
+        #daftar-rekap .table-responsive > table > thead > tr > th:last-child {
+            padding-right: 1.5rem !important;
         }
         .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
         .presence-summary .item { white-space: nowrap; }

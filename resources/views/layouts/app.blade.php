@@ -855,14 +855,14 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
 
         .mobile-nav-grid {
             display: grid !important;
-            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            grid-template-columns: 1fr 1fr 76px 1fr 1fr !important;
             height: 72px !important;
             width: 100% !important;
             max-width: 600px !important;
             margin: 0 auto !important;
             align-items: center !important;
             position: relative !important;
-            padding: 0 4px !important;
+            padding: 0 20px !important;
             box-sizing: border-box !important;
         }
 
