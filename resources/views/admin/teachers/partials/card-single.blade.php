@@ -24,7 +24,7 @@
 
     if (!$qrSrc && $teacherItem) {
         try {
-            $__token = \App\Services\TeacherCardService::qrTokenFor($teacherItem->nip ?? null, $teacherItem->name ?? null);
+            $__token = \App\Services\TeacherCardService::qrTokenFor($teacherItem->nip ?? null, (string) ($teacherItem->id ?? ''));
             $__svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->margin(0)->generate($__token);
             $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($__svg);
         } catch (\Throwable $e) {
@@ -35,25 +35,30 @@
     $logoSrc = $logoSrc ?? ($logoBase64 ?? null);
 
     if (!$logoSrc) {
-        $__logoPath = public_path(\App\Models\Setting::getLogo());
-        if (file_exists($__logoPath)) {
-            $__logoMime = mime_content_type($__logoPath) ?: 'image/png';
-            $logoSrc = 'data:' . $__logoMime . ';base64,' . base64_encode(file_get_contents($__logoPath));
+        try {
+            $__logoRel = \App\Models\Setting::getLogo();
+            $__logoPath = $__logoRel ? public_path($__logoRel) : null;
+            if ($__logoPath && is_file($__logoPath)) {
+                $__logoMime = mime_content_type($__logoPath) ?: 'image/png';
+                $logoSrc = 'data:' . $__logoMime . ';base64,' . base64_encode(file_get_contents($__logoPath));
+            }
+        } catch (\Throwable $e) {
+            $logoSrc = null;
         }
     }
 @endphp
-<div style="position:relative; width:53.9mm; height:85.6mm; overflow:hidden; margin:0; padding:0; border:0; font-family:Arial, Helvetica, sans-serif; background:#dcefe2; -webkit-print-color-adjust:exact; print-color-adjust:exact; page-break-inside:avoid;">
+<div style="position:relative; width:53.9mm; height:85.6mm; overflow:hidden; margin:0; padding:0; border:0; font-family:'DejaVu Sans', Verdana, Geneva, Arial, sans-serif; background:#dcefe2; -webkit-print-color-adjust:exact; print-color-adjust:exact; page-break-inside:avoid;">
 
     @if($__bg)
         <img src="{{ $__bg }}" alt="" style="position:absolute; left:0; top:0; width:53.9mm; height:85.6mm; object-fit:cover; display:block;">
     @endif
 
     @if($logoSrc)
-        <img src="{{ $logoSrc }}" alt="" style="position:absolute; left:3mm; top:3.1mm; width:7mm; height:7mm;">
+        <img src="{{ $logoSrc }}" alt="" style="position:absolute; left:2.8mm; top:2.85mm; width:7.5mm; height:7.5mm;">
     @endif
 
-    <div style="position:absolute; left:10.7mm; top:3.8mm; width:40mm; font-size:7pt; font-weight:bold; color:#ffffff; line-height:normal; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($schoolName) }}</div>
-    <div style="position:absolute; left:10.8mm; top:6.3mm; width:40mm; font-size:5pt; font-weight:bold; color:#fcd34d; line-height:normal; white-space:nowrap; overflow:hidden;">KARTU PRESENSI DIGITAL</div>
+    <div style="position:absolute; left:10.7mm; top:3.5mm; width:40mm; font-size:7pt; font-weight:bold; color:#ffffff; line-height:1.15; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($schoolName) }}</div>
+    <div style="position:absolute; left:10.8mm; top:6.2mm; width:40mm; font-size:5pt; font-weight:bold; color:#fcd34d; line-height:1.15; white-space:nowrap; overflow:hidden;">KARTU PRESENSI DIGITAL</div>
 
     <div style="position:absolute; left:0; top:16.5mm; width:53.9mm; font-size:7pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($teacherName) }}</div>
     <div style="position:absolute; left:0; top:20.6mm; width:53.9mm; font-size:6.8pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ $teacherNip }}</div>

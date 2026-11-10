@@ -553,6 +553,20 @@
                 'period_date': tanggal
             };
 
+            // Semester: kirim pilihan ganjil/genap (tanpa ini PDF selalu Ganjil).
+            if (type === 'semester') {
+                params['period_semester'] = (periodSubType === 'genap') ? 'genap' : 'ganjil';
+            }
+
+            // Bulanan: PDF membaca bulan & tahun, bukan tanggal acuan.
+            if (type === 'bulanan') {
+                var parts = String(tanggal).split('-');
+                if (parts.length >= 2) {
+                    params['period_year'] = parseInt(parts[0], 10);
+                    params['period_month'] = parseInt(parts[1], 10);
+                }
+            }
+
             for (var key in params) {
                 if (params.hasOwnProperty(key)) {
                     var hiddenField = document.createElement('input');

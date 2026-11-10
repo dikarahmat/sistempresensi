@@ -165,6 +165,14 @@
             text-align: left;
         }
         .signature-space { height: 50px; }
+    
+        /* Warna keterangan sama dengan warna status di tabel */
+        .pdf-legend .lg-h { color: #059669 !important; }
+        .pdf-legend .lg-t { color: #d97706 !important; }
+        .pdf-legend .lg-s { color: #2563eb !important; }
+        .pdf-legend .lg-i { color: #7e22ce !important; }
+        .pdf-legend .lg-a { color: #e11d48 !important; }
+        .pdf-legend .lg-l { color: #94a3b8 !important; }
     </style>
 </head>
 <body>
@@ -181,7 +189,10 @@
     $npsn = \App\Models\Setting::get('school_npsn', '20102030');
     $resolvedActiveYear = $activeYear ?? \App\Models\AcademicYear::getActive();
     $signPlaceholder = \App\Exports\MultiPeriodAttendanceExport::NAME_PLACEHOLDER;
-    $legendLines = \App\Exports\MultiPeriodAttendanceExport::legendLines();
+    // Normalisasi: pastikan selalu ada 3 baris (index 0,1,2) walau legendLines() mengembalikan
+    // array lebih pendek atau ber-key non-numerik. Mencegah "Undefined array key 2".
+    $legendLines = array_values((array) \App\Exports\MultiPeriodAttendanceExport::pdfLegendLines());
+    $legendLines = array_pad($legendLines, 3, '');
     $printedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i');
     $signedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y');
     // Satu blok = satu kelas. Blok pertama langsung menyusul blok sebelumnya,
@@ -242,8 +253,8 @@
                 <td class="text-left"><strong>{{ mb_strtoupper($row['student']->name ?? '', 'UTF-8') }}</strong></td>
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
-                <td>{!! $row['check_in'] !!}</td>
-                <td>{!! $row['check_out'] ?? '-' !!}</td>
+                <td>{!! ($row['check_in'] ?? '') !== '' ? $row['check_in'] : '—' !!}</td>
+                <td>{!! ($row['check_out'] ?? '') !== '' ? $row['check_out'] : '—' !!}</td>
                 <td>{!! $row['late_text'] !!}</td>
                 <td>
                     @if($row['status'] === 'Hadir')
@@ -409,6 +420,12 @@
         $wBulananTetap = $wNo + $wNisn + $wNama + $wKelas + $wJk;
         $wRingkasanBulanan = (2.6 * 5) + 4.4;    // H, T, S, I, A + %
         $wKolomTanggalBulanan = (100 - $wBulananTetap - $wRingkasanBulanan) / max(1, (int) $daysInMonth);
+        // Peta nomor hari -> tanggal lengkap (Y-m-d). Data 'days' disimpan per tanggal,
+        // bukan per nomor hari, jadi tanpa peta ini semua sel jatuh ke '-'.
+        $dateKeyByDay = [];
+        foreach (($dateColumns ?? []) as $dc) {
+            $dateKeyByDay[(int) \Carbon\Carbon::parse($dc['date'])->format('j')] = $dc['date'];
+        }
     @endphp
     <table class="data-table">
         <thead>
@@ -419,7 +436,7 @@
                 <th style="width: {{ $wKelas }}%;">{!! __('Kelas') !!}</th>
                 <th style="width: {{ $wJk }}%;">{!! __('JK') !!}</th>
                 @for($d = 1; $d <= $daysInMonth; $d++)
-                    <th style="padding: 2px 1px; width: {{ $wKolomTanggalBulanan }}%;">{{ $d }}</th>
+                    <th style="padding: 2px 0; font-size: 6.5pt; width: {{ $wKolomTanggalBulanan }}%;">{{ $d }}</th>
                 @endfor
                 <th style="width: 2.6%; background-color: #059669;">H</th>
                 <th style="width: 2.6%; background-color: #d97706;">T</th>
@@ -439,7 +456,7 @@
                 <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     @php
-                        $code = $row['days'][$d] ?? '-';
+                        $code = $row['days'][$dateKeyByDay[$d] ?? ''] ?? ($row['days'][$d] ?? '-');
                         $cls = match($code) {
                             'H' => 'badge-h',
                             'T' => 'badge-t',
@@ -473,13 +490,17 @@
          halaman. Isi, urutan baris, dan teksnya SAMA dengan ekspor Excel. -->
     <div class="section-footer">
         <div class="pdf-legend">
-            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] }}</div>
-            <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
-                {{ $legendLines[1] }}
-            </div>
-            <div style="font-size: 8pt; color: #64748b; line-height: 1.5; margin-top: 2px;">
-                {{ $legendLines[2] }}
-            </div>
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] ?? '' }}</div>
+            @php
+                        $_lgClass = ['H' => 'lg-h', 'T' => 'lg-t', 'S' => 'lg-s', 'I' => 'lg-i', 'A' => 'lg-a', 'L' => 'lg-l'];
+                        $_lgParts = array_values(array_filter(array_map('trim', explode(',', (string) ($legendLines[1] ?? ''))), 'strlen'));
+                    @endphp
+                    <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
+                        @foreach($_lgParts as $_lgPart)
+                            @php $_lgCode = strtoupper(trim(strtok($_lgPart, '='))); @endphp
+                            <span class="{{ $_lgClass[$_lgCode] ?? '' }}">{{ $_lgPart }}</span>@if(!$loop->last), @endif
+                        @endforeach
+                    </div>
         </div>
 
         <!-- TANDA TANGAN: 2 KOLOM SAJA (Kiri: Kepala Sekolah, Kanan: Wali Kelas).

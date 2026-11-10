@@ -559,6 +559,74 @@
             margin-bottom: 4px;
         }
     }
+
+    /* ===== IDENTITAS & LOGO SEKOLAH - MOBILE (< 768px): dirapatkan, proporsional =====
+       Hanya berlaku di HP. Desktop/tablet tidak tersentuh. Awalan "body" dipakai
+       supaya menang atas aturan !important di atas tanpa bergantung urutan. */
+    @media (max-width: 767.98px) {
+        /* Judul section -> field lebih dekat */
+        body .settings-section:first-child .section-header {
+            margin-bottom: 10px !important;
+        }
+
+        /* Jarak antar field (vertikal) 14px -> 10px */
+        body .identitas-inner-grid {
+            gap: 10px !important;
+        }
+
+        /* Jarak antara blok field dan blok logo 16px -> 12px */
+        body .identitas-outer-grid {
+            gap: 12px !important;
+        }
+
+        /* Label lebih kecil dan dekat ke input: 6px -> 4px */
+        body .identitas-inner-grid label.form-label,
+        body .identitas-logo-col label.form-label {
+            font-size: 0.75rem !important;
+            margin-bottom: 4px !important;
+            line-height: 1.25 !important;
+        }
+
+        /* Tinggi input 38px -> 34px */
+        body .identitas-inner-grid .identitas-field .form-control,
+        body .identitas-logo-col input[type="file"].form-control {
+            height: 34px !important;
+            min-height: 34px !important;
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+            font-size: 0.8125rem !important;
+        }
+
+        /* Pesan error klien tidak menambah jarak berlebih */
+        body .identitas-field .text-danger.mt-1 {
+            margin-top: 2px !important;
+            font-size: 0.7rem !important;
+        }
+
+        /* Blok logo: pratinjau 130px -> 96px, jarak internal dirapatkan */
+        body .identitas-logo-col {
+            gap: 8px !important;
+        }
+        body .logo-preview-box {
+            width: 96px !important;
+            height: 96px !important;
+            min-width: 96px !important;
+            min-height: 96px !important;
+            border-radius: 10px !important;
+        }
+        body .logo-row {
+            gap: 6px !important;
+        }
+        body .logo-note {
+            font-size: 10.5px !important;
+            margin-top: 3px !important;
+        }
+
+        /* Jarak antar section (Identitas -> Jadwal) 28px -> 22px */
+        body .settings-form-wrapper {
+            gap: 22px !important;
+        }
+    }
 </style>
 @endpush
 
@@ -747,7 +815,7 @@
 
                         <div class="schedule-cell">
                             <label class="schedule-cell-label" for="sch_{{ $day }}_in">{{ __('Jam Masuk') }}</label>
-                            <input type="time" id="sch_{{ $day }}_in" name="schedules[{{ $day }}][check_in_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_in_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_in_time', $schedule['check_in_time']) }}" required>
+                            <input type="text" readonly inputmode="none" autocomplete="off" data-clock="1" placeholder="--:--" id="sch_{{ $day }}_in" name="schedules[{{ $day }}][check_in_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_in_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_in_time', $schedule['check_in_time']) }}" required>
                             @error('schedules.'.$day.'.check_in_time')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -755,7 +823,7 @@
 
                         <div class="schedule-cell">
                             <label class="schedule-cell-label" for="sch_{{ $day }}_late">{{ __('Batas Keterlambatan') }}</label>
-                            <input type="time" id="sch_{{ $day }}_late" name="schedules[{{ $day }}][late_limit_time]" class="form-control schedule-input @error('schedules.'.$day.'.late_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.late_limit_time', $schedule['late_limit_time']) }}" required>
+                            <input type="text" readonly inputmode="none" autocomplete="off" data-clock="1" placeholder="--:--" id="sch_{{ $day }}_late" name="schedules[{{ $day }}][late_limit_time]" class="form-control schedule-input @error('schedules.'.$day.'.late_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.late_limit_time', $schedule['late_limit_time']) }}" required>
                             @error('schedules.'.$day.'.late_limit_time')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -763,7 +831,7 @@
 
                         <div class="schedule-cell">
                             <label class="schedule-cell-label" for="sch_{{ $day }}_out">{{ __('Jam Pulang') }}</label>
-                            <input type="time" id="sch_{{ $day }}_out" name="schedules[{{ $day }}][check_out_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_out_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_time', $schedule['check_out_time']) }}" required>
+                            <input type="text" readonly inputmode="none" autocomplete="off" data-clock="1" placeholder="--:--" id="sch_{{ $day }}_out" name="schedules[{{ $day }}][check_out_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_out_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_time', $schedule['check_out_time']) }}" required>
                             @error('schedules.'.$day.'.check_out_time')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -771,7 +839,7 @@
 
                         <div class="schedule-cell">
                             <label class="schedule-cell-label" for="sch_{{ $day }}_limit">{{ __('Batas Waktu Pulang') }}</label>
-                            <input type="time" id="sch_{{ $day }}_limit" name="schedules[{{ $day }}][check_out_limit_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_out_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_limit_time', $schedule['check_out_limit_time']) }}" required>
+                            <input type="text" readonly inputmode="none" autocomplete="off" data-clock="1" placeholder="--:--" id="sch_{{ $day }}_limit" name="schedules[{{ $day }}][check_out_limit_time]" class="form-control schedule-input @error('schedules.'.$day.'.check_out_limit_time') is-invalid @enderror" value="{{ old('schedules.'.$day.'.check_out_limit_time', $schedule['check_out_limit_time']) }}" required>
                             @error('schedules.'.$day.'.check_out_limit_time')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -953,4 +1021,169 @@
     });
     </script>
     @endpush
+
+@push('scripts')
+@verbatim
+<script>
+(function () {
+    // ===== Picker jam bulat (analog) untuk input[data-clock] =====
+    var css = ''
+      + 'input[data-clock]{cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'18\' height=\'18\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23475569\' stroke-width=\'2\' stroke-linecap=\'round\'><circle cx=\'12\' cy=\'12\' r=\'9\'/><path d=\'M12 7v5l3 2\'/></svg>");background-repeat:no-repeat;background-position:right 12px center;}'
+      + '.ck-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:2000;padding:16px;}'
+      + '.ck-overlay.open{display:flex;}'
+      + '.ck-box{background:#fff;border-radius:20px;width:100%;max-width:320px;padding:18px 18px 12px;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:inherit;}'
+      + '.ck-head{display:flex;align-items:center;justify-content:center;gap:4px;font-size:44px;font-weight:700;color:#0f172a;margin-bottom:10px;}'
+      + '.ck-head button{border:0;background:#eef2ff;color:#334155;border-radius:12px;padding:2px 14px;font:inherit;line-height:1.3;cursor:pointer;}'
+      + '.ck-head button.on{background:#2563eb;color:#fff;}'
+      + '.ck-dial{width:256px;height:256px;display:block;margin:0 auto;touch-action:none;user-select:none;cursor:pointer;}'
+      + '.ck-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;}'
+      + '.ck-actions button{border:0;background:transparent;font-weight:700;color:#2563eb;padding:8px 14px;border-radius:10px;cursor:pointer;}'
+      + '.ck-actions button:hover{background:#eef2ff;}';
+    var st = document.createElement('style');
+    st.textContent = css;
+    document.head.appendChild(st);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'ck-overlay';
+    overlay.innerHTML = '<div class="ck-box" role="dialog" aria-modal="true">'
+      + '<div class="ck-head"><button type="button" class="ck-h"></button><span>:</span><button type="button" class="ck-m"></button></div>'
+      + '<svg class="ck-dial" viewBox="0 0 256 256"></svg>'
+      + '<div class="ck-actions"><button type="button" class="ck-cancel">Batal</button><button type="button" class="ck-ok">OK</button></div>'
+      + '</div>';
+    document.body.appendChild(overlay);
+
+    var dial = overlay.querySelector('.ck-dial');
+    var btnH = overlay.querySelector('.ck-h');
+    var btnM = overlay.querySelector('.ck-m');
+    var target = null, hour = 7, minute = 0, mode = 'h', dragging = false;
+    var NS = 'http://www.w3.org/2000/svg';
+    var C = 128, R_OUT = 100, R_IN = 64;
+
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function pos(angle, r) {
+        var a = angle * Math.PI / 180;
+        return { x: C + r * Math.sin(a), y: C - r * Math.cos(a) };
+    }
+    function el(name, attrs, text) {
+        var e = document.createElementNS(NS, name);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (text !== undefined) e.textContent = text;
+        return e;
+    }
+
+    function render() {
+        btnH.textContent = pad(hour);
+        btnM.textContent = pad(minute);
+        btnH.className = 'ck-h' + (mode === 'h' ? ' on' : '');
+        btnM.className = 'ck-m' + (mode === 'm' ? ' on' : '');
+        while (dial.firstChild) dial.removeChild(dial.firstChild);
+
+        dial.appendChild(el('circle', { cx: C, cy: C, r: 124, fill: '#f1f5f9' }));
+
+        var selAngle, selR;
+        if (mode === 'h') {
+            selAngle = (hour % 12) * 30;
+            selR = (hour === 0 || hour > 12) ? R_IN : R_OUT;
+        } else {
+            selAngle = minute * 6;
+            selR = R_OUT;
+        }
+        var sp = pos(selAngle, selR);
+        dial.appendChild(el('line', { x1: C, y1: C, x2: sp.x, y2: sp.y, stroke: '#2563eb', 'stroke-width': 2 }));
+        dial.appendChild(el('circle', { cx: C, cy: C, r: 4, fill: '#2563eb' }));
+        dial.appendChild(el('circle', { cx: sp.x, cy: sp.y, r: 19, fill: '#2563eb' }));
+
+        var i, p, label, active;
+        if (mode === 'h') {
+            for (i = 1; i <= 12; i++) {
+                p = pos(i * 30, R_OUT);
+                active = (hour === i);
+                dial.appendChild(el('text', { x: p.x, y: p.y + 5, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 600, fill: active ? '#fff' : '#0f172a', 'pointer-events': 'none' }, String(i)));
+            }
+            for (i = 1; i <= 12; i++) {
+                var h2 = (i === 12) ? 0 : i + 12;
+                p = pos(i * 30, R_IN);
+                active = (hour === h2);
+                dial.appendChild(el('text', { x: p.x, y: p.y + 4, 'text-anchor': 'middle', 'font-size': 12, fill: active ? '#fff' : '#475569', 'pointer-events': 'none' }, pad(h2)));
+            }
+        } else {
+            for (i = 0; i < 12; i++) {
+                var mv = i * 5;
+                p = pos(mv * 6, R_OUT);
+                active = (minute === mv);
+                dial.appendChild(el('text', { x: p.x, y: p.y + 5, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 600, fill: active ? '#fff' : '#0f172a', 'pointer-events': 'none' }, pad(mv)));
+            }
+            if (minute % 5 !== 0) {
+                dial.appendChild(el('circle', { cx: sp.x, cy: sp.y, r: 3, fill: '#fff' }));
+            }
+        }
+    }
+
+    function fromEvent(e) {
+        var rect = dial.getBoundingClientRect();
+        var k = 256 / rect.width;
+        var x = (e.clientX - rect.left) * k - C;
+        var y = (e.clientY - rect.top) * k - C;
+        var angle = (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360;
+        var r = Math.sqrt(x * x + y * y);
+        if (mode === 'h') {
+            var n = Math.round(angle / 30) % 12;
+            var inner = r < 82;
+            hour = inner ? (n === 0 ? 0 : n + 12) : (n === 0 ? 12 : n);
+        } else {
+            minute = Math.round(angle / 6) % 60;
+        }
+        render();
+    }
+
+    dial.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        try { dial.setPointerCapture(e.pointerId); } catch (err) {}
+        fromEvent(e);
+        e.preventDefault();
+    });
+    dial.addEventListener('pointermove', function (e) { if (dragging) fromEvent(e); });
+    dial.addEventListener('pointerup', function () {
+        if (!dragging) return;
+        dragging = false;
+        if (mode === 'h') { mode = 'm'; render(); }
+    });
+    btnH.addEventListener('click', function () { mode = 'h'; render(); });
+    btnM.addEventListener('click', function () { mode = 'm'; render(); });
+
+    function close() { overlay.classList.remove('open'); target = null; }
+    overlay.querySelector('.ck-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && target) close(); });
+    overlay.querySelector('.ck-ok').addEventListener('click', function () {
+        if (target) {
+            target.value = pad(hour) + ':' + pad(minute);
+            target.classList.remove('is-invalid');
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        close();
+    });
+
+    function open(input) {
+        target = input;
+        var m = /^(\d{1,2}):(\d{2})/.exec(input.value || '');
+        hour = m ? Math.min(23, parseInt(m[1], 10)) : 7;
+        minute = m ? Math.min(59, parseInt(m[2], 10)) : 0;
+        mode = 'h';
+        render();
+        overlay.classList.add('open');
+    }
+
+    document.querySelectorAll('input[data-clock]').forEach(function (input) {
+        input.addEventListener('click', function () { open(input); });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(input); }
+        });
+    });
+})();
+</script>
+@endverbatim
+@endpush
+
 @endsection

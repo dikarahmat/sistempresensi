@@ -13,10 +13,21 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class RekapGuruController extends Controller
 {
@@ -125,6 +136,7 @@ class RekapGuruController extends Controller
 
         $pdf = Pdf::loadView('admin.attendances.pdf_rekap_guru', array_merge($data, [
             'type'           => $ctx['type'],
+            'date'           => $ctx['start']->toDateString(),
             'periodLabel'    => $ctx['label'],
             'heading'        => $heading,
             'subtitle'       => $periodText . ' | Tahun Ajaran: ' . $tahunAjaran,
@@ -184,21 +196,203 @@ class RekapGuruController extends Controller
             }
         }
 
-        $export = new class($headings, $out) implements FromArray, WithHeadings, ShouldAutoSize {
-            public function __construct(private array $headings, private array $rows) {}
+        [$heading, $subtitle] = $this->headingAndSubtitle($ctx);
 
-            public function array(): array
-            {
-                return $this->rows;
+        // Export Excel guru dibuat langsung di sini (class anonim) supaya tidak bergantung pada
+        // file/autoloader terpisah.
+        $export = new class($headings, $out, $heading, $subtitle) extends DefaultValueBinder implements FromArray, ShouldAutoSize, WithStyles, WithColumnWidths, WithCustomValueBinder
+        {
+    public const NAME_PLACEHOLDER = '( ................................. )';
+
+    protected int $dataStartRow = 5;
+    protected int $dataEndRow = 5;
+    protected int $legendRow = 0;
+    protected int $signRow = 0;
+    protected int $columnCount;
+    protected bool $isHarian = true;
+    protected int $signColumn = 6;
+
+    public function __construct(
+        protected array $headings,
+        protected array $rows,
+        protected string $heading,
+        protected string $subtitle
+    ) {
+        $this->columnCount = max(count($headings), 3);
+        $this->isHarian = ($headings[4] ?? '') === 'JAM MASUK';
+        // Kolom tanda tangan: harian di kolom terakhir; mingguan/bulanan dll. digeser ke kiri
+        // karena kolom-kolomnya sempit (teks tanda tangan meluap ke sel kosong di kanannya).
+        $this->signColumn = $this->isHarian ? $this->columnCount : max(3, $this->columnCount - 7);
+    }
+
+    /** NIP (kolom B) selalu teks; sel lain mengikuti perilaku bawaan. */
+    public function bindValue(Cell $cell, $value): bool
+    {
+        if ($cell->getColumn() === 'B' && $cell->getRow() >= $this->dataStartRow && is_string($value)) {
+            $cell->setValueExplicit($value, DataType::TYPE_STRING);
+
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
+    }
+
+    public function array(): array
+    {
+        Carbon::setLocale('id');
+
+        $out = [];
+        $out[] = [$this->heading];
+        $out[] = [$this->subtitle];
+        $out[] = [''];
+        $out[] = $this->headings;
+
+        foreach ($this->rows as $row) {
+            $row[1] = ($row[1] ?? '') !== '' && $row[1] !== null ? (string) $row[1] : '-';
+            $out[] = $row;
+        }
+        $this->dataEndRow = count($out);
+
+        // Legenda
+        $out[] = [''];
+        $this->legendRow = count($out) + 1;
+        foreach (MultiPeriodAttendanceExport::legendLines(false) as $line) {
+            $out[] = [$line];
+        }
+
+        // Tanda tangan: kiri Kepala Sekolah, kanan petugas
+        $out[] = [''];
+        $this->signRow = count($out) + 1;
+        foreach ($this->signatureRows() as $line) {
+            $out[] = $line;
+        }
+
+        return $out;
+    }
+
+    protected function signatureRows(): array
+    {
+        $right = $this->signColumn;
+        $blank = array_fill(0, $this->columnCount, '');
+        $make = function (array $values) use ($blank) {
+            $row = $blank;
+            foreach ($values as $idx => $value) {
+                $row[$idx - 1] = $value;
             }
 
-            public function headings(): array
-            {
-                return $this->headings;
+            return $row;
+        };
+
+        $headmasterName = Setting::getHeadmasterName();
+        $headmasterNip = Setting::getHeadmasterNip();
+
+        // Sama dengan PDF guru: guru tidak punya wali kelas, jadi hanya
+        // tanda tangan Kepala Sekolah di sisi kanan.
+        return [
+            $make([$right => 'Parung Panjang, ' . Carbon::now('Asia/Jakarta')->translatedFormat('d F Y')]),
+            $make([$right => 'Kepala Sekolah']),
+            $blank,
+            $blank,
+            $make([$right => $headmasterName ?: self::NAME_PLACEHOLDER]),
+            $make([$right => 'NIP. ' . ($headmasterNip ?: '-')]),
+        ];
+    }
+
+    public function styles(Worksheet $sheet): array
+    {
+        $lastCol = Coordinate::stringFromColumnIndex($this->columnCount);
+
+        $sheet->mergeCells("A1:{$lastCol}1");
+        $sheet->mergeCells("A2:{$lastCol}2");
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->setColor(new Color('1D4ED8'));
+        $sheet->getStyle('A2')->getFont()->setSize(10)->setColor(new Color('475569'));
+
+        $header = "A4:{$lastCol}4";
+        $sheet->getStyle($header)->getFont()->setBold(true)->setColor(new Color('FFFFFF'));
+        $sheet->getStyle($header)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('2563EB');
+        $sheet->getStyle($header)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+
+        if ($this->dataEndRow >= $this->dataStartRow) {
+            $sheet->getStyle("A4:{$lastCol}{$this->dataEndRow}")->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('CBD5E1');
+            $sheet->getStyle("A5:B{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("D5:{$lastCol}{$this->dataEndRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // JK (kolom D): L biru, P merah
+            for ($r = $this->dataStartRow; $r <= $this->dataEndRow; $r++) {
+                $jk = strtoupper(trim((string) $sheet->getCell('D' . $r)->getValue()));
+                if ($jk === 'L' || $jk === 'P') {
+                    $sheet->getStyle('D' . $r)->getFont()->setColor(new Color($jk === 'L' ? '3B82F6' : 'EF4444'));
+                }
             }
+        }
+
+        if ($this->legendRow > 0) {
+            $sheet->getStyle("A{$this->legendRow}")->getFont()->setBold(true);
+            $sheet->getStyle("A{$this->legendRow}:{$lastCol}" . ($this->legendRow + 3))
+                ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        }
+
+        if ($this->signRow > 0) {
+            $start = $this->signRow;
+            $signLetter = Coordinate::stringFromColumnIndex($this->signColumn);
+            $end = $start + 5;
+            foreach ([$start + 1, $start + 4] as $r) {
+                $sheet->getStyle($signLetter . $r)->getFont()->setBold(true);
+            }
+            $sheet->getStyle("{$signLetter}{$start}:{$signLetter}{$end}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        }
+
+        return [];
+    }
+
+    public function columnWidths(): array
+    {
+        // Semua lebar kolom dikunci supaya teks panjang (judul, keterangan, tanda tangan)
+        // tidak memaksa kolom No jadi lebar.
+        $widths = ['A' => 6.0, 'B' => 24.0, 'C' => 38.0, 'D' => 6.0];
+
+        for ($i = 5; $i <= $this->columnCount; $i++) {
+            $label = (string) ($this->headings[$i - 1] ?? '');
+            $widths[Coordinate::stringFromColumnIndex($i)] = (float) max(5, min(14, mb_strlen($label) + 3));
+        }
+
+        return $widths;
+    }
+
         };
 
         return Excel::download($export, 'rekap-presensi-guru-' . $ctx['type'] . '-' . $ctx['start']->toDateString() . '.xlsx');
+    }
+
+    /** Judul & sub-judul laporan (dipakai Excel; sama dengan versi PDF). */
+    private function headingAndSubtitle(array $ctx): array
+    {
+        Carbon::setLocale('id');
+        $schoolName  = Setting::getSchoolName();
+        $tahunAjaran = AcademicYear::getActive()?->name ?? '-';
+
+        if ($ctx['type'] === 'harian') {
+            $periodText = 'Tanggal: ' . $ctx['start']->locale('id')->translatedFormat('l, d F Y');
+        } elseif ($ctx['type'] === 'mingguan') {
+            $periodText = 'Periode: ' . $ctx['start']->locale('id')->translatedFormat('d M Y')
+                . ' s/d ' . $ctx['end']->locale('id')->translatedFormat('d M Y');
+        } elseif ($ctx['type'] === 'bulanan') {
+            $periodText = 'Bulan: ' . $ctx['start']->locale('id')->translatedFormat('F Y');
+        } else {
+            $periodText = 'Periode: ' . $ctx['start']->locale('id')->translatedFormat('F Y')
+                . ' s/d ' . $ctx['end']->locale('id')->translatedFormat('F Y');
+        }
+
+        if ($ctx['type'] === 'semester') {
+            $heading = 'LAPORAN REKAPITULASI PRESENSI GURU SEMESTER ' . strtoupper($ctx['semester'] ?? 'ganjil');
+        } elseif ($ctx['type'] === 'tahunan') {
+            $heading = 'LAPORAN REKAPITULASI PRESENSI GURU TAHUNAN';
+        } else {
+            $heading = 'LAPORAN REKAPITULASI PRESENSI GURU ' . strtoupper($ctx['type']) . ' - ' . ($schoolName ?: '-');
+        }
+
+        return [$heading, $periodText . ' | Tahun Ajaran: ' . $tahunAjaran];
     }
 
     private function context(Request $request): array
@@ -311,7 +505,7 @@ class RekapGuruController extends Controller
                     'nip'       => $t->nip,
                     'name'      => $t->name,
                     'jk'        => $jk,
-                    'check_in'  => $a && $a->created_at ? $a->created_at->timezone(self::TZ)->format('H:i') : '-',
+                    'check_in'  => $this->checkInText($a),
                     'status'    => $this->statusLabel($code),
                 ];
                 continue;
@@ -388,6 +582,23 @@ class RekapGuruController extends Controller
             'isHoliday'   => $isHoliday,
             'holidayDesc' => $holidayDesc,
         ];
+    }
+
+    /**
+     * Jam masuk guru: pakai kolom check_in yang diisi scanner (jam scan sebenarnya).
+     * created_at hanya cadangan untuk data lama yang check_in-nya kosong.
+     */
+    private function checkInText($a): string
+    {
+        if (!$a) {
+            return '-';
+        }
+
+        if (!empty($a->check_in)) {
+            return substr((string) $a->check_in, 0, 5);
+        }
+
+        return $a->created_at ? $a->created_at->timezone(self::TZ)->format('H:i') : '-';
     }
 
     private function codeOf($a): string

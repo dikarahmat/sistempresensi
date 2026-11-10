@@ -295,6 +295,29 @@
         .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
         .presence-summary .item { white-space: nowrap; }
     }
+    /* ===== SPLIT SCREEN / LAYAR SEMPIT: NIP & NAMA GURU SELALU PENUH =====
+       Kolom punya lebar tetap (px). Bila area lebih sempit dari total kolom,
+       tabel digeser ke kanan - tidak ada lagi yang terpotong. */
+    .flex-1 > .d-none.d-md-block { padding-right: 12px; }
+    #daftar-rekap { min-width: 0; max-width: 100%; }
+    #daftar-rekap .table-responsive { overflow-x: auto !important; max-width: 100%; }
+    #daftar-rekap .table-matrix.rekap-harian { min-width: 920px; }
+    #daftar-rekap .table-matrix thead th:nth-child(2),
+    #daftar-rekap .table-matrix tbody td:nth-child(2),
+    #daftar-rekap .table-matrix thead th:nth-child(3),
+    #daftar-rekap .table-matrix tbody td:nth-child(3) {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
+    #daftar-rekap .table-matrix thead th:nth-child(3),
+    #daftar-rekap .table-matrix tbody td:nth-child(3) {
+        text-align: left !important;
+        padding-left: 1rem !important;
+        padding-right: 0.75rem !important;
+    }
+    .filter-card > form { min-width: 0; }
+    .filter-card .btn-red-pdf, .filter-card .btn-green-excel { flex-shrink: 0; }
 </style>
 @endpush
 
@@ -479,15 +502,23 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
+                <table class="table table-hover align-middle mb-0 table-matrix rekap-harian text-nowrap" style="width: 100%; table-layout: fixed;">
+                    <colgroup>
+                        <col style="width: 56px;">
+                        <col style="width: 200px;">
+                        <col style="width: 340px;">
+                        <col style="width: 70px;">
+                        <col style="width: 130px;">
+                        <col style="width: 124px;">
+                    </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th class="text-center" style="width: 6%;">{{ __('No') }}</th>
-                            <th class="text-center" style="width: 18%;">{{ __('NIP') }}</th>
-                            <th class="text-start" style="width: 34%;">{{ __('Nama Guru') }}</th>
-                            <th class="text-center" style="width: 8%;">{{ __('JK') }}</th>
-                            <th class="text-center" style="width: 16%;">{{ __('Jam Masuk') }}</th>
-                            <th class="text-center" style="width: 18%;">{{ __('Status') }}</th>
+                            <th class="text-center">{{ __('No') }}</th>
+                            <th class="text-center">{{ __('NIP') }}</th>
+                            <th class="text-start">{{ __('Nama Guru') }}</th>
+                            <th class="text-center">{{ __('JK') }}</th>
+                            <th class="text-center">{{ __('Jam Masuk') }}</th>
+                            <th class="text-center">{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -537,20 +568,20 @@
                 @php
                     $isMingguan = $type === 'mingguan';
                     $jumlahHari = count($dateColumns);
-                    $dateColWidth = $isMingguan ? '72px' : '28px';
+                    $dateColWidth = $isMingguan ? '84px' : '38px';
                 @endphp
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <colgroup>
-                        <col style="width: 36px;">
-                        <col style="width: 110px;">
-                        <col style="width: 240px;">
-                        <col style="width: 36px;">
-                        @for($dg = 0; $dg < $jumlahHari; $dg++) <col style="min-width: {{ $dateColWidth }};"> @endfor
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
                         <col style="width: 48px;">
+                        <col style="width: 200px;">
+                        <col style="width: 340px;">
+                        <col style="width: 52px;">
+                        @for($dg = 0; $dg < $jumlahHari; $dg++) <col style="width: {{ $dateColWidth }};"> @endfor
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 56px;">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
@@ -786,7 +817,17 @@
             infoText.textContent = {!! json_encode(__('Semua Guru')) !!} + ' • ' + rangeText + ' • ' + {!! json_encode(__('Format:')) !!} + ' ' + formatLabel;
         }
 
+        // Semester (ganjil/genap) mengikuti tahun ajaran yang dipilih.
+        function syncRekapSemester() {
+            const sel = document.getElementById('rekapSemesterAy');
+            const hid = document.getElementById('rekapSemesterValue');
+            if (!sel || !hid) return;
+            const opt = sel.options[sel.selectedIndex];
+            hid.value = (opt && opt.dataset.semester === 'genap') ? 'genap' : 'ganjil';
+        }
+
         function toggleRekapPeriodFields() {
+            syncRekapSemester();
             const period = document.getElementById('rekapPeriodType').value;
             const fields = ['periodHarian', 'periodMingguan', 'periodBulanan', 'periodSemester', 'periodTahunan'];
             fields.forEach(id => {
@@ -1038,29 +1079,26 @@
                             </div>
                         </div>
                         <div class="mb-3" id="periodSemester" style="display: none;">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="form-label small fw-semibold">{{ __('Semester') }}</label>
-                                    <select name="period_semester" class="form-select form-select-sm rounded-3">
-                                        <option value="ganjil">{{ __('Ganjil') }}</option>
-                                        <option value="genap">{{ __('Genap') }}</option>
-                                    </select>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
-                                    <select name="period_academic_year" class="form-select form-select-sm rounded-3">
-                                        @foreach($academicYears as $ay)
-                                        <option value="{{ $ay->id }}" {{ (int) ($activeYear->id ?? 0) === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                            <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
+                            <select name="period_academic_year" id="rekapSemesterAy" class="form-select form-select-sm rounded-3" onchange="syncRekapSemester()">
+                                @foreach($academicYears as $ay)
+                                <option value="{{ $ay->id }}" data-semester="{{ strtolower((string) $ay->semester) === 'genap' ? 'genap' : 'ganjil' }}" {{ (int) ($activeYear->id ?? 0) === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
+                                @endforeach
+                            </select>
+                            {{-- Semester dibaca otomatis dari tahun ajaran yang dipilih --}}
+                            <input type="hidden" name="period_semester" id="rekapSemesterValue" value="{{ strtolower((string) ($activeYear->semester ?? '')) === 'genap' ? 'genap' : 'ganjil' }}">
                         </div>
+                        @php
+                            // Setahun: satu pilihan per tahun ajaran (Ganjil + Genap digabung otomatis)
+                            $tahunanOptions = $academicYears->groupBy('name')->map(function ($g) {
+                                return $g->first(fn ($a) => strtolower((string) $a->semester) === 'ganjil') ?? $g->first();
+                            })->values();
+                        @endphp
                         <div class="mb-3" id="periodTahunan" style="display: none;">
                             <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
                             <select name="period_academic_year" class="form-select form-select-sm rounded-3">
-                                @foreach($academicYears as $ay)
-                                <option value="{{ $ay->id }}" {{ (int) ($activeYear->id ?? 0) === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
+                                @foreach($tahunanOptions as $ay)
+                                <option value="{{ $ay->id }}" {{ ($ay->name ?? null) === ($activeYear->name ?? null) ? 'selected' : '' }}>{{ $ay->name }}</option>
                                 @endforeach
                             </select>
                         </div>

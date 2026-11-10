@@ -117,7 +117,23 @@
         width: 100%;
         min-width: 760px;
         margin-bottom: 0;
-        table-layout: fixed;
+        table-layout: auto;
+    }
+
+    /* Desktop / layar split: kolom punya lebar minimum supaya teks tidak
+       saling menumpuk. Kalau container sempit, tabel di-scroll ke samping. */
+    @media (min-width: 768px) {
+        .table-zebra-custom {
+            min-width: 1150px;
+        }
+
+        .table-zebra-custom th.no-col,    .table-zebra-custom td.no-col    { min-width: 60px; }
+        .table-zebra-custom th.nip-col,   .table-zebra-custom td.nip-col   { min-width: 190px; white-space: nowrap; }
+        .table-zebra-custom th.nama-col,  .table-zebra-custom td.nama-col  { min-width: 300px; white-space: nowrap; }
+        .table-zebra-custom th.jk-col,    .table-zebra-custom td.jk-col    { min-width: 140px; white-space: nowrap; }
+        .table-zebra-custom th.tugas-col, .table-zebra-custom td.tugas-col { min-width: 160px; white-space: nowrap; }
+        .table-zebra-custom th.phone-col, .table-zebra-custom td.phone-col { min-width: 180px; white-space: nowrap; }
+        .table-zebra-custom th.aksi-col,  .table-zebra-custom td.aksi-col  { min-width: 100px; }
     }
 
     .table-responsive {
@@ -150,6 +166,10 @@
 
     .no-col, .nip-col {
         font-family: 'Poppins', 'Roboto', sans-serif !important;
+    }
+
+    .nip-col {
+        text-align: center !important;
     }
 
     .jk-col, .tugas-col {
@@ -197,21 +217,13 @@
             padding-right: 4px !important;
         }
 
-        /* Header NIP center, isi data NIP left */
-        .table-zebra-custom th.nip-col {
+        /* Header NIP & isi data NIP sama-sama center */
+        .table-zebra-custom th.nip-col,
+        .table-zebra-custom td.nip-col {
             text-align: center !important;
             padding-left: 6px !important;
             padding-right: 6px !important;
-            width: 95px !important;
-            min-width: 95px !important;
-            white-space: nowrap !important;
-        }
-        .table-zebra-custom td.nip-col {
-            text-align: left !important;
-            padding-left: 6px !important;
-            padding-right: 6px !important;
-            width: 95px !important;
-            min-width: 95px !important;
+            min-width: 150px !important;
             white-space: nowrap !important;
         }
 
@@ -219,8 +231,7 @@
             text-align: left !important;
             padding-left: 6px !important;
             padding-right: 6px !important;
-            width: 140px !important;
-            min-width: 140px !important;
+            min-width: 170px !important;
             white-space: normal !important;
             word-break: break-word !important;
         }
@@ -596,8 +607,8 @@
                     @endphp
                     <tr class="align-middle {{ $loop->odd ? 'baris-abu' : 'baris-putih' }}">
                         <td data-label="{{ __('No') }}" class="text-center text-nowrap px-3 no-col">{{ $teachers->firstItem() + $index }}</td>
-                        <!-- Isi NIP rata kiri -->
-                        <td data-label="{{ __('NIP') }}" class="text-start text-nowrap px-3 nip-col">{{ $teacher->nip ?? '-' }}</td>
+                        <!-- Isi NIP rata tengah -->
+                        <td data-label="{{ __('NIP') }}" class="text-center text-nowrap px-3 nip-col">{{ $teacher->nip ?? '-' }}</td>
                         <td data-label="{{ __('Nama Guru') }}" class="text-start text-nowrap fw-semibold text-dark px-3 pe-4 nama-col">{{ $teacher->name }}</td>
                         <td data-label="{{ __('Jenis Kelamin') }}" class="text-center text-nowrap px-3 jk-col">
                             {{ ($teacher->gender == 'Perempuan' || $teacher->gender == 'P') ? __('Perempuan') : __('Laki-laki') }}

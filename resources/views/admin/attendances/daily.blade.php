@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', __('PRESENSI SISWA HARI INI'))
-@section('page_title', __('PRESENSI SISWA HARI INI'))
+@section('title', __('Presensi Siswa Hari Ini'))
+@section('page_title', 'PRESENSI SISWA HARI INI')
 
 @section('page_header_right')
 <div class="header-action-btns d-none d-md-flex">

@@ -134,6 +134,14 @@
             text-align: left;
         }
         .signature-space { height: 50px; }
+    
+        /* Warna keterangan sama dengan warna status di tabel */
+        .pdf-legend .lg-h { color: #059669 !important; }
+        .pdf-legend .lg-t { color: #d97706 !important; }
+        .pdf-legend .lg-s { color: #2563eb !important; }
+        .pdf-legend .lg-i { color: #7e22ce !important; }
+        .pdf-legend .lg-a { color: #e11d48 !important; }
+        .pdf-legend .lg-l { color: #94a3b8 !important; }
     </style>
 </head>
 <body>
@@ -150,7 +158,7 @@
     $npsn = \App\Models\Setting::get('school_npsn', '20102030');
     $resolvedActiveYear = $activeYear ?? \App\Models\AcademicYear::getActive();
     $signPlaceholder = \App\Exports\MultiPeriodAttendanceExport::NAME_PLACEHOLDER;
-    $legendLines = \App\Exports\MultiPeriodAttendanceExport::legendLines();
+    $legendLines = array_pad(\App\Exports\MultiPeriodAttendanceExport::pdfLegendLines(), 3, '');
     $printedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i');
     $signedAt = \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y');
     $sections = $sections ?: [];
@@ -208,7 +216,7 @@
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['nip'] ?: '-' }}</td>
                 <td class="text-left"><strong>{{ mb_strtoupper($row['name'] ?? '', 'UTF-8') }}</strong></td>
-                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki'? 'L' : 'P' }}</td>
                 <td>{!! $row['check_in'] !!}</td>
                 <td>
                     @if($row['status'] === 'Hadir')
@@ -260,7 +268,7 @@
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['nip'] ?: '-' }}</td>
                 <td class="text-left"><strong>{{ mb_strtoupper($row['name'] ?? '', 'UTF-8') }}</strong></td>
-                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki'? 'L' : 'P' }}</td>
                 @foreach($dateColumns as $d)
                     @php
                         $code = $row['days'][$d['date']] ?? '-';
@@ -289,7 +297,8 @@
     @php
         $wNo = 4; $wNip = 9; $wNama = 20; $wJk = 3;
         $wBulanTetap = $wNo + $wNip + $wNama + $wJk;
-        $wKolomBulan = (100 - $wBulanTetap) / max(1, count($months));
+        $wRingkasanBulan = (2.6 * 4) + 4.4;    // S, H, I, A + %
+        $wKolomBulan = (100 - $wBulanTetap - $wRingkasanBulan) / max(1, count($months));
     @endphp
     <table class="data-table">
         <thead>
@@ -304,6 +313,11 @@
                         <div style="font-size: 6pt; font-weight: normal; text-transform: none;">{{ $mInfo['year'] }}</div>
                     </th>
                 @endforeach
+                <th style="width: 2.6%; background-color: #059669;">H</th>
+                <th style="width: 2.6%; background-color: #2563eb;">S</th>
+                <th style="width: 2.6%; background-color: #7e22ce;">I</th>
+                <th style="width: 2.6%; background-color: #e11d48;">A</th>
+                <th style="width: 4.4%;">%</th>
             </tr>
         </thead>
         <tbody>
@@ -312,17 +326,25 @@
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['nip'] ?: '-' }}</td>
                 <td class="text-left"><strong>{{ mb_strtoupper($row['name'] ?? '', 'UTF-8') }}</strong></td>
-                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki'? 'L' : 'P' }}</td>
                 @foreach($months as $mInfo)
                     @php $cell = $row['days'][$mInfo['key']] ?? null; @endphp
                     <td>{{ $cell === null ? '-' : $cell }}</td>
                 @endforeach
+                <td class="badge-h">{!! $row['hadir'] ?? 0 !!}</td>
+                <td class="badge-s">{!! $row['sakit'] ?? 0 !!}</td>
+                <td class="badge-i">{!! $row['izin'] ?? 0 !!}</td>
+                <td class="badge-a">{!! $row['alfa'] ?? 0 !!}</td>
+                <td><strong>{!! $row['percentage'] ?? 0 !!}%</strong></td>
             </tr>
             @empty
             <tr>
-                <td colspan="{{ count($months) + 7 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+                <td colspan="{{ count($months) + 9 }}" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
+        </tbody>
+    </table>
+
     @else
     @php
         $wNo = 4; $wNip = 9; $wNama = 20; $wJk = 3;
@@ -347,7 +369,7 @@
                 <td>{{ $row['no'] }}</td>
                 <td>{{ $row['nip'] ?: '-' }}</td>
                 <td class="text-left" style="font-size: 7pt;"><strong>{{ mb_strtoupper($row['name'] ?? '', 'UTF-8') }}</strong></td>
-                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki' ? 'L' : 'P' }}</td>
+                <td class="{!! $row['gender'] === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['gender'] === 'Laki-laki'? 'L' : 'P' }}</td>
                 @for($d = 1; $d <= $daysInMonth; $d++)
                     @php $code = $row['days'][$d] ?? '-'; @endphp
                     <td class="{{ match($code) { 'H' => 'badge-h', 'S' => 'badge-s', 'I' => 'badge-i', 'A' => 'badge-a', 'L' => 'badge-l', default => 'badge-l' } }}" style="padding: 2px 1px; font-size: 7pt;">{{ $code }}</td>
@@ -365,9 +387,17 @@
     <!-- LEGENDA + TANDA TANGAN -->
     <div class="section-footer">
         <div class="pdf-legend">
-            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] }}</div>
-            <div style="font-size: 9pt; color: #334155; line-height: 1.6;">{{ $legendLines[1] }}</div>
-            <div style="font-size: 8pt; color: #64748b; line-height: 1.5; margin-top: 2px;">{{ $legendLines[2] }}</div>
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] ?? '' }}</div>
+            @php
+                $_lgClass = ['H' => 'lg-h', 'T' => 'lg-t', 'S' => 'lg-s', 'I' => 'lg-i', 'A' => 'lg-a', 'L' => 'lg-l'];
+                $_lgParts = array_values(array_filter(array_map('trim', explode(',', (string) ($legendLines[1] ?? ''))), 'strlen'));
+            @endphp
+            <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
+                @foreach($_lgParts as $_lgPart)
+                    @php $_lgCode = strtoupper(trim(strtok($_lgPart, '='))); @endphp
+                    <span class="{{ $_lgClass[$_lgCode] ?? '' }}">{{ $_lgPart }}</span>@if(!$loop->last), @endif
+                @endforeach
+            </div>
         </div>
 
         <!-- TANDA TANGAN: 2 KOLOM (Kiri: Kepala Sekolah, Kanan: Guru). -->
@@ -396,4 +426,3 @@
 
 </body>
 </html>
-

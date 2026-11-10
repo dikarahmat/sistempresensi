@@ -89,40 +89,77 @@ class Attendance extends Model
     }
 
     /**
-     * Jumlah hari libur (Pengaturan Hari Libur) yang jatuh di dalam periode.
-     *
-     * Satu query untuk semua data hari libur, lalu tanggal-tanggalnya
-     * dikumpulkan (termasuk hari libur ber rentang start_date..end_date).
+     * Kumpulan tanggal libur (Pengaturan Hari Libur) sebagai set ['Y-m-d' => true].
+     * Mendukung libur satu tanggal (date) maupun rentang (start_date..end_date).
+     * Satu query untuk semua data libur.
      */
-    public static function holidayDatesInPeriod(\Carbon\Carbon $mulai, \Carbon\Carbon $selesai): int
+    public static function holidayDateSet(): array
     {
-        $tanggalLibur = [];
+        $set = [];
 
         foreach (Holiday::get() as $holiday) {
             if (! empty($holiday->date)) {
-                $tanggalLibur[(string) $holiday->date] = true;
+                $set[Carbon::parse($holiday->date)->toDateString()] = true;
             }
 
             if (! empty($holiday->start_date) && ! empty($holiday->end_date)) {
-                $cursor = \Carbon\Carbon::parse($holiday->start_date)->startOfDay();
-                $end = \Carbon\Carbon::parse($holiday->end_date)->endOfDay();
+                $cursor = Carbon::parse($holiday->start_date)->startOfDay();
+                $end = Carbon::parse($holiday->end_date)->startOfDay();
 
                 while ($cursor->lte($end)) {
-                    $tanggalLibur[$cursor->toDateString()] = true;
+                    $set[$cursor->toDateString()] = true;
                     $cursor->addDay();
                 }
             }
         }
 
-        if ($tanggalLibur === []) {
+        return $set;
+    }
+
+    /**
+     * Jumlah hari libur HARI KERJA (Senin-Jumat) yang jatuh di dalam periode.
+     * Libur yang jatuh di Sabtu/Minggu tidak dihitung lagi (sudah bukan hari sekolah).
+     */
+    public static function holidayDatesInPeriod(Carbon $mulai, Carbon $selesai): int
+    {
+        $set = self::holidayDateSet();
+        if ($set === []) {
             return 0;
         }
 
         $jumlah = 0;
         $cursor = $mulai->copy()->startOfDay();
+        $end = $selesai->copy()->startOfDay();
 
-        while ($cursor->lte($selesai)) {
-            if (isset($tanggalLibur[$cursor->toDateString()])) {
+        while ($cursor->lte($end)) {
+            if (! $cursor->isWeekend() && isset($set[$cursor->toDateString()])) {
+                $jumlah++;
+            }
+            $cursor->addDay();
+        }
+
+        return $jumlah;
+    }
+
+    /**
+     * SATU-SATUNYA rumus hari sekolah: Senin-Jumat, bukan tanggal libur,
+     * rentang INKLUSIF (tanggal mulai dan selesai ikut dihitung).
+     * Dipakai oleh rekap siswa/guru, PDF, Excel, dan riwayat kehadiran.
+     */
+    public static function effectiveDays(Carbon $mulai, Carbon $selesai): int
+    {
+        $cursor = $mulai->copy()->startOfDay();
+        $end = $selesai->copy()->startOfDay();
+
+        if ($cursor->gt($end)) {
+            return 0;
+        }
+
+        $set = self::holidayDateSet();
+        $jumlah = 0;
+
+        while ($cursor->lte($end)) {
+            if (! $cursor->isWeekend() && ! isset($set[$cursor->toDateString()])) {
                 $jumlah++;
             }
             $cursor->addDay();
@@ -134,27 +171,34 @@ class Attendance extends Model
     /**
      * Jumlah HARI BELAJAR (bukan akhir pekan & bukan hari libur) dalam rentang.
      *
-     * @param  \Carbon\Carbon  $mulai
-     * @param  \Carbon\Carbon  $selesai
-     * @param  bool  $sebelumHariIni  true = hanya menghitung hari yang sudah lewat
+     * @param  bool  $sebelumHariIni  true = hanya menghitung hari yang sudah lewat (sampai hari ini)
      */
-    public static function schoolDaysCount(\Carbon\Carbon $mulai, \Carbon\Carbon $selesai, bool $sebelumHariIni = false): int
+    public static function schoolDaysCount(Carbon $mulai, Carbon $selesai, bool $sebelumHariIni = false): int
     {
-        if ($mulai->gt($selesai)) {
+        if ($mulai->copy()->startOfDay()->gt($selesai->copy()->startOfDay())) {
             return 0;
         }
 
-        $akhir = $selesai->copy()->endOfDay();
-        $hariIni = \Carbon\Carbon::now('Asia/Jakarta')->endOfDay();
+        $akhir = $selesai->copy()->startOfDay();
 
-        if ($sebelumHariIni && $akhir->gt($hariIni)) {
-            $akhir = $hariIni;
+        if ($sebelumHariIni) {
+            $hariIni = Carbon::now('Asia/Jakarta')->startOfDay();
+            if ($akhir->gt($hariIni)) {
+                $akhir = $hariIni;
+            }
         }
 
-        $jumlah = (int) $mulai->copy()->startOfDay()->diffInWeekdays($akhir);
-        $jumlah = max(0, $jumlah - self::holidayDatesInPeriod($mulai->copy()->startOfDay(), $akhir));
+        return self::effectiveDays($mulai, $akhir);
+    }
 
-        return $jumlah;
+    /** Persentase kehadiran standar (dibatasi 0-100). Hadir sudah termasuk Terlambat. */
+    public static function attendancePercentage(int $hadirTermasukTerlambat, int $hariEfektif): int
+    {
+        if ($hariEfektif <= 0) {
+            return 0;
+        }
+
+        return (int) min(100, max(0, round(($hadirTermasukTerlambat / $hariEfektif) * 100)));
     }
 
     /**
@@ -325,13 +369,21 @@ class Attendance extends Model
      * - Scan setelah Batas Terlambat (>) = TERLAMBAT
      * Memakai zona waktu Asia/Jakarta dan perbandingan waktu yang presisi.
      */
-    public static function evaluateCheckInTime(string|\Carbon\Carbon $checkIn, ?string $lateLimit = null, ?string $checkInStart = null): array
+    public static function evaluateCheckInTime(string|\Carbon\Carbon $checkIn, ?string $lateLimit = null, ?string $openTime = null): array
     {
         $timezone = 'Asia/Jakarta';
-        $todayStr = \Carbon\Carbon::now($timezone)->toDateString();
+        $now = \Carbon\Carbon::now($timezone);
+        $todayStr = $now->toDateString();
 
-        $checkInTimeStr = $checkInStart ?: Setting::getCheckInTime(); // e.g. '06:45'
-        // Normalize: pastikan format H:i:s untuk perbandingan
+        // Jam buka presensi: pakai jadwal PER HARI (Senin, Selasa, dst.) bila ada,
+        // bukan setting tunggal lama (yang sebelumnya selalu terbaca jam Senin).
+        $checkInTimeStr = $openTime;
+        if (!$checkInTimeStr) {
+            $daySchedule = OperatingSchedule::timesForDate($now);
+            $checkInTimeStr = $daySchedule['check_in_time'] ?? null;
+        }
+        $checkInTimeStr = $checkInTimeStr ?: Setting::getCheckInTime(); // e.g. '06:00' atau '06:45'
+        $openTimeLabel = substr((string) $checkInTimeStr, 0, 5);
         if (strlen($checkInTimeStr) === 5) {
             $checkInTimeStr .= ':00';
         }
@@ -341,25 +393,24 @@ class Attendance extends Model
             $lateLimitStr .= ':00';
         }
 
-        // --- TAMBAHAN: Cek apakah scan masih sebelum jam buka presensi ---
         $checkInCarbon = ($checkIn instanceof \Carbon\Carbon)
             ? $checkIn->copy()->setTimezone($timezone)
             : \Carbon\Carbon::parse($todayStr . ' ' . $checkIn, $timezone);
+        
         $openingCarbon = \Carbon\Carbon::parse($todayStr . ' ' . $checkInTimeStr, $timezone);
 
-        // Jika scan sebelum jam buka presensi, tolak dengan pesan khusus
+        // Validasi ketat: Jika waktu saat ini / waktu check-in kurang dari jam buka (misal dini hari 00:24)
         if ($checkInCarbon->lessThan($openingCarbon)) {
             return [
                 'db_status' => null,
                 'status' => Attendance::STATUS_ALFA,
                 'display_status' => Attendance::STATUS_ALFA,
-                'time_remark' => 'Presensi belum dibuka. Presensi dimulai pukul ' . substr($checkInTimeStr, 0, 5) . '.',
+                'time_remark' => 'Presensi belum dibuka. Presensi dimulai pukul ' . $openTimeLabel . '.',
                 'is_late' => false,
                 'late_minutes' => 0,
                 'display_remark' => 'Presensi belum dibuka',
             ];
         }
-        // ---------------------------------------------------------
 
         $cutoffCarbon = \Carbon\Carbon::parse($todayStr . ' ' . $lateLimitStr, $timezone);
 
@@ -408,7 +459,7 @@ class Attendance extends Model
     }
 
     /**
-     * Get raw check_in value (wanjilu tanpa konversi timezone).
+     * Get raw check_in value.
      */
     public function getRawCheckInAttribute(): ?string
     {
@@ -417,9 +468,6 @@ class Attendance extends Model
 
     /**
      * Dapatkan menit keterlambatan (basis batas Pengaturan).
-     * Hanya dihitung kalau status = Terlambat/is_late/time_remark = Terlambat
-     * dan jam masuk ada. Paling sedikit 1 menit, sama dengan logika
-     * Attendance::evaluateCheckInTime.
      */
     public function getLateMinutesAttribute(): int
     {
@@ -447,9 +495,6 @@ class Attendance extends Model
 
     /**
      * Dapatkan status efektif presensi untuk tampilan, rekap, & ekspor.
-     * Aturan:
-     * - Hadir + time_remark=Terlambat / is_late=true  -> Terlambat
-     * - Selain itu -> status apa adanya (Hadir/Sakit/Izin/Alfa), atau HADIR bila kosong.
      */
     public function getEffectiveStatusAttribute(): string
     {
@@ -490,16 +535,12 @@ class Attendance extends Model
         return '-';
     }
 
-    /**
-     * Data baris rekapan / PDF yang konsisten: jam masuk, keterlambatan, status,
-     * catatan. Satu sumber dari satu Attendance + batas Pengaturan.
-     */
     public static function dataRowForRekap($attendance, string $lateLimitTime): array
     {
         $att = $attendance;
         $status = self::STATUS_BELUM;
         $checkIn = null;
-        $checkOut = null;
+        $checkOut = '-';
         $notes = '-';
         $proofDoc = null;
         $lateText = '-';
@@ -510,10 +551,10 @@ class Attendance extends Model
             $notes = $att->notes ?? '-';
             $proofDoc = $att->proof_document;
             $checkIn = $att->check_in;
-            $checkOut = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
 
             if ($status === self::STATUS_HADIR || $status === self::STATUS_TERLAMBAT) {
                 $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
+                $checkOut = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
 
                 if ($status === self::STATUS_TERLAMBAT || ($att->time_remark === self::REMARK_TERLAMBAT || (bool) ($att->is_late))) {
                     $diff = 0;
@@ -525,7 +566,6 @@ class Attendance extends Model
                         }
                     }
                     $lateMinutes = $diff < 0 ? (int) round(abs($diff)) : 0;
-                    // Minimal 1 menit adalah aturan konsisten dengan status Terlambat.
                     if ($lateMinutes === 0) {
                         $lateMinutes = 1;
                     }
@@ -536,21 +576,13 @@ class Attendance extends Model
                 }
             }
         } else {
-            /*
-             * Tanpa catatan presensi:
-             * - tanggal lampau (bukan hari libur/akhir pekan) -> ALFA
-             *   (hitungan tampilan, tidak ditulis ke database);
-             * - hari ini / masa depan -> BELUM;
-             * - hari libur / akhir pekan -> LIBUR.
-             * Sama dengan halaman Presensi (Attendance::statusOf).
-             */
             $status = self::statusOf(null, null, false);
         }
 
         return [
             'student' => null,
             'check_in' => $checkIn,
-            'check_out' => $checkOut ?? '-',
+            'check_out' => $checkOut,
             'late_text' => $lateText,
             'late_minutes' => $lateMinutes,
             'status' => $status,
@@ -559,10 +591,6 @@ class Attendance extends Model
         ];
     }
 
-    /**
-     * Satu-satunya tempat menghitung baris jumlah siswa untuk presensi, kehadiran,
-     * dan PDF. Hasilnya konsisten di semua halaman.
-     */
     public static function mapStudentAttendanceToRow($attendance, string $tanggal, bool $isHoliday, string $lateLimitTime, $student = null): object
     {
         $att = $attendance;
@@ -583,7 +611,6 @@ class Attendance extends Model
 
             $status = $att->effective_status;
 
-            // Status Terlambat (sama dengan logika evaluateCheckInTime) dan jam masuk ada.
             if ($status === self::STATUS_TERLAMBAT || (isset($att->is_late) && (bool) $att->is_late)) {
                 $lateMinutes = (int) $att->late_minutes;
                 if ($lateMinutes === 0 && $checkIn) {
@@ -596,10 +623,6 @@ class Attendance extends Model
                 }
             }
         } else {
-            // Tanpa catatan:
-            // - hari libur/akhir pekan -> LIBUR
-            // - tanggal lampau -> ALFA (hitungan tampilan saja, TIDAK ditulis ke DB)
-            // - hari ini/masa depan   -> BELUM
             if ($isHoliday) {
                 $status = self::STATUS_LIBUR;
             } elseif (Carbon::parse($tanggal)->startOfDay()->lt(Carbon::now('Asia/Jakarta')->startOfDay())) {
@@ -625,18 +648,12 @@ class Attendance extends Model
             'notes' => $notes,
             'proof_document' => $proofDocument,
             'attendance_id' => $att?->id,
-            // AksesOR data dari model (satu sumber: tampil di Presensi, Kehadiran, PDF)
             'effective_status' => $att ? $att->effective_status : $status,
             'check_in_display' => $att ? $att->check_in_display : '—',
             'late_label' => $att ? $att->late_label : '–',
         ];
     }
 
-    /**
-     * Satu baris rekap harian yang konsisten (PDF + Excel + web).
-     * Output: ['status','check_in','late_text','late_minutes','notes']
-     * yang sama persis dengan RekapController::dataRowForRekap().
-     */
     public static function makeDailyRow($attendance, string $date, string $lateLimit, string $dayStatus, string $studentClassId): array
     {
         $att = $attendance;
@@ -649,10 +666,10 @@ class Attendance extends Model
         if ($att) {
             $status = $att->effective_status;
             $notes = $att->notes ?? '-';
-            $checkOut = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
 
             if ($status === self::STATUS_HADIR || $status === self::STATUS_TERLAMBAT) {
                 $checkIn = $att->check_in ? substr($att->check_in, 0, 5) . ' WIB' : '-';
+                $checkOut = $att->check_out ? substr($att->check_out, 0, 5) . ' WIB' : '-';
 
                 if ($status === self::STATUS_TERLAMBAT || ($att->time_remark === self::REMARK_TERLAMBAT || (bool) ($att->is_late))) {
                     $diff = 0;
@@ -674,12 +691,6 @@ class Attendance extends Model
                 }
             }
         } else {
-            /*
-             * Tanpa catatan presensi:
-             * - hari libur / akhir pekan -> LIBUR (bukan Alfa).
-             * - selainnya -> status "-" (kosong, tidak ada catatan).
-             * Sama dengan halaman Rekap & halaman Presensi.
-             */
             $status = self::statusOf(null, $date, false) === self::STATUS_LIBUR ? self::STATUS_LIBUR : '-';
         }
 

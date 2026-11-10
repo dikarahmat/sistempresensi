@@ -128,11 +128,13 @@
     }
     .btn-download-green:hover { background-color: #059669; color: #ffffff; box-shadow: 0 6px 8px rgba(16, 185, 129, 0.3); }
 
-    /* Preview kartu: 1.6x ukuran CR80, di tengah box */
+    /* Preview kartu CR80 (53.9mm x 85.6mm) yang SKALANYA mengikuti lebar box.
+       Skala dihitung JS (--kp-scale) supaya kartu selalu utuh, tidak terpotong
+       di lebar layar berapa pun (split screen, tablet, HP). Maksimal 1.6x. */
     .kp-card-box {
-        width: calc(53.9mm * 1.6);
-        height: calc(85.6mm * 1.6);
-        max-width: 100%;
+        width: 100%;
+        max-width: calc(53.9mm * 1.6);
+        aspect-ratio: 53.9 / 85.6;
         margin: 0 auto 1.5rem auto;
         position: relative;
         overflow: hidden;
@@ -141,13 +143,19 @@
     .kp-card-scale {
         width: 53.9mm;
         height: 85.6mm;
-        transform: scale(1.6);
+        transform: scale(var(--kp-scale, 1));
         transform-origin: top left;
     }
 
     .kp-card-scale > * {
         margin: 0;
     }
+
+    /* Kolom boleh menyusut (tanpa ini isi flex/grid bisa meluber & terpotong). */
+    .kp-col { min-width: 0; }
+
+    /* Ruang napas di bawah supaya elemen terakhir selalu bisa di-scroll sampai habis. */
+    .kp-page { padding-bottom: 1.5rem; }
 </style>
 @endpush
 
@@ -178,9 +186,9 @@
         @endif
     </div>
 
-    <div class="row g-4 align-items-start">
-        <!-- Informasi Guru (Kolom Kiri) -->
-        <div class="col-12 col-lg-7">
+    <div class="row g-4 align-items-start kp-page">
+        <!-- Informasi Guru (Kolom Kiri; di layar < 1200px turun jadi satu kolom) -->
+        <div class="col-12 col-xl-7 kp-col">
             <div class="card card-modern p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold mb-0" style="color: #0f172a;">{{ __('Informasi Guru') }}</h5>
@@ -242,8 +250,8 @@
             </div>
         </div>
 
-        <!-- Box Kartu Presensi (Kolom Kanan) -->
-        <div class="col-12 col-lg-5">
+        <!-- Box Kartu Presensi (Kolom Kanan / di bawah pada layar sempit) -->
+        <div class="col-12 col-xl-5 kp-col">
             <div class="card card-modern p-4">
                 <h5 class="fw-bold mb-4" style="color: #0f172a;">{{ __('Kartu Presensi') }}</h5>
 
@@ -609,5 +617,27 @@
         });
     }
 })();
+
+    // Skala kartu otomatis mengikuti lebar box (maks 1.6x), supaya kartu
+    // tidak pernah terpotong di split screen / layar sempit.
+    (function () {
+        var box = document.querySelector('.kp-card-box');
+        var card = document.querySelector('.kp-card-scale');
+        if (!box || !card) return;
+
+        function fit() {
+            var base = card.offsetWidth;
+            var avail = box.clientWidth;
+            if (!base || !avail) return;
+            card.style.setProperty('--kp-scale', Math.min(1.6, avail / base));
+        }
+
+        fit();
+        window.addEventListener('resize', fit);
+        window.addEventListener('load', fit);
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(fit).observe(box);
+        }
+    })();
 </script>
 @endpush

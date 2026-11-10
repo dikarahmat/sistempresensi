@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
+use App\Models\OperatingSchedule;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -219,15 +220,25 @@ class ScannerController extends Controller
         $activeYear = AcademicYear::getActive();
         $academicYearId = $activeYear ? $activeYear->id : null;
 
-        $lateLimitTime = Setting::getLateLimitTime();
-        $checkOutThreshold = Setting::getCheckOutTime();
+        // Jadwal PER HARI (Senin, Selasa, dst.) dari Pengaturan; bila belum ada
+        // barisnya, jatuh ke setting tunggal lama.
+        $schedule = OperatingSchedule::timesForDate($now) ?? [];
+        $checkInOpenTime = $schedule['check_in_time'] ?? Setting::getCheckInTime();
+        $lateLimitTime = $schedule['late_limit_time'] ?? Setting::getLateLimitTime();
+        $checkOutThreshold = $schedule['check_out_time'] ?? Setting::getCheckOutTime();
+        $checkOutLimit = $schedule['check_out_limit_time']
+            ?? date('H:i', strtotime($checkOutThreshold . ' +60 minutes'));
 
-        // Validasi ganda anti-double scan lintas role (Admin Gerbang & Guru Kelas) sebelum DB::transaction
+        // Anti-double scan: tolak HANYA bila catatan hari ini bukan presensi
+        // hadir (mis. Sakit/Izin/Alfa tanpa jam masuk). Siswa yang sudah scan
+        // masuk TIDAK boleh ditolak di sini, supaya bisa scan pulang.
+        // (Sebelumnya semua catatan ditolak sehingga presensi pulang
+        // tidak pernah tercapai.)
         $existingAttendance = Attendance::where('student_id', $student->id)
             ->whereDate('date', $todayDate)
             ->first();
 
-        if ($existingAttendance) {
+        if ($existingAttendance && empty($existingAttendance->check_in)) {
             return response()->json([
                 'success' => false,
                 'status' => 'error',
@@ -242,7 +253,7 @@ class ScannerController extends Controller
         }
 
         $result = DB::transaction(function () use (
-            $student, $todayDate, $currentTime, $academicYearId, $lateLimitTime, $checkOutThreshold
+            $student, $todayDate, $currentTime, $academicYearId, $lateLimitTime, $checkOutThreshold, $checkOutLimit, $checkInOpenTime
         ) {
             $attendance = Attendance::where('student_id', $student->id)
                 ->whereDate('date', $todayDate)
@@ -259,6 +270,27 @@ class ScannerController extends Controller
 
             // KASUS 1: Presensi Masuk (Check-In)
             if (empty($attendance->check_in)) {
+                // Sudah memasuki jendela pulang tapi belum pernah presensi masuk:
+                // TOLAK. Hanya siswa yang sudah presensi masuk yang boleh pulang,
+                // dan scan di jam pulang tidak boleh diam-diam jadi presensi masuk.
+                if (substr($currentTime, 0, 5) >= substr((string) $checkOutThreshold, 0, 5)) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => 'Siswa belum presensi masuk hari ini.',
+                            'student' => [
+                                'name' => $student->name,
+                                'nisn' => $student->nisn,
+                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                            ],
+                        ],
+                    ];
+                }
+
                 $attendance->check_in = $currentTime;
                 /*
                  * Penentuan status terlambat memakai SATU sumber kebenaran:
@@ -269,7 +301,29 @@ class ScannerController extends Controller
                  * kehadiran (Dashboard, Rekap, Kehadiran) konsisten; status
                  * "Terlambat" dibaca lewat accessor effective_status.
                  */
-                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime);
+                $evaluasi = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime, $checkInOpenTime);
+
+                // Scan SEBELUM jam buka presensi: tolak, jangan simpan apa pun.
+                // (db_status null = sebelum jam buka; time_remark berisi pesan
+                // "Presensi belum dibuka. Presensi dimulai pukul HH:MM."
+                // yang terlalu panjang untuk kolom time_remark.)
+                if (($evaluasi['db_status'] ?? null) === null) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => $evaluasi['time_remark'],
+                            'student' => [
+                                'name' => $student->name,
+                                'nisn' => $student->nisn,
+                                'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                            ],
+                        ],
+                    ];
+                }
 
                 $attendance->status = Attendance::STATUS_HADIR;
                 $attendance->time_remark = $evaluasi['time_remark'];
@@ -284,10 +338,40 @@ class ScannerController extends Controller
                 try {
                     $attendance->save();
                 } catch (\Illuminate\Database\QueryException $e) {
-                    // Race condition: request lain menyisipkan baris
-                    // (student_id, date) yang sama lebih dulu sehingga UNIQUE
-                    // constraint menolak simpan ini. Kembalikan pesan yang sama
-                    // seperti pemeriksaan aplikasi, bukan error 500.
+                    // HANYA pelanggaran UNIQUE (student_id, date) yang berarti
+                    // "sudah presensi" (race condition). Error DB lain (kolom
+                    // tidak ada, NOT NULL, enum tidak cocok, dll.) JANGAN
+                    // disamarkan jadi pesan duplikat: dicatat ke log dan
+                    // dikembalikan sebagai kegagalan simpan yang jujur.
+                    $sqlState = $e->errorInfo[0] ?? null;
+                    $driverCode = (int) ($e->errorInfo[1] ?? 0);
+                    $isDuplicate = $sqlState === '23000' && in_array($driverCode, [1062, 19, 2067, 1555], true);
+
+                    if (!$isDuplicate) {
+                        \Log::error('Scan presensi gagal disimpan: ' . $e->getMessage(), [
+                            'student_id' => $student->id,
+                            'date' => $todayDate,
+                            'time' => $currentTime,
+                            'academic_year_id' => $academicYearId,
+                        ]);
+
+                        return [
+                            'status_code' => 500,
+                            'should_notify_wa' => false,
+                            'response' => [
+                                'success' => false,
+                                'status' => 'error',
+                                'message' => 'Presensi gagal disimpan karena kesalahan sistem. Hubungi admin.',
+                                'student' => [
+                                    'name' => $student->name,
+                                    'nisn' => $student->nisn,
+                                    'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                                    'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                                ],
+                            ],
+                        ];
+                    }
+
                     return [
                         'status_code' => 400,
                         'should_notify_wa' => false,
@@ -351,6 +435,44 @@ class ScannerController extends Controller
                     ];
                 }
 
+                // Jendela pulang sesuai Pengaturan hari ini:
+                // [Jam Pulang, Batas Waktu Pulang].
+                $nowHm = substr($currentTime, 0, 5);
+                $openHm = substr((string) $checkOutThreshold, 0, 5);
+                $closeHm = substr((string) $checkOutLimit, 0, 5);
+                $studentInfo = [
+                    'name' => $student->name,
+                    'nisn' => $student->nisn,
+                    'class' => $student->schoolClass ? $student->schoolClass->name : '-',
+                    'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                ];
+
+                if ($nowHm < $openHm) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => "Presensi pulang belum dibuka. Dimulai pukul {$openHm} WIB.",
+                            'student' => $studentInfo,
+                        ],
+                    ];
+                }
+
+                if ($nowHm > $closeHm) {
+                    return [
+                        'status_code' => 400,
+                        'should_notify_wa' => false,
+                        'response' => [
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => "Batas presensi pulang ({$closeHm} WIB) sudah lewat.",
+                            'student' => $studentInfo,
+                        ],
+                    ];
+                }
+
                 // Catat presensi pulang
                 $attendance->check_out = $currentTime;
                 $attendance->save();
@@ -379,13 +501,24 @@ class ScannerController extends Controller
                 ];
             }
 
-            // KASUS 3: Siswa sudah lengkap Masuk & Pulang
+            // KASUS 3: Siswa sudah lengkap Masuk & Pulang.
+            // Ini BUKAN kegagalan (presensinya sudah lengkap), jadi dikirim
+            // sebagai sukses (HTTP 200, success=true) supaya ikon di layar
+            // scanner hijau, bukan X merah.
             return [
-                'status_code' => 400,
+                'status_code' => 200,
                 'should_notify_wa' => false,
                 'response' => [
-                    'success' => false,
-                    'message' => "Siswa sudah menyelesaikan presensi Masuk (" . substr($attendance->check_in, 0, 5) . " WIB) dan Pulang (" . substr($attendance->check_out, 0, 5) . " WIB) hari ini.",
+                    'success' => true,
+                    'status' => 'completed',
+                    'type' => 'completed',
+                    'time' => '',
+                    'time_short' => '',
+                    'remark' => 'SISWA SUDAH PRESENSI MASUK DAN PULANG.',
+                    'display_remark' => 'SISWA SUDAH PRESENSI MASUK DAN PULANG.',
+                    'is_late' => false,
+                    'late_minutes' => 0,
+                    'message' => 'SISWA SUDAH PRESENSI MASUK DAN PULANG.',
                     'student' => [
                         'name' => $student->name,
                         'nisn' => $student->nisn,
@@ -457,9 +590,9 @@ class ScannerController extends Controller
             ];
         }
 
-        // Evaluasi jam masuk (tepat waktu / terlambat) — sama logika dengan siswa.
-        $lateLimitTime = Setting::getLateLimitTime();
-        $eval = Attendance::evaluateCheckInTime($currentTime, $lateLimitTime);
+        // Guru TIDAK mengenal status terlambat dan tidak memakai jam buka/batas
+        // terlambat siswa: scan pada jam berapa pun dicatat Hadir, dan jam scan
+        // disimpan sebagai jam masuk.
 
         $className = '-';
         $class = $teacher->schoolClass;
@@ -469,9 +602,9 @@ class ScannerController extends Controller
             $className = $teacher->schoolClasses()->first()->name;
         }
 
-        // Status baku untuk tabel teacher_attendances (enum sudah termasuk 'Terlambat').
-        $dbStatus = $eval['is_late'] ? Attendance::STATUS_TERLAMBAT : Attendance::STATUS_HADIR;
-        $timeRemark = $eval['time_remark']; // 'Tepat Waktu' atau 'Terlambat'
+        // Status guru selalu Hadir (tidak ada Terlambat untuk guru).
+        $dbStatus = TeacherAttendance::STATUS_HADIR;
+        $timeRemark = TeacherAttendance::REMARK_TEPAT_WAKTU;
 
         // Kolom wajib (selalu ada di tabel).
         $attendanceData = [
@@ -505,9 +638,9 @@ class ScannerController extends Controller
                 'time' => substr($currentTime, 0, 8),
                 'time_short' => substr($currentTime, 0, 5),
                 'remark' => $timeRemark,
-                'display_remark' => $eval['display_remark'],
-                'is_late' => (bool) $eval['is_late'],
-                'late_minutes' => (int) $eval['late_minutes'],
+                'display_remark' => 'Hadir',
+                'is_late' => false,
+                'late_minutes' => 0,
                 'student' => [
                     'name' => $teacher->name,
                     'nisn' => $teacher->nip ?: '-',

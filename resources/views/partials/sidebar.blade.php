@@ -10,8 +10,26 @@
     $isGuruPanel = ($userRole === 'guru');
     $isPiketPanel = ($userRole === 'piket');
 
+    // ------------------------------------------------------------------------
+    // PENCOCOKAN MENU AKTIF BERDASARKAN URL (selain nama route).
+    // Aturan: halaman apapun di dalam sebuah menu (daftar, detail, riwayat,
+    // edit, dll.) HARUS tetap menyalakan menu itu + induk dropdown-nya.
+    // Nama route halaman turunan sering tidak diawali nama menu, jadi URL
+    // dipakai sebagai penentu tambahan.
+    //   $urlIs  : diawali prefix panel  (admin/..., guru/..., piket/...)
+    //   $urlSeg : segmen di mana saja   (*/kehadiran/siswa*)
+    // ------------------------------------------------------------------------
+    $panelPrefix = $isAdminPanel ? 'admin' : ($isGuruPanel ? 'guru' : 'piket');
+    $urlIs = function (string ...$paths) use ($panelPrefix) {
+        return request()->is(...array_map(fn ($p) => $panelPrefix . '/' . $p, $paths));
+    };
+    $urlSeg = function (string ...$paths) {
+        return request()->is(...array_map(fn ($p) => '*/' . $p, $paths));
+    };
+
     $dashboardRoute = panel_route('dashboard');
-    $isDashboardActive = request()->routeIs('admin.dashboard', 'guru.dashboard', 'piket.dashboard');
+    $isDashboardActive = request()->routeIs('admin.dashboard', 'guru.dashboard', 'piket.dashboard')
+        || $urlIs('dashboard*');
 
     // PRESENSI (dropdown: Siswa & Guru untuk admin/piket; link langsung untuk guru)
     $absensiRoute       = panel_route('absensi.index');
@@ -23,7 +41,9 @@
 
     $isPresensiGuruActive  = $presensiGuruRoute !== null
         && (request()->routeIs('*presensi.guru*') || request()->is('presensi/guru*', '*/presensi/guru*'));
-    $isPresensiSiswaActive = ! $isPresensiGuruActive && panel_is('absensi*');
+    // Siswa = semua halaman presensi yang BUKAN presensi guru (daftar kelas, detail kelas, dll).
+    $isPresensiSiswaActive = ! $isPresensiGuruActive
+        && (panel_is('absensi*') || panel_is('presensi*') || $urlSeg('absensi*', 'presensi*'));
     $isAbsensiActive       = $isPresensiSiswaActive || $isPresensiGuruActive;
 
     // KEHADIRAN (dropdown: Siswa & Guru untuk admin/piket; link langsung untuk guru)
@@ -32,9 +52,13 @@
     if ($kehadiranGuruRoute === '#') {
         $kehadiranGuruRoute = null;
     }
-    $isKehadiranSiswaActive = panel_is('kehadiran.siswa*');
-    $isKehadiranGuruActive  = $kehadiranGuruRoute !== null && panel_is('kehadiran.guru*');
-    $isKehadiranActive      = $isKehadiranSiswaActive || $isKehadiranGuruActive || panel_is('kehadiran*');
+    // Guru dicek dulu; sisanya di bawah /kehadiran (termasuk /kehadiran/siswa/{id}/history)
+    // otomatis dianggap Kehadiran Siswa.
+    $isKehadiranGuruActive  = $kehadiranGuruRoute !== null
+        && (panel_is('kehadiran.guru*') || $urlSeg('kehadiran/guru*'));
+    $isKehadiranSiswaActive = ! $isKehadiranGuruActive
+        && (panel_is('kehadiran*') || $urlSeg('kehadiran*'));
+    $isKehadiranActive      = $isKehadiranSiswaActive || $isKehadiranGuruActive;
 
     // REKAP (dropdown: Siswa & Guru untuk admin; link langsung untuk guru)
     $rekapSiswaRoute    = panel_route('rekap.siswa');
@@ -47,9 +71,12 @@
     // adalah prefix dari /admin/rekap/guru, jadi 'rekap*' tidak boleh
     // dipakai untuk menentukan siswa vs guru — hanya 'rekap' dan
     // 'rekap.siswa*' untuk siswa, 'rekap.guru*' untuk guru.
-    $isRekapSiswaActive = panel_is('rekap.siswa*') || panel_is('rekap');
-    $isRekapGuruActive  = $rekapGuruRoute !== null && panel_is('rekap.guru*');
-    $isRekapActive      = $isRekapSiswaActive || $isRekapGuruActive || panel_is('rekap*');
+    // Guru dicek dulu; sisanya di bawah /rekap otomatis dianggap Rekap Siswa.
+    $isRekapGuruActive  = $rekapGuruRoute !== null
+        && (panel_is('rekap.guru*') || $urlSeg('rekap/guru*'));
+    $isRekapSiswaActive = ! $isRekapGuruActive
+        && (panel_is('rekap*') || $urlSeg('rekap*'));
+    $isRekapActive      = $isRekapSiswaActive || $isRekapGuruActive;
 
     $siswaRoute = panel_route('students.index');
     $siswaLabel = __('Siswa');
@@ -60,22 +87,22 @@
         'admin.students.trash',
         'admin.teachers.trash',
         'admin.classes.trash'
-    );
-    $isSiswaActive = panel_is('students*') && ! $isTrashPage;
+    ) || $urlIs('students/trash*', 'teachers/trash*', 'classes/trash*', 'trash*');
+    $isSiswaActive = (panel_is('students*') || $urlIs('siswa*', 'students*')) && ! $isTrashPage;
 
     $kelasRoute = panel_route('classes.index');
     $kelasLabel = __('Kelas');
-    $isKelasActive = (panel_is('classes*') || panel_is('kelas*')) && ! $isTrashPage;
+    $isKelasActive = (panel_is('classes*') || panel_is('kelas*') || $urlIs('kelas*', 'classes*')) && ! $isTrashPage;
 
-    $isGuruActive = (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*')) && ! $isTrashPage;
+    $isGuruActive = (request()->routeIs('admin.guru.*') || request()->routeIs('admin.teachers.*') || $urlIs('guru*', 'teachers*')) && ! $isTrashPage;
 
     // PENGATURAN (dropdown: Identitas Sekolah, Tahun Ajaran, Hari Libur, Tempat Sampah)
-    $isIdentitasActive    = request()->routeIs('admin.settings.*');
-    $isTahunAjaranActive  = request()->routeIs('admin.academic-years.*');
-    $isHariLiburActive    = request()->routeIs('admin.holidays.*');
+    $isIdentitasActive    = request()->routeIs('admin.settings.*') || $urlIs('settings*');
+    $isTahunAjaranActive  = request()->routeIs('admin.academic-years.*') || $urlIs('academic-years*');
+    $isHariLiburActive    = request()->routeIs('admin.holidays.*') || $urlIs('holidays*');
     $isSampahActive       = $isTrashPage;
     $isPengaturanActive   = $isIdentitasActive || $isTahunAjaranActive || $isHariLiburActive
-                            || $isSampahActive || request()->routeIs('admin.accounts.*');
+                            || $isSampahActive || request()->routeIs('admin.accounts.*') || $urlIs('accounts*');
 
     // Sesuaikan kalau route halaman "Tempat Sampah" lu beda.
     $sampahRoute = \Illuminate\Support\Facades\Route::has('admin.trash.index')

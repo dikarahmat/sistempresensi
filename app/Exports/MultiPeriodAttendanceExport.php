@@ -245,12 +245,23 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         $ay = AcademicYear::find($params['period_academic_year'] ?? $params['academic_year_id'] ?? null)
             ?: ($activeYear ?: AcademicYear::getActive());
 
+        // Record tahun ajaran "Genap" bisa bertanggal mulai Januari-Juni. Mundurkan
+        // 6 bulan supaya patokan awal selalu awal tahun ajaran (Jul), sehingga
+        // rentang Ganjil/Genap/Setahun benar apa pun record yang dipilih.
+        $ayStart = null;
+        if ($ay && $ay->start_date) {
+            $ayStart = Carbon::parse($ay->start_date)->startOfMonth();
+            if (strtolower((string) $ay->semester) === 'genap' && (int) $ayStart->month <= 6) {
+                $ayStart = $ayStart->copy()->subMonthsNoOverflow(6);
+            }
+        }
+
         if ($type === 'tahunan') {
-            if ($ay && $ay->start_date) {
-                $start = Carbon::parse($ay->start_date)->toDateString();
-                $end = $ay->end_date
-                    ? Carbon::parse($ay->end_date)->toDateString()
-                    : Carbon::parse($ay->start_date)->addMonths(11)->endOfMonth()->toDateString();
+            if ($ay && $ayStart) {
+                // Setahun = 12 bulan penuh dari bulan mulai tahun ajaran (Jul-Jun).
+                // end_date TIDAK dipakai: kalau datanya keliru (mis. Des) PDF jadi 6 bulan.
+                $start = $ayStart->copy()->toDateString();
+                $end = $ayStart->copy()->addMonthsNoOverflow(11)->endOfMonth()->toDateString();
             } else {
                 $start = Carbon::createFromDate($now->year, 7, 1)->toDateString();
                 $end = Carbon::createFromDate($now->year + 1, 6, 30)->toDateString();
@@ -261,16 +272,16 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
 
         $semester = ($params['period_semester'] ?? $params['semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
 
-        if ($ay && $ay->start_date) {
-            $ayStart = Carbon::parse($ay->start_date);
+        if ($ay && $ayStart) {
             if ($semester === 'ganjil') {
-                $start = $ayStart->copy()->startOfMonth()->toDateString();
-                $end = $ayStart->copy()->addMonths(5)->endOfMonth()->toDateString();
+                // Ganjil = 6 bulan pertama (Jul-Des).
+                $start = $ayStart->copy()->toDateString();
+                $end = $ayStart->copy()->addMonthsNoOverflow(5)->endOfMonth()->toDateString();
             } else {
-                $start = $ayStart->copy()->addMonths(6)->startOfMonth()->toDateString();
-                $end = $ay->end_date
-                    ? Carbon::parse($ay->end_date)->toDateString()
-                    : $ayStart->copy()->addMonths(11)->endOfMonth()->toDateString();
+                // Genap = 6 bulan berikutnya (Jan-Jun). end_date tidak dipakai
+                // supaya rentang tidak pernah terbalik / terpotong.
+                $start = $ayStart->copy()->addMonthsNoOverflow(6)->toDateString();
+                $end = $ayStart->copy()->addMonthsNoOverflow(11)->endOfMonth()->toDateString();
             }
         } else {
             $refYear = $now->year;
@@ -408,13 +419,27 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         return $counts;
     }
 
-    /** Baris legenda - sama persis di PDF dan Excel. */
-    public static function legendLines(): array
+    /**
+     * Baris legenda - sama persis di PDF dan Excel.
+     * Siswa memakai H, T, S, I, A (ada Terlambat). Guru tidak mengenal status
+     * Terlambat, jadi memanggil dengan $withLate = false (H, S, I, A).
+     */
+    public static function legendLines(bool $withLate = true): array
     {
+        $codes = $withLate
+            ? 'H = Hadir, T = Terlambat, S = Sakit, I = Izin, A = Alfa, L = Libur, - = Belum'
+            : 'H = Hadir, S = Sakit, I = Izin, A = Alfa, L = Libur, - = Belum';
+
         return [
             'KETERANGAN:',
-            'H = Hadir, S = Sakit, I = Izin, A = Alfa, L = Libur, - = Belum',
+            $codes,
         ];
+    }
+
+    /** Legenda untuk PDF: judul + kode status. */
+    public static function pdfLegendLines(bool $withLate = true): array
+    {
+        return array_values(self::legendLines($withLate));
     }
 
     /** Dua posisi kolom tanda tangan: kiri (Kepala Sekolah) dan kanan (Wali Kelas). */
@@ -642,7 +667,6 @@ class MultiPeriodAttendanceExport implements FromArray, WithMultipleSheets, With
         foreach ($legend as $line) {
             $output[] = [$line];
         }
-        $output[] = ['Jam masuk: ' . Setting::getCheckInTime() . ', batas keterlambatan: ' . Setting::getLateLimitTime()];
 
         // ---- BLOK TANDA TANGAN 2 KOLOM (per kelas / per sheet) ----
         $output[] = [''];

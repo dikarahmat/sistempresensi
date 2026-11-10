@@ -1,41 +1,68 @@
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+# Dependencies
+/vendor
 /node_modules
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+env
+.user.ini
+php.ini
+error_log
+
+# Config hosting (cPanel)
+/.htaccess
+
+# Laravel
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
-/vendor
+/storage/logs/*
+/storage/fonts/
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
+auth.json
 Homestead.json
 Homestead.yaml
+.phpunit.result.cache
+/.phpunit.cache
+
+# Logs
+*.log
+
+# Editor / OS / tools
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.phpactor.json
+.freebuff
+.DS_Store
 Thumbs.db
+
+# Folder nested/duplikat
+/sistem-presensi-smp
+
+# Dokumen internal
 AUDIT_REPORT.md
 AUDIT.md
 CHECKLIST-MANUAL.md
 DESIGN.md
 PERBAIKAN-LAPORAN.md
+PERBAIKAN.md
+RINGKASAN_AUDIT.md
+LAPORAN_FINAL.md
 PRD.md
 tech.md
 struktur.md
-scratch/
-
-PERBAIKAN.md 
-RINGKASAN_AUDIT.md 
-LAPORAN_FINAL.md
 dk.md
+scratch/
 docs/agent.md
 docs/architecture.md
 docs/PRD.backup.md
@@ -43,5 +70,4 @@ docs/skill.md
 docs/style-guide.md
 docs/tasks.md
 docs/workflow.md
-.env.wasmer
 docs/tree.md

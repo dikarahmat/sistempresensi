@@ -16,11 +16,11 @@
      * $formAction   : (opsional) URL simpan status. Kalau tidak dikirim, dipakai
      *                 route di bawah. GANTI nama route-nya dengan route simpan
      *                 presensi guru yang SUDAH ADA di proyek.
-     * $canEdit      : (opsional) boleh ubah status? default is_admin()
+     * $canEdit      : (opsional) boleh ubah status? default admin atau piket
      */
     $teachersList = collect($teachersList ?? []);
     $tanggal      = $tanggal ?? now()->toDateString();
-    $canEdit      = $canEdit ?? (function_exists('is_admin') ? is_admin() : true);
+    $canEdit      = $canEdit ?? ((function_exists('is_admin') && is_admin()) || request()->routeIs('piket.*'));
     $formAction   = $formAction ?? panel_route('presensi.guru.store'); // <-- sesuaikan
 
     $validStatus  = ['Hadir', 'Sakit', 'Izin', 'Alfa'];

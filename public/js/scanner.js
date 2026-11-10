@@ -322,7 +322,12 @@ function handleScanResult(status, body) {
         const titleHtml = `<span class="d-block text-uppercase fw-bold text-truncate" style="letter-spacing: -0.01em;">${escapeHtml(nama)}</span>` +
                           (kelas ? `<span class="d-block fw-bold text-white opacity-90 mt-1" style="font-size: 0.88em;">${escapeHtml(kelas)}</span>` : '');
 
-        if (body.is_late) {
+        if (body.type === 'completed') {
+            // Sudah presensi Masuk & Pulang (tap ulang) -> Lingkaran HIJAU + CENTANG putih,
+            // teks dari server, tanpa label "Hadir" dan tanpa jam.
+            const subtitleText = body.display_remark || body.message || 'SISWA SUDAH PRESENSI MASUK DAN PULANG.';
+            renderScanResult('green', 'check', titleHtml, subtitleText, false);
+        } else if (body.is_late) {
             // HASIL 2: Berhasil tapi TERLAMBAT -> Lingkaran HIJAU + X putih
             const subtitleText = ((window.__i18n && window.__i18n.late) || 'Terlambat') + (waktu ? ' · ' + waktu : '');
             renderScanResult('green', 'cross', titleHtml, subtitleText, false);

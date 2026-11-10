@@ -17,12 +17,17 @@
         .report-subtitle { font-size: 8.5pt; text-align: center; color: #64748b; margin-bottom: 12px; }
 
         .data-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 8pt; }
-        .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 4px 5px; text-align: center; }
+        .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 3px 5px; text-align: center; }
         .data-table th { background-color: #2563eb; color: #ffffff; font-weight: bold; text-transform: uppercase; font-size: 7.5pt; }
         .data-table thead { display: table-header-group; }
-        .data-table tr { page-break-inside: avoid; }
+        /* Jangan pakai page-break-inside: avoid pada tr: DomPDF jadi memindahkan seluruh tabel ke halaman berikutnya */
         .data-table tr:nth-child(even) td { background-color: #f8fafc; }
         .text-left { text-align: left !important; }
+
+        /* Harian: makin banyak guru, makin rapat supaya tetap 1 halaman */
+        .data-table.compact th, .data-table.compact td { padding: 2px 5px; font-size: 7.5pt; }
+        .data-table.tight th, .data-table.tight td { padding: 1px 4px; font-size: 7pt; line-height: 1.2; }
+        .data-table.tight th { font-size: 7pt; }
 
         .badge-h { color: #059669; font-weight: bold; }
         .badge-s { color: #2563eb; font-weight: bold; }
@@ -45,13 +50,24 @@
         .school-subtitle, .report-subtitle { color: #000 !important; font-weight: 400 !important; }
         .header-table td { color: #000 !important; font-weight: 400 !important; }
 
-        .section-footer { page-break-inside: avoid; page-break-before: avoid; }
-        .pdf-legend { margin-top: 10px; margin-bottom: 10px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 4px; background-color: #f8fafc; }
-        .signature-table { width: 100%; margin-top: 24px; page-break-inside: avoid; }
-        .signature-table td { text-align: left; font-size: 8.5pt; width: 50%; vertical-align: top; }
-        .signature-table td.sig-right { text-align: right; }
-        .signature-table td.sig-right .sig-inline { display: inline-block; text-align: left; }
-        .signature-space { height: 50px; }
+        .header-table, .report-title, .report-subtitle { page-break-after: avoid; }
+        .data-table { page-break-before: avoid; page-break-inside: auto; }
+        .section-footer { page-break-inside: avoid; }
+        .pdf-legend { margin: 0; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 4px; background-color: #f8fafc; }
+        .footer-table { width: 100%; margin-top: 8px; page-break-inside: avoid; }
+        .footer-table td { vertical-align: top; font-size: 8.5pt; }
+        .footer-table td.f-left { width: 58%; padding-right: 20px; }
+        .footer-table td.f-right { width: 42%; text-align: right; }
+        .footer-table td.f-right .sig-inline { display: inline-block; text-align: left; }
+        .signature-space { height: 34px; }
+    
+        /* Warna keterangan sama dengan warna status di tabel */
+        .pdf-legend .lg-h { color: #059669 !important; }
+        .pdf-legend .lg-t { color: #d97706 !important; }
+        .pdf-legend .lg-s { color: #2563eb !important; }
+        .pdf-legend .lg-i { color: #7e22ce !important; }
+        .pdf-legend .lg-a { color: #e11d48 !important; }
+        .pdf-legend .lg-l { color: #94a3b8 !important; }
     </style>
 </head>
 <body>
@@ -68,7 +84,7 @@
     $npsn = \App\Models\Setting::get('school_npsn', '20102030');
     $resolvedActiveYear = $activeYear ?? \App\Models\AcademicYear::getActive();
     $signPlaceholder = \App\Exports\MultiPeriodAttendanceExport::NAME_PLACEHOLDER;
-    $legendLines = \App\Exports\MultiPeriodAttendanceExport::legendLines();
+    $legendLines = array_pad(array_values(\App\Exports\MultiPeriodAttendanceExport::pdfLegendLines(false)), 3, '');
     $printedAt = $printedAt ?? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i');
     $signedAt = $signedAt ?? \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y');
     $dateColumns = $dateColumns ?? [];
@@ -99,7 +115,11 @@
 <div class="report-subtitle">{{ $subtitle }}</div>
 
 @if($type === 'harian')
-<table class="data-table">
+@php
+    $_n = count($dataRows ?? []);
+    $_density = $_n <= 16 ? '' : ($_n <= 24 ? 'compact' : ($_n <= 34 ? 'tight' : 'tight'));
+@endphp
+<table class="data-table {{ $_density }}">
     <thead>
         <tr>
             <th style="width: 4%;">{!! __('No') !!}</th>
@@ -243,19 +263,27 @@
 </table>
 @endif
 
-<!-- LEGENDA + TANDA TANGAN -->
+<!-- LEGENDA (kiri) + TANDA TANGAN (kanan), satu baris agar muat 1 halaman -->
 <div class="section-footer">
-    <div class="pdf-legend">
-        <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] }}</div>
-        <div style="font-size: 9pt; color: #334155; line-height: 1.6;">{{ $legendLines[1] }}</div>
-        <div style="font-size: 8pt; color: #64748b; line-height: 1.5; margin-top: 2px;">{{ $legendLines[2] }}</div>
-    </div>
-
-    {{-- Guru tidak punya wali kelas: hanya tanda tangan Kepala Sekolah (kanan). --}}
-    <table class="signature-table">
+    <table class="footer-table" @if(($type ?? '') === 'harian' && count($dataRows ?? []) > 24) style="margin-top: 4px;" @endif>
         <tr>
-            <td></td>
-            <td class="sig-right">
+            <td class="f-left">
+                <div class="pdf-legend">
+                    <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] ?? '' }}</div>
+                    @php
+                        $_lgClass = ['H' => 'lg-h', 'T' => 'lg-t', 'S' => 'lg-s', 'I' => 'lg-i', 'A' => 'lg-a', 'L' => 'lg-l'];
+                        $_lgParts = array_values(array_filter(array_map('trim', explode(',', (string) ($legendLines[1] ?? ''))), 'strlen'));
+                    @endphp
+                    <div style="font-size: 9pt; color: #334155; line-height: 1.5;">
+                        @foreach($_lgParts as $_lgPart)
+                            @php $_lgCode = strtoupper(trim(strtok($_lgPart, '='))); @endphp
+                            <span class="{{ $_lgClass[$_lgCode] ?? '' }}">{{ $_lgPart }}</span>@if(!$loop->last), @endif
+                        @endforeach
+                    </div>
+                </div>
+            </td>
+            <td class="f-right">
+                {{-- Guru tidak punya wali kelas: hanya tanda tangan Kepala Sekolah (kanan). --}}
                 <div class="sig-inline">
                     Parung Panjang, {{ $signedAt }}<br>
                     {!! __('Kepala Sekolah') !!}

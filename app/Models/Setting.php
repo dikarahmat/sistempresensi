@@ -181,9 +181,9 @@ class Setting extends Model
     }
 
     /**
-     * Jam pulang (Check-Out) legacy. Nilai ini disinkronkan dari jadwal hari
-     * Senin, sedangkan jadwal operasional lengkap per hari dibaca melalui
-     * OperatingSchedule::timesForDate().
+     * Jam pulang (Check-Out) - HANYA untuk logika Scanner/Gerbang.
+     * TIDAK ditampilkan di form pengaturan, TIDAK disimpan via form.
+     * Dipakai oleh ScannerController::processScan() untuk logika check-out.
      */
     public static function getCheckOutTime(): string
     {
@@ -192,18 +192,64 @@ class Setting extends Model
 
     public static function getLogo(): string
     {
-        return Cache::remember('setting_school_logo', 3600, function () {
-            $logo = self::get('school_logo');
-            if ($logo) {
-                if (file_exists(public_path('storage/' . $logo))) {
-                    return 'storage/' . $logo;
+        $logo = ltrim((string) self::get('school_logo', ''), '/');
+
+        if ($logo !== '') {
+            $cacheKey = 'setting_school_logo';
+
+            try {
+                $cached = Cache::get($cacheKey);
+                // Pakai cache hanya jika file yang di-cache masih ada.
+                if ($cached && $cached !== 'images/logo.webp' && file_exists(public_path($cached))) {
+                    return $cached;
                 }
-                if (file_exists(public_path($logo))) {
-                    return $logo;
-                }
+            } catch (\Throwable $e) {
+                // abaikan error cache
             }
-            return 'images/logo.webp';
-        });
+
+            $resolved = self::resolveStoredLogo($logo);
+            if ($resolved !== null) {
+                try {
+                    Cache::put($cacheKey, $resolved, 3600);
+                } catch (\Throwable $e) {
+                    // abaikan error cache
+                }
+                return $resolved;
+            }
+        }
+
+        // Fallback bawaan: JANGAN di-cache supaya logo baru langsung terdeteksi.
+        return 'images/logo.webp';
+    }
+
+    /**
+     * Cari file logo yang diunggah. Jika hanya ada di storage/app/public
+     * (symlink public/storage belum dibuat, umum di shared hosting),
+     * salin ke public/storage agar bisa diakses lewat URL.
+     */
+    private static function resolveStoredLogo(string $logo): ?string
+    {
+        if (is_file(public_path('storage/' . $logo))) {
+            return 'storage/' . $logo;
+        }
+
+        if (is_file(public_path($logo))) {
+            return $logo;
+        }
+
+        $source = storage_path('app/public/' . $logo);
+        if (is_file($source)) {
+            $target = public_path('storage/' . $logo);
+            $dir = dirname($target);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+            if (is_dir($dir) && @copy($source, $target) && is_file($target)) {
+                return 'storage/' . $logo;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -227,15 +273,23 @@ class Setting extends Model
     {
         $logo = self::get('school_logo');
         $fallback = public_path('images/logo.webp');
-        $source = $logo ?: $fallback;
+        // Cari logo di folder publik, lalu storage/app/public
+        $source = $fallback;
+        if ($logo) {
+            $candidates = [
+                public_path('storage/' . ltrim($logo, '/')),
+                storage_path('app/public/' . ltrim($logo, '/')),
+                public_path(ltrim($logo, '/')),
+            ];
+            foreach ($candidates as $candidate) {
+                if (is_file($candidate)) {
+                    $source = $candidate;
+                    break;
+                }
+            }
+        }
 
-        // Coba dari storage/app/public (setelah symlink ingin)
-        $localPath = 'storage/app/public/' . ltrim($logo ?? '', '/');
-        if ($logo && file_exists($localPath)) {
-            $source = $localPath;
-        } elseif (file_exists($fallback)) {
-            $source = $fallback;
-        } else {
+        if (!is_file($source)) {
             // Fallback default: jika tidak ada file gambar, pakai placeholder teks
             return 'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏫</text></svg>');
         }

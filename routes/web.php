@@ -313,9 +313,10 @@ Route::prefix('guru')->name('guru.')->middleware(['role:guru'])->group(function 
 // Akses HANYA KE TIGA MODUL: DASHBOARD, KEHADIRAN, dan PRESENSI (scan QR /
 // mode gerbang). Route Rekap (termasuk export/cetak), Siswa, Guru, Kelas,
 // Pengaturan, Tahun Ajaran, Hari Libur, Tempat Sampah, Kelola Akun, maupun
-// override absensi TIDAK didaftarkan di sini - sehingga piket otomatis
-// menerima HTTP 403 untuk SEMUA method (GET/POST/PUT/PATCH/DELETE) bila
-// URL diketik manual. View yang dipakai tetap view bersama admin/guru;
+// TIDAK didaftarkan di sini - sehingga piket otomatis menerima HTTP 403 untuk
+// SEMUA method bila URL diketik manual. Pengecualian: simpan status presensi
+// siswa (piket.absensi.override) dan guru (piket.presensi.guru.store), karena
+// piket mengisi presensi sama seperti admin. View yang dipakai tetap view bersama admin/guru;
 // menu disesuaikan lewat partials/sidebar.blade.php & bottom nav.
 // ============================================================================
 Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(function () {
@@ -330,8 +331,11 @@ Route::prefix('piket')->name('piket.')->middleware(['role:piket'])->group(functi
     Route::get('/presensi', [AttendanceController::class, 'index'])->name('presensi.index');
     // Presensi Guru: halaman & simpan status guru khusus panel piket.
     Route::get('/presensi/guru', [AttendanceController::class, 'kehadiranGuru'])->name('presensi.guru');
-    Route::post('/presensi/guru/store', [AttendanceController::class, 'storeGuruPresensi'])->name('presensi.guru.store');
+    Route::post('/presensi/guru/store', [AttendanceController::class, 'storeGuruPresensi'])->name('presensi.guru.store')->middleware('throttle:20,1');
     Route::get('/absensi/kiosk', [AdminScannerController::class, 'kiosk'])->name('absensi.kiosk');
+    // Simpan status presensi siswa (dropdown "Pilih Status" di detail kelas), identik admin.
+    // Statis (POST) sehingga tidak bentrok dengan GET /absensi/{schoolClass}.
+    Route::post('/absensi/override', [AttendanceController::class, 'override'])->name('absensi.override')->middleware('throttle:20,1');
     Route::get('/absensi/{schoolClass}', [AttendanceController::class, 'showClass'])->name('absensi.show');
     Route::get('/scanner', [AdminScannerController::class, 'index'])->name('scanner');
     Route::get('/kiosk', [AdminScannerController::class, 'kiosk'])->name('kiosk');

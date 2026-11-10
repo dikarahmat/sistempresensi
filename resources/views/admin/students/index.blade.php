@@ -196,28 +196,6 @@
         box-sizing: border-box;
     }
 
-    /* Pada Desktop (>= 1024px), sembunyikan tombol reset di dalam wrapper search dan tampilkan tombol reset khusus desktop di sebelah kanan dropdown kelas */
-    @media (min-width: 1024px) {
-        .search-and-reset-wrapper .btn-reset {
-            display: none !important;
-        }
-        .desktop-reset-btn {
-            display: flex !important;
-            flex: 0 0 38px !important;
-            width: 38px !important;
-            height: 38px !important;
-            min-width: 38px !important;
-            max-width: 38px !important;
-        }
-    }
-
-    /* Pada Mobile (< 1024px), sembunyikan tombol reset desktop */
-    @media (max-width: 1023.98px) {
-        .desktop-reset-btn {
-            display: none !important;
-        }
-    }
-
     /* Zebra Striping Khusus */
     .table-zebra-custom tbody tr:nth-child(even) > td,
     .table-zebra-custom tbody tr.baris-abu > td {
@@ -236,7 +214,7 @@
     .table-zebra-custom {
         width: 100%;
         table-layout: fixed;
-        min-width: 860px;
+        min-width: 760px;
         margin-bottom: 0;
     }
 
@@ -277,7 +255,9 @@
         padding-left: 0;
         text-align: left;
         white-space: normal;
-        word-break: break-word;
+        word-break: normal;
+        overflow-wrap: break-word;
+        line-height: 1.35;
     }
 
     .crud-center-wrapper {
@@ -352,6 +332,15 @@
             padding-right: 0 !important;
             text-align: left !important;
         }
+        .table-zebra-custom { min-width: 640px; }
+        .table-zebra-custom tbody td:nth-child(4) {
+            white-space: normal !important;
+            min-width: 180px;
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            text-align: left !important;
+        }
+        .table-zebra-custom thead th:nth-child(4) { text-align: left !important; }
     }
 
     /* Header tabel Data Siswa: nilai DESKTOP (>= 1024px) */
@@ -432,15 +421,87 @@
         .table-zebra-custom thead th:nth-child(4),
         .table-zebra-custom tbody td:nth-child(4) {
             text-align: left !important;
-            padding-left: 225px !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
         }
         .table-zebra-custom tbody td:nth-child(4) {
             white-space: normal !important;
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+        }
+        /* Kolom lain: satu baris, tidak ikut menumpuk */
+        .table-zebra-custom tbody td:not(:nth-child(4)),
+        .table-zebra-custom thead th:not(:nth-child(4)) {
+            white-space: nowrap !important;
+            text-align: center !important;
         }
         .table-zebra-custom tbody td:nth-child(4) .nama-siswa-wrapper {
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
+    }
+
+    /* ==========================================================================
+       ANTI-TABRAKAN (split screen / layar sempit)
+       Selector diperkuat dengan #daftar-siswa agar tidak kalah oleh CSS layout.
+       ========================================================================== */
+    #daftar-siswa .action-bar-section {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 10px 12px !important;
+    }
+    #daftar-siswa form.action-search-form {
+        flex: 1 1 460px !important;
+        min-width: 440px !important;
+        width: auto !important;
+        max-width: 100% !important;
+    }
+    #daftar-siswa .search-and-reset-wrapper .search-box-wrap { min-width: 160px !important; }
+    #daftar-siswa .filter-box-wrap { min-width: 160px !important; flex-shrink: 0 !important; }
+    #daftar-siswa .btn-reset { flex-shrink: 0 !important; }
+    #daftar-siswa .action-buttons-wrap {
+        flex: 0 0 auto !important;
+        max-width: 100%;
+        margin-left: auto !important;
+    }
+    #daftar-siswa .action-buttons-wrap .btn-solid-pill {
+        flex: 0 0 auto;
+        min-width: 0 !important;
+        padding: 0 14px !important;
+    }
+    /* Lebar area kartu (bukan lebar layar) yang menentukan: saat sidebar terbuka
+       atau split screen, tombol pindah ke baris sendiri sehingga search tidak terjepit. */
+    .filter-bar-container { container-type: inline-size; container-name: filterbar; }
+    @container filterbar (max-width: 1300px) {
+        #daftar-siswa form.action-search-form {
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        #daftar-siswa .action-buttons-wrap {
+            flex: 1 1 100% !important;
+            width: 100%;
+            margin-left: 0 !important;
+            justify-content: stretch;
+        }
+        #daftar-siswa .action-buttons-wrap .btn-solid-pill { flex: 1 1 0 !important; }
+    }
+    @media (max-width: 1023.98px) {
+        #daftar-siswa form.action-search-form {
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        #daftar-siswa .filter-box-wrap { flex: 1 1 100% !important; width: 100% !important; }
+        #daftar-siswa .action-buttons-wrap {
+            flex: 1 1 100% !important;
+            width: 100%;
+            justify-content: stretch;
+        }
+        #daftar-siswa .action-buttons-wrap .btn-solid-pill { flex: 1 1 0 !important; }
     }
 
     /* Deretan tombol aksi di kanan */
@@ -573,6 +634,114 @@
     .alert.alert-success .bx-check-circle {
         color: #16a34a !important;
     }
+    /* ==========================================================================
+       FILTER BAR: dropdown kelas + tombol reset = satu kelompok
+       - >= 768px : reset berada di KANAN dropdown (sama seperti Data Kelas)
+       - <  768px : reset di samping kolom search, dropdown satu baris penuh
+       Kelompok tidak bisa menyusut, jadi reset tidak pernah tertutup tombol aksi.
+       ========================================================================== */
+    #daftar-siswa .filter-reset-group {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0;
+    }
+    #daftar-siswa .filter-reset-group .filter-box-wrap {
+        margin: 0 !important;
+        min-width: 0 !important;
+    }
+    #daftar-siswa .filter-reset-group .desktop-reset-btn {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        height: 38px !important;
+    }
+    @media (min-width: 768px) {
+        #daftar-siswa .search-and-reset-wrapper .btn-reset { display: none !important; }
+        #daftar-siswa .filter-reset-group .desktop-reset-btn { display: flex !important; }
+    }
+    @media (max-width: 767.98px) {
+        #daftar-siswa .filter-reset-group { flex: 1 1 100% !important; width: 100% !important; }
+        #daftar-siswa .filter-reset-group .filter-box-wrap { flex: 1 1 100% !important; width: 100% !important; }
+        #daftar-siswa .filter-reset-group .desktop-reset-btn { display: none !important; }
+    }
+    @media (min-width: 768px) and (max-width: 1023.98px) {
+        /* Form tersusun vertikal: dropdown melebar, reset tetap di kanannya */
+        #daftar-siswa .filter-reset-group { flex: 1 1 100% !important; width: 100% !important; }
+        #daftar-siswa .filter-reset-group .filter-box-wrap { flex: 1 1 auto !important; width: auto !important; }
+    }
+    @media (min-width: 1024px) {
+        /* Form satu baris: kelompok dropdown+reset lebar tetap; kalau sempit, turun ke baris bawah (tidak menimpa tombol aksi) */
+        #daftar-siswa form.action-search-form { flex-wrap: wrap !important; }
+        #daftar-siswa .search-and-reset-wrapper { flex: 1 1 200px !important; min-width: 160px !important; }
+        #daftar-siswa .filter-reset-group { flex: 0 0 auto !important; width: auto !important; }
+        #daftar-siswa .filter-reset-group .filter-box-wrap { flex: 0 0 190px !important; width: 190px !important; min-width: 160px !important; }
+    }
+    /* ==========================================================================
+       FILTER BAR DATA SISWA: SATU BARIS SEJAJAR (seperti Data Kelas / Data Guru)
+       Ukuran mengikuti lebar KARTU (container), bukan lebar layar, jadi tetap
+       satu baris saat sidebar terbuka atau layar di-split.
+       Urutan: [Search] [Dropdown Kelas] [Reset] .......... [Tombol aksi]
+       Di bawah 601px (HP) tombol aksi turun ke baris sendiri.
+       ========================================================================== */
+    @container filterbar (min-width: 601px) {
+        #daftar-siswa .action-bar-section {
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+        #daftar-siswa .action-bar-section form.action-search-form {
+            flex: 1 1 0 !important;
+            width: auto !important;
+            min-width: 0 !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        #daftar-siswa .action-bar-section .search-and-reset-wrapper {
+            flex: 1 1 130px !important;
+            width: auto !important;
+            min-width: 84px !important;
+        }
+        /* Reset selalu di kanan dropdown pada mode satu baris */
+        #daftar-siswa .action-bar-section .search-and-reset-wrapper .btn-reset { display: none !important; }
+        #daftar-siswa .action-bar-section .filter-reset-group {
+            flex: 0 1 158px !important;
+            width: auto !important;
+            min-width: 150px !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+        }
+        #daftar-siswa .action-bar-section .filter-reset-group .filter-box-wrap {
+            flex: 1 1 112px !important;
+            width: auto !important;
+            min-width: 104px !important;
+        }
+        #daftar-siswa .action-bar-section .filter-reset-group .desktop-reset-btn { display: flex !important; }
+        #daftar-siswa .action-bar-section .action-buttons-wrap {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            margin-left: auto !important;
+            flex-wrap: nowrap !important;
+            justify-content: flex-end !important;
+            gap: 6px !important;
+        }
+        #daftar-siswa .action-bar-section .action-buttons-wrap .btn-solid-pill {
+            flex: 0 0 auto !important;
+            min-width: 0 !important;
+        }
+    }
+    /* Kartu sedang/sempit (split screen, sidebar terbuka): tombol aksi dipadatkan supaya muat satu baris */
+    @container filterbar (min-width: 601px) and (max-width: 1300px) {
+        #daftar-siswa .action-bar-section .action-buttons-wrap .btn-solid-pill {
+            padding: 0 10px !important;
+            font-size: 0.7rem !important;
+            letter-spacing: 0 !important;
+        }
+    }
 </style>
 @endpush
 
@@ -668,10 +837,10 @@
     <div id="importAlertBox"></div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4 bg-white" id="daftar-siswa">
-        <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white">
+        <div class="p-3 p-md-4 border-bottom border-gray-100 bg-white filter-bar-container">
             <div class="action-bar-section d-flex flex-column flex-md-row justify-content-between">
                 <form method="GET" action="{{ panel_route('students.index') }}" class="action-search-form" id="studentSearchForm">
-                    <!-- Search & Tombol Reset (Tombol Reset di samping search khusus untuk tampilan mobile) -->
+                    <!-- Search & Tombol Reset (sebaris, sama seperti halaman Data Guru) -->
                     <div class="search-and-reset-wrapper">
                         <div class="input-group search-box-wrap">
                             <input type="text"
@@ -687,15 +856,16 @@
                             </button>
                         </div>
 
-                        <!-- Tombol Reset Mobile (Tampil di samping search hanya pada layar kecil) -->
-                        <a href="{{ panel_route('students.index') }}" class="btn-reset d-lg-none" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
+                        <!-- Tombol Reset Mobile (di samping search, hanya layar < 768px) -->
+                        <a href="{{ panel_route('students.index') }}" class="btn-reset" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
                             </svg>
                         </a>
                     </div>
 
-                    <!-- Dropdown Filter Kelas -->
+                    <!-- Dropdown Filter Kelas + Tombol Reset Desktop (satu kelompok, tidak bisa terpisah/tertimpa) -->
+                    <div class="filter-reset-group">
                     <div class="filter-box-wrap">
                         <select name="class_id" id="studentClassFilter" onchange="this.form.submit()" class="form-select border-secondary-subtle shadow-none fw-normal w-100" aria-label="{{ __('Pilih kelas') }}">
                             <option value="">{{ __('Semua Kelas') }}</option>
@@ -707,12 +877,13 @@
                         </select>
                     </div>
 
-                    <!-- Tombol Reset Desktop (Tampil di sebelah kanan dropdown kelas khusus pada layar desktop) -->
+                    <!-- Tombol Reset Desktop (di sebelah kanan dropdown kelas, layar >= 768px) -->
                     <a href="{{ panel_route('students.index') }}" class="btn-reset desktop-reset-btn" role="button" title="{{ __('Reset pencarian') }}" aria-label="{{ __('Reset pencarian') }}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
                         </svg>
                     </a>
+                    </div>
                 </form>
 
                 <div class="action-buttons-wrap">
@@ -743,12 +914,12 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 table-zebra-custom text-nowrap">
                 <colgroup>
-                    <col style="width: 5%;">
+                    <col style="width: 6%;">
                     <col style="width: 10%;">
-                    <col style="width: 15%;">
-                    <col style="width: 35%;">
-                    <col style="width: 15%;">
+                    <col style="width: 17%;">
+                    <col style="width: 26%;">
                     <col style="width: 20%;">
+                    <col style="width: 21%;">
                 </colgroup>
                 <thead>
                     <tr>

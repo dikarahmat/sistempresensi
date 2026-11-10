@@ -37,26 +37,15 @@
     .table-enterprise thead tr > th {
         background-color: #2563eb !important;
         color: #ffffff !important;
-    }
-        background-color: #2563eb !important;
-        color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 0.8rem !important;
         padding: 0.8rem 1rem;
         border-bottom: 1.5px solid #1d4ed8;
-        border-top-left-radius: 8px !important;
-        border-top-right-radius: 8px !important;
         text-transform: uppercase;
         letter-spacing: 0.03em;
         white-space: nowrap !important;
         vertical-align: middle !important;
         text-align: center !important;
-    }
-    .table-enterprise thead th:first-child {
-        border-top-left-radius: 8px !important;
-    }
-    .table-enterprise thead th:last-child {
-        border-top-right-radius: 8px !important;
     }
     /* Zebra Striping Khusus (Sesuai Benchmark Data Siswa) */
     .table-enterprise tbody tr:nth-child(even) > td,
@@ -447,15 +436,9 @@
        GELAP supaya kontrasnya tetap terbaca di proyektor / layar terang.
        ========================================================================== */
 
-
-
     /* --- 1. KOLOM NAMA SISWA --------------------------------------------- */
-    /* Nama tidak bold, satu baris, uppercase. Label kelas ("7A") dihapus dari
-       markup (tidak lagi dirender di bawah nama). */
-    .presensi-student-cell {
-        gap: 0;
-    }
-
+    /* Nama tidak bold, SELALU satu baris (nowrap), uppercase. Label kelas
+       ("7A") dihapus dari markup (tidak lagi dirender di bawah nama). */
     .presensi-student-cell {
         gap: 0;
     }
@@ -463,7 +446,7 @@
         font-weight: 400 !important;
         color: #111827 !important;
         text-transform: uppercase;
-        white-space: normal;
+        white-space: nowrap !important;
         overflow: visible;
         max-width: none;
         display: block;
@@ -483,7 +466,7 @@
         font-weight: 400 !important;
     }
 
-    /* --- 2. KOLOM STATUS: TEKS MURNI์, TANPA CONTAINER -------------------- */
+    /* --- 2. KOLOM STATUS: TEKS MURNI, TANPA CONTAINER -------------------- */
     /* Hanya teks berwarna: tanpa background, border, padding kotak, shadow. */
     .presensi-badge {
         font-weight: 400 !important;
@@ -539,7 +522,10 @@
         overflow-y: visible !important;
     }
 
-    /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal ===== */
+    /* ===== MOBILE: tabel digeser horizontal sebagai SATU KESATUAN =====
+       Semua kolom (termasuk NO) ikut bergeser bersama; TIDAK ada kolom
+       sticky. Header biru tetap utuh dan melengkung karena kartu pembungkus
+       memakai rounded-4 + overflow-hidden. Nama siswa selalu satu baris. */
     @media (max-width: 767.98px) {
         #tableColumn .table-responsive {
             overflow-x: auto !important;
@@ -556,15 +542,8 @@
         #tableColumn .table-zebra-custom tbody td,
         #tableColumn .table-zebra-custom thead th {
             white-space: nowrap !important;
-            padding: 0.55rem 0.7rem !important;
+            padding: 0.55rem 0.9rem !important;
             font-size: 0.78rem !important;
-        }
-        #tableColumn .table-enterprise tbody td:nth-child(1),
-        #tableColumn .table-enterprise thead th:nth-child(1) {
-            position: sticky !important;
-            left: 0 !important;
-            z-index: 2 !important;
-            background: #ffffff !important;
         }
         .presence-summary { flex-wrap: wrap; gap: 0.6rem; }
         .presence-summary .item { white-space: nowrap; }
@@ -573,6 +552,10 @@
 @endpush
 
 @section('content')
+@php
+    // Admin dan Guru Piket sama-sama boleh mengubah status presensi.
+    $canEditPresensi = is_admin() || request()->routeIs('piket.*');
+@endphp
 <div class="pt-1 space-y-3">
 
     {{-- NOTIFIKASI: sukses / gagal / error validasi.
@@ -723,7 +706,7 @@
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Jam Pulang') }}</th>
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Keterlambatan') }}</th>
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Status') }}</th>
-                                @if(is_admin())
+                                @if($canEditPresensi)
                                 <th class="text-center py-3" style="white-space: nowrap;">{{ __('Aksi') }}</th>
                                 @endif
                             </tr>
@@ -771,7 +754,7 @@
                                         {{ $st }}
                                     </span>
                                 </td>
-                                @if(is_admin())
+                                @if($canEditPresensi)
                                 <td class="aksi-cell text-start">
                                     <div class="aksi-quick">
                                         <form action="{{ panel_route('absensi.override') }}" method="POST" class="aksi-form" data-student-id="{{ $student->id }}">
@@ -855,7 +838,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ is_admin() ? 7 : 6 }}" class="text-center py-4 text-secondary empty-state">
+                                <td colspan="{{ $canEditPresensi ? 7 : 6 }}" class="text-center py-4 text-secondary empty-state">
                                     <i class='bx bx-error' aria-hidden='true'></i>
                                     {{ __('Belum ada data siswa di kelas ini.') }}
                                 </td>
@@ -1178,4 +1161,3 @@
     });
 </script>
 @endpush
-

@@ -371,6 +371,38 @@
         color: var(--bs-btn-color, #212529);
     }
 
+    /* ===== SPLIT SCREEN / LAYAR SEMPIT (desktop >= 768px) =====
+       Kolom tabel punya lebar tetap (px) sehingga NISN & Nama Siswa selalu terbaca
+       penuh. Bila area kartu lebih sempit dari total kolom, tabel digeser ke kanan
+       (scroll horizontal) -- tidak lagi dipotong atau saling menimpa. */
+    .rekap-desktop-wrap { padding-right: 12px; min-width: 0; }
+    #daftar-rekap { min-width: 0; max-width: 100%; }
+    #daftar-rekap .table-responsive {
+        overflow-x: auto !important;
+        max-width: 100%;
+    }
+    #daftar-rekap .table-matrix { width: 100%; table-layout: fixed; }
+    #daftar-rekap .table-matrix.rekap-harian { min-width: 1080px; }
+    /* NISN & Nama: tidak boleh dipotong titik-titik */
+    #daftar-rekap .table-matrix tbody td:nth-child(2),
+    #daftar-rekap .table-matrix tbody td:nth-child(3),
+    #daftar-rekap .table-matrix thead th:nth-child(2),
+    #daftar-rekap .table-matrix thead th:nth-child(3) {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
+    #daftar-rekap .table-matrix tbody td:nth-child(3),
+    #daftar-rekap .table-matrix thead th:nth-child(3) {
+        padding-left: 1rem !important;
+        padding-right: 0.75rem !important;
+        text-align: left !important;
+    }
+    /* Baris filter: tombol cetak tidak ikut mengecil / menimpa */
+    .filter-card > form { min-width: 0; }
+    .filter-card > form > .ms-auto { flex-shrink: 0; margin-left: auto; }
+    .filter-card .btn-red-pdf, .filter-card .btn-green-excel { flex-shrink: 0; min-width: 104px; }
+
     /* ===== MOBILE: tabel tidak tertumpuk, digeser horizontal, NO+NAMA sticky ===== */
     @media (max-width: 767.98px) {
         /* Card tidak boleh memotong isi tabel yang di-scroll horizontal. */
@@ -530,7 +562,7 @@
     </div>
 
     <!-- 2. DESKTOP VIEW -->
-    <div class="d-none d-md-block">
+    <div class="d-none d-md-block rekap-desktop-wrap">
         <div class="period-container">
             <div class="period-nav">
                 <a href="{{ panel_route('rekap', array_merge(request()->except(['type', 'page']), ['type' => 'harian'])) }}" class="period-link {{ $type === 'harian' ? 'active' : '' }}">
@@ -630,18 +662,29 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden md:mb-4" id="daftar-rekap">
         <div class="table-responsive">
             @if($type === 'harian')
-                <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
+                <table class="table table-hover align-middle mb-0 table-matrix rekap-harian text-nowrap" style="width: 100%; table-layout: fixed;">
+                    <colgroup>
+                        <col style="width: 56px;">
+                        <col style="width: 140px;">
+                        <col style="width: 280px;">
+                        <col style="width: 76px;">
+                        <col style="width: 56px;">
+                        <col style="width: 110px;">
+                        <col style="width: 110px;">
+                        <col style="width: 140px;">
+                        <col style="width: 110px;">
+                    </colgroup>
                     <thead>
                         <tr class="align-middle">
-                            <th class="text-center" style="width: 5%;">{{ __('No') }}</th>
-                            <th class="text-center" style="width: 12%;">{{ __('NISN') }}</th>
-                            <th class="text-start" style="width: 28%;">{{ __('Nama Siswa') }}</th>
-                            <th class="text-center" style="width: 8%;">{{ __('Kelas') }}</th>
-                            <th class="text-center" style="width: 6%;">{{ __('JK') }}</th>
-                            <th class="text-center" style="width: 11%;">{{ __('Jam Masuk') }}</th>
-                            <th class="text-center" style="width: 11%;">{{ __('Jam Pulang') }}</th>
-                            <th class="text-center" style="width: 11%;">{{ __('Keterlambatan') }}</th>
-                            <th class="text-center" style="width: 8%;">{{ __('Status') }}</th>
+                            <th class="text-center">{{ __('No') }}</th>
+                            <th class="text-center">{{ __('NISN') }}</th>
+                            <th class="text-start">{{ __('Nama Siswa') }}</th>
+                            <th class="text-center">{{ __('Kelas') }}</th>
+                            <th class="text-center">{{ __('JK') }}</th>
+                            <th class="text-center">{{ __('Jam Masuk') }}</th>
+                            <th class="text-center">{{ __('Jam Pulang') }}</th>
+                            <th class="text-center">{{ __('Keterlambatan') }}</th>
+                            <th class="text-center">{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -704,18 +747,18 @@
             @elseif($type === 'mingguan')
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <colgroup>
-                        <col style="width: 36px;">
-                        <col style="width: 110px;">
-                        <col style="width: 240px;">
                         <col style="width: 48px;">
-                        <col style="width: 36px;">
-                        @for($ds = 0; $ds < count($dateColumns); $ds++) <col style="min-width: 72px;"> @endfor
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 48px;">
+                        <col style="width: 140px;">
+                        <col style="width: 270px;">
+                        <col style="width: 70px;">
+                        <col style="width: 52px;">
+                        @for($ds = 0; $ds < count($dateColumns); $ds++) <col style="width: 84px;"> @endfor
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 56px;">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
@@ -789,18 +832,18 @@
             @else
                 <table class="table table-hover align-middle mb-0 table-matrix text-nowrap" style="width: 100%; table-layout: fixed;">
                     <colgroup>
-                        <col style="width: 36px;">
-                        <col style="width: 110px;">
-                        <col style="width: 240px;">
                         <col style="width: 48px;">
-                        <col style="width: 36px;">
-                        @for($dsb = 0; $dsb < $daysInMonth; $dsb++) <col style="min-width: 28px;"> @endfor
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 32px;">
-                        <col style="width: 48px;">
+                        <col style="width: 140px;">
+                        <col style="width: 270px;">
+                        <col style="width: 70px;">
+                        <col style="width: 52px;">
+                        @for($dsb = 0; $dsb < $daysInMonth; $dsb++) <col style="width: 38px;"> @endfor
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 40px;">
+                        <col style="width: 56px;">
                     </colgroup>
                     <thead>
                         <tr class="align-middle">
@@ -1090,7 +1133,17 @@
             toggleRekapPeriodFields();
         }
 
+        // Semester (ganjil/genap) mengikuti tahun ajaran yang dipilih.
+        function syncRekapSemester() {
+            const sel = document.getElementById('rekapSemesterAy');
+            const hid = document.getElementById('rekapSemesterValue');
+            if (!sel || !hid) return;
+            const opt = sel.options[sel.selectedIndex];
+            hid.value = (opt && opt.dataset.semester === 'genap') ? 'genap' : 'ganjil';
+        }
+
         function toggleRekapPeriodFields() {
+            syncRekapSemester();
             const period = document.getElementById('rekapPeriodType').value;
             const fields = ['periodHarian', 'periodMingguan', 'periodBulanan', 'periodSemester', 'periodTahunan'];
             fields.forEach(id => {
@@ -1984,29 +2037,26 @@
                             </div>
                         </div>
                         <div class="mb-3" id="periodSemester" style="display: none;">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="form-label small fw-semibold">{{ __('Semester') }}</label>
-                                    <select name="period_semester" class="form-select form-select-sm rounded-3">
-                                        <option value="ganjil">{{ __('Ganjil') }}</option>
-                                        <option value="genap">{{ __('Genap') }}</option>
-                                    </select>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
-                                    <select name="period_academic_year" class="form-select form-select-sm rounded-3">
-                                        @foreach($academicYears as $ay)
-                                        <option value="{{ $ay->id }}" {{ (int) $activeYear->id === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                            <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
+                            <select name="period_academic_year" id="rekapSemesterAy" class="form-select form-select-sm rounded-3" onchange="syncRekapSemester()">
+                                @foreach($academicYears as $ay)
+                                <option value="{{ $ay->id }}" data-semester="{{ strtolower((string) $ay->semester) === 'genap' ? 'genap' : 'ganjil' }}" {{ (int) ($activeYear->id) === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
+                                @endforeach
+                            </select>
+                            {{-- Semester dibaca otomatis dari tahun ajaran yang dipilih --}}
+                            <input type="hidden" name="period_semester" id="rekapSemesterValue" value="{{ strtolower((string) ($activeYear->semester ?? '')) === 'genap' ? 'genap' : 'ganjil' }}">
                         </div>
+                        @php
+                            // Setahun: satu pilihan per tahun ajaran (Ganjil + Genap digabung otomatis)
+                            $tahunanOptions = $academicYears->groupBy('name')->map(function ($g) {
+                                return $g->first(fn ($a) => strtolower((string) $a->semester) === 'ganjil') ?? $g->first();
+                            })->values();
+                        @endphp
                         <div class="mb-3" id="periodTahunan" style="display: none;">
                             <label class="form-label small fw-semibold">{{ __('Tahun Ajaran') }}</label>
                             <select name="period_academic_year" class="form-select form-select-sm rounded-3">
-                                @foreach($academicYears as $ay)
-                                <option value="{{ $ay->id }}" {{ (int) $activeYear->id === (int) $ay->id ? 'selected' : '' }}>{{ $ay->name }} ({{ $ay->semester }})</option>
+                                @foreach($tahunanOptions as $ay)
+                                <option value="{{ $ay->id }}" {{ ($ay->name ?? null) === ($activeYear->name ?? null) ? 'selected' : '' }}>{{ $ay->name }}</option>
                                 @endforeach
                             </select>
                         </div>

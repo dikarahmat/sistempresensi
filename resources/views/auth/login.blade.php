@@ -1,4 +1,4 @@
-﻿@php
+@php
     $appName = \App\Models\Setting::getTitleAppName();
     // Nama sekolah: ambil dari Pengaturan (getSchoolName() / key school_name / nama_sekolah)
     $schoolName = null;

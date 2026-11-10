@@ -164,6 +164,14 @@
             text-align: left;
         }
         .signature-space { height: 50px; }
+    
+        /* Warna keterangan sama dengan warna status di tabel */
+        .pdf-legend .lg-h { color: #059669 !important; }
+        .pdf-legend .lg-t { color: #d97706 !important; }
+        .pdf-legend .lg-s { color: #2563eb !important; }
+        .pdf-legend .lg-i { color: #7e22ce !important; }
+        .pdf-legend .lg-a { color: #e11d48 !important; }
+        .pdf-legend .lg-l { color: #94a3b8 !important; }
     </style>
 </head>
 <body>
@@ -228,7 +236,6 @@
                 <th style="width: 8%;">{!! __('Kelas') !!}</th>
                 <th style="width: 3%;">{!! __('JK') !!}</th>
                 <th style="width: 10%;">{!! __('Jam Masuk') !!}</th>
-                <th style="width: 10%;">{!! __('Jam Pulang') !!}</th>
                 <th style="width: 12%;">{!! __('Keterlambatan') !!}</th>
                 <th style="width: 8%;">{!! __('Status') !!}</th>
                 <th style="text-align: left; width: 26%;">{!! __('Catatan') !!}</th>
@@ -243,7 +250,6 @@
                 <td>{{ $row['student']->schoolClass?->name ?? '-' }}</td>
                 <td class="{!! $row['student']->gender === 'Laki-laki' ? 'jk-l' : 'jk-p' !!}">{{ $row['student']->gender === 'Laki-laki' ? 'L' : 'P' }}</td>
                 <td>{!! $row['check_in'] !!}</td>
-                <td>{!! $row['check_out'] ?? '-' !!}</td>
                 <td>{!! $row['late_text'] !!}</td>
                 <td>
                     @if($row['status'] === 'Hadir')
@@ -268,7 +274,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="10" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
+                <td colspan="9" style="padding: 16px; color: #64748b;">{!! __('Tidak ada data presensi.') !!}</td>
             </tr>
             @endforelse
         </tbody>
@@ -476,12 +482,16 @@
     <div class="section-footer">
         <div class="pdf-legend">
             <div style="font-size: 9pt; font-weight: bold; color: #1e293b; margin-bottom: 3px;">{{ $legendLines[0] }}</div>
-            <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
-                {{ $legendLines[1] }}
-            </div>
-            <div style="font-size: 8pt; color: #64748b; line-height: 1.5; margin-top: 2px;">
-                {{ $legendLines[2] }}
-            </div>
+            @php
+                        $_lgClass = ['H' => 'lg-h', 'T' => 'lg-t', 'S' => 'lg-s', 'I' => 'lg-i', 'A' => 'lg-a', 'L' => 'lg-l'];
+                        $_lgParts = array_values(array_filter(array_map('trim', explode(',', (string) ($legendLines[1] ?? ''))), 'strlen'));
+                    @endphp
+                    <div style="font-size: 9pt; color: #334155; line-height: 1.6;">
+                        @foreach($_lgParts as $_lgPart)
+                            @php $_lgCode = strtoupper(trim(strtok($_lgPart, '='))); @endphp
+                            <span class="{{ $_lgClass[$_lgCode] ?? '' }}">{{ $_lgPart }}</span>@if(!$loop->last), @endif
+                        @endforeach
+                    </div>
         </div>
 
         <!-- TANDA TANGAN: 2 KOLOM SAJA (Kiri: Kepala Sekolah, Kanan: Wali Kelas).

@@ -199,8 +199,13 @@ class HolidayController extends Controller
         return redirect()->route('admin.holidays.index')->with('success', __('Hari libur berhasil ditambahkan!'));
     }
 
-    public function update(Request $request, Holiday $holiday): RedirectResponse
+    /**
+     * PERBAIKAN: parameter route resource 'hari-libur' bernama {hari_libur},
+     * jadi harus dicari manual (sama seperti method destroy).
+     */
+    public function update(Request $request, $hari_libur): RedirectResponse
     {
+        $holiday = Holiday::findOrFail($hari_libur);
         $type = $request->input('type', 'single');
 
         if ($type === 'range') {
@@ -250,8 +255,7 @@ class HolidayController extends Controller
     {
         $holiday = Holiday::find($hari_libur) ?? Holiday::findOrFail($hari_libur);
         $holiday->delete();
-        // Notifikasi hasil HAPUS sengaja memakai flash 'error' supaya tampil
-        // MERAH (alert-danger) sesuai aturan warna notifikasi, bukan hijau.
+        // Notifikasi hasil HAPUS memakai flash 'deleted' supaya tampil MERAH.
         return redirect()->route('admin.holidays.index')->with('deleted', __('Hari libur berhasil dihapus!'));
     }
 

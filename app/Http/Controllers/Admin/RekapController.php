@@ -23,9 +23,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class RekapController extends Controller
 {
-    /**
-     * Dapatkan data rekapitulasi berdasarkan tipe periode (Harian, Mingguan, Bulanan).
-     */
     protected function getRecapData(string $type, ?int $classId, array $inputs, bool $paginateStudents = false): array
     {
         Carbon::setLocale('id');
@@ -44,7 +41,6 @@ class RekapController extends Controller
             ? $studentPaginator->getCollection()
             : $query->orderBy('name', 'asc')->get();
 
-
         $totalHadir = 0;
         $totalTerlambat = 0;
         $totalSakit = 0;
@@ -54,7 +50,6 @@ class RekapController extends Controller
 
         $lateLimitTime = Setting::getLateLimitTime();
 
-        // Determine date range based on period type
         $dateRange = $this->resolveDateRange($type, $inputs, $now, $activeYear);
         $startDate = $dateRange['start'];
         $endDate = $dateRange['end'];
@@ -67,7 +62,7 @@ class RekapController extends Controller
             $isHoliday = Holiday::isHoliday($date) || $isWeekend;
             $holidayDesc = Holiday::getHolidayDescription($date) ?? ($isWeekend ? 'Akhir Pekan' : null);
 
-            $attendances = Attendance::whereDate('date', $date)
+            $attendances = Attendance::where('date', $date)
                 ->whereIn('student_id', $students->pluck('id'))
                 ->get()
                 ->keyBy('student_id');
@@ -91,21 +86,16 @@ class RekapController extends Controller
                         $totalAlfa++;
                     }
                 } else {
-                    /*
-                     * Tanpa catatan presensi:
-                     * - tanggal lampau (bukan hari libur/akhir pekan) -> ALFA
-                     *   (hitungan tampilan, tidak ditulis ke database);
-                     * - hari ini / masa depan -> BELUM;
-                     * - hari libur / akhir pekan -> LIBUR.
-                     * Sama dengan halaman Presensi (Attendance::statusOf).
-                     */
                     $status = Attendance::statusOf(null, $date, $isHoliday);
                 }
+
+                // Jam pulang: sumber yang sama dengan ekspor Excel (makeDailyRow).
+                $dailyRow = Attendance::makeDailyRow($att, $date, $lateLimitTime, $status, $student->school_class_id);
 
                 $dataRows[] = [
                     'student' => $student,
                     'check_in' => $row['check_in'],
-                    'check_out' => $row['check_out'],
+                    'check_out' => $dailyRow['check_out'] ?? $row['check_out'] ?? '-',
                     'late_text' => $row['late_text'],
                     'late_minutes' => $row['late_minutes'],
                     'status' => $status,
@@ -121,7 +111,6 @@ class RekapController extends Controller
             );
         }
 
-        // For mingguan, bulanan, semester, tahunan - use date range
         $dateColumns = [];
         $cur = Carbon::parse($startDate)->copy();
         $endObj = Carbon::parse($endDate);
@@ -142,9 +131,6 @@ class RekapController extends Controller
         $isMonthTable = in_array($type, ['semester', 'tahunan'], true);
 
         if ($isMonthTable) {
-            // Semester & tahunan memakai kolom BULAN, bukan kolom tanggal 1-31.
-            // Agregat per siswa per bulan diambil dari SATU query terkelompok
-            // (GROUP BY siswa, bulan, status) - bukan loop per hari.
             $monthlyCounts = MultiPeriodAttendanceExport::monthlyStatusCounts(
                 $startDate,
                 $endDate,
@@ -160,7 +146,6 @@ class RekapController extends Controller
                 foreach ($months as $monthInfo) {
                     $data = $perMonth[$monthInfo['key']] ?? null;
                     if ($data === null) {
-                        // Bulan tanpa data presensi ditulis "-" di sel.
                         $monthly[$monthInfo['key']] = null;
                         continue;
                     }
@@ -170,11 +155,10 @@ class RekapController extends Controller
                     $s += $data['sakit'];
                     $i += $data['izin'];
                     $a += $data['alfa'];
-                    // Sel bulan = jumlah hari Hadir (H + T) pada bulan itu.
                     $monthly[$monthInfo['key']] = $data['hadir'] + $data['terlambat'];
                 }
 
-                $percentage = $totalEffective > 0 ? round(($h / $totalEffective) * 100) : 0;
+                $percentage = Attendance::attendancePercentage((int) $h, (int) $totalEffective);
 
                 $totalHadir += $h;
                 $totalTerlambat += $t;
@@ -225,9 +209,6 @@ class RekapController extends Controller
             ->groupBy('student_id');
 
         foreach ($students as $student) {
-            // BUG FIX: keyBy('date') creates keys like '2026-10-06 00:00:00'
-            // but lookup uses '2026-10-06' ÔÇö they never match!
-            // Fix: use toDateString() for consistent date-only keys
             $stAtts = $attendances->get($student->id, collect())->keyBy(fn($a) => $a->date->toDateString());
             $h = 0; $t = 0; $s = 0; $i = 0; $a = 0;
             $days = [];
@@ -268,7 +249,7 @@ class RekapController extends Controller
             }
 
             $totalEffective = count(array_filter($dateColumns, fn($c) => !$c['is_holiday']));
-            $percentage = $totalEffective > 0 ? round(($h / $totalEffective) * 100) : 0;
+            $percentage = Attendance::attendancePercentage((int) $h, (int) $totalEffective);
 
             $totalHadir += $h;
             $totalTerlambat += $t;
@@ -288,7 +269,6 @@ class RekapController extends Controller
             ];
         }
 
-        // Add period-specific data to return
         $extra = [
             'type' => $type,
             'startDate' => $startDate,
@@ -305,7 +285,6 @@ class RekapController extends Controller
             'studentPaginator' => $studentPaginator,
         ];
 
-        // Add monthly-specific data for bulanan
         if ($type === 'bulanan') {
             $month = (int) ($inputs['month'] ?? $now->month);
             $year = (int) ($inputs['year'] ?? $now->year);
@@ -328,14 +307,10 @@ class RekapController extends Controller
         return $extra;
     }
 
-    /**
-     * Resolve date range based on period type.
-     */
     protected function resolveDateRange(string $type, array $inputs, Carbon $now, ?AcademicYear $activeYear): array
     {
         switch ($type) {
             case 'harian':
-                // Harian: tepat satu tanggal yang dipilih.
                 $date = $inputs['date'] ?? $now->toDateString();
                 $date = Carbon::parse($date)->toDateString();
                 return [
@@ -345,12 +320,6 @@ class RekapController extends Controller
                 ];
 
             case 'mingguan':
-                // Mingguan: Senin s/d Minggu dari SATU tanggal acuan (konsisten
-                // dengan halaman Riwayat Presensi per Siswa).
-                // Fallback ke start_date/end_date eksplisit HANYA untuk jalur
-                // filter tabel halaman Rekap yang memang mengirim rentang
-                // kustom; jalur cetak popup tidak pernah mengirim keduanya,
-                // sehingga pilihan popup (tanggal acuan) yang selalu menang.
                 if (!empty($inputs['start_date']) || !empty($inputs['end_date'])) {
                     $startDate = Carbon::parse($inputs['start_date'] ?? $now->copy()->startOfWeek(Carbon::MONDAY)->toDateString())->toDateString();
                     $endDate = Carbon::parse($inputs['end_date'] ?? $now->copy()->startOfWeek(Carbon::MONDAY)->addDays(6)->toDateString())->toDateString();
@@ -369,7 +338,6 @@ class RekapController extends Controller
                 ];
 
             case 'bulanan':
-                // Bulanan: tanggal 1 sampai akhir bulan dari bulan + tahun pilihan.
                 $month = (int) ($inputs['month'] ?? $now->month);
                 $year = (int) ($inputs['year'] ?? $now->year);
                 if ($month < 1 || $month > 12) {
@@ -384,9 +352,6 @@ class RekapController extends Controller
                 ];
 
             case 'semester':
-                // Semester Ganjil = Juli-Desember, Genap = Januari-Juni.
-                // Definisi rentang ada di satu tempat (MultiPeriodAttendanceExport)
-                // agar PDF, halaman rekap, dan Excel tidak pernah berbeda.
                 $semester = ($inputs['period_semester'] ?? 'ganjil') === 'genap' ? 'genap' : 'ganjil';
                 $ay = AcademicYear::find($inputs['period_academic_year'] ?? ($activeYear?->id ?? 0)) ?: $activeYear;
                 $range = MultiPeriodAttendanceExport::academicBounds('semester', $inputs, $activeYear);
@@ -400,7 +365,6 @@ class RekapController extends Controller
                 ];
 
             case 'tahunan':
-                // Tahunan: satu tahun ajaran penuh (Juli-Juni).
                 $ay = AcademicYear::find($inputs['period_academic_year'] ?? ($activeYear?->id ?? 0)) ?: $activeYear;
                 $range = MultiPeriodAttendanceExport::academicBounds('tahunan', $inputs, $activeYear);
                 $startDate = $range['start'];
@@ -421,12 +385,6 @@ class RekapController extends Controller
         }
     }
 
-    /**
-     * Nama file unduhan Cetak Per Siswa.
-     * ZIP sudah dihapus: satu request = satu file. Scope "class" menghasilkan
-     * satu file berisi seluruh siswa kelas itu, scope "single" satu file untuk
-     * satu siswa. Nama selalu lewat Str::slug agar bebas spasi dan garis miring.
-     */
     protected function studentProfileFileName(array $studentsData, string $periodType, ?string $studentScope, string $extension): string
     {
         $first = $studentsData[0]['student'] ?? null;
@@ -446,14 +404,6 @@ class RekapController extends Controller
     {
         $paginator = $recap['studentPaginator'] ?? null;
         if ($paginator instanceof LengthAwarePaginator) {
-            // PENTING: dataRows dari getRecapData() berisi baris rekap berbentuk array
-            // (['student' => Student, 'days' => [...], 'status' => ...]) yang urutannya
-            // identik dengan koleksi siswa pada halaman paginator ini.
-            //
-            // JANGAN menimpa dataRows dengan $paginator (koleksi model Student):
-            // view rekap (admin & guru) membaca $row['student'], sehingga bila item
-            // berupa model Student maka $row['student'] selalu null dan halaman
-            // rekap error 500 ("Attempt to read property 'nisn' on null").
             $paginator->setCollection(collect($recap['dataRows'] ?? [])->values());
             $recap['dataRows'] = $paginator;
         }
@@ -463,9 +413,6 @@ class RekapController extends Controller
         return $recap;
     }
 
-    /**
-     * Halaman Rekapitulasi Presensi Admin.
-     */
     public function index(Request $request): View
     {
         $type = $request->input('type', 'harian');
@@ -473,7 +420,6 @@ class RekapController extends Controller
         $classes = SchoolClass::orderBy('name')->get();
         $activeYear = AcademicYear::getActive();
 
-        // Pagination 50 siswa per halaman di desktop dan mobile (disamakan dengan Data Siswa)
         $recap = $this->getRecapData($type, $classId, $request->all(), true);
         $recap = $this->paginateRecapRows($recap);
 
@@ -482,11 +428,6 @@ class RekapController extends Controller
             'classId' => $classId,
             'classes' => $classes,
             'activeYear' => $activeYear,
-
-            // Data popup cetak. Nilai AWAL mengikuti filter/tab halaman, TAPI
-            // popup hanya mengirim field periodenya sendiri (tidak mewarisi
-            // rentang $startDate/$endDate halaman) sehingga rentang final
-            // dihitung resolveDateRange() dari pilihan popup.
             'popupDate' => $request->input('date') ?: Carbon::now('Asia/Jakarta')->toDateString(),
             'popupMonth' => (int) ($request->input('month') ?: Carbon::now('Asia/Jakarta')->month),
             'popupYear' => (int) ($request->input('year') ?: Carbon::now('Asia/Jakarta')->year),
@@ -497,8 +438,6 @@ class RekapController extends Controller
                 ->pluck('jml', 'school_class_id')
                 ->all(),
             'siswaTotal' => Student::where('status', 'Aktif')->count(),
-
-            // Daftar kelas untuk opsi "Semua Kelas" di popup: satu file per kelas.
             'kelasCetak' => $classes->map(fn($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
@@ -507,9 +446,6 @@ class RekapController extends Controller
         ]));
     }
 
-    /**
-     * Ekspor Excel Admin Multi-Periode.
-     */
     public function exportExcel(Request $request)
     {
         try {
@@ -532,9 +468,6 @@ class RekapController extends Controller
         }
     }
 
-    /**
-     * Ekspor PDF Admin Multi-Periode.
-     */
     public function exportPdf(Request $request)
     {
         try {
@@ -557,9 +490,6 @@ class RekapController extends Controller
 
                 $recap = $this->getRecapData($type, $classId, $request->all());
 
-                // Section per kelas: urutan kelas dari data (tingkat -> rombel),
-                // nomor urut lanjut, wali kelas diambil dari Data Guru,
-                // judul & sub-judul memakai helper yang SAMA dengan ekspor Excel.
                 $sections = MultiPeriodAttendanceExport::buildSections(
                     $recap['dataRows'],
                     $type,
@@ -567,53 +497,9 @@ class RekapController extends Controller
                     $classId
                 );
 
-                $logoBase64 = optional(Setting::getLogo())->when(function ($relative) {
-                    $path = public_path($relative);
-                    $raw = file_exists($path) ? @file_get_contents($path) : null;
-                    if (!$raw) {
-                        return null;
-                    }
-                    if (function_exists('imagecreatefromstring')) {
-                        try {
-                            $src = @imagecreatefromstring($raw);
-                        } catch (\Throwable $e) {
-                            $src = false;
-                        }
-                        if ($src) {
-                            try {
-                                $w = imagesx($src);
-                                $h = imagesy($src);
-                                $max = 120;
-                                $scale = min($max / max($w, 1), $max / max($h, 1), 1.0);
-                                $nw = max(1, (int) round($w * $scale));
-                                $nh = max(1, (int) round($h * $scale));
+                $logoBase64 = $this->getLogoBase64();
 
-                                $dst = imagecreatetruecolor($nw, $nh);
-                                imagealphablending($dst, false);
-                                imagesavealpha($dst, true);
-                                $transparent = imagecolorallocatealpha($dst, 127, 127, 127, 127);
-                                imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
-                                imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
-                                imagedestroy($src);
-
-                                ob_start();
-                                imagepng($dst, null, 6);
-                                $png = ob_get_clean();
-                                imagedestroy($dst);
-
-                                if ($png) {
-                                    return 'data:image/png;base64,' . base64_encode($png);
-                                }
-                            } catch (\Throwable $e) {
-                                // logo tidak wajib; cetak tetap jalan
-                            }
-                        }
-                    }
-
-                    return 'data:' . ($mime = @mime_content_type($path) ?: 'image/png') . ';base64,' . base64_encode($raw);
-                });
-
-            $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
+                $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
                     'title' => "Laporan Presensi {$type} - {$className}",
                     'schoolName' => $schoolName,
                     'schoolAddress' => $schoolAddress,
@@ -632,9 +518,6 @@ class RekapController extends Controller
         }
     }
 
-    /**
-     * Cari siswa untuk autocomplete di modal cetak rekap (AJAX).
-     */
     public function studentSearch(Request $request): \Illuminate\Http\JsonResponse
     {
         $query = trim($request->input('q', ''));
@@ -663,9 +546,6 @@ class RekapController extends Controller
         return response()->json($students);
     }
 
-    /**
-     * Cetak Rekap Presensi (PDF/Excel) via modal.
-     */
     public function printRekap(Request $request)
     {
         try {
@@ -683,25 +563,13 @@ class RekapController extends Controller
                 'period_year' => 'nullable|integer|min:2020|max:2030',
                 'period_semester' => 'nullable|in:ganjil,genap',
                 'period_academic_year' => 'nullable|integer|exists:academic_years,id',
-            ], [
-                'format.required' => 'Format output wajib dipilih.',
-                'type.required' => 'Tipe rekap wajib dipilih.',
-                'print_mode.required' => 'Jenis cetak wajib dipilih.',
-                'period_type.required' => 'Periode wajib dipilih.',
-                'period_date.required' => 'Tanggal wajib diisi untuk rekap harian/mingguan.',
-                'period_month.required' => 'Bulan wajib dipilih untuk rekap bulanan.',
-                'period_year.required' => 'Tahun wajib dipilih untuk rekap bulanan/semester/tahunan.',
-                'period_semester.required' => 'Semester wajib dipilih untuk rekap semester.',
-                'period_academic_year.required' => 'Tahun ajaran wajib dipilih untuk rekap semester/tahunan.',
-                'student_id.required' => 'Siswa wajib dipilih untuk cetak per siswa tunggal.',
-                'scope_class_id.required' => 'Kelas wajib dipilih untuk cetak per siswa per kelas.',
             ]);
 
-            $format = $validated['format']; // pdf or excel
-            $type = $validated['type']; // harian, mingguan, bulanan, semester, tahunan
-            $printMode = $validated['print_mode']; // class or student
+            $format = $validated['format'];
+            $type = $validated['type'];
+            $printMode = $validated['print_mode'];
             $classId = $validated['class_id'] ?? null;
-            $studentScope = $validated['student_scope'] ?? null; // single, class, classes
+            $studentScope = $validated['student_scope'] ?? null;
             $studentId = $validated['student_id'] ?? null;
             $scopeClassId = $validated['scope_class_id'] ?? null;
             $periodType = $validated['period_type'];
@@ -711,13 +579,6 @@ class RekapController extends Controller
             $periodSemester = $validated['period_semester'] ?? null;
             $periodAcademicYear = $validated['period_academic_year'] ?? null;
 
-            // Build inputs array for getRecapData - use period_* fields.
-            // CATATAN PENTING: field tanggal/bulan/tahun BAWAAN HALAMAN REKAP TIDAK
-            // lagi ikut terkirim ke jalur cetak. Dulu modal popup diisi otomatis
-            // dengan $startDate/$endDate hasil filter halaman (mis. 01 Okt - 31 Okt),
-            // sehingga memilih "Mingguan" tetap terkirim rentang bulan itu dan
-            // PDF berisi 31 baris. Sekarang popup hanya mengirim field periodenya
-            // sendiri, jadi pilihan popup yang menentukan rentang.
             $inputs = [
                 'date' => $periodDate,
                 'month' => $periodMonth,
@@ -726,15 +587,11 @@ class RekapController extends Controller
                 'period_academic_year' => $periodAcademicYear,
             ];
 
-            // Determine student query based on print mode and scope
-            $studentQuery = Student::with('schoolClass')->where('status', 'Aktif');
-
             if ($printMode === 'class') {
-                // Cetak per Kelas (Rekap Tabel)
+                $studentQuery = Student::with('schoolClass')->where('status', 'Aktif');
                 if ($classId) {
                     $studentQuery->where('school_class_id', $classId);
                 }
-                // Use getRecapData for class mode
                 $recap = $this->getRecapData($periodType, $classId, $inputs, false);
 
                 $studentIds = $studentQuery->pluck('id')->toArray();
@@ -748,21 +605,6 @@ class RekapController extends Controller
                     return $this->generateExcelRekap($request, $recap, $format, $classId, $inputs);
                 }
             } else {
-                // ================================================================
-                // CABANG PER SISWA ÔÇö tulis ulang dari nol
-                // Query siswa SAMA PERSIS dengan getRecapData()/tabel Rekap.
-                // Tidak filter berdasarkan ada/tidaknya data presensi.
-                // ================================================================
-
-                // 1. Tentukan cakupan siswa berdasarkan scope.
-        //    single  = satu siswa
-        //    class   = semua siswa pada satu kelas (satu file)
-        //    classes = semua kelas; dipecah jadi SATU FILE PER KELAS oleh JS di
-        //              browser. Server TIDAK pernah menangani many kelas sekaligus:
-        //              tiap request hanya satu kelas (student_scope=class).
-        //    all     = seluruh siswa aktif dalam satu file. Scope ini TIDAK lagi
-        //              dipakai popup (diganti "classes"), tetapi tetap diterima
-        //              untuk kompatibilitas pemanggil lama.
                 $studentQuery = Student::with('schoolClass')->where('status', 'Aktif');
 
                 if ($studentScope === 'single' && $studentId) {
@@ -771,7 +613,7 @@ class RekapController extends Controller
                     $studentQuery->where('school_class_id', $scopeClassId);
                 } elseif ($studentScope === 'classes') {
                     return response()->json([
-                        'message' => 'Scope "classes" harus dipecah per kelas oleh browser. Kirim satu request per kelas dengan student_scope=class.',
+                        'message' => 'Scope "classes" harus dipecah per kelas oleh browser.',
                     ], 422);
                 }
 
@@ -781,27 +623,18 @@ class RekapController extends Controller
                     return response()->json(['message' => 'Tidak ada siswa aktif yang ditemukan untuk dicetak.'], 422);
                 }
 
-                // 2. Resolve date range dari inputs
                 $now = Carbon::now('Asia/Jakarta');
                 $activeYear = AcademicYear::getActive();
                 $dateRange = $this->resolveDateRange($periodType, $inputs, $now, $activeYear);
-                $startDate = $dateRange['start'];
-                $endDate = $dateRange['end'];
                 $periodLabel = $dateRange['label'];
 
-                // 3. Ambil data rekap dari getRecapData (sumber kebenaran yang sama dengan tabel).
-                //    Karena $students hanya berisi 1 (atau beberapa siswa dalam 1 kelas),
-                //    getRecapData akan menghasilkan dataRows yang sesuai.
                 $recap = $this->getRecapData($periodType, null, $inputs, false);
 
-                // 4. Filter dataRows dari getRecapData hanya untuk siswa yang dipilih.
                 $studentIds = $students->pluck('id');
                 $filteredDataRows = collect($recap['dataRows'])->filter(function ($row) use ($studentIds) {
                     return $row['student'] && $studentIds->contains($row['student']->id);
                 })->values();
 
-                // 5. Build studentsData dalam format yang sama dengan pdf_multi_rekap:
-                //    sections berisi rows dengan no, student, days/monthly, hadir, terlambat, sakit, izin, alfa, percentage.
                 $studentsData = [];
                 $no = 1;
                 foreach ($filteredDataRows as $row) {
@@ -809,16 +642,14 @@ class RekapController extends Controller
                     $studentsData[] = $row;
                 }
 
-                // Jika tidak ada dataRows (mis. periode tanpa data sama sekali), tetap
-                // buat entry kosong supaya PDF tetap ter-render.
                 if (empty($studentsData)) {
                     foreach ($students as $student) {
                         if ($periodType === 'harian') {
-                            // Harian butuh field check_in, late_text, status, notes
                             $studentsData[] = [
                                 'no' => 1,
                                 'student' => $student,
                                 'check_in' => '-',
+                                'check_out' => '-',
                                 'late_text' => '-',
                                 'status' => 'Belum',
                                 'notes' => '-',
@@ -839,7 +670,6 @@ class RekapController extends Controller
                     }
                 }
 
-                // 5. Generate PDF atau Excel
                 if ($format === 'pdf') {
                     return $this->generatePdfStudentProfile($request, $studentsData, $periodType, $periodLabel, $studentScope, $recap);
                 } else {
@@ -856,10 +686,6 @@ class RekapController extends Controller
         }
     }
 
-
-    /**
-     * Generate PDF Rekap (per Kelas - tabel rekap).
-     */
     protected function generatePdfRekap(Request $request, array $recap, string $format, ?int $classId, array $inputs)
     {
         ini_set('memory_limit', '512M');
@@ -878,83 +704,34 @@ class RekapController extends Controller
         $activeYear = AcademicYear::getActive();
 
         $sections = MultiPeriodAttendanceExport::buildSections(
-            $recap['dataRows']->toArray(),
+            is_object($recap['dataRows']) ? $recap['dataRows']->toArray() : $recap['dataRows'],
             $recap['type'],
             $inputs,
             $classId
         );
 
-        $logoBase64 = optional(Setting::getLogo())->when(function ($relative) {
-            $path = public_path($relative);
-            $raw = file_exists($path) ? @file_get_contents($path) : null;
-            if (!$raw) {
-                return null;
-            }
-            if (function_exists('imagecreatefromstring')) {
-                try {
-                    $src = @imagecreatefromstring($raw);
-                } catch (\Throwable $e) {
-                    $src = false;
-                }
-                if ($src) {
-                    try {
-                        $w = imagesx($src);
-                        $h = imagesy($src);
-                        $max = 120;
-                        $scale = min($max / max($w, 1), $max / max($h, 1), 1.0);
-                        $nw = max(1, (int) round($w * $scale));
-                        $nh = max(1, (int) round($h * $scale));
-
-                        $dst = imagecreatetruecolor($nw, $nh);
-                        imagealphablending($dst, false);
-                        imagesavealpha($dst, true);
-                        $transparent = imagecolorallocatealpha($dst, 127, 127, 127, 127);
-                        imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
-                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
-                        imagedestroy($src);
-
-                        ob_start();
-                        imagepng($dst, null, 6);
-                        $png = ob_get_clean();
-                        imagedestroy($dst);
-
-                        if ($png) {
-                            return 'data:image/png;base64,' . base64_encode($png);
-                        }
-                    } catch (\Throwable $e) {
-                        // logo tidak wajib; cetak tetap jalan
-                    }
-                }
-            }
-
-            return 'data:' . ($mime = @mime_content_type($path) ?: 'image/png') . ';base64,' . base64_encode($raw);
-        });
+        $logoBase64 = $this->getLogoBase64();
 
         $pdf = Pdf::loadView('admin.attendances.pdf_multi_rekap', array_merge($recap, [
             'title' => "Laporan Presensi {$recap['type']} - {$className}",
-            'schoolName' => Setting::getSchoolName(),
-            'schoolAddress' => Setting::getSchoolAddress(),
+            'schoolName' => $schoolName,
+            'schoolAddress' => $schoolAddress,
             'logoBase64' => $logoBase64,
             'activeYear' => $activeYear,
             'headmasterName' => Setting::getHeadmasterName(),
             'headmasterNip' => Setting::getHeadmasterNip(),
             'sections' => $sections,
-        ]));
+        ]))->setPaper('a4', 'landscape');
 
-        $response = response($pdf->output(), 200, [
+        return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
             'Expires' => '0',
         ]);
-
-        return $response;
     }
 
-    /**
-     * Generate Excel Rekap (per Kelas - tabel rekap).
-     */
     protected function generateExcelRekap(Request $request, array $recap, string $format, ?int $classId, array $inputs)
     {
         ini_set('memory_limit', '512M');
@@ -968,21 +745,13 @@ class RekapController extends Controller
 
         return \App\Services\DownloadCacheService::downloadRekapFile('xlsx', $recap['type'], $classId, $inputs, function() use ($type, $classId, $inputs, $className) {
             $response = Excel::download(new MultiPeriodAttendanceExport($type, array_merge($inputs, ['class_id' => $classId])), "Rekap_Presensi_{$type}_" . Str::slug($className) . ".xlsx");
-            // Maatwebsite tidak selalu mengisi Content-Type untuk ekspor multi-sheet,
-            // sehingga header sempat kosong. Dipaksa eksplisit di sini.
             $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             return $response;
         }, "Rekap_Presensi_{$type}_" . Str::slug($className) . ".xlsx");
-    }    /**
-     * Generate PDF Student Profile (per Siswa - profil lengkap).
-     * Sekarang menggunakan view yang sama dengan pdf_multi_rekap.blade.php
-     * sehingga layout, gaya, kop, keterangan, dan tanda tangan identik.
-     */
+    }
+
     protected function generatePdfStudentProfile(Request $request, array $studentsData, string $periodType, string $periodLabel, ?string $studentScope, array $recap = [])
     {
-        // Request cetak Per Siswa boleh berat: satu kelas x ~40 siswa x 180 hari
-        // (semester) = ribuan baris tabel yang di-render dompdf sekali jalan.
-        // Limit dinaikkan KHUSUS jalur ini; Per Kelas tidak tersentuh.
         ini_set('memory_limit', '2048M');
         ini_set('max_execution_time', '300');
         @set_time_limit(300);
@@ -990,20 +759,14 @@ class RekapController extends Controller
         Carbon::setLocale('id');
 
         $activeYear = AcademicYear::getActive();
-        $schoolName = Setting::getSchoolName();$schoolAddress = Setting::getSchoolAddress();
-
-        $photoshopBaseUrl = config('services.photoshop.base_url', null);
+        $schoolName = Setting::getSchoolName();
+        $schoolAddress = Setting::getSchoolAddress();
         $headmasterName = Setting::getHeadmasterName();
         $headmasterNip = Setting::getHeadmasterNip();
 
-        $logoBase64 = $this->studentProfileLogoBase64($photoshopBaseUrl);
-
-        // Satu request = satu file (ZIP sudah dihapus). Tiap siswa mulai di
-        // halaman baru dan header tabel diulang tiap halaman oleh view
-        // (page-break-after + thead display:table-header-group).
+        $logoBase64 = $this->getLogoBase64();
         $fileName = $this->studentProfileFileName($studentsData, $periodType, $studentScope, 'pdf');
 
-        // Build sections array untuk view pdf_multi_rekap (1 section = 1 siswa).
         $sections = [];
         foreach ($studentsData as $data) {
             $student = $data['student'] ?? null;
@@ -1013,11 +776,20 @@ class RekapController extends Controller
             $className = $student->schoolClass?->name ?? '-';
             $wali = $student->schoolClass?->teacher;
 
-            // Reuse the exact same row shape produced by getRecapData() so the
-            // horizontal table in pdf_multi_rekap.blade.php receives the same
-            // keys the class rekap already expects (no new counting logic).
+            // Semester/Tahunan: bulan tanpa catatan tampil 0 (sama dengan halaman web),
+            // bukan '-'. Bulan di luar rentang tidak ada di $months jadi tidak ikut tampil.
+            if (in_array($periodType, ['semester', 'tahunan'], true) && !empty($recap['months'])) {
+                $monthlyFilled = $data['monthly'] ?? [];
+                foreach ($recap['months'] as $mInfo) {
+                    if (!isset($monthlyFilled[$mInfo['key']])) {
+                        $monthlyFilled[$mInfo['key']] = 0;
+                    }
+                }
+                $data['monthly'] = $monthlyFilled;
+            }
+
             $rowData = $data;
-            unset($rowData['student']); // view membaca $section['rows'][0]['student'] sebagai model
+            unset($rowData['student']);
             $rowData['student'] = $student;
 
             $sections[] = [
@@ -1026,18 +798,15 @@ class RekapController extends Controller
                 'rows' => [$rowData],
                 'waliName' => $wali?->name,
                 'waliNip' => $wali?->nip,
-                // Build heading/subtitle sama seperti buildSections di MultiPeriodAttendanceExport
                 'heading' => $this->buildStudentProfileHeading($periodType, $recap),
                 'subtitle' => $this->buildStudentProfileSubtitle($periodType, $recap, $className, $data),
             ];
         }
 
-        // Untuk semester/tahunan, kita perlu $months dan untuk mingguan/bulanan $dateColumns
         $months = $recap['months'] ?? null;
         $dateColumns = $recap['dateColumns'] ?? [];
         $daysInMonth = $recap['daysInMonth'] ?? null;
 
-        // Build dateLabels untuk mingguan dari dateColumns
         $dateLabels = [];
         if ($periodType === 'mingguan' && !empty($dateColumns)) {
             foreach ($dateColumns as $col) {
@@ -1060,9 +829,7 @@ class RekapController extends Controller
             'logoBase64' => $logoBase64,
             'headmasterName' => $headmasterName,
             'headmasterNip' => $headmasterNip,
-            // Dibuat saat request, bukan nilai tersimpan.
             'printedAt' => Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i') . ' WIB',
-            // Data untuk view (sama seperti pdf_multi_rekap)
             'sections' => $sections,
             'months' => $months,
             'dateColumns' => $dateColumns,
@@ -1079,16 +846,12 @@ class RekapController extends Controller
         return response()->download($tempFile, $fileName, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-            // Mencegah browser/proxy menyajikan PDF lama.
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
             'Pragma' => 'no-cache',
             'Expires' => '0',
         ])->deleteFileAfterSend(true);
     }
 
-    /**
-     * Build heading untuk student profile PDF (sama seperti MultiPeriodAttendanceExport::buildHeading).
-     */
     protected function buildStudentProfileHeading(string $periodType, array $recap): string
     {
         Carbon::setLocale('id');
@@ -1106,9 +869,6 @@ class RekapController extends Controller
         return 'LAPORAN REKAPITULASI PRESENSI ' . $label . ' - ' . ($schoolName ?: '-');
     }
 
-    /**
-     * Build subtitle untuk student profile PDF (sama seperti MultiPeriodAttendanceExport::buildSubtitle).
-     */
     protected function buildStudentProfileSubtitle(string $periodType, array $recap, string $className, array $data): string
     {
         Carbon::setLocale('id');
@@ -1132,7 +892,6 @@ class RekapController extends Controller
             $period = 'Periode: ' . Carbon::parse($startDate)->translatedFormat('F Y')
                 . ' s/d ' . Carbon::parse($endDate)->translatedFormat('F Y');
         } else {
-            // Bulanan
             $month = (int) ($recap['month'] ?? $now->month);
             $year = (int) ($recap['year'] ?? $now->year);
             $period = 'Bulan: ' . Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
@@ -1145,10 +904,6 @@ class RekapController extends Controller
             . ' | Tahun Ajaran: ' . ($activeYear ? $activeYear->name : '-');
     }
 
-    /**
-     * Generate Excel Student Profile (per Siswa - profil lengkap).
-     * Transform data ke format yang diharapkan StudentProfileExport.
-     */
     protected function generateExcelStudentProfile(Request $request, array $studentsData, string $periodType, string $periodLabel, ?string $studentScope, array $recap = [])
     {
         ini_set('memory_limit', '1024M');
@@ -1161,29 +916,18 @@ class RekapController extends Controller
         $schoolName = Setting::getSchoolName();
         $schoolAddress = Setting::getSchoolAddress();
 
-        // Transform studentsData ke format yang diharapkan StudentProfileExport
         $excelData = $this->transformForExcelExport($studentsData, $periodType, $recap);
-
-        // Satu request = satu file: satu sheet per siswa di dalam 1 workbook.
         $fileName = $this->studentProfileFileName($studentsData, $periodType, $studentScope, 'xlsx');
 
         $response = Excel::download(
             new \App\Exports\StudentProfileExport($excelData, $periodType, $periodLabel, $activeYear, $schoolName, $schoolAddress),
             $fileName
         );
-        // Maatwebsite tidak selalu mengisi Content-Type untuk multi-sheet.
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
         return $response;
     }
 
-    /**
-     * Transform studentsData ke format yang diharapkan StudentProfileExport.
-     * StudentProfileExport expects:
-     * - rows: array of daily rows with tanggal_raw, jam_masuk, jam_pulang, status, keterlambatan, keterangan
-     * - stats: array with hadir, terlambat, sakit, izin, alfa, libur
-     * - totalEffective, totalHadir, percentage
-     */
     protected function transformForExcelExport(array $studentsData, string $periodType, array $recap): array
     {
         $transformed = [];
@@ -1193,10 +937,8 @@ class RekapController extends Controller
                 continue;
             }
 
-            // Build rows untuk Excel export
             $rows = [];
             if ($periodType === 'harian') {
-                // Harian: satu baris untuk tanggal tersebut
                 $rows[] = [
                     'tanggal_raw' => $recap['date'] ?? Carbon::now()->toDateString(),
                     'jam_masuk' => $data['check_in'] ?? '-',
@@ -1206,49 +948,43 @@ class RekapController extends Controller
                     'keterangan' => $data['notes'] ?? '-',
                 ];
             } elseif (in_array($periodType, ['mingguan', 'bulanan'], true)) {
-                // Mingguan/Bulanan: build dari days array
                 $dateColumns = $recap['dateColumns'] ?? [];
                 foreach ($dateColumns as $col) {
                     $code = $data['days'][$col['date']] ?? '-';
                     $rows[] = [
                         'tanggal_raw' => $col['date'],
-                        'jam_masuk' => '-',  // Tidak tersedia di format horizontal
+                        'jam_masuk' => '-',
                         'jam_pulang' => '-',
                         'status' => $this->codeToStatus($code),
                         'keterlambatan' => $code === 'T' ? 'Terlambat' : '-',
-                        'keterangan' => '-',  // Tidak tersedia di format horizontal
+                        'keterangan' => '-',
                     ];
                 }
             } elseif (in_array($periodType, ['semester', 'tahunan'], true)) {
-                // Semester/Tahunan: build dari monthly data (per bulan)
                 $months = $recap['months'] ?? [];
                 $monthly = $data['monthly'] ?? [];
                 foreach ($months as $monthInfo) {
                     $hadirCount = $monthly[$monthInfo['key']] ?? 0;
-                    // Untuk Excel, kita hanya mencatat total hadir per bulan
-                    // karena detail harian tidak tersedia di format horizontal
                     $rows[] = [
-                        'tanggal_raw' => $monthInfo['key'] . '-01',  // First day of month
+                        'tanggal_raw' => $monthInfo['key'] . '-01',
                         'jam_masuk' => '-',
                         'jam_pulang' => '-',
-                        'status' => $hadirCount > 0 ? 'Hadir' : '-',  // Simplified
-                        'keterlambatan' => '-',  // Tidak tersedia
-                        'keterangan' => $hadirCount > 0 ? "{$hadirCount} hari hadir" : '-',  // Info di keterangan
+                        'status' => $hadirCount > 0 ? 'Hadir' : '-',
+                        'keterlambatan' => '-',
+                        'keterangan' => $hadirCount > 0 ? "{$hadirCount} hari hadir" : '-',
                     ];
                 }
             }
 
-            // Build stats
             $stats = [
                 'hadir' => $data['hadir'] ?? 0,
                 'terlambat' => $data['terlambat'] ?? 0,
                 'sakit' => $data['sakit'] ?? 0,
                 'izin' => $data['izin'] ?? 0,
                 'alfa' => $data['alfa'] ?? 0,
-                'libur' => 0,  // Tidak dihitung di format horizontal
+                'libur' => 0,
             ];
 
-            // Total hari efektif (ini estimasi based on period type)
             $totalEffective = ($data['hadir'] ?? 0) + ($data['terlambat'] ?? 0) + ($data['sakit'] ?? 0) + ($data['izin'] ?? 0) + ($data['alfa'] ?? 0);
             $totalHadir = ($data['hadir'] ?? 0) + ($data['terlambat'] ?? 0);
             $percentage = $data['percentage'] ?? 0;
@@ -1266,9 +1002,6 @@ class RekapController extends Controller
         return $transformed;
     }
 
-    /**
-     * Konversi kode status (H, T, S, I, A, L, -) ke status teks.
-     */
     protected function codeToStatus(string $code): string
     {
         return match ($code) {
@@ -1282,91 +1015,86 @@ class RekapController extends Controller
         };
     }
 
-    /**
-     * Logo sekolah untuk PDF Per Siswa, diperkecil dan di-embed SEKALI.
-     *
-     * Logo asli bisa berukuran ratusan KB. Pada cetak per kelas (puluhan siswa
-     * x ratusan baris) logo mentahan berulang kali di dalam DOM dan di-decode
-     * ulang oleh dompdf untuk tiap gambar, yang_tx memboroskan memori. Di sini
-     * logo dikecilkan maksimal 120 px lalu di-encode sekali menjadi PNG, lalu
-     * string base64 yang sama dipakai untuk semua siswa. Tetap tajam karena di
-     * PDF logo hanya dicetak ~13 mm (52 px pada 96 dpi).
-     */
-    protected function studentProfileLogoBase64(?string $photoshopBaseUrl = null): ?string
+    protected function getLogoBase64(): ?string
     {
-        static $cache = null;
-        static $resolved = false;
+        try {
+            static $cache = null;
+            static $resolved = false;
 
-        if ($resolved) {
-            return $cache;
-        }
-        $resolved = true;
-
-        // Mode Photoshop: kembalikan data kosong supaya template CONDONG
-        // menggambar kwadran gelap, ikon bintang, dan nama kelas kotak biru.
-        // Jalur ini hanya diaktifkan bila pengaturan sudah memenuhi syarat
-        // (lihat "`config/services.php` → `photoshop.*`" pada README).
-        if (is_string($photoshopBaseUrl) && preg_match('#^https?://#', $photoshopBaseUrl)) {
-            return $cache = '';
-        }
-
-        $relative = Setting::getLogo();
-        if (!$relative) {
-            return $cache = null;
-        }
-
-        $path = public_path($relative);
-        if (!is_file($path)) {
-            return $cache = null;
-        }
-
-        $raw = @file_get_contents($path);
-        if ($raw === false || $raw === '') {
-            return $cache = null;
-        }
-
-        // Fallback: kalau GD tidak bisa membaca (mis. WEBP tanpa dukungan), pakai
-        // berkas asli apa adanya.
-        $max = 120;
-        if (function_exists('imagecreatefromstring') && function_exists('imagecreatetruecolor')) {
-            try {
-                $src = @imagecreatefromstring($raw);
-            } catch (\Throwable $e) {
-                $src = false;
+            if ($resolved) {
+                return $cache;
             }
-            if ($src) {
-                try {
-                    $w = imagesx($src);
-                    $h = imagesy($src);
-                    $scale = min($max / max($w, 1), $max / max($h, 1), 1.0);
-                    $nw = max(1, (int) round($w * $scale));
-                    $nh = max(1, (int) round($h * $scale));
+            $resolved = true;
 
-                    $dst = imagecreatetruecolor($nw, $nh);
-                    imagealphablending($dst, false);
-                    imagesavealpha($dst, true);
-                    $transparent = imagecolorallocatealpha($dst, 127, 127, 127, 127);
-                    imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
-                    imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
-                    imagedestroy($src);
+            $relative = Setting::getLogo();
+            // Jika logo tidak ada, kembalikan gambar transparan 1x1 piksel base64
+            // agar DomPDF tidak pernah error "Cannot resolve public path"
+            if (empty($relative) || !is_string($relative)) {
+                return $cache = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            }
 
-                    ob_start();
-                    imagepng($dst, null, 6);
-                    $png = ob_get_clean();
-                    imagedestroy($dst);
+            $cleanPath = ltrim(parse_url($relative, PHP_URL_PATH) ?? $relative, '/');
+            $cleanPath = str_replace('storage/', '', $cleanPath);
 
-                    if ($png) {
-                        return $cache = 'data:image/png;base64,' . base64_encode($png);
-                    }
-                } catch (\Throwable $e) {
-                    // logo tidak wajib; cetak tetap jalan tanpa logo.
+            $possiblePaths = [
+                public_path($cleanPath),
+                public_path('storage/' . $cleanPath),
+                storage_path('app/public/' . $cleanPath),
+            ];
+
+            $path = null;
+            foreach ($possiblePaths as $testPath) {
+                if (is_file($testPath)) {
+                    $path = $testPath;
+                    break;
                 }
             }
+
+            if (!$path) {
+                return $cache = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            }
+
+            $raw = @file_get_contents($path);
+            if ($raw === false || $raw === '') {
+                return $cache = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+            }
+
+            $max = 120;
+            if (function_exists('imagecreatefromstring') && function_exists('imagecreatetruecolor')) {
+                try {
+                    $src = @imagecreatefromstring($raw);
+                    if ($src) {
+                        $w = imagesx($src);
+                        $h = imagesy($src);
+                        $scale = min($max / max($w, 1), $max / max($h, 1), 1.0);
+                        $nw = max(1, (int) round($w * $scale));
+                        $nh = max(1, (int) round($h * $scale));
+
+                        $dst = imagecreatetruecolor($nw, $nh);
+                        imagealphablending($dst, false);
+                        imagesavealpha($dst, true);
+                        $transparent = imagecolorallocatealpha($dst, 127, 127, 127, 127);
+                        imagefilledrectangle($dst, 0, 0, $nw, $nh, $transparent);
+                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+                        imagedestroy($src);
+
+                        ob_start();
+                        imagepng($dst, null, 6);
+                        $png = ob_get_clean();
+                        imagedestroy($dst);
+
+                        if ($png) {
+                            return $cache = 'data:image/png;base64,' . base64_encode($png);
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            $mime = @mime_content_type($path) ?: 'image/png';
+            return $cache = 'data:' . $mime . ';base64,' . base64_encode($raw);
+
+        } catch (\Throwable $e) {
+            return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
         }
-
-        $mime = @mime_content_type($path) ?: 'image/png';
-
-        return $cache = 'data:' . $mime . ';base64,' . base64_encode($raw);
     }
 }
-

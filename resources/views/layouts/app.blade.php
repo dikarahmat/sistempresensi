@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -5778,7 +5778,7 @@ min-height: 0 !important; /* batalkan min-height: 100vh dari aturan dasar */
     $isNavKehadiranActive = request()->routeIs('*kehadiran*');
 
     // 3. Presensi (Ikon QR Code: bx-qr-scan)
-    $navAbsensiUrl = panel_route('absensi.index');
+    $navAbsensiUrl = panel_route('absensi.kiosk'); // tombol QR langsung ke Mode Gerbang (kamera otomatis menyala)
     $isNavAbsensiActive = (request()->routeIs('*absensi*') || request()->routeIs('*presensi*') || request()->routeIs('*scanner*') || request()->routeIs('*kiosk*')) && !$isNavKehadiranActive;
 
     // 4. Rekap
@@ -6569,7 +6569,3 @@ window.__i18n = Object.assign(window.__i18n || {}, {!! json_encode([
 @stack('scripts')
 </body>
 </html>
-
-
-
-

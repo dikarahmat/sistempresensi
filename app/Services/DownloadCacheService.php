@@ -33,7 +33,7 @@ class DownloadCacheService
      * Versi cache rekap. Naikkan nilainya setiap logika perhitungan rekap berubah
      * supaya file lama tidak pernah disajikan lagi.
      */
-    protected static string $rekapCacheVersion = 'v3';
+    protected static string $rekapCacheVersion = 'v2';
 
     /***
      * satu-satinya tempat ganti jenis kertas ('a4' atau 'a3').
@@ -162,6 +162,16 @@ class DownloadCacheService
      */
     public static function downloadSingleCard(Student $student)
     {
+        // Desain kartu terbaru (latar biru) ada di renderer JPG, sama dengan kartu massal
+        // dan pratinjau di halaman detail siswa. Renderer PNG lama (latar putih) tidak dipakai lagi.
+        return self::downloadSingleCardJpg($student);
+    }
+
+    /**
+     * @deprecated Renderer PNG lama (latar putih). Dipertahankan hanya sebagai cadangan.
+     */
+    public static function downloadSingleCardLegacyPng(Student $student)
+    {
         self::initDirs();
 
         try {
@@ -169,13 +179,11 @@ class DownloadCacheService
             $student->loadMissing('schoolClass');
             $settingStamp = self::getSettingStamp();
             $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-            $qrStamp = md5($student->qrValue());
             $designStamp = self::getDesignStamp();
-            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$qrStamp}_{$settingStamp}_{$designStamp}.png";
+            $cacheFileName = "card_single_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.png";
             $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
-            $identifier = $student->nisn ?: $student->id;
-            $downloadFileName = 'kartu-presensi-' . $identifier . '-' . Str::slug($student->name) . '.png';
+            $downloadFileName = 'kartu-presensi-' . $student->nisn . '-' . Str::slug($student->name) . '.png';
 
             // Bersihkan file cache jika ada file 0-byte atau rusak
             if (File::exists($cacheFilePath) && File::size($cacheFilePath) === 0) {
@@ -255,10 +263,9 @@ class DownloadCacheService
     private static function studentCardJpgCachePath(Student $student, string $settingStamp, string $designStamp): string
     {
         $studentStamp = $student->updated_at ? $student->updated_at->timestamp : 0;
-        $qrStamp = md5($student->qrValue());
 
         return self::$baseDir . '/cards/'
-            . "card_single_jpg_v6_{$student->id}_{$studentStamp}_{$qrStamp}_{$settingStamp}_{$designStamp}.jpg";
+            . "card_single_jpg_v5_{$student->id}_{$studentStamp}_{$settingStamp}_{$designStamp}.jpg";
     }
 
     private static function ensureStudentCardJpgCache(Student $student, string $settingStamp, string $designStamp): string
@@ -422,6 +429,9 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
 
         $studentName = mb_strtoupper(trim($student->name));
         $studentNisn = trim((string) ($student->nisn ?? ''));
+        if ($studentNisn === '' || $studentNisn === 'null') {
+            $studentNisn = '-';
+        }
         $className = mb_strtoupper($student->schoolClass->name ?? ($student->kelas ?? '-'));
 
         // Font sizes - SAMA DENGAN card.blade.php (7pt, 6.8pt, 8pt @ 500 DPI)
@@ -620,7 +630,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
 
     $idsHash = $studentIds ? md5(implode(',', $studentIds)) : 'all';
     $scopeKey = ($classId ? "cls_{$classId}" : 'all') . "_{$idsHash}_{$studentCount}_" . strtotime($latestUpdate) . "_{$settingStamp}";
-    $cacheFileName = "cards_mass_jpg_v9_{$scopeKey}_{$designStamp}.zip";
+    $cacheFileName = "cards_mass_jpg_v8_{$scopeKey}_{$designStamp}.zip";
     $cacheFilePath = self::$baseDir . '/cards/' . $cacheFileName;
 
     $targetClassName = 'Semua_Siswa';
@@ -768,8 +778,8 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
     private static function renderCardJpgPreview(Student $student, string $outputPath): void
     {
         $studentNisn = trim((string) ($student->nisn ?? ''));
-        if ($studentNisn === '-' || $studentNisn === 'null') {
-            $studentNisn = '';
+        if ($studentNisn === '' || $studentNisn === 'null') {
+            $studentNisn = '-';
         }
 
         self::renderCardJpgData([
@@ -798,7 +808,7 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
             'third_line' => 'GURU',
             'third_line_color' => [20, 83, 45],
             'scan_color' => [20, 83, 45],
-            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, $teacher->name),
+            'qr_token' => TeacherCardService::qrTokenFor($teacher->nip, (string) $teacher->id),
             'subtitle_top' => 134,
             'scan_top' => 1312,
             'footer_top' => 1640,
@@ -1257,8 +1267,8 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
         }
 
         $names = $italic
-            ? ['ariali.ttf', 'Arial Italic.ttf', 'Arial_Italic.ttf', 'LiberationSans-Italic.ttf']
-            : ['arialbd.ttf', 'Arial Bold.ttf', 'Arial_Bold.ttf', 'LiberationSans-Bold.ttf'];
+            ? ['ariali.ttf', 'Arial Italic.ttf', 'Arial_Italic.ttf', 'LiberationSans-Italic.ttf', 'DejaVuSans-Oblique.ttf', 'DejaVuSans.ttf']
+            : ['arialbd.ttf', 'Arial Bold.ttf', 'Arial_Bold.ttf', 'LiberationSans-Bold.ttf', 'DejaVuSans-Bold.ttf', 'DejaVuSans.ttf'];
 
         $directories = [
             public_path('fonts'),
@@ -1269,18 +1279,43 @@ public static function renderCardPngWithGd(Student $student, string $outputPath)
             '/usr/share/fonts/truetype/msttcorefonts',
             '/usr/share/fonts/truetype/liberation2',
             '/usr/share/fonts/truetype/liberation',
+            '/usr/share/fonts/truetype/dejavu',
+            '/usr/share/fonts/dejavu',
+            '/usr/share/fonts/TTF',
+            base_path('vendor/dompdf/dompdf/lib/fonts'),
         ];
 
+        $tried = [];
         foreach ($directories as $directory) {
             foreach ($names as $name) {
                 $path = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $name;
-                if (is_file($path)) {
+                $tried[] = $path;
+                if (@is_file($path)) {
                     return $cache[$key] = $path;
                 }
             }
         }
 
-        throw new \RuntimeException('Font Arial untuk kartu JPG tidak ditemukan.');
+        // Fallback terakhir: font TTF apa pun yang ikut di vendor dompdf / project.
+        $globDirectories = [
+            base_path('vendor/dompdf/dompdf/lib/fonts'),
+            storage_path('fonts'),
+            public_path('fonts'),
+            resource_path('fonts'),
+        ];
+        foreach ($globDirectories as $directory) {
+            $files = @glob(rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . '*.ttf') ?: [];
+            if ($files !== []) {
+                sort($files);
+                return $cache[$key] = $files[0];
+            }
+        }
+
+        \Illuminate\Support\Facades\Log::error('Font kartu JPG tidak ditemukan', ['tried' => $tried]);
+
+        throw new \RuntimeException(
+            'Font untuk kartu JPG tidak ditemukan. Pastikan folder vendor/dompdf/dompdf/lib/fonts berisi DejaVuSans-Bold.ttf, atau taruh font .ttf di storage/fonts.'
+        );
     }
 
     private static function loadCardRasterImage(string $path)

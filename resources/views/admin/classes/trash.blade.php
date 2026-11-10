@@ -688,7 +688,7 @@
      * - Belum sampai bawah: ikon panah bawah, title/aria "Ke bawah".
      *   Klik = smooth scroll ke paling bawah (Zona Berbahaya).
      * - Sudah sampai bawah (jarak ke dasar container < 40px):
-     *   Ikon berputar 180Â° jadi panah atas (animasi 200ms), title/aria "Ke atas".
+     *   Ikon berputar 180¡Æ jadi panah atas (animasi 200ms), title/aria "Ke atas".
      *   Klik = smooth scroll kembali ke paling atas.
      * - Deteksi scroll menggunakan listener pada container scrollbar (.flex-1)
      *   dengan passive: true dan window.requestAnimationFrame.

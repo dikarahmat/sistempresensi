@@ -167,6 +167,7 @@
         border-bottom: 1px solid #f1f5f9 !important;
     }
     .table-history tbody td.text-left { text-align: left !important; }
+    .table-history thead tr > th.text-left { text-align: left !important; }
     .table-history tbody td.summary-h { color: #059669 !important; }
     .table-history tbody td.summary-s { color: #2563eb !important; }
     .table-history tbody td.summary-i { color: #7e22ce !important; }
@@ -315,14 +316,11 @@
                     <tr>
                         <th style="width: 4%;">{{ __('No') }}</th>
                         <th style="width: 16%;">{{ __('NIP') }}</th>
-                        <th style="width: 20%;">{{ __('Nama Guru') }}</th>
+                        <th class="text-left" style="width: 20%;">{{ __('Nama Guru') }}</th>
                         <th style="width: 8%;">{{ __('JK') }}</th>
                         @if($currentPeriod === 'harian')
-                            <th style="width: 16%;">{{ __('Tanggal') }}</th>
-                            <th style="width: 12%;">{{ __('Hari') }}</th>
-                            <th style="width: 12%;">{{ __('Status') }}</th>
-                            <th style="width: 14%;">{{ __('Jam Masuk') }}</th>
-                            <th style="width: 18%;">{{ __('Catatan') }}</th>
+                            <th style="width: 26%;">{{ __('Jam Masuk') }}</th>
+                            <th style="width: 26%;">{{ __('Status') }}</th>
                         @elseif(in_array($currentPeriod, ['mingguan','bulanan'], true))
                             @php
                                 $wTetap = 4 + 16 + 20 + 8;
@@ -352,7 +350,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if(count($rows) === 1 && $rows[0]['date'] === '-')
+                    @if($currentPeriod !== 'harian' && count($rows) === 1 && $rows[0]['date'] === '-')
                         <tr>
                             <td colspan="12" class="text-center py-5 text-secondary">
                                 <i class='bx bx-error' aria-hidden='true'></i>
@@ -360,19 +358,22 @@
                             </td>
                         </tr>
                     @elseif($currentPeriod === 'harian')
-                        @foreach($rows as $row)
-                            <tr>
-                                <td style="text-transform: uppercase;">{{ $row['no'] }}</td>
-                                <td style="text-transform: uppercase;">{{ $teacher->nip ?: '-' }}</td>
-                                <td class="text-left" style="text-transform: uppercase;">{{ $teacher->name }}</td>
-                                <td style="text-transform: uppercase;">{{ strtoupper(substr($teacher->gender ?? 'L', 0, 1)) }}</td>
-                                <td style="text-transform: uppercase;">{{ $row['date'] }}</td>
-                                <td style="text-transform: uppercase;">{{ $row['day'] }}</td>
-                                <td style="color: {{ $row['status_color'] }} !important; text-transform: uppercase;">{{ $row['status'] }}</td>
-                                <td style="text-transform: uppercase;">{{ $row['check_in'] }}</td>
-                                <td class="text-left" style="text-transform: uppercase;">{{ $row['notes'] }}</td>
-                            </tr>
-                        @endforeach
+                        @php
+                            $jk = str_starts_with(strtolower((string)($teacher->gender ?? 'L')), 'p') ? 'P' : 'L';
+                            $_row = $rows[0] ?? [];
+                            $_noData = (($_row['date'] ?? '-') === '-');
+                            $_checkIn = (!$_noData && !empty($_row['check_in'])) ? $_row['check_in'] : '-';
+                            $_status = (!$_noData && !empty($_row['status'])) ? $_row['status'] : '-';
+                            $_statusColor = (!$_noData && !empty($_row['status_color'])) ? $_row['status_color'] : '#111827';
+                        @endphp
+                        <tr>
+                            <td style="text-transform: uppercase;">{{ $_row['no'] ?? 1 }}</td>
+                            <td style="text-transform: uppercase;">{{ $teacher->nip ?: '-' }}</td>
+                            <td class="text-left" style="text-transform: uppercase;">{{ $teacher->name }}</td>
+                            <td style="text-transform: uppercase;">{{ $jk }}</td>
+                            <td style="text-transform: uppercase;">{{ $_checkIn }}</td>
+                            <td style="color: {{ $_statusColor }} !important; text-transform: uppercase;">{{ $_status }}</td>
+                        </tr>
                     @elseif(in_array($currentPeriod, ['mingguan','bulanan'], true))
                         @php
                             $jk = str_starts_with(strtolower((string)($teacher->gender ?? 'L')), 'p') ? 'P' : 'L';
@@ -385,7 +386,7 @@
                             @foreach($dateColumns ?? [] as $d)
                                 @php
                                     $_dStr = $d['date'];
-                                    $_att = $attendances->firstWhere('date', $_dStr);
+                                    $_att = $attendances->first(fn($a) => $a->date && $a->date->toDateString() === $_dStr);
                                     $_code = '-';
                                     if ($_att) {
                                         $_st = $_att->effective_status;

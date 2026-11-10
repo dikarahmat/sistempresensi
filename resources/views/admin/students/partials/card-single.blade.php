@@ -1,77 +1,80 @@
 @php
-    $studentItem = $studentItem ?? null;
-    $schoolName  = $schoolName ?? \App\Models\Setting::getSchoolName();
+    $studentItem = $studentItem ?? ($student ?? null);
+    $schoolName = $schoolName ?? \App\Models\Setting::getSchoolName();
 
-    $studentName  = $studentName ?? ($studentItem->name ?? $studentItem->nama ?? '-');
-    $studentClass = $studentClass ?? ($studentItem->schoolClass->name ?? $studentItem->kelas ?? '-');
+    $studentName = $studentName ?? ($studentItem->name ?? '-');
 
-    $studentNisn = trim((string) ($studentNisn ?? ($studentItem->nisn ?? '')));
-    if ($studentNisn === '-' || $studentNisn === 'null') {
-        $studentNisn = '';
-    }
+    $nisnRaw = trim((string) ($studentNisn ?? ($studentItem->nisn ?? '')));
+    $studentNisn = ($nisnRaw === '' || $nisnRaw === '-' || strcasecmp($nisnRaw, 'null') === 0)
+        ? '-'
+        : $nisnRaw;
 
-    // Background SVG/PNG (di-cache sekali per request)
-    static $__bgSvg = null;
-    static $__bgPng = null;
-    if ($__bgSvg === null) {
-        $__p = public_path('images/card-bg-single.svg');
-        $__bgSvg = file_exists($__p)
-            ? 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($__p))
+    $className = $className
+        ?? ($studentItem->schoolClass->name ?? ($studentItem->school_class->name ?? ($studentItem->class->name ?? '-')));
+
+    // Ganti nama file di sini kalau mau memakai background lain
+    // (misal: card-bg-single.png)
+    $__bgFile = 'images/card-bg-pdf.png';
+
+    static $__bgCache = [];
+
+    if (!array_key_exists($__bgFile, $__bgCache)) {
+        $__bgPath = public_path($__bgFile);
+        $__bgCache[$__bgFile] = file_exists($__bgPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($__bgPath))
             : '';
     }
-    if ($__bgPng === null) {
-        $__pngPath = public_path('images/card-bg-pdf.png');
-        $__bgPng = file_exists($__pngPath)
-            ? 'data:image/png;base64,' . base64_encode(file_get_contents($__pngPath))
-            : '';
-    }
-    
-    $__bg = !empty($isPdf) ? ($__bgPng ?: $__bgSvg) : $__bgSvg;
 
-    $qrSrc = $qrSrc ?? ($qrBase64 ?? null);
+    $__bg = $__bgCache[$__bgFile];
+
+    $qrSrc = $qrSrc ?? ($qrBase64 ?? ($studentItem->qr_base64 ?? null));
+
     if (!$qrSrc && $studentItem) {
-        $__token = $studentItem->qrValue();
-        if ($__token !== '') {
-            try {
-                $__svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->margin(0)->generate((string) $__token);
-                $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($__svg);
-            } catch (\Throwable $e) {
-                $qrSrc = null;
-            }
+        try {
+            // Memakai nilai QR yang sama dengan yang dipakai scanner untuk siswa
+            $__token = method_exists($studentItem, 'qrValue')
+                ? $studentItem->qrValue()
+                : ($studentItem->qr_token ?? $studentItem->nisn);
+            $__svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->margin(0)->generate($__token);
+            $qrSrc = 'data:image/svg+xml;base64,' . base64_encode($__svg);
+        } catch (\Throwable $e) {
+            $qrSrc = null;
         }
     }
 
     $logoSrc = $logoSrc ?? ($logoBase64 ?? null);
+
     if (!$logoSrc) {
-        $__lp = public_path(\App\Models\Setting::getLogo());
-        if (file_exists($__lp)) {
-            $__mime = mime_content_type($__lp) ?: 'image/png';
-            $logoSrc = 'data:' . $__mime . ';base64,' . base64_encode(file_get_contents($__lp));
+        $__logoPath = public_path(\App\Models\Setting::getLogo());
+        if (file_exists($__logoPath)) {
+            $__logoMime = mime_content_type($__logoPath) ?: 'image/png';
+            $logoSrc = 'data:' . $__logoMime . ';base64,' . base64_encode(file_get_contents($__logoPath));
         }
     }
 @endphp
-<div style="position:relative; width:53.98mm; height:85.6mm; overflow:hidden; margin:0; padding:0; border:0; font-family:Arial, Helvetica, sans-serif; background:#d6e4fa;">
+<div style="position:relative; width:53.9mm; height:85.6mm; overflow:hidden; margin:0; padding:0; border:0; font-family:'DejaVu Sans', Verdana, Geneva, Arial, sans-serif; background:#dbeafe; -webkit-print-color-adjust:exact; print-color-adjust:exact; page-break-inside:avoid;">
 
     @if($__bg)
-        <img src="{{ $__bg }}" alt="" style="position:absolute; left:0; top:0; width:53.98mm; height:85.6mm;">
+        <img src="{{ $__bg }}" alt="" style="position:absolute; left:0; top:0; width:53.9mm; height:85.6mm; object-fit:cover; display:block;">
     @endif
 
     @if($logoSrc)
-        <img src="{{ $logoSrc }}" alt="" style="position:absolute; left:3mm; top:3.1mm; width:7mm; height:7mm;">
+        <img src="{{ $logoSrc }}" alt="" style="position:absolute; left:2.8mm; top:2.85mm; width:7.5mm; height:7.5mm;">
     @endif
-    <div style="position:absolute; left:10.7mm; top:3.8mm; width:41mm; font-size:7pt; font-weight:bold; color:#ffffff; line-height:normal; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($schoolName) }}</div>
-<div style="position:absolute; left:10.8mm; top:6.3mm; width:41mm; font-size:5pt; font-weight:bold; color:#fcd34d; line-height:normal; white-space:nowrap;">KARTU PRESENSI DIGITAL</div>
 
-    <div style="position:absolute; left:0; top:16.5mm; width:53.98mm; font-size:7pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($studentName) }}</div>
-    <div style="position:absolute; left:0; top:20.6mm; width:53.98mm; font-size:6.8pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ $studentNisn }}</div>
-    <div style="position:absolute; left:0; top:24.6mm; width:53.98mm; font-size:8pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ $studentClass }}</div>
+    <div style="position:absolute; left:10.7mm; top:3.5mm; width:40mm; font-size:7pt; font-weight:bold; color:#ffffff; line-height:1.15; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($schoolName) }}</div>
+    <div style="position:absolute; left:10.8mm; top:6.2mm; width:40mm; font-size:5pt; font-weight:bold; color:#fcd34d; line-height:1.15; white-space:nowrap; overflow:hidden;">KARTU PRESENSI DIGITAL</div>
 
-    <div style="position:absolute; left:10.99mm; top:30.5mm; width:32mm; height:32mm; background:#ffffff;">
+    <div style="position:absolute; left:0; top:16.5mm; width:53.9mm; font-size:7pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($studentName) }}</div>
+    <div style="position:absolute; left:0; top:20.6mm; width:53.9mm; font-size:6.8pt; font-weight:bold; color:#0f172a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ $studentNisn }}</div>
+    <div style="position:absolute; left:0; top:24.6mm; width:53.9mm; font-size:8pt; font-weight:bold; color:#1e3a8a; text-align:center; line-height:normal; white-space:nowrap; overflow:hidden;">{{ mb_strtoupper($className) }}</div>
+
+    <div style="position:absolute; left:10.95mm; top:30.5mm; width:32mm; height:32mm; background:#ffffff;">
         @if($qrSrc)
             <img src="{{ $qrSrc }}" alt="" style="position:absolute; left:1mm; top:1mm; width:30mm; height:30mm;">
         @endif
     </div>
-    <div style="position:absolute; left:0; top:64.8mm; width:53.98mm; font-size:5pt; font-weight:bold; letter-spacing:0.4mm; color:#0f172a; text-align:center;">SCAN PRESENSI</div>
+    <div style="position:absolute; left:0; top:64.8mm; width:53.9mm; font-size:5pt; font-weight:bold; letter-spacing:0.4mm; color:#1e3a8a; text-align:center;">SCAN PRESENSI</div>
 
-<div style="position:absolute; left:0; top:{{ !empty($isPdf) ? '76.5mm' : '78.6mm' }}; width:53.98mm; height:7mm; line-height:7mm; text-align:center; font-size:4.5pt; font-style:italic; color:#ffffff;">Tunjukkan kartu saat presensi masuk</div>
+    <div style="position:absolute; left:0; top:{{ !empty($isPdf) ? '76.5mm' : '78.6mm' }}; width:53.9mm; height:7mm; line-height:7mm; display:flex; align-items:center; justify-content:center; text-align:center; font-size:4.5pt; font-style:italic; color:#ffffff;">Tunjukkan kartu saat presensi masuk</div>
 </div>

@@ -678,6 +678,51 @@
         }
     }
 
+    /* ==================================================================
+       JADWAL OPERASIONAL: label "JAM MASUK" / "BATAS TERLAMBAT" TIDAK BOLEH
+       PECAH/TUMPUK jadi 2 baris, sehingga angka jam di kedua kartu SELALU
+       sejajar pada satu garis horizontal (mis. saat layar di-split).
+       - Label dipaksa 1 baris (nowrap), ukurannya mengecil mengikuti lebar
+         kolom (container query: .dash-col jadi container),
+       - Isi tiap kartu rata ke atas, jadi label & angka mulai dari garis sama.
+       - Angka jam + WIB tetap 1 baris dan ikut mengecil halus bila sempit.
+       ================================================================== */
+    body .dashboard-section .dash-bottom-grid > .dash-col {
+        container-type: inline-size;
+    }
+    body .dashboard-section .dash-clock-grid {
+        align-items: flex-start !important;
+    }
+    body .dashboard-section .dashboard-clock {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        min-width: 0;
+    }
+    body .dashboard-section .dashboard-clock .clock-label {
+        white-space: nowrap !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+        text-align: center;
+    }
+    body .dashboard-section .dashboard-clock .clock-value {
+        white-space: nowrap !important;
+        line-height: 1.15 !important;
+    }
+    @media (min-width: 768px) {
+        body .dashboard-section .dashboard-clock {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        body .dashboard-section .dashboard-clock .clock-label {
+            font-size: clamp(0.5rem, 3.6cqw, 0.7rem) !important;
+        }
+        body .dashboard-section .dashboard-clock .clock-value {
+            font-size: clamp(1.25rem, 10cqw, 2rem) !important;
+        }
+    }
+
     /* Desktop (>=768px): hanya judul Jadwal Operasional yang tampil, tanggal disembunyikan
        (sudah ditampilkan di header pojok kanan atas). */
     @media (min-width: 768px) {

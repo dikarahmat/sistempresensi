@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Exports\MultiPeriodAttendanceExport;
 use App\Services\DailyAttendanceSummary;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
@@ -19,6 +20,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -623,18 +625,29 @@ class AttendanceController extends Controller
 
         // Transform teacher histories into the format the class-guru view expects:
         // id, name, jam_masuk (string HH:mm), current_status ('Hadir' | 'Sakit' | 'Izin' | 'Alfa' | null)
+        // Status & jam masuk diambil dari catatan pada TANGGAL yang ditampilkan
+        // (bukan ringkasan seluruh periode), sehingga kolom "Jam Masuk" terisi
+        // dari jam scan dan guru yang belum presensi tampil sebagai belum.
+        $dayAttendances = TeacherAttendance::whereDate('date', $tanggal)
+            ->get()
+            ->keyBy('teacher_id');
+
         $teachersList = collect();
         foreach ($teacherHistories as $teacher) {
+            $rec = $dayAttendances->get($teacher->id);
             $st = null;
-            if ($teacher->hadir) $st = 'Hadir';
-            elseif ($teacher->terlambat) $st = 'Hadir';
-            elseif ($teacher->sakit) $st = 'Sakit';
-            elseif ($teacher->izin)  $st = 'Izin';
-            elseif ($teacher->alfa)  $st = 'Alfa';
+            $jamMasuk = null;
+            if ($rec) {
+                // Guru tidak mengenal Terlambat: data lama 'Terlambat' ditampilkan sebagai Hadir.
+                $st = ($rec->status === TeacherAttendance::STATUS_TERLAMBAT) ? 'Hadir' : $rec->status;
+                if (!empty($rec->check_in)) {
+                    $jamMasuk = substr((string) $rec->check_in, 0, 5) . ' WIB';
+                }
+            }
             $teachersList->push((object) [
                 'id'        => $teacher->id,
                 'name'      => $teacher->name,
-                'jam_masuk' => null,  // belum terintegrasi dengan jam presensi guru
+                'jam_masuk' => $jamMasuk,
                 'current_status' => $st,
             ]);
         }
@@ -709,6 +722,10 @@ class AttendanceController extends Controller
             if (! $existing->time_remark && $status === 'Hadir') {
                 $existing->time_remark = $now->format('H:i');
             }
+            // Hadir tanpa jam masuk (mis. dipilih manual lewat dropdown): isi jam sekarang.
+            if ($status === 'Hadir' && empty($existing->check_in)) {
+                $existing->check_in = $now->format('H:i:s');
+            }
             $existing->save();
         } else {
             // Baru buat catatan
@@ -718,6 +735,7 @@ class AttendanceController extends Controller
                 'date' => $date,
                 'status' => $status,
                 'time_remark' => $jamMasuk,
+                'check_in' => $status === 'Hadir' ? $now->format('H:i:s') : null,
             ]);
         }
 
@@ -1042,6 +1060,9 @@ class AttendanceController extends Controller
                 ];
                 $cur->addDay();
             }
+        } elseif (in_array($period, ['semester', 'tahunan'], true)) {
+            // Kolom bulan (Ganjil Jul-Des, Genap Jan-Jun, Tahunan Jul-Jun) seperti halaman web.
+            $months = MultiPeriodAttendanceExport::monthColumnsBetween($startDateStr, $endDateStr);
         }
 
         // Build rows untuk tabel
@@ -1113,17 +1134,31 @@ class AttendanceController extends Controller
                             $hadirCount++;
                         }
                     }
-                    $days[$ym] = $hadirCount ?: '-';
+                    $days[$ym] = $hadirCount;
                 }
             }
 
-            $guruRows[] = [
+            $guruRow = [
                 'no' => 1,
                 'nip' => $teacher->nip ?: '-',
                 'name' => $teacher->name,
                 'gender' => $teacher->gender ?? 'Laki-laki',
                 'days' => $days,
             ];
+
+            // Semester/Tahunan: total H/S/I/A dan % (angka sama dengan kartu ringkasan di halaman web).
+            if (in_array($period, ['semester', 'tahunan'], true)) {
+                $guruStats = TeacherAttendance::summarizeTeacher($attendances, $hariSekolahLalu, $hariSekolahDepan);
+                $guruRow['hadir'] = (int) ($guruStats['hadir'] ?? 0);
+                $guruRow['sakit'] = (int) ($guruStats['sakit'] ?? 0);
+                $guruRow['izin'] = (int) ($guruStats['izin'] ?? 0);
+                $guruRow['alfa'] = (int) ($guruStats['alfa'] ?? 0);
+                $guruRow['percentage'] = $totalHariBelajar > 0
+                    ? (int) round(($guruRow['hadir'] / $totalHariBelajar) * 100)
+                    : 0;
+            }
+
+            $guruRows[] = $guruRow;
         }
 
         $fileName = 'Profil_Presensi_' . $period . '_' . Str::slug($teacher->nip ?: $teacher->name) . '.pdf';
@@ -1202,24 +1237,24 @@ class AttendanceController extends Controller
         } else {
             // Semester/Tahunan: gunakan dropdown period_subtype
             $activeYear = AcademicYear::getActive();
-            if ($periodSubType === 'ganjil') {
-                // Semester Ganjil = Jul-Des (tahun awal TA)
-                $taStart = $activeYear && $activeYear->start_date ? Carbon::parse($activeYear->start_date) : $anchor->copy()->addMonths(6);
-                $startDate = $taStart->copy()->startOfMonth();
-                $endDate = $taStart->copy()->addMonths(5)->endOfMonth();
-                $periodLabel = 'Semester Ganjil ' . ($activeYear?->name ?? $startDate->format('Y'));
-            } elseif ($periodSubType === 'genap') {
-                // Semester Genap = Jan-Jun (tahun akhir TA)
-                $taStart = $activeYear && $activeYear->start_date ? Carbon::parse($activeYear->start_date) : $anchor->copy()->addMonths(6);
-                $startDate = $taStart->copy()->addMonths(6)->startOfMonth();
-                $endDate = $activeYear && $activeYear->end_date ? Carbon::parse($activeYear->end_date) : $taStart->copy()->addMonths(11)->endOfMonth();
-                $periodLabel = 'Semester Genap ' . ($activeYear?->name ?? $startDate->format('Y'));
-            } elseif ($periodSubType === 'tahunan') {
-                // Setahun = Jul-Jun
-                $taStart = $activeYear && $activeYear->start_date ? Carbon::parse($activeYear->start_date) : $anchor->copy()->addMonths(6);
-                $startDate = $taStart->copy()->startOfMonth();
-                $endDate = $activeYear && $activeYear->end_date ? Carbon::parse($activeYear->end_date) : $taStart->copy()->addMonths(11)->endOfMonth();
-                $periodLabel = 'Tahun Ajaran ' . ($activeYear?->name ?? $startDate->format('Y'));
+            if (in_array($periodSubType, ['ganjil', 'genap', 'tahunan'], true)) {
+                // Rentang dihitung dari tanggal MULAI tahun ajaran (sama persis dengan PDF/Excel):
+                // Ganjil = Jul-Des, Genap = Jan-Jun, Tahunan = Jul-Jun. end_date tahun ajaran
+                // tidak dipakai supaya data yang keliru tidak memotong/membalik rentang.
+                $bounds = \App\Exports\MultiPeriodAttendanceExport::academicBounds(
+                    $periodSubType === 'tahunan' ? 'tahunan' : 'semester',
+                    ['period_semester' => $periodSubType],
+                    $activeYear
+                );
+                $startDate = Carbon::parse($bounds['start'])->startOfDay();
+                $endDate = Carbon::parse($bounds['end'])->endOfDay();
+                if ($periodSubType === 'ganjil') {
+                    $periodLabel = 'Semester Ganjil ' . ($activeYear?->name ?? $startDate->format('Y'));
+                } elseif ($periodSubType === 'genap') {
+                    $periodLabel = 'Semester Genap ' . ($activeYear?->name ?? $startDate->format('Y'));
+                } else {
+                    $periodLabel = 'Tahun Ajaran ' . ($activeYear?->name ?? $startDate->format('Y'));
+                }
             } else {
                 // Mode "Semua": periode yang sama dengan daftar Catatan Kehadiran
                 // (tahun berjalan) supaya angkanya bisa langsung dibandingkan.
@@ -1361,6 +1396,19 @@ class AttendanceController extends Controller
         }
         $harianRow = 
             \App\Models\Attendance::mapStudentAttendanceToRow($harianAttendance, $anchor->toDateString(), $isHoliday, $lateLimitTime, $student);
+
+        // Jam pulang untuk tab Harian (ambil langsung dari catatan presensi hari itu).
+        $jamPulang = '-';
+        if ($harianAttendance && !empty($harianAttendance->check_out)) {
+            try {
+                $jamPulang = Carbon::parse((string) $harianAttendance->check_out)->format('H:i');
+            } catch (\Throwable $e) {
+                $jamPulang = (string) $harianAttendance->check_out;
+            }
+        }
+        if (is_object($harianRow)) {
+            $harianRow->jam_pulang = $jamPulang;
+        }
 
         $isHoliday = false;
 
@@ -1747,6 +1795,19 @@ class AttendanceController extends Controller
         }
 
         $attendance->save();
+
+        // Siswa yang tercatat terlambat TIDAK bisa diubah menjadi Hadir (status
+        // tetap Terlambat). Notifikasi harus mengikuti hasil sebenarnya: merah
+        // (error), bukan hijau "berhasil diubah menjadi Hadir".
+        if ($requestedStatus === Attendance::STATUS_HADIR && $isLate) {
+            return $respond([
+                'success' => false,
+                'message' => __('Siswa :nama tercatat Terlambat, tidak dapat diubah menjadi Hadir.', [
+                    'nama' => $attendance->student->name ?? '',
+                ]),
+                'with' => 'error',
+            ], 422);
+        }
 
         $msg = __('Status presensi :nama diubah menjadi :status.', [
             'nama' => $attendance->student->name ?? '',

@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Daftarkan alias role middleware (hanya ADMIN & GURU)
+        // Daftarkan alias role middleware
         $middleware->alias([
             'role' => EnsureUserRole::class,
         ]);
@@ -22,29 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security headers global
         $middleware->append(SecurityHeaders::class);
 
-        // BAHASA (id / en): locale per request dipasang dari middleware role yang
-        // sudah ada (App\Http\Middleware\EnsureUserRole memanggil
-        // AppServiceProvider::setLocale), jadi tidak ada file middleware baru.
-        // Middleware itu berjalan di dalam group `web`, sehingga session sudah
-        // aktif ketika bahasa dibaca.
-
-        // Railway ada di belakang reverse proxy, percayai header X-Forwarded-*
+        // Percayai header X-Forwarded-* dari reverse proxy
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Pesan rate limit (HTTP 429) untuk halaman login.
-        //
-        // Secara default Laravel membalas dengan pesan berbahasa Inggris
-        // ("Too Many Attempts.") yang membingungkan pengguna sekolah. Kita
-        // ganti dengan pesan Bahasa Indonesia yang jelas.
-        //
-        // Catatan keamanan: pesan ini SENGAJA tidak menyebutkan apakah
-        // username-nya terdaftar atau tidak, sehingga tidak membocorkan
-        // informasi soal akun yang ada.
+        // Pesan rate limit (HTTP 429) untuk halaman login, berbahasa Indonesia.
         $exceptions->render(function (ThrottleRequestsException $e, $request) {
             if ($request->is('login', 'login/*') && ! $request->expectsJson()) {
-                // Selalu kembali ke halaman login supaya pesan throttle benar-benar
-                // terlihat, bukan ke halaman sebelumya yang mungkin sudah tidak relevan.
                 return redirect()
                     ->route('login')
                     ->withInput($request->only('login', 'remember'))
@@ -55,4 +39,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return null;
         });
-    })->create();
+    })
+    ->create()
+    ->usePublicPath(
+        is_dir(dirname(__DIR__, 2).'/public_html')
+            ? dirname(__DIR__, 2).'/public_html'
+            : dirname(__DIR__).'/public'
+    );
